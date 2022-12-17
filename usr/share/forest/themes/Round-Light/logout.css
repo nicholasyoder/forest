@@ -1,0 +1,33 @@
+#logout_MainWindow
+{
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(40,40,40, 98%), stop:0.1 rgba(50,50,50, 90%), stop:0.9 rgba(10,10,10, 90%), stop:1 rgba(20,20,20, 98%)); 
+    border-radius: 6px;
+    margin-bottom: 4px;
+    margin-right: 4px;
+    padding: 0 5px 5px 5px;
+}
+
+#logout_TitleLabel
+{
+    color: white;
+    margin: 5px 0 0 5px;
+}
+
+#logout_Button
+{
+    border: 1px solid transparent;
+    border-radius: 3px; 
+    margin-top: 5px;
+}
+
+#logout_Button:hover 
+{ 
+    background: rgba(255,255,255, 1%);
+    border: 1px solid rgba(255,255,255, 5%);
+} 
+
+#logout_Button:pressed 
+{ 
+    background: rgba(80,80,80, 50%);
+    border: 1px solid rgba(60,60,60, 40%);
+}

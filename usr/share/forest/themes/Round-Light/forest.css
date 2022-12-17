@@ -1,0 +1,260 @@
+#panel {
+    background: rgba(220,220,220, 98%);
+    padding: 3px 3px 3px 3px;
+    
+    min-height: 30;
+    max-height: 30;
+}
+
+#panelSeparator {
+    min-width: 1px;
+    max-width: 1px;
+    
+    margin: 2px 4px 2px 4px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0, 0%), stop:0.15 rgba(150,150,150, 80%), stop:0.85 rgba(150,150,150, 80%), stop:1 rgba(0,0,0, 0%));
+}
+
+#panelButton { 
+    border: 1px solid transparent;
+    border-radius: 3px; 
+    color: black;
+    height: auto;
+} 
+
+#panelButton[buttontype="Custom"] { 
+    text-align: center; 
+    padding: 2px;
+} 
+
+#panelButton[buttontype="Icon"] { 
+    text-align: center; 
+    min-width: 28px;
+} 
+
+#panelButton[buttontype="Text"] { 
+    text-align: center; 
+    padding-left: 3px;
+    padding-right: 3px;
+    min-width: 20px;
+} 
+
+#panelButton[buttontype="IconAndText"] { 
+    text-align: left;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-right: 3px;
+} 
+
+#panelButton:hover  { 
+    background: rgba(240,240,240, 70%);
+    border-top: 1px solid rgba(255,255,255, 60%);
+    border-right: 1px solid rgba(255,255,255, 60%);
+    border-bottom: 1px solid rgba(250,250,250, 60%);
+    border-left: 1px solid rgba(250,250,250, 60%);
+} 
+
+#panelButton:pressed  { 
+    background: rgba(230,230,230, 70%);
+    border-top: 1px solid rgba(255,255,255, 60%);
+    border-right: 1px solid rgba(255,255,255, 60%);
+    border-bottom: 1px solid rgba(250,250,250, 60%);
+    border-left: 1px solid rgba(250,250,250, 60%);
+}
+
+#popup {
+    background: rgba(220,220,220, 98%);
+    border: 1px solid rgba(100,100,100, 40%);
+    border-radius: 6px;
+    margin: 3px;
+    padding: 5px;
+}  
+
+#popupMenuItem {
+    border: 1px solid rgba(0,0,0, 0%);
+    border-radius: 3px; 
+    text-align: left; 
+    padding: 3px; 
+    color: black;
+} 
+
+#popupMenuItem:hover  { 
+    background: rgba(240,240,240, 70%);
+    border-top: 1px solid rgba(255,255,255, 60%);
+    border-right: 1px solid rgba(255,255,255, 60%);
+    border-bottom: 1px solid rgba(250,250,250, 60%);
+    border-left: 1px solid rgba(250,250,250, 60%);
+} 
+
+#popupMenuItem:pressed  { 
+    background: rgba(230,230,230, 70%);
+    border-top: 1px solid rgba(255,255,255, 60%);
+    border-right: 1px solid rgba(255,255,255, 60%);
+    border-bottom: 1px solid rgba(250,250,250, 60%);
+    border-left: 1px solid rgba(250,250,250, 60%);
+}
+
+#popupMenuSeperator { 
+    background: rgba(200,200,200, 80%); 
+    min-height: 1px;
+    max-height: 1px;
+    margin-top: 4px;
+    margin-right: 2px;
+    margin-bottom: 4px;
+    margin-left: 2px;
+} 
+
+#desktopIcon {
+    border: 1px solid transparent;
+    border-radius: 3px; 
+}
+
+#desktopIcon:hover  { 
+    background: rgba(180,180,180, 25%);
+    border-top: 1px solid rgba(100,100,100, 70%);
+    border-right: 1px solid rgba(100,100,100, 70%);
+    border-bottom: 1px solid rgba(100,100,100, 60%);
+    border-left: 1px solid rgba(100,100,100, 60%);
+} 
+
+#desktopDragBox {
+	background: rgba(200,200,200, 60%);
+}
+
+#panelMainmenuSearchbox {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(190,190,190, 60%);
+    border-right: 1px solid rgba(190,190,190, 60%);
+    border-bottom: 1px solid rgba(180,180,180, 60%);
+    border-left: 1px solid rgba(180,180,180, 60%);
+    
+    border-radius: 3px; 
+    padding: 4px 2px; 
+    color: black;
+}
+
+
+#panelMainMenuListWidget #popupMenuItem{
+	min-width: 150px;
+}
+
+#notifyPopup {
+    background: rgba(220,220,220, 98%);
+    border: 1px solid rgba(100,100,100, 40%);
+    border-radius: 6px;
+    margin: 3px;
+    padding: 5px;
+}
+
+#notifyPopup QLabel{
+	color: black;
+}
+
+#notifyPopup #iconLabel{
+	margin-right: 4px;
+	margin-left: 8px;
+}
+
+#notifyPopup #summaryLabel{
+	color: black;
+	font-weight: bold;
+	margin-right: 4px;
+}
+
+#notifyPopup #bodyLabel{
+	margin-right: 4px;
+}
+
+#notifyPopup #appnameLabel{
+	font-style: italic;
+	font-size: 8pt;
+	margin-bottom: 3px;
+	margin-right: 4px;
+}
+
+#notifyPopup #closeButton {
+    border: 1px solid rgba(0,0,0, 0%);
+    border-radius: 3px; 
+    padding: 3px; 
+    color: white;
+	
+	text-align: center; 
+    min-width: 24px;
+	max-width: 24px;
+	min-height: 24px;
+	max-height: 24px;
+}
+
+#notifyPopup #closeButton:hover  { 
+    background: rgba(240,240,240, 70%);
+    border-top: 1px solid rgba(255,255,255, 60%);
+    border-right: 1px solid rgba(255,255,255, 60%);
+    border-bottom: 1px solid rgba(250,250,250, 60%);
+    border-left: 1px solid rgba(250,250,250, 60%);
+} 
+
+#notifyPopup #closeButton:pressed  { 
+    background: rgba(230,230,230, 70%);
+    border-top: 1px solid rgba(255,255,255, 60%);
+    border-right: 1px solid rgba(255,255,255, 60%);
+    border-bottom: 1px solid rgba(250,250,250, 60%);
+    border-left: 1px solid rgba(250,250,250, 60%);
+}
+
+QSlider::groove:vertical {
+	background: rgba(255,255,255, 80%);
+	border-radius: 3px;
+	position: absolute; /* absolutely position 4px from the left and right of the widget. setting margins on the widget should work too... */
+	left: 4px; right: 4px;
+}
+
+QSlider::handle:vertical {
+	height: 14px;
+	background: rgba(120,120,120, 100%);
+    border-radius: 3px;
+	margin: 0 -4px; /* expand outside the groove */
+}
+
+QSlider::add-page:vertical {
+	background: rgba(180,180,180, 100%);
+	border-radius: 3px;
+}
+
+QSlider::sub-page:vertical {
+	background: rgba(255,255,255, 100%);
+	border-radius: 3px;
+}
+
+QScrollBar:vertical {
+    background: rgba(255,255,255, 80%);
+    border: none;
+    border-radius: 5px;
+    width: 10px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: rgba(120,120,120, 70%);
+    border-radius: 3px;
+    margin: 2px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+
+QScrollBar::sub-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: none;
+    width: 0;
+    height: 0;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}

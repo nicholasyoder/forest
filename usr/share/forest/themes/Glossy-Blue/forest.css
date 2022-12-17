@@ -1,0 +1,258 @@
+#panel {
+    background: qlineargradient(x1:0, y1:0, x2:1, y2:0, stop:0 #e0e7ee, stop: 0.2 #f0f7ff, stop: 0.8 #f0f7ff, stop:1 #e0e7ee);
+	border-top: 1px solid rgba(50,50,50, 80%);
+    
+    min-height: 35;
+    max-height: 35;
+}
+
+#panelSeparator {
+    min-width: 1px;
+    max-width: 1px;
+    
+    margin: 2px 4px 2px 4px;
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0, 0%), stop:0.15 rgba(100,100,100, 80%), stop:0.85 rgba(100,100,100, 80%), stop:1 rgba(0,0,0, 0%));
+}
+
+#panelButton { 
+    border: 1px solid transparent;
+	border-top: none;
+    border-radius: 4px; 
+	margin: -1px 0 -1px 0;
+    color: black;
+    height: auto;
+	icon-size: 22px;
+} 
+
+#panelButton[buttontype="Custom"] { 
+    text-align: center; 
+    padding: 5px;
+} 
+
+#panelButton[buttontype="Icon"] { 
+    text-align: center; 
+    min-width: 28px;
+} 
+
+#panelButton[buttontype="Text"] { 
+    text-align: center; 
+    padding-left: 3px;
+    padding-right: 3px;
+    min-width: 20px;
+} 
+
+#panelButton[buttontype="IconAndText"] { 
+    text-align: left;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-right: 3px;
+} 
+
+#panelButton:hover  { 
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d3e5ff, stop:0.5 #a0d7ff, stop:1 #d3e5ff);
+	border: 1px solid rgba(10,10,10, 20%);
+	border-top: none;
+	border-bottom: none;
+} 
+
+#panelButton:pressed  { 
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #eee, stop:0.5 #bbb, stop:1 #eee);
+	border: 1px solid rgba(10,10,10, 20%);
+	border-top: none;
+	border-bottom: none;
+}
+
+#popup {
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #f0f7ff, stop: 0.2 #e0e7ee, stop: 0.8 #e0e7ee, stop:1 #f0f7ff);
+    border: 1px solid rgba(20,20,20, 80%);
+	border-bottom: none;
+    border-top-left-radius: 6px;
+	border-top-right-radius: 6px;
+    margin: 0;
+    padding: 8px;
+}  
+
+#popupMenuItem {
+    border: 1px solid rgba(0,0,0, 0%);
+    border-radius: 2px;
+    text-align: left; 
+    padding: 3px; 
+    color: black;
+} 
+
+#popupMenuItem:hover  { 
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d3e5ff, stop:1 #a8daff);
+	border: 1px solid #8ab6ee;
+} 
+
+#popupMenuItem:pressed  {
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d3e5f5, stop:1 #a0d0f5);
+    border: 1px solid #8ab6ee;
+}
+
+#popupMenuSeperator { 
+    background: rgba(200,200,200, 80%); 
+    min-height: 1px;
+    max-height: 1px;
+    margin-top: 4px;
+    margin-right: 2px;
+    margin-bottom: 4px;
+    margin-left: 2px;
+} 
+
+#desktopIcon {
+    border: 1px solid transparent;
+    border-radius: 3px; 
+}
+
+#desktopIcon:hover  { 
+    background: rgba(180,180,180, 25%);
+    border-top: 1px solid rgba(100,100,100, 70%);
+    border-right: 1px solid rgba(100,100,100, 70%);
+    border-bottom: 1px solid rgba(100,100,100, 60%);
+    border-left: 1px solid rgba(100,100,100, 60%);
+} 
+
+#desktopDragBox {
+	background: rgba(200,200,200, 60%);
+}
+
+#panelMainmenuSearchbox {
+    background: white;
+    border: 1px solid #8ab6ee;
+    
+    border-radius: 3px; 
+    padding: 4px 2px; 
+    color: black;
+}
+
+#panelMainMenuListWidget #popupMenuItem{
+	min-width: 150px;
+}
+
+#notifyPopup {
+	background: rgba(30,30,30, 100%);
+    border: 1px solid rgba(100,100,100, 40%);
+    border-radius: 6px;
+    margin: 3px;
+    padding: 5px;
+	color: white;
+}
+
+#notifyPopup QLabel{
+	color: white;
+}
+
+#notifyPopup #iconLabel{
+	margin-right: 4px;
+	margin-left: 8px;
+}
+
+#notifyPopup #summaryLabel{
+	color: white;
+	font-weight: bold;
+	margin-right: 4px;
+}
+
+#notifyPopup #bodyLabel{
+	margin-right: 4px;
+}
+
+#notifyPopup #appnameLabel{
+	font-style: italic;
+	font-size: 8pt;
+	margin-bottom: 3px;
+	margin-right: 4px;
+}
+
+#notifyPopup #closeButton {
+    border: 1px solid rgba(0,0,0, 0%);
+    border-radius: 3px; 
+    padding: 3px; 
+    color: white;
+	
+	text-align: center; 
+    min-width: 24px;
+	max-width: 24px;
+	min-height: 24px;
+	max-height: 24px;
+}
+
+#notifyPopup #closeButton:hover  { 
+    background: rgba(50,50,50, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+} 
+
+#notifyPopup #closeButton:pressed  { 
+    background: rgba(40,40,40, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+QSlider::groove:vertical {
+	background: white;
+	position: absolute; /* absolutely position 4px from the left and right of the widget. setting margins on the widget should work too... */
+	left: 3px; right: 3px;
+}
+
+QSlider::handle:vertical {
+	height: 14px;
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d3e5ff, stop:1 #a8daff);
+	border: 1px solid #8ab6ee;
+    border-radius: 1px;
+	margin: 0 -3px; /* expand outside the groove */
+}
+
+QSlider::add-page:vertical {
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d3e5ff, stop:1 #a8daff);
+	border: 1px solid #8ab6ee;
+    border-radius: 2px; 
+}
+
+QSlider::sub-page:vertical {
+	background: white;
+	border: 1px solid #8ab6ee;
+    border-radius: 2px; 
+}
+
+
+QScrollBar:vertical {
+    background: white;
+    border: 1px solid #8ab6ee;
+    border-radius: 2px; 
+    width: 15px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+	background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 #d3e5ff, stop:1 #a8daff);
+	border: 1px solid #8ab6ee;
+    border-radius: 1px;
+    margin: 2px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+
+QScrollBar::sub-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: none;
+    width: 0;
+    height: 0;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}

@@ -1,0 +1,36 @@
+#settingsMainWindow {
+    padding: 0;
+}
+
+#settingsSideBar {
+    background : rgba(238,238,238, 100%);
+}
+
+QTabWidget::pane { 
+    background: solid #ffffff; 
+    border: 1px solid #ffffff;  
+    margin: 0;
+}
+
+QTabWidget::tab-bar { 
+    alignment: center; 
+}
+
+QTabBar::tab { 
+    background : solid #eeeeee; 
+    min-width: 8ex; 
+    padding: 2px; 
+    border: 0px solid #ffffff; 
+    
+}
+QTabBar::tab:hover { 
+    background: solid #f7f7f7; 
+}
+
+QTabBar::tab:selected { 
+    background: solid #ffffff; 
+}
+
+QTabBar::scroller { 
+    width: 15px; 
+}

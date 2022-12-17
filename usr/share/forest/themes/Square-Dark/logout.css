@@ -1,0 +1,38 @@
+#logout_MainWindow
+{
+    background: rgba(30,30,30, 100%);
+    border: 1px solid rgba(100,100,100, 40%);
+    margin-bottom: 3px;
+    margin-right: 3px;
+    padding: 0 5px 5px 5px;
+}
+
+#logout_TitleLabel
+{
+    color: white;
+    margin: 5px 0 0 5px;
+}
+
+#logout_Button
+{
+    border: 1px solid transparent;
+    margin-top: 5px;
+}
+
+#logout_Button:hover 
+{ 
+    background: rgba(50,50,50, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+} 
+
+#logout_Button:pressed 
+{ 
+    background: rgba(40,40,40, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}

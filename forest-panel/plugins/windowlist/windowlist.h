@@ -1,0 +1,98 @@
+/* BEGIN_COMMON_COPYRIGHT_HEADER
+ * (c)LGPL3+
+ *
+ * Copyright: 2021 Nicholas Yoder
+ *
+ * This program or library is free software; you can redistribute it
+ * and/or modify it under the terms of the GNU Lesser General Public
+ * License as published by the Free Software Foundation; either
+ * version 3 of the License, or (at your option) any later version.
+ *
+ * This library is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
+ * Lesser General Public License for more details.
+
+ * You should have received a copy of the GNU Lesser General
+ * Public License along with this library; if not, write to the
+ * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
+ * Boston, MA 02110-1301 USA
+ *
+ * END_COMMON_COPYRIGHT_HEADER */
+
+#ifndef WINDOWLIST_H
+#define WINDOWLIST_H
+
+//#define Q_WS_X11
+
+#include <QMainWindow>
+#include <QApplication>
+#include <QtX11Extras/QX11Info>
+#include <QSettings>
+#include <QTimer>
+#include <QMessageBox>
+#include <QtDBus>
+#include <QGenericPlugin>
+
+#include "button.h"
+#include "imagepopup.h"
+#include "settingswidget.h"
+#include "panelpluginterface.h"
+#include "xcbutills/xcbutills.h"
+
+class windowlist : public QWidget, panelpluginterface
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "forest.panel.windowlist.plugin")
+    Q_INTERFACES(panelpluginterface)
+
+public:
+    windowlist();
+    ~windowlist();
+
+    //begin plugin interface
+    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void closePlug(){this->close(); deleteLater();}
+    void XcbEventFilter(xcb_generic_event_t* event);
+    QHash<QString, QString> getpluginfo();
+    //end plugin interface
+
+public slots:
+    void reloadsettings();
+    //void resetsize(QString panelpos);
+
+signals:
+    void closepopups();
+    void changehighlight(xcb_window_t window);
+    void updatebuttondata();
+    void closebts();
+
+protected:
+    void mouseReleaseEvent(QMouseEvent *event);
+
+private slots:
+    void updatelist();
+    void resizebuttons(QList<xcb_window_t> newwindow);
+    void loadsettings();
+    void showsettingswidget();
+
+private:
+    QWidget *stretchwidget = new QWidget;
+    QHBoxLayout *mainlayout = new QHBoxLayout();
+    QList<xcb_window_t> oldwindows;
+    QString plugnum;
+    QMap<unsigned long, button*> winlist;
+
+    int currentdesk = 0;
+    int olddesk = 0;
+
+    QString bttype = "twopart";
+    int maxbtsize;
+
+    popupmenu *pmenu = nullptr;
+    imagepopup *ipopup = nullptr;
+
+    settingswidget *swidget = new settingswidget;
+};
+
+#endif // WINDOWLIST_H

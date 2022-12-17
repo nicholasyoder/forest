@@ -1,0 +1,17 @@
+Source: forest
+Section: unknown
+Priority: optional
+Maintainer: Nicholas <nicholas@compassfoundation.io>
+Build-Depends: debhelper-compat (= 13)
+Standards-Version: 4.5.1
+Homepage: 
+Rules-Requires-Root: no
+
+Package: forest
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, xfwm4, lxsession, gtk2-engines-murrine, qt5ct, oxygen-icon-theme, lxterminal
+Description: Forest desktop environment
+ Forest is a desktop environment built using Qt.
+ It is still in the development stage so expect
+ to find partially developed (i.e. not working)
+ features.

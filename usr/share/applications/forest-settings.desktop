@@ -1,0 +1,6 @@
+[Desktop Entry]
+Exec=/usr/bin/forest-settings
+Icon=preferences-system
+Type=Application
+Name=Forest Settings
+Categories=Settings
