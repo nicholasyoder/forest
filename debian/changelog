@@ -1,3 +1,12 @@
+forest (0.7.6-1) unstable; urgency=medium
+
+  * Fixed mainmenu name
+  * Added hotkeys for screen brightness and screenshot
+  * Enabled seperator between menu and quicklaunch
+
+ -- Nicholas <nicholas@compassfoundation.io>  Sat, 17 Dec 2022 17:10:00 -0000
+
+
 forest (0.7.5-1) unstable; urgency=medium
 
   * Mainmenu rebuilt and not crashing
