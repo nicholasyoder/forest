@@ -23,14 +23,11 @@
 #ifndef WINDOWLIST_H
 #define WINDOWLIST_H
 
-//#define Q_WS_X11
-
 #include <QMainWindow>
 #include <QApplication>
 #include <QtX11Extras/QX11Info>
 #include <QSettings>
 #include <QTimer>
-#include <QMessageBox>
 #include <QtDBus>
 #include <QGenericPlugin>
 
@@ -52,27 +49,24 @@ public:
 
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
-    void closePlug(){this->close(); deleteLater();}
+    void closePlug(){ close(); deleteLater();}
     void XcbEventFilter(xcb_generic_event_t* event);
     QHash<QString, QString> getpluginfo();
     //end plugin interface
 
 public slots:
     void reloadsettings();
-    //void resetsize(QString panelpos);
 
 signals:
-    void closepopups();
+    //void closepopups();
     void changehighlight(xcb_window_t window);
     void updatebuttondata();
-    void closebts();
 
 protected:
     void mouseReleaseEvent(QMouseEvent *event);
 
 private slots:
     void updatelist();
-    void resizebuttons(QList<xcb_window_t> newwindow);
     void loadsettings();
     void showsettingswidget();
 
@@ -80,8 +74,7 @@ private:
     QWidget *stretchwidget = new QWidget;
     QHBoxLayout *mainlayout = new QHBoxLayout();
     QList<xcb_window_t> oldwindows;
-    QString plugnum;
-    QMap<unsigned long, button*> winlist;
+    QMap<unsigned long, button*> button_list;
 
     int currentdesk = 0;
     int olddesk = 0;

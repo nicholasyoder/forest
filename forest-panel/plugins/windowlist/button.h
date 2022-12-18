@@ -42,11 +42,6 @@
 
 #include "xcbutills/xcbutills.h"
 
-//#include <X11/X.h>
-//#include <X11/extensions/Xdamage.h>
-
-//#undef Bool // defined as int in X11/Xlib.h
-
 class button : public panelbutton
 {
     Q_OBJECT
@@ -59,7 +54,6 @@ public slots:
     void sethighlight(xcb_window_t win);
     void slotclicked(QMouseEvent *event);
     void updatedata();
-    void closebt(){this->close(); this->deleteLater();}
     xcb_window_t xcbwindow(){return btwindow;}
 
 signals:

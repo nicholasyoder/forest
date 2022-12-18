@@ -22,29 +22,24 @@
 
 #include "button.h"
 
-button::button(xcb_window_t window, QIcon icon, QString type, QString text)
-{
+button::button(xcb_window_t window, QIcon icon, QString type, QString text){
     bttype = type;
     bttext = text;
     btwindow = window;
 
-    if (bttype == "icononly")
-    {
+    if (bttype == "icononly"){
         setupIconButton(icon, 16);
     }
-    else if (bttype == "tab")//take this out or make it work again
-    {
+    else if (bttype == "tab"){//take this out or make it work again
         setupIconAndTextButton(bttext, icon, 16);
-        /*if (hlayout)
-        {
+        /*if (hlayout){
             closebutton *cbt = new closebutton;
             cbt->setFixedSize(18,18);
             hlayout->addWidget(cbt);
             connect(cbt, &closebutton::clicked, this, &button::closewindow);
         }*/
     }
-    else
-    {
+    else{
         setupIconAndTextButton(bttext, icon, 16);
     }
 
@@ -91,51 +86,40 @@ button::button(xcb_window_t window, QIcon icon, QString type, QString text)
     connect(this, &button::leaveevent, this, &button::handleLeaveEvent);
 }
 
-button::~button()
-{
+button::~button(){
     pmenu->deleteLater();
 }
 
-void button::mousePressEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton)
-    {
+void button::mousePressEvent(QMouseEvent *event){
+    if (event->button() == Qt::LeftButton){
         mousepressed = true;
         startdragpos = event->pos();
     }
 }
 
-void button::mouseReleaseEvent(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton)
-    {
-        if (mousepressed)
-        {
+void button::mouseReleaseEvent(QMouseEvent *event){
+    if (event->button() == Qt::LeftButton){
+        if (mousepressed){
             emit clicked(event);
             mousepressed = false;
         }
     }
-    else
-    {
+    else{
         emit clicked(event);
     }
 
 }
 
-void button::mouseMoveEvent(QMouseEvent *event)
-{
-    if (mousepressed)
-    {
-        if ((event->pos() - startdragpos).manhattanLength() > 20)
-        {
+void button::mouseMoveEvent(QMouseEvent *event){
+    if (mousepressed){
+        if ((event->pos() - startdragpos).manhattanLength() > 20){
             demaximizewindow();
             mousepressed = false;
         }
     }
 }
 
-void button::updatedata()//get rid of this somehow...
-{
+void button::updatedata(){ //get rid of this somehow...
     if (this->property("buttontype") != "Icon"){
         QString newtext = Xcbutills::getWindowTitle(btwindow);
         if (bttext != newtext){
@@ -144,34 +128,17 @@ void button::updatedata()//get rid of this somehow...
             setIcon(Xcbutills::getWindowIcon(btwindow));
         }
     }
-
-    //QIcon ico = Xcbutills::getWindowIcon(btwindow);
-    //qDebug() << ico.name() << this->icon().name();
-
-    //if (ico.name() != this->icon().name()){
-        //setIcon(ico);
-    //}
-    //this->bticon = ico;
-
 }
 
-void button::slotclicked(QMouseEvent *event)
-{
-    if (event->button() == Qt::LeftButton)
-    {
-        this->setDown(true);
+void button::slotclicked(QMouseEvent *event){
+    if (event->button() == Qt::LeftButton){
+        setDown(true);
         raisewindow();
     }
-    else if (event->button() == Qt::RightButton)
-    {
-        //if (this->width() > pmenu->popupw->sizeHint().width())
-        //    pmenu->popupw->setFixedWidth(this->width());
-        //else
-        //    pmenu->popupw->setFixedWidth(pmenu->popupw->sizeHint().width());
-
+    else if (event->button() == Qt::RightButton){
         QSize sizeHint = pmenu->popupw->sizeHint();
-        if (this->width() > sizeHint.width())
-            pmenu->popupw->setFixedSize(this->width(), sizeHint.height());
+        if (width() > sizeHint.width())
+            pmenu->popupw->setFixedSize(width(), sizeHint.height());
         else
             pmenu->popupw->setFixedSize(sizeHint.width(), sizeHint.height());
 
@@ -179,40 +146,33 @@ void button::slotclicked(QMouseEvent *event)
     }
 }
 
-void button::sethighlight(xcb_window_t win)
-{
+void button::sethighlight(xcb_window_t win){
     if (win == btwindow) setDown(true);
     else setDown(false);
 }
 
-void button::raisewindow()
-{
+void button::raisewindow(){
     Xcbutills::raiseWindow(btwindow);
 }
 
-void button::maximizewindow()
-{
+void button::maximizewindow(){
     Xcbutills::maximizeWindow(btwindow);
 }
 
-void button::minimizewindow()
-{
+void button::minimizewindow(){
     Xcbutills::minimizeWindow(btwindow);
 }
 
-void button::closewindow()
-{
+void button::closewindow(){
     Xcbutills::closeWindow(btwindow);
 }
 
-void button::demaximizewindow()
-{
+void button::demaximizewindow(){
     Xcbutills::demaximizeWindow(btwindow);
     //QTimer::singleShot(100, this, SLOT(resizeifneeded()));
 }
 
-void button::resizeifneeded()
-{
+void button::resizeifneeded(){
     /*QRect wingeo = Xcbutills::getwindowGeometry(btwindow);
     QRect parentgeo = this->parentWidget()->parentWidget()->geometry();
     if (wingeo.intersects(parentgeo))
@@ -223,8 +183,7 @@ void button::resizeifneeded()
     }*/
 }
 
-void button::handleEnterEvent()
-{
+void button::handleEnterEvent(){
     emit mouseEnter(this);
     /*if (openptimer)
         delete openptimer;
@@ -235,8 +194,7 @@ void button::handleEnterEvent()
     openptimer->start(500);*/
 }
 
-void button::handleLeaveEvent()
-{
+void button::handleLeaveEvent(){
     emit mouseLeave(this);
     /*if (openptimer)
     {
