@@ -31,6 +31,16 @@
 #include <QtX11Extras/QX11Info>
 #include <xcb/xcb.h>
 
+/** XEMBED messages */
+#define XEMBED_EMBEDDED_NOTIFY          0
+#define XEMBED_WINDOW_ACTIVATE          1
+#define XEMBED_WINDOW_DEACTIVATE        2
+#define XEMBED_REQUEST_FOCUS            3
+#define XEMBED_FOCUS_IN                 4
+#define XEMBED_FOCUS_OUT                5
+#define XEMBED_FOCUS_NEXT               6
+#define XEMBED_FOCUS_PREV               7
+
 class Xcbutills
 {
 public:

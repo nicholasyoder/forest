@@ -280,7 +280,6 @@ void Xcbutills::closeWindow(xcb_window_t window)
 
 void Xcbutills::resizeWindow(xcb_window_t window, int w, int h)
 {
-    //qDebug() << "resize";
     const uint32_t data[5] = { uint32_t(w), uint32_t(h), uint32_t(6), 0, 0 };
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
     send_client_message(xcbconnection, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_WM_MOVERESIZE"), data);

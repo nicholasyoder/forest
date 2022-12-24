@@ -26,25 +26,12 @@
 #include <QWidget>
 #include <QHBoxLayout>
 
-//#include "panelbutton.h"
 #include "panelpluginterface.h"
-#include "trayicon.h"
-#include "xcbutills/xcbutills.h"
 
-#include <QtX11Extras/QX11Info>
-
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/Xdamage.h>
 #include <xcb/xcb.h>
-#include <xcb/damage.h>
 
-#undef Bool // defined as int in X11/Xlib.h
-
-typedef long unsigned int luint;
+class KSelectionOwner;
+class trayicon;
 
 class systray : public QWidget, panelpluginterface
 {
@@ -58,33 +45,34 @@ public:
 
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
-    void closePlug(){this->close(); deleteLater();}
-    void XcbEventFilter(xcb_generic_event_t *event);
+    void closePlug(){close(); deleteLater();}
+    void XcbEventFilter(xcb_generic_event_t *ev);
     QHash<QString, QString> getpluginfo();
     //end plugininterface
 
+private:
+    void init();
+
+    void dock(xcb_window_t winId);
+    void undock(xcb_window_t winId);
+    bool addDamageWatch(xcb_window_t client);
+
 private slots:
-    void starttray();
-    void stoptray();
-    void onIconDestroyed(QObject * icon);
-    void clientMessageEvent(xcb_generic_event_t *e);
-    int clientMessage(WId _wid, Atom _msg, luint data0, luint data1 = 0, luint data2 = 0, luint data3 = 0, luint data4 = 0) const;
-    void addIcon(Window id);
-    TrayIcon* findIcon(Window trayId);
+    void onClaimedOwnership();
+    void onFailedToClaimOwnership();
+    void onLostOwnership();
+    void setSystemTrayVisual();
 
 private:
-    VisualID getVisual();
-    void setIconSize(QSize icosize);
+    QHBoxLayout *mainLayout = nullptr;
 
-    QList<TrayIcon*> mIcons;
+    uint8_t damageEventBase = 0;
+    QHash<xcb_window_t, trayicon*> tIcons;
+    QHash<xcb_window_t, u_int32_t> tDamageWatches;
+    KSelectionOwner *tSelectionOwner;
 
-    QSize iconsize;
-    Display* mDisplay;
-    Window mTrayId = 0;
-    int mDamageEvent = 0;
-    int mDamageError = 0;
-    Atom _NET_SYSTEM_TRAY_OPCODE;
-    QHBoxLayout *traylayout;
+    bool valid = false;
+
 };
 
 #endif // SYSTRAY_H

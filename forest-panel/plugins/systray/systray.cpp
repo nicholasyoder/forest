@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2022 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -22,257 +22,228 @@
 
 #include "systray.h"
 
+#include <QTimer>
+
+#include <KSelectionOwner>
+#include "trayicon.h"
+
+#include "xcbutills/xcbutills.h"
+
+#include <xcb/xcb_event.h>
+#include <xcb/composite.h>
 #include <xcb/damage.h>
-#include <xcb/render.h>
 
 #define SYSTEM_TRAY_REQUEST_DOCK    0
-#define SYSTEM_TRAY_BEGIN_MESSAGE   1
-#define SYSTEM_TRAY_CANCEL_MESSAGE  2
-#define XEMBED_EMBEDDED_NOTIFY  0
-#define XEMBED_MAPPED          (1 << 0)
 
-systray::systray()
-{
+systray::systray(){
 }
 
-systray::~systray()
-{
-    stoptray();
+systray::~systray(){
 }
 
-void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
-{
+void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist){
     Q_UNUSED(itemlist);
 
-    mDisplay = QX11Info::display();
-    _NET_SYSTEM_TRAY_OPCODE = Xcbutills::atom("_NET_SYSTEM_TRAY_OPCODE");
-
-    traylayout = new QHBoxLayout(this);
-    traylayout->setMargin(0);
-    traylayout->setSpacing(0);
+    mainLayout = new QHBoxLayout(this);
+    mainLayout->setMargin(0);
+    mainLayout->setSpacing(0);
     layout->addWidget(this);
 
-    iconsize = QSize(22,22);
-    QTimer::singleShot(0, this, &systray::starttray);
+    //Use KSelectionOwner to get ownership of the systray atom for the current screen
+    QString trayAtomName = QString("_NET_SYSTEM_TRAY_S%1").arg(QX11Info::appScreen());
+    tSelectionOwner = new KSelectionOwner(Xcbutills::atom(trayAtomName), -1, this);
+
+    QTimer::singleShot(500, this, &systray::init);
 }
 
-void systray::XcbEventFilter(xcb_generic_event_t *event)
-{
-    TrayIcon* icon;
-    int event_type = event->response_type & ~0x80;
+void systray::init(){
+    //load damage extension
+    xcb_connection_t *c = QX11Info::connection();
+    xcb_prefetch_extension_data(c, &xcb_damage_id);
+    const auto *reply = xcb_get_extension_data(c, &xcb_damage_id);
+    if (reply && reply->present) {
+        damageEventBase = reply->first_event;
+        xcb_damage_query_version_unchecked(c, XCB_DAMAGE_MAJOR_VERSION, XCB_DAMAGE_MINOR_VERSION);
+    } else {
+        qDebug() << "Systray: Error - Could not load damage extension.";
+    }
 
-    switch (event_type)
-    {
-        case ClientMessage:
-            clientMessageEvent(event);
-            break;
+    connect(tSelectionOwner, &KSelectionOwner::claimedOwnership, this, &systray::onClaimedOwnership);
+    connect(tSelectionOwner, &KSelectionOwner::failedToClaimOwnership, this, &systray::onFailedToClaimOwnership);
+    connect(tSelectionOwner, &KSelectionOwner::lostOwnership, this, &systray::onLostOwnership);
+    tSelectionOwner->claim(false);
+}
 
-//        case ConfigureNotify:
-//            icon = findIcon(event->xconfigure.window);
-//            if (icon)
-//                icon->configureEvent(&(event->xconfigure));
-//            break;
+void systray::XcbEventFilter(xcb_generic_event_t *ev){
+    if (!damageEventBase || !valid) return;
 
-        case DestroyNotify: {
-            unsigned long event_window;
-            event_window = reinterpret_cast<xcb_destroy_notify_event_t*>(event)->window;
-            icon = findIcon(event_window);
-            if (icon)
-            {
-                icon->windowDestroyed(event_window);
-                mIcons.removeAll(icon);
-                delete icon;
+    const auto responseType = XCB_EVENT_RESPONSE_TYPE(ev);
+    if (responseType == XCB_CLIENT_MESSAGE) {
+        const auto ce = reinterpret_cast<xcb_client_message_event_t *>(ev);
+        if (ce->type == Xcbutills::atom("_NET_SYSTEM_TRAY_OPCODE")) {
+            switch (ce->data.data32[1]) {
+            case SYSTEM_TRAY_REQUEST_DOCK:
+                dock(ce->data.data32[2]);
+                return;
             }
-            break;
         }
-        default:
-            if (event_type == mDamageEvent + XDamageNotify)
-            {
-                xcb_damage_notify_event_t* dmg = reinterpret_cast<xcb_damage_notify_event_t*>(event);
-                icon = findIcon(dmg->drawable);
-                if (icon)
-                    icon->updateicon();
+    } else if (responseType == XCB_UNMAP_NOTIFY) {
+        const auto unmappedWId = reinterpret_cast<xcb_unmap_notify_event_t *>(ev)->window;
+        if (tIcons.contains(unmappedWId)) {
+            undock(unmappedWId);
+        }
+    } else if (responseType == XCB_DESTROY_NOTIFY) {
+        const auto destroyedWId = reinterpret_cast<xcb_destroy_notify_event_t *>(ev)->window;
+        if (tIcons.contains(destroyedWId)) {
+            undock(destroyedWId);
+        }
+    } else if (responseType == damageEventBase + XCB_DAMAGE_NOTIFY) {
+        const auto damagedWId = reinterpret_cast<xcb_damage_notify_event_t *>(ev)->drawable;
+        const auto tIcon = tIcons.value(damagedWId);
+        if (tIcon) {
+            tIcon->update();
+            xcb_damage_subtract(QX11Info::connection(), tDamageWatches[damagedWId], XCB_NONE, XCB_NONE);
+        }
+    } else if (responseType == XCB_CONFIGURE_REQUEST) {
+        const auto event = reinterpret_cast<xcb_configure_request_event_t *>(ev);
+        const auto tIcon = tIcons.value(event->window);
+        if (tIcon) {
+            // The embedded window tries to move or resize. Ignore move, handle resize only.
+            if ((event->value_mask & XCB_CONFIG_WINDOW_WIDTH) || (event->value_mask & XCB_CONFIG_WINDOW_HEIGHT)) {
+                tIcon->resizeWindow(event->width, event->height);
             }
-            break;
+        }
+    } else if (responseType == XCB_VISIBILITY_NOTIFY) {
+        const auto event = reinterpret_cast<xcb_visibility_notify_event_t *>(ev);
+        // it's possible that something showed our container window, we have to hide it
+        // workaround for BUG 357443: when KWin is restarted, container window is shown on top
+        if (event->state == XCB_VISIBILITY_UNOBSCURED) {
+            for (auto tIcon : tIcons.values()) {
+                tIcon->hideContainerWindow(event->window);
+            }
+        }
     }
 }
 
-QHash<QString, QString> systray::getpluginfo()
-{
+QHash<QString, QString> systray::getpluginfo(){
     QHash<QString, QString> info;
     info["name"] = "System Tray";
     info["needsXcbEvents"] = "true";
     return info;
 }
 
-void systray::starttray()
-{
-    Display* dsp = mDisplay;
-    Window root = QX11Info::appRootWindow();
-    QString s = QString("_NET_SYSTEM_TRAY_S%1").arg(DefaultScreen(dsp));
-    Atom _NET_SYSTEM_TRAY_S = Xcbutills::atom(s.toLatin1());
+void systray::dock(xcb_window_t winId){
+    qDebug() << "Systray: Docking window " << winId;
 
-    if (XGetSelectionOwner(dsp, _NET_SYSTEM_TRAY_S) != None)
-    {
-        qWarning() << "Another systray is running";
-        //mValid = false;
-        return;
-    }
-
-    // init systray protocol
-    mTrayId = XCreateSimpleWindow(dsp, root, -1, -1, 1, 1, 0, 0, 0);
-
-    XSetSelectionOwner(dsp, _NET_SYSTEM_TRAY_S, mTrayId, CurrentTime);
-    if (XGetSelectionOwner(dsp, _NET_SYSTEM_TRAY_S) != mTrayId)
-    {
-        qWarning() << "Can't get systray manager";
-        stoptray();
-        //mValid = false;
-        return;
-    }
-
-    int orientation = 0; //0 = horizontal, 1 = vertical
-    XChangeProperty(dsp, mTrayId, Xcbutills::atom("_NET_SYSTEM_TRAY_ORIENTATION"), XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&orientation, 1);
-
-    // ** Visual ********************************
-    VisualID visualId = getVisual();
-    if (visualId)
-    {
-        XChangeProperty(mDisplay, mTrayId, Xcbutills::atom("_NET_SYSTEM_TRAY_VISUAL"), XA_VISUALID, 32, PropModeReplace, (unsigned char*)&visualId, 1);
-    }
-    // ******************************************
-
-    setIconSize(iconsize);
-
-    XClientMessageEvent ev;
-    ev.type = ClientMessage;
-    ev.window = root;
-    ev.message_type = Xcbutills::atom("MANAGER");
-    ev.format = 32;
-    ev.data.l[0] = CurrentTime;
-    ev.data.l[1] = long(_NET_SYSTEM_TRAY_S);
-    ev.data.l[2] = long(mTrayId);
-    ev.data.l[3] = 0;
-    ev.data.l[4] = 0;
-    XSendEvent(dsp, root, False, StructureNotifyMask, (XEvent*)&ev);
-
-    XDamageQueryExtension(mDisplay, &mDamageEvent, &mDamageError);
-
-    qDebug() << "Systray started";
-}
-
-void systray::stoptray()
-{
-    for (auto & icon : mIcons)
-        disconnect(icon, &QObject::destroyed, this, &systray::onIconDestroyed);
-    qDeleteAll(mIcons);
-    if (mTrayId)
-    {
-        XDestroyWindow(mDisplay, mTrayId);
-        mTrayId = 0;
-    }
-    //mValid = false;
-}
-
-void systray::onIconDestroyed(QObject * icon)
-{
-    //in the time QOjbect::destroyed is emitted, the child destructor
-    //is already finished, so the qobject_cast to child will return nullptr in all cases
-    mIcons.removeAll(static_cast<TrayIcon *>(icon));
-}
-
-void systray::addIcon(Window winId)
-{
-    // decline to add an icon for a window we already manage
-    TrayIcon *icon = findIcon(winId);
-    if(icon)
+    if (tIcons.contains(winId))
         return;
 
-    icon = new TrayIcon(winId, iconsize);
-    mIcons.append(icon);
-    traylayout->addWidget(icon);
-    connect(icon, &QObject::destroyed, this, &systray::onIconDestroyed);
+    if (addDamageWatch(winId)) {
+        trayicon *tIcon = new trayicon(winId);
+        tIcons[winId] = tIcon;
+        mainLayout->addWidget(tIcon);
+    }
 }
 
-VisualID systray::getVisual()
+void systray::undock(xcb_window_t winId){
+    qDebug() << "Systray: Undocking window " << winId;
+
+    if (!tIcons.contains(winId))
+        return;
+
+    trayicon *tIcon = tIcons[winId];
+    mainLayout->removeWidget(tIcon);
+    tIcon->deleteLater();
+    tIcons.remove(winId);
+}
+
+bool systray::addDamageWatch(xcb_window_t client){
+    qDebug() << "Systray: Adding damage watch for " << client;
+
+    xcb_connection_t *c = QX11Info::connection();
+    const auto attribsCookie = xcb_get_window_attributes_unchecked(c, client);
+
+    const auto damageId = xcb_generate_id(c);
+    tDamageWatches[client] = damageId;
+    xcb_damage_create(c, damageId, client, XCB_DAMAGE_REPORT_LEVEL_NON_EMPTY);
+
+    xcb_generic_error_t *error = nullptr;
+    QScopedPointer<xcb_get_window_attributes_reply_t, QScopedPointerPodDeleter> attr(xcb_get_window_attributes_reply(c, attribsCookie, &error));
+    QScopedPointer<xcb_generic_error_t, QScopedPointerPodDeleter> getAttrError(error);
+    uint32_t events = XCB_EVENT_MASK_STRUCTURE_NOTIFY;
+    if (!attr.isNull()) {
+        events = events | attr->your_event_mask;
+    }
+    // if window is already gone, there is no need to handle it.
+    if (getAttrError && getAttrError->error_code == XCB_WINDOW) {
+        return false;
+    }
+    // the event mask will not be removed again. We cannot track whether another component also needs STRUCTURE_NOTIFY (e.g. KWindowSystem).
+    // if we would remove the event mask again, other areas will break.
+    const auto changeAttrCookie = xcb_change_window_attributes_checked(c, client, XCB_CW_EVENT_MASK, &events);
+    QScopedPointer<xcb_generic_error_t, QScopedPointerPodDeleter> changeAttrError(xcb_request_check(c, changeAttrCookie));
+    // if window is gone by this point, it will be caught by eventFilter, so no need to check later errors.
+    if (changeAttrError && changeAttrError->error_code == XCB_WINDOW) {
+        return false;
+    }
+
+    return true;
+}
+
+
+void systray::onClaimedOwnership()
 {
-    VisualID visualId = 0;
-    Display* dsp = mDisplay;
+    qDebug() << "Systray: Claimed ownership of Systray Manager";
+    setSystemTrayVisual();
+    valid = true;
+}
 
-    XVisualInfo templ;
-    templ.screen=QX11Info::appScreen();
-    templ.depth=32;
-    templ.c_class=TrueColor;
+void systray::onFailedToClaimOwnership()
+{
+    qWarning() << "Systray: Failed to claim ownership of Systray Manager";
+    valid = false;
+}
 
-    int nvi;
-    XVisualInfo* xvi = XGetVisualInfo(dsp, VisualScreenMask|VisualDepthMask|VisualClassMask, &templ, &nvi);
+void systray::onLostOwnership()
+{
+    qWarning() << "Systray: Lost ownership of Systray Manager";
+    valid = false;
+}
 
-    if (xvi)
-    {
-        int i;
-        XRenderPictFormat* format;
-        for (i = 0; i < nvi; i++)
-        {
-            format = XRenderFindVisualFormat(dsp, xvi[i].visual);
-            if (format && format->type == PictTypeDirect && format->direct.alphaMask)
-            {
-                visualId = xvi[i].visualid;
+void systray::setSystemTrayVisual()
+{
+    xcb_connection_t *c = QX11Info::connection();
+    auto screen = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
+    auto trayVisual = screen->root_visual;
+    xcb_depth_iterator_t depth_iterator = xcb_screen_allowed_depths_iterator(screen);
+    xcb_depth_t *depth = nullptr;
+
+    while (depth_iterator.rem) {
+        if (depth_iterator.data->depth == 32) {
+            depth = depth_iterator.data;
+            break;
+        }
+        xcb_depth_next(&depth_iterator);
+    }
+
+    if (depth) {
+        xcb_visualtype_iterator_t visualtype_iterator = xcb_depth_visuals_iterator(depth);
+        while (visualtype_iterator.rem) {
+            xcb_visualtype_t *visualtype = visualtype_iterator.data;
+            if (visualtype->_class == XCB_VISUAL_CLASS_TRUE_COLOR) {
+                trayVisual = visualtype->visual_id;
                 break;
             }
+            xcb_visualtype_next(&visualtype_iterator);
         }
-        XFree(xvi);
     }
 
-    return visualId;
-}
-
-void systray::setIconSize(QSize icosize)
-{
-    iconsize = icosize;
-    unsigned long size = ulong(qMin(iconsize.width(), iconsize.height()));
-    XChangeProperty(mDisplay, mTrayId, Xcbutills::atom("_NET_SYSTEM_TRAY_ICON_SIZE"), XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&size, 1);
-}
-
-TrayIcon* systray::findIcon(Window id)
-{
-    for(TrayIcon* icon : qAsConst(mIcons))
-    {
-        if (icon->iconId() == id || icon->windowId() == id)
-            return icon;
-    }
-    return nullptr;
-}
-
-void systray::clientMessageEvent(xcb_generic_event_t *e)
-{
-    unsigned long opcode;
-    unsigned long message_type;
-    Window id;
-    xcb_client_message_event_t* event = reinterpret_cast<xcb_client_message_event_t*>(e);
-    uint32_t* data32 = event->data.data32;
-    message_type = event->type;
-    opcode = data32[1];
-    if(message_type != _NET_SYSTEM_TRAY_OPCODE)
-        return;
-
-    switch (opcode)
-    {
-        case SYSTEM_TRAY_REQUEST_DOCK:
-            id = data32[2];
-            if (id)
-                addIcon(id);
-            break;
-
-        case SYSTEM_TRAY_BEGIN_MESSAGE:
-        case SYSTEM_TRAY_CANCEL_MESSAGE:
-            qDebug() << "we don't show balloon messages.";
-            break;
-
-        default:
-//            if (opcode == xfitMan().atom("_NET_SYSTEM_TRAY_MESSAGE_DATA"))
-//                qDebug() << "message from dockapp:" << e->data.b;
-//            else
-//                qDebug() << "SYSTEM_TRAY : unknown message type" << opcode;
-            break;
-    }
+    xcb_change_property(c,
+                        XCB_PROP_MODE_REPLACE,
+                        tSelectionOwner->ownerWindow(),
+                        Xcbutills::atom("_NET_SYSTEM_TRAY_VISUAL"),
+                        XCB_ATOM_VISUALID,
+                        32,
+                        1,
+                        &trayVisual);
 }
