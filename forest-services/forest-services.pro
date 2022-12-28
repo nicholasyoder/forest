@@ -10,6 +10,11 @@ CONFIG += c++11 \
             plugin
 
 LIBS += -lpolkit-qt5-agent-1 -lQt5Xdg
+
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
+INCLUDEPATH += /usr/include/KF5/KWindowSystem
+DEPENDPATH += /usr/include/KF5/KWindowSystem
+
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the

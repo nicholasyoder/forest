@@ -22,6 +22,8 @@
 
 #include "button.h"
 
+#include <KWindowInfo>
+
 button::button(xcb_window_t window, QIcon icon, QString type, QString text){
     bttype = type;
     bttext = text;
@@ -114,6 +116,15 @@ void button::mouseMoveEvent(QMouseEvent *event){
     if (mousepressed){
         if ((event->pos() - startdragpos).manhattanLength() > 20){
             demaximizewindow();
+
+            //Move window so top of window (title bar) is on screen
+            KWindowInfo info(btwindow, NET::WMGeometry);
+            QRect screengeo = qApp->primaryScreen()->geometry();
+            QRect windowgeo = info.geometry();
+            int x = (windowgeo.width() > screengeo.width()) ? 50 : screengeo.width()/2 - windowgeo.width()/2;
+            int y = (windowgeo.height() > screengeo.height()) ? 50 : screengeo.height()/2 - windowgeo.height()/2;
+            Xcbutills::moveWindow(btwindow, x, y);
+
             mousepressed = false;
         }
     }
@@ -121,7 +132,9 @@ void button::mouseMoveEvent(QMouseEvent *event){
 
 void button::updatedata(){ //get rid of this somehow...
     if (this->property("buttontype") != "Icon"){
-        QString newtext = Xcbutills::getWindowTitle(btwindow);
+        KWindowInfo info(btwindow, NET::WMVisibleName | NET::WMName);
+        QString newtext = info.visibleName().isEmpty() ? info.name() : info.visibleName();
+
         if (bttext != newtext){
             bttext = newtext;
             setText(bttext);

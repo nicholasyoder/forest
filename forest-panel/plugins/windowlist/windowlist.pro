@@ -6,6 +6,11 @@ DEFINES += PLUG_LIBRARY
 DESTDIR = ../../../usr/lib/forest/panel
 INCLUDEPATH += ../../library
 INCLUDEPATH += ../../../library
+
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
+INCLUDEPATH += /usr/include/KF5/KWindowSystem
+DEPENDPATH += /usr/include/KF5/KWindowSystem
+
 CONFIG += c++11 \
             plugin
 
@@ -27,6 +32,7 @@ SOURCES += \
     button.cpp \
     imagepopup.cpp \
     settingswidget.cpp \
+    windowbutton.cpp \
     windowlist.cpp \
     ../../../library/xcbutills/xcbutills.cpp
 
@@ -35,6 +41,7 @@ HEADERS += \
     closebutton.h \
     imagepopup.h \
     settingswidget.h \
+    windowbutton.h \
     windowlist.h \
     ../../../library/xcbutills/xcbutills.h \
     ../../library/panelbutton.h \

@@ -21,6 +21,7 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "xcbutills.h"
+#include <KWindowSystem>
 
 xcb_connection_t* Xcbutills::xcbconnection = QX11Info::connection();
 
@@ -61,7 +62,7 @@ bool Xcbutills::isWindow4Taskbar(xcb_window_t window){
 
 QString Xcbutills::getWindowTitle(xcb_window_t window){
     //TODO: try _NET_WM_VISIBLE_NAME, _NET_WM_NAME, WM_NAME before returning empty
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 0, 100000);
+    /*xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 0, 100000);
 
     QString s = "unknown";
     const QByteArray str = get_string_reply(xcbconnection, cookie, XCB_ATOM_STRING);
@@ -70,7 +71,10 @@ QString Xcbutills::getWindowTitle(xcb_window_t window){
     //else
     //qDebug() << "error - can't get WM_NAME";
 
-    return s;
+    return s;*/
+    KWindowInfo info(window, NET::WMVisibleName | NET::WMName);
+    QString title = info.visibleName().isEmpty() ? info.name() : info.visibleName();
+    return title;
 }
 
 QIcon Xcbutills::getWindowIcon(xcb_window_t window)
@@ -287,7 +291,10 @@ void Xcbutills::resizeWindow(xcb_window_t window, int w, int h)
 
 void Xcbutills::moveWindow(xcb_window_t window, int x, int y)
 {
-    qDebug() << window << x << y;
+    uint32_t configVals[2] = {0, 0};
+    configVals[0] = static_cast<uint32_t>(x);
+    configVals[1] = static_cast<uint32_t>(y);
+    xcb_configure_window(xcbconnection, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, configVals);
 }
 
 void Xcbutills::setCurrentDesktop(int desknum)

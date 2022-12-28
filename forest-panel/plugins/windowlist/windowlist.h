@@ -31,7 +31,11 @@
 #include <QtDBus>
 #include <QGenericPlugin>
 
+#include <KWindowSystem>
+
 #include "button.h"
+#include "windowbutton.h"
+
 #include "imagepopup.h"
 #include "settingswidget.h"
 #include "panelpluginterface.h"
@@ -66,16 +70,24 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
 
 private slots:
-    void updatelist();
+    //void updatelist();
     void loadsettings();
     void showsettingswidget();
+
+    bool acceptWindow(WId window) const;
+
+    void onWindowAdded(WId window);
+    void onWindowRemoved(WId window);
+    void onWindowChanged(WId window, NET::Properties prop, NET::Properties2 prop2);
+    void onDesktopChanged(int desktop);
 
 private:
     QWidget *stretchwidget = new QWidget;
     QHBoxLayout *mainlayout = new QHBoxLayout();
     QList<xcb_window_t> oldwindows;
-    QMap<unsigned long, button*> button_list;
+    QMap<unsigned long, windowbutton*> button_list;
 
+    WId active_window = 0;
     int currentdesk = 0;
     int olddesk = 0;
 
@@ -86,6 +98,9 @@ private:
     imagepopup *ipopup = nullptr;
 
     settingswidget *swidget = new settingswidget;
+
+    //QHash<int, QList<WId>> windowHash;
+
 };
 
 #endif // WINDOWLIST_H

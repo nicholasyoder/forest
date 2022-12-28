@@ -3,6 +3,10 @@ QT       += core gui widgets x11extras
 TEMPLATE = lib
 CONFIG += staticlib
 
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
+INCLUDEPATH += /usr/include/KF5/KWindowSystem
+DEPENDPATH += /usr/include/KF5/KWindowSystem
+
 # You can also make your code fail to compile if you use deprecated APIs.
 # In order to do so, uncomment the following line.
 # You can also select to disable deprecated APIs only up to a certain version of Qt.
