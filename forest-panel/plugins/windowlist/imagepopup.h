@@ -3,9 +3,10 @@
 
 #include <QLabel>
 #include <QGridLayout>
+#include <QTimer>
 
 #include "popup.h"
-#include "button.h"
+#include "windowbutton.h"
 #include "closebutton.h"
 
 #include "xcbutills/xcbutills.h"
@@ -19,7 +20,7 @@ public:
 signals:
 
 public slots:
-    void btmouseEnter(button *bt);
+    void btmouseEnter(windowbutton *bt);
     void btmouseLeave();
     void btclicked();
 
@@ -28,12 +29,12 @@ private slots:
     void tryclosepopup();
     void closepopup();
     void deleteopenptimer();
-    void closewindow(){if(currentbt){ Xcbutills::closeWindow(currentbt->xcbwindow()); closepopup();}}
-    void raisewindow(){if(currentbt){ Xcbutills::raiseWindow(currentbt->xcbwindow()); closepopup();}}
+    void closewindow(){if(currentbt){ Xcbutills::closeWindow(currentbt->windowId()); closepopup();}}
+    void raisewindow(){if(currentbt){ Xcbutills::raiseWindow(currentbt->windowId()); closepopup();}}
     //void resizepbox(){pbox->resize(pbox->sizeHint()); pbox->positionOnLauncher();}
 
 private:
-    button *currentbt = nullptr;
+    windowbutton *currentbt = nullptr;
     bool open = false;
 
     QTimer *openptimer = nullptr;

@@ -11,4 +11,5 @@ SUBDIRS += \
     windowlist \
     quicklaunch \
     systray \
+    systray-sni \
     deskswitch

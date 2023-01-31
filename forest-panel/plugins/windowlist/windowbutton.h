@@ -17,8 +17,15 @@ public:
     int windowDesktop(){return window_desktop;}
 
 signals:
+    void moved(windowbutton *wbt, bool left);
+
+    void mouseEnter(windowbutton *wbt);
+    void mouseLeave(windowbutton *wbt);
 
 private slots:
+    void handleEnterEvent(){emit mouseEnter(this);}
+    void handleLeaveEvent(){emit mouseLeave(this);}
+
     void raise_w();
     void maximize_w();
     void minimize_w();
@@ -26,11 +33,17 @@ private slots:
     void demaximize_w();
 
 protected:
+    void mousePressEvent(QMouseEvent *event);
+    void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
 
 private:
     ulong window_id;
     int window_desktop;
+
+    bool dragActive = false;
+    bool allowReleaseAction = true;
+    QPoint dragPos;
 
     popupmenu *pmenu = nullptr;
 };

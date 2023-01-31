@@ -23,7 +23,7 @@ imagepopup::imagepopup(QWidget *parentw)
     connect(pbox, &popup::mousereleased, this, &imagepopup::raisewindow);
 }
 
-void imagepopup::btmouseEnter(button *bt)
+void imagepopup::btmouseEnter(windowbutton *bt)
 {
     currentbt = bt;
 
@@ -37,7 +37,7 @@ void imagepopup::btmouseEnter(button *bt)
         openptimer->start(500);
     }
     else {
-        QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->xcbwindow())).scaledToHeight(100, Qt::SmoothTransformation);
+        QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->windowId())).scaledToHeight(100, Qt::SmoothTransformation);
 
         scrshotlabel->setPixmap(QPixmap());
         pbox->setMinimumSize(0,0);
@@ -71,7 +71,7 @@ void imagepopup::showpopup()
 {
     if (!currentbt) return;
 
-    QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->xcbwindow())).scaledToHeight(100, Qt::SmoothTransformation);
+    QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->windowId())).scaledToHeight(100, Qt::SmoothTransformation);
 
     scrshotlabel->resize(pix.size());
     scrshotlabel->setPixmap(pix);

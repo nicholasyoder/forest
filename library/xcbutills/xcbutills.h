@@ -95,6 +95,9 @@ public:
 
     static void moveWindow(xcb_window_t window, int x, int y);
 
+    //Move window so top of window (title bar) is on screen
+    static void fitWindowOnScreen(xcb_window_t window);
+
     static void setCurrentDesktop(int desknum);
 
     //not sure what this actually does -- setPartialStrut seems to be what should be used

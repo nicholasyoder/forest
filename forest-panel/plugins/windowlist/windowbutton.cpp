@@ -22,10 +22,44 @@ windowbutton::windowbutton(ulong windowid, int desktop, QIcon icon, QString text
     pmenuitem *item5 = new pmenuitem("Close", QIcon::fromTheme("application-exit"));
     connect(item5, &pmenuitem::clicked, this, &windowbutton::close_w);
     pmenu->additem(item5);
+
+    connect(this, &windowbutton::enterevent, this, &windowbutton::handleEnterEvent);
+    connect(this, &windowbutton::leaveevent, this, &windowbutton::handleLeaveEvent);
+}
+
+void windowbutton::mousePressEvent(QMouseEvent *event){
+    if (event->button() == Qt::LeftButton){
+        dragActive = true;
+        dragPos = event->pos();
+    }
+}
+
+void windowbutton::mouseMoveEvent(QMouseEvent *event){
+    if (dragActive){
+        if(event->pos().y() < 0){
+            Xcbutills::fitWindowOnScreen(window_id);
+            dragActive = false;
+            allowReleaseAction = false;
+        }
+        else if(event->pos().x() < -5){
+            emit moved(this, true);
+            allowReleaseAction = false;
+        }
+        else if(event->pos().x() > this->width() + 5){
+            emit moved(this, false);
+            allowReleaseAction = false;
+        }
+    }
 }
 
 void windowbutton::mouseReleaseEvent(QMouseEvent *event){
     panelbutton::mouseReleaseEvent(event);
+    dragActive = false;
+
+    if(!allowReleaseAction){
+        allowReleaseAction = true;
+        return;
+    }
 
     if (event->button() == Qt::LeftButton){
         raise_w();

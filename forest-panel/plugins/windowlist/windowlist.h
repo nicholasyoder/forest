@@ -33,10 +33,9 @@
 
 #include <KWindowSystem>
 
-#include "button.h"
 #include "windowbutton.h"
 
-#include "imagepopup.h"
+//#include "imagepopup.h"
 #include "settingswidget.h"
 #include "panelpluginterface.h"
 #include "xcbutills/xcbutills.h"
@@ -54,7 +53,7 @@ public:
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
     void closePlug(){ close(); deleteLater();}
-    void XcbEventFilter(xcb_generic_event_t* event);
+    void XcbEventFilter(xcb_generic_event_t*){}
     QHash<QString, QString> getpluginfo();
     //end plugin interface
 
@@ -70,7 +69,6 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
 
 private slots:
-    //void updatelist();
     void loadsettings();
     void showsettingswidget();
 
@@ -80,6 +78,12 @@ private slots:
     void onWindowRemoved(WId window);
     void onWindowChanged(WId window, NET::Properties prop, NET::Properties2 prop2);
     void onDesktopChanged(int desktop);
+
+    void onButtonMoved(windowbutton *wbt, bool left);
+    void onButtonEnter(windowbutton *wbt);
+    void onButtonLeave(windowbutton *);
+
+    void previewWindow();
 
 private:
     QWidget *stretchwidget = new QWidget;
@@ -95,11 +99,9 @@ private:
     int maxbtsize;
 
     popupmenu *pmenu = nullptr;
-    imagepopup *ipopup = nullptr;
+    //imagepopup *ipopup = nullptr;
 
     settingswidget *swidget = new settingswidget;
-
-    //QHash<int, QList<WId>> windowHash;
 
 };
 

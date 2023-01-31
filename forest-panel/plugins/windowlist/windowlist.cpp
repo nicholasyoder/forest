@@ -51,18 +51,11 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     connect(item, &pmenuitem::clicked, this, &windowlist::showsettingswidget);
     pmenu->additem(item);
 
-    ipopup = new imagepopup(this);
+    //ipopup = new imagepopup(this);
 
     loadsettings();
 
     currentdesk = Xcbutills::getCurrentDesktop();
-    //updatelist();
-
-    //this updates the text on the button (for like when you change directories in a file manager & the window title changes too.)
-    //there should be a better way to do this instead of running a timer all the time
-    //QTimer *t = new QTimer;
-    //connect(t, SIGNAL(timeout()), this, SIGNAL(updatebuttondata()));
-    //t->start(800);
 
     connect(KWindowSystem::self(), &KWindowSystem::windowAdded, this, &windowlist::onWindowAdded);
     connect(KWindowSystem::self(), &KWindowSystem::windowRemoved, this, &windowlist::onWindowRemoved);
@@ -74,86 +67,15 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 QHash<QString, QString> windowlist::getpluginfo(){
     QHash<QString, QString> info;
     info["name"] = "Window List";
-    info["needsXcbEvents"] = "true";
     info["stretch"] = "true";
     return info;
 }
 
-//void windowlist::updatelist(){
-/*    QList<xcb_window_t> x_client_list = Xcbutills::getClientList();
-
-    if (x_client_list != oldwindows || currentdesk != olddesk){
-        mainlayout->removeWidget(stretchwidget);
-
-        QList<xcb_window_t> desk_windows;
-        foreach (xcb_window_t window, x_client_list) {
-            if (Xcbutills::getWindowDesktop(window) == currentdesk){
-                desk_windows.append(window);
-
-                if (!oldwindows.contains(window)){
-
-                    KWindowInfo info(window, NET::WMVisibleName | NET::WMName);
-                    QString title = info.visibleName().isEmpty() ? info.name() : info.visibleName();
-
-                    button *bt = new button(window, Xcbutills::getWindowIcon(window), bttype, title);
-                    connect(this, &windowlist::changehighlight, bt, &button::sethighlight);
-                    connect(this, &windowlist::updatebuttondata, bt, &button::updatedata);
-                    //connect(bt, &button::mouseEnter, ipopup, &imagepopup::btmouseEnter);
-                    //connect(bt, &button::mouseLeave, ipopup, &imagepopup::btmouseLeave);
-                    //connect(bt, &button::clicked, ipopup, &imagepopup::btclicked);
-
-                    bt->setMaximumWidth(maxbtsize);
-                    mainlayout->addWidget(bt, 1);
-                    button_list[window] = bt;
-                }
-            }
-        }
-
-        foreach (xcb_window_t window, oldwindows) {
-            if (!desk_windows.contains(window)) {
-                mainlayout->removeWidget(button_list[window]);
-                button_list[window]->close();
-                delete button_list[window];
-            }
-        }
-
-        mainlayout->addWidget(stretchwidget, 0);
-        oldwindows = desk_windows;
-        olddesk = currentdesk;
-    }*/
-//}
-
-//process events from X11 i.e. active window change, active desktop change
-//called from the plugin host
-void windowlist::XcbEventFilter(xcb_generic_event_t* event){
-/*    if (event->response_type == XCB_PROPERTY_NOTIFY){
-        xcb_client_message_event_t *message = reinterpret_cast<xcb_client_message_event_t *>(event);
-
-        if (message->type == Xcbutills::atom("_NET_CLIENT_LIST")){
-            updatelist();
-        }
-        if (message->type == Xcbutills::atom("_NET_ACTIVE_WINDOW")){
-            emit changehighlight(Xcbutills::getActiveWindow());
-        }
-        if (message->type == Xcbutills::atom("_NET_CURRENT_DESKTOP")){
-            int newcurrentdesk = Xcbutills::getCurrentDesktop();
-            if (newcurrentdesk != currentdesk){
-                currentdesk = newcurrentdesk;
-                updatelist();
-            }
-        }
-    }*/
-}
-
 void windowlist::reloadsettings(){
     loadsettings();
-    /*foreach (unsigned long key, button_list.keys()) {
-        button *bt = button_list[key];
-        if (bt){ bt->close(); bt->deleteLater(); }
-    }*/
-    //button_list.clear();
-    //oldwindows.clear();
-    //updatelist();
+    foreach (windowbutton *wbt, button_list) {
+        wbt->setMaximumWidth(maxbtsize);
+    }
 }
 
 void windowlist::mouseReleaseEvent(QMouseEvent *event){
@@ -165,7 +87,7 @@ void windowlist::loadsettings(){
     QSettings settings("Forest", "Window List");
     settings.sync();
     bttype = settings.value("buttontype", "twopart").toString();
-    maxbtsize = settings.value("maxbuttonsize", 150).toInt();
+    maxbtsize = settings.value("maxbuttonsize", 170).toInt();
 }
 
 void windowlist::showsettingswidget(){
@@ -218,6 +140,9 @@ void windowlist::onWindowAdded(WId window){
 
     if(!button_list.contains(window)){
         windowbutton *wbt = new windowbutton(window, desktop, Xcbutills::getWindowIcon(window), Xcbutills::getWindowTitle(window));
+        connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
+        //connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
+        //connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
         wbt->setMaximumWidth(maxbtsize);
         mainlayout->addWidget(wbt, 1);
         button_list[window] = wbt;
@@ -275,5 +200,22 @@ void windowlist::onDesktopChanged(int desktop){
     currentdesk = desktop;
     foreach(windowbutton *wbt, button_list){
         wbt->setHidden(wbt->windowDesktop() != currentdesk);
+    }
+}
+
+void windowlist::onButtonMoved(windowbutton *wbt, bool left){
+    int index = mainlayout->indexOf(wbt);
+
+    if (left){
+        if (index != 0){
+            QLayoutItem *item = mainlayout->takeAt(index);
+            mainlayout->insertWidget(index-1, item->widget(), 1);
+        }
+    }
+    else{
+        if (index != mainlayout->count() - 1){
+            QLayoutItem *item = mainlayout->takeAt(index);
+            mainlayout->insertWidget(index+1, item->widget(), 1);
+        }
     }
 }

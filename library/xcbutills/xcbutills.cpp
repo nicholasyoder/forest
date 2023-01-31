@@ -23,6 +23,8 @@
 #include "xcbutills.h"
 #include <KWindowSystem>
 
+#include "xcb/xcb_image.h"
+
 xcb_connection_t* Xcbutills::xcbconnection = QX11Info::connection();
 
 xcb_atom_t Xcbutills::atom(QString name){
@@ -126,13 +128,28 @@ QImage Xcbutills::getWindowImage(xcb_window_t window)
 {
     const xcb_get_geometry_cookie_t geoCookie = xcb_get_geometry_unchecked(xcbconnection,  window);
     xcb_get_geometry_reply_t* geo(xcb_get_geometry_reply(xcbconnection, geoCookie, nullptr));
-    if (!geo)
-    {
+    if (!geo){
         return QImage();
     }
 
-    const xcb_get_image_cookie_t imageCookie = xcb_get_image_unchecked(xcbconnection, XCB_IMAGE_FORMAT_Z_PIXMAP, window, 0, 0, geo->width, geo->height, uint32_t(~0));
-    xcb_get_image_reply_t* xImage(xcb_get_image_reply(xcbconnection, imageCookie, nullptr));
+
+    //xcb_connection_t *con = xcb_connect(nullptr, nullptr);
+
+    //xcb_map_window(xcbconnection, window);
+    //xcb_clear_area(xcbconnection, 1, window, 0, 0, geo->width, geo->height);
+    //xcb_flush(xcbconnection);
+
+
+    xcb_image_t *image = xcb_image_get(xcbconnection, window, 0, 0, geo->width, geo->height, 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
+
+    if (image) {
+        return QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
+    } else {
+        return QImage();
+    }
+
+    /*const xcb_get_image_cookie_t imageCookie = xcb_get_image_unchecked(con, XCB_IMAGE_FORMAT_Z_PIXMAP, window, 0, 0, geo->width, geo->height, uint32_t(~0));
+    xcb_get_image_reply_t* xImage(xcb_get_image_reply(con, imageCookie, nullptr));
     if (!xImage) { // for some unknown reason, xcb_get_image failed. try another less efficient method.
         qDebug() << "Xcbutils: falling back to screen->grabWindow";
         xcb_clear_area(xcbconnection, 1, window, 0, 0, geo->width, geo->height);
@@ -172,7 +189,7 @@ QImage Xcbutills::getWindowImage(xcb_window_t window)
         image.setColor(0, QColor(Qt::white).rgb());
         image.setColor(1, QColor(Qt::black).rgb());
     }
-    return image;
+    return image;*/
 }
 
 int Xcbutills::getNumDesktops()
@@ -295,6 +312,16 @@ void Xcbutills::moveWindow(xcb_window_t window, int x, int y)
     configVals[0] = static_cast<uint32_t>(x);
     configVals[1] = static_cast<uint32_t>(y);
     xcb_configure_window(xcbconnection, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, configVals);
+}
+
+void Xcbutills::fitWindowOnScreen(xcb_window_t window){
+    demaximizeWindow(window);
+    KWindowInfo info(window, NET::WMGeometry);
+    QRect screengeo = qApp->primaryScreen()->geometry();
+    QRect windowgeo = info.geometry();
+    int x = (windowgeo.width() > screengeo.width()) ? 50 : screengeo.width()/2 - windowgeo.width()/2;
+    int y = (windowgeo.height() > screengeo.height()) ? 50 : screengeo.height()/2 - windowgeo.height()/2;
+    moveWindow(window, x, y);
 }
 
 void Xcbutills::setCurrentDesktop(int desknum)

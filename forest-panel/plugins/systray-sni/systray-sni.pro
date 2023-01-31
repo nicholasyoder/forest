@@ -1,6 +1,6 @@
 QT       += core gui dbus widgets x11extras
 
-TARGET = systray
+TARGET = systray-sni
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
@@ -8,10 +8,11 @@ DESTDIR = ../../../usr/lib/forest/panel
 
 CONFIG += plugin
 
-LIBS += $(SUBLIBS) -lXrender -lxcb-composite
+LIBS += $(SUBLIBS) -lxcb-composite -lxcb-image -lxcb-damage -lxcb-shape
 
 INCLUDEPATH = ../../library
 INCLUDEPATH += ../../../library
+INCLUDEPATH += ../../../library/xcbutills
 
 LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
 INCLUDEPATH += /usr/include/KF5/KWindowSystem
@@ -53,3 +54,5 @@ INSTALLS += target
 #DEPENDPATH += $$PWD/../../../library/xcbutills
 
 #unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a
+
+

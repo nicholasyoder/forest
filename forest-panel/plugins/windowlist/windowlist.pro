@@ -7,6 +7,8 @@ DESTDIR = ../../../usr/lib/forest/panel
 INCLUDEPATH += ../../library
 INCLUDEPATH += ../../../library
 
+LIBS += -lxcb-image
+
 LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
 INCLUDEPATH += /usr/include/KF5/KWindowSystem
 DEPENDPATH += /usr/include/KF5/KWindowSystem
@@ -29,7 +31,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    button.cpp \
     imagepopup.cpp \
     settingswidget.cpp \
     windowbutton.cpp \
@@ -37,7 +38,6 @@ SOURCES += \
     ../../../library/xcbutills/xcbutills.cpp
 
 HEADERS += \
-    button.h \
     closebutton.h \
     imagepopup.h \
     settingswidget.h \
@@ -46,7 +46,6 @@ HEADERS += \
     ../../../library/xcbutills/xcbutills.h \
     ../../library/panelbutton.h \
     ../../library/popup.h \
-    ../../library/popuprender.h \
     ../../library/popupmenu.h
 
 # Default rules for deployment.
