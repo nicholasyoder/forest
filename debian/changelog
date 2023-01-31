@@ -1,3 +1,12 @@
+forest (0.7.7-1) unstable; urgency=medium
+
+  * Started using KWindowSystem for some stuff
+  * Allow window reordering on the taskbar
+  * Built SNI systemtray but left the old one in as an option
+
+ -- Nicholas <nicholas@compassfoundation.io>  Mon, 30 Jan 2023 17:10:00 -0000
+ 
+ 
 forest (0.7.6-1) unstable; urgency=medium
 
   * Fixed mainmenu name
