@@ -45,6 +45,12 @@ public:
 
 private slots:
     void notifyslot(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
-                const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout);
+                const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout, uint id);
+
+    void closeslot(uint id);
+
+private:
+    QHash<uint, notifypopup*> popuphash;
+
 };
 #endif // NOTIFY_H

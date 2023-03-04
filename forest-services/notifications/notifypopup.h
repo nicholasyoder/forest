@@ -43,11 +43,17 @@ class notifypopup : public QWidget
     Q_OBJECT
 
 public:
-    notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout);
+    notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id);
+
+signals:
+    void readyToClose(uint);
 
 private slots:
     QIcon geticon(QString icon);
+    void closepopup(){ emit readyToClose(popupid); }
 
+private:
+    uint popupid;
 };
 
 

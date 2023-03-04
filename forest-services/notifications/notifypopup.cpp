@@ -22,7 +22,7 @@
 
 #include "notifypopup.h"
 
-notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout)
+notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id)
 {
     Qt::WindowFlags flags;
     flags |= Qt::WindowStaysOnTopHint;
@@ -70,12 +70,14 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     vlayout->addWidget(panelQFrame);
 
     QRect screengeo = qApp->primaryScreen()->availableGeometry();
-    this->move(screengeo.width() - this->sizeHint().width(), screengeo.height() - this->sizeHint().height());
+    move(screengeo.width() - sizeHint().width(), screengeo.height() - sizeHint().height());
+
+    popupid = id;
 
     if (timeout > 0 && timeout < 3000) timeout = 3000;
-    else timeout = 8000;
+    else if(timeout > 8000) timeout = 8000;
 
-    QTimer::singleShot(timeout, this, SLOT(close()));
+    QTimer::singleShot(timeout, this, SLOT(closepopup()));
 }
 
 QIcon notifypopup::geticon(QString icon){
