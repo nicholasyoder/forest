@@ -1,5 +1,5 @@
 [Desktop Entry]
 Name=Power
-Icon=/usr/share/forest/pics/power.png
+Icon=system-shutdown
 Type=Application
 Exec=/usr/bin/forest-logout

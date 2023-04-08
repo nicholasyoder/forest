@@ -36,6 +36,8 @@
 #include <QStyleOptionButton>
 
 #include <qt5xdg/XdgIcon>
+#include "../../library/futils/futils.h"
+#include "QApplication"
 
 class panelbutton : public QFrame
 {
@@ -45,34 +47,34 @@ public:
     panelbutton(){ setObjectName("panelButton"); setProperty("buttontype", "Custom");}
 
     void setupIconButton(QIcon icon, int customiconsize = 0){
+        setProperty("buttontype", "Icon");
         setIcon(icon);
         setupiconsize(customiconsize);
-        setProperty("buttontype", "Icon");
     }
 
     void setupIconButton(QString icon, int customiconsize = 0){
+        setProperty("buttontype", "Icon");
         setIcon(geticon(icon));
         setupiconsize(customiconsize);
-        setProperty("buttontype", "Icon");
     }
 
     void setupTextButton(QString text){
-        setText(text);
         setProperty("buttontype", "Text");
+        setText(text);
     }
 
     void setupIconAndTextButton(QString text, QString icon, int customiconsize = 0){
+        setProperty("buttontype", "IconAndText");
         setText(text);
         setIcon(geticon(icon));
         setupiconsize(customiconsize);
-        setProperty("buttontype", "IconAndText");
     }
 
     void setupIconAndTextButton(QString text, QIcon icon, int customiconsize = 0){
+        setProperty("buttontype", "IconAndText");
         setText(text);
         setIcon(icon);
         setupiconsize(customiconsize);
-        setProperty("buttontype", "IconAndText");
     }
 
 
@@ -99,10 +101,16 @@ public:
     }
 
     void setupiconsize(int customiconsize){
-        int iconsize;
-        if (customiconsize != 0){ iconsize = customiconsize;}
-        else{ iconsize = 22;}
-        setIconSize(QSize(iconsize, iconsize));
+        qDebug() << customiconsize;
+        QSize iconsize;
+        if (customiconsize != 0){ iconsize = QSize(customiconsize, customiconsize);}
+        else{
+            QString type = this->property("buttontype").toString();
+            qDebug() << type;
+            iconsize = futils::get_iconsize_stylesheet("#"+objectName()+"\\[buttontype=\""+type+"\"\\]", qApp->styleSheet());
+        }
+        qDebug() << iconsize;
+        setIconSize(iconsize);
     }
 
     QString text(){return bttext;}

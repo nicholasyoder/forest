@@ -22,6 +22,9 @@
 
 #include "menuitem.h"
 
+#include <QDebug>
+#include "futils/futils.h"
+
 menuitem::menuitem(QUuid id, QIcon icon, QString text){
     itemID = id;
     itemIcon = icon;
@@ -57,7 +60,7 @@ void menuitem::paintEvent(QPaintEvent *){
 
     option.icon = itemIcon;
     option.text = itemText;
-    option.iconSize = QSize(16,16);
+    option.iconSize = futils::get_iconsize_stylesheet("#popupMenuItem", qApp->styleSheet());
 
     QPainter painter(this);
     style()->drawControl(QStyle::CE_PushButton, &option, &painter, this);

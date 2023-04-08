@@ -14,36 +14,38 @@
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0, 0%), stop:0.15 rgba(100,100,100, 80%), stop:0.85 rgba(100,100,100, 80%), stop:1 rgba(0,0,0, 0%));
 }
 
-#panelButton { 
+#panelButton {
     border: 1px solid transparent;
     border-radius: 3px; 
     color: white;
     height: auto;
-} 
+}
 
-#panelButton[buttontype="Custom"] { 
+#panelButton[buttontype="Custom"] {
     text-align: center; 
     padding: 2px;
-} 
+}
 
-#panelButton[buttontype="Icon"] { 
+#panelButton[buttontype="Icon"] {
     text-align: center; 
     min-width: 28px;
-} 
+    icon-size: 22px;
+}
 
-#panelButton[buttontype="Text"] { 
+#panelButton[buttontype="Text"] {
     text-align: center; 
     padding-left: 3px;
     padding-right: 3px;
     min-width: 20px;
-} 
+}
 
-#panelButton[buttontype="IconAndText"] { 
+#panelButton[buttontype="IconAndText"] {
     text-align: left;
     padding-left: 3px;
     padding-right: 3px;
     margin-right: 3px;
-} 
+    icon-size: 22px;
+}
 
 #panelButton:hover  { 
     background: rgba(50,50,50, 70%);
@@ -66,18 +68,20 @@
     background: rgba(30,30,30, 100%);
     border: 1px solid rgba(100,100,100, 40%);
     border-radius: 6px;
-    margin: 3px;
-    padding: 5px;
+    margin: 5px;
+    padding: 8px;
 }  
 
 #popupMenuItem {
-    min-height: 20px;
-    max-height: 20px;
+    min-height: 24px;
+    max-height: 24px;
     border: 1px solid rgba(0,0,0, 0%);
     border-radius: 3px; 
     text-align: left; 
-    padding: 3px; 
+    padding: 4px;
     color: white;
+    font-size: 10pt;
+    icon-size: 22px;
 } 
 
 #popupMenuItem:hover  { 
@@ -129,7 +133,7 @@
     border-bottom-left-radius: 4px;
     border-bottom-right-radius: 4px;
     padding: 5px 3px 4px 3px; 
-    margin-left: 5px;
+    margin-left: 8px;
     color: white;
 }
 
@@ -139,7 +143,8 @@
     border-bottom: none;
     border-top-left-radius: 4px;
     border-top-right-radius: 4px;
-    margin-left: 5px;
+    margin-left: 8px;
+    min-height: 500px;
 }
 
 #panelMainMenuListWidget #popupMenuItem{
@@ -148,12 +153,11 @@
 
 #panelMainMenuScrollWidget {
     background: transparent;
-    padding: 3px;
+    padding: 5px;
 }
 
-#panelMainMenuScrollWidget {
-	background: transparent;
-	padding: 3px;
+#panelMainMenuPopup {
+    min-width: 600px;
 }
 
 #notifyPopup {
@@ -162,7 +166,7 @@
     border-radius: 6px;
     margin: 3px;
     padding: 5px;
-	color: white;
+    color: white;
 }
 
 #notifyPopup QLabel{
@@ -218,6 +222,10 @@
     border-right: 1px solid rgba(60,60,60, 60%);
     border-bottom: 1px solid rgba(55,55,55, 60%);
     border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+QSlider:vertical {
+    margin: 2px;
 }
 
 QSlider::groove:vertical {

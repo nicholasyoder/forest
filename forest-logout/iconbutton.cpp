@@ -25,7 +25,7 @@
 iconbutton::iconbutton(QIcon icon, int w, int h, bool havetext, QString text)
 {
     setFocusPolicy(Qt::StrongFocus);
-    setObjectName("logout_Button");
+    //setObjectName("logout_Button");
 
     if (havetext == true)
     {

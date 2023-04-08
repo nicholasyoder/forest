@@ -117,7 +117,8 @@ void mainmenu::loadUI(){
     connect(searchBox, SIGNAL(textChanged(QString)), this, SLOT(search(QString)));
 
     pBox = new popup(mainHLayout, this, CenteredOnWidget);
-    pBox->setFixedSize(500,500);
+    pBox->setObjectName("panelMainMenuPopup");
+    //pBox->setFixedSize(500,500);
     connect(pBox, &popup::keypressed, this, &mainmenu::handleKeyPressed);
 }
 

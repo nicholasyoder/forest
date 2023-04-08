@@ -123,33 +123,35 @@ void logoutmanager::setup()
 
     QHBoxLayout *closehlayout = new QHBoxLayout;
     closehlayout->setMargin(0);
+    closehlayout->setSpacing(0);
     QLabel *titlelabel = new QLabel("Choose Action:");
     titlelabel->setObjectName("logout_TitleLabel");
     closehlayout->addWidget(titlelabel);
     closehlayout->addStretch(5);
 
     iconbutton *closebt = new iconbutton(QIcon::fromTheme("dialog-close"), 16, 16);
+    closebt->setObjectName("logout_CloseButton");
     connect(closebt, SIGNAL(clicked()), this, SLOT(cancel()));
     closehlayout->addWidget(closebt);
     basevlayout->addLayout(closehlayout);
 
-    QSize btsize(85,85);
+    //QSize btsize(90,90);
     QHBoxLayout *actionshlayout = new QHBoxLayout;
     actionshlayout->setSpacing(0);
     iconbutton *shutdownbt = new iconbutton(QIcon::fromTheme("system-shutdown"), 48, 48, true, "Shutdown");
-    shutdownbt->setFixedSize(btsize);
+    //shutdownbt->setFixedSize(btsize);
     actionshlayout->addWidget(shutdownbt);
     iconbutton *rebootbt = new iconbutton(QIcon::fromTheme("system-reboot"), 48, 48, true, "Reboot");
-    rebootbt->setFixedSize(btsize);
+    //rebootbt->setFixedSize(btsize);
     actionshlayout->addWidget(rebootbt);
     iconbutton *logoutbt = new iconbutton(QIcon::fromTheme("system-log-out"), 48, 48, true, "Logout");
-    logoutbt->setFixedSize(btsize);
+    //logoutbt->setFixedSize(btsize);
     actionshlayout->addWidget(logoutbt);
     iconbutton *suspendbt = new iconbutton(QIcon::fromTheme("system-suspend"), 48, 48, true, "Suspend");
-    suspendbt->setFixedSize(btsize);
+    //suspendbt->setFixedSize(btsize);
     actionshlayout->addWidget(suspendbt);
     iconbutton *hibernatebt = new iconbutton(QIcon::fromTheme("system-suspend-hibernate"), 48, 48, true, "Hibernate");
-    hibernatebt->setFixedSize(btsize);
+    //hibernatebt->setFixedSize(btsize);
     actionshlayout->addWidget(hibernatebt);
     basevlayout->addLayout(actionshlayout);
 

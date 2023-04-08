@@ -3,7 +3,7 @@
 #include "xcbutills/xcbutills.h"
 
 windowbutton::windowbutton(ulong windowid, int desktop, QIcon icon, QString text) : window_id(windowid), window_desktop(desktop){
-    setupIconAndTextButton(text, icon, 16);
+    setupIconAndTextButton(text, icon);
 
     pmenu = new popupmenu(this, CenteredOnWidget);
 

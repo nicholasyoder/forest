@@ -10,7 +10,8 @@ DESTDIR = ../../../usr/lib/forest/panel
 
 CONFIG += plugin
 
-INCLUDEPATH = ../../library
+INCLUDEPATH += ../../library
+INCLUDEPATH += ../../../library
 
 LIBS += -lQt5Xdg
 # The following define makes your compiler emit warnings if you use
