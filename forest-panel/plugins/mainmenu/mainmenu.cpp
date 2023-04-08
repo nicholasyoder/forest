@@ -75,6 +75,13 @@ QHash<QString, QString> mainmenu::getpluginfo(){
     return info;
 }
 
+void mainmenu::togglemenu(){
+    if(pBox->isVisible())
+        closemenu();
+    else
+        showmenu();
+}
+
 void mainmenu::showmenu(){
     allowClose = false;
     searchBox->setText("");

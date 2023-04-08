@@ -52,6 +52,7 @@ public:
     QHash<QString, QString> getpluginfo();
 
 public slots:
+    void togglemenu();
     void showmenu();
     void closemenu();
 

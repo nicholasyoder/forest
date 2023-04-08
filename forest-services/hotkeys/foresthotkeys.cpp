@@ -21,40 +21,39 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "foresthotkeys.h"
-
 #include "../library/xcbutills/xcbutills.h"
 
-foresthotkeys::foresthotkeys()
-{
+foresthotkeys::foresthotkeys(){
 }
 
-foresthotkeys::~foresthotkeys()
-{
-
+foresthotkeys::~foresthotkeys(){
 }
 
-void foresthotkeys::setup()
-{
+void foresthotkeys::setup(){
     QDBusConnection::sessionBus().registerObject("/org/forest/hotkeys", this, QDBusConnection::ExportAllSlots);
     loadhotkeys();
 }
 
-void foresthotkeys::XcbEventFilter(xcb_generic_event_t *event)
-{
+void foresthotkeys::XcbEventFilter(xcb_generic_event_t *event){
     foreach (globalhotkey *item, hotkeylist)
-    {
         item->XcbEventFilter(event);
-    }
 }
 
-void foresthotkeys::loadhotkeys()
-{
+void foresthotkeys::loadhotkeys(){
     QSettings settings("Forest","Forest");
     settings.beginGroup("hotkeys");
 
-    foreach (QString hotkey, settings.childGroups())
-    {
+    foreach (QString hotkey, settings.childGroups()){
         settings.beginGroup(hotkey);
+
+        QKeySequence kseq;
+        QString keys = settings.value("keysequence").toString();
+        if(keys == "Meta"){
+            kseq = QKeySequence(Qt::Key_Meta);
+        }
+        else{
+            kseq = QKeySequence(keys);
+        }
 
         QString action = settings.value("action").toString();
         if (action.startsWith("DBUS:")){
@@ -65,13 +64,12 @@ void foresthotkeys::loadhotkeys()
                 if (keyvalue.length() == 2) dbushash[keyvalue.first()] = keyvalue.last();
             }
 
-            globalhotkey *item = new globalhotkey(QKeySequence(settings.value("keysequence").toString()), Type_Dbus);
+            globalhotkey *item = new globalhotkey(kseq, Type_Dbus);
             item->setDbusInfo(dbushash["service"], dbushash["path"], dbushash["interface"], dbushash["method"], dbushash["bus"]);
             hotkeylist.append(item);
         }
-        else
-        {
-            globalhotkey *item= new globalhotkey(QKeySequence(settings.value("keysequence").toString()), Type_Exec);
+        else{
+            globalhotkey *item= new globalhotkey(kseq, Type_Exec);
             item->setExecCommand(action);
             hotkeylist.append(item);
         }
@@ -79,16 +77,12 @@ void foresthotkeys::loadhotkeys()
     }
 }
 
-void foresthotkeys::showdesktop()
-{
-    //XShowDesktop::showDesktopNew();
+void foresthotkeys::showdesktop(){
     Xcbutills::showDesktop();
 }
 
-void foresthotkeys::reloadhotkeys()
-{
-    while (hotkeylist.length() > 0)
-    {
+void foresthotkeys::reloadhotkeys(){
+    while (hotkeylist.length() > 0){
         globalhotkey *shcut = hotkeylist.takeAt(0);
         delete shcut;
     }

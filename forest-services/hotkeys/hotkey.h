@@ -29,7 +29,7 @@
 
 #include <xcb/xcb.h>
 
-enum SType
+enum HK_Type
 {
     Type_Exec,
     Type_Dbus
@@ -40,12 +40,8 @@ class globalhotkey : public QObject
     Q_OBJECT
 
 public:
-    globalhotkey(const QKeySequence &sequence, SType type);
+    globalhotkey(const QKeySequence &sequence, HK_Type type);
     ~globalhotkey();
-
-    //bool enabled;
-    Qt::Key key;
-    Qt::KeyboardModifiers mods;
 
     void setShortcut(const QKeySequence& shortcut);
     void unsetShortcut();
@@ -60,7 +56,7 @@ private slots:
     void  exec();
 
 private:
-    SType shtype;
+    HK_Type hotkey_type;
     QString shcommand;
     QString dbusservice;
     QString dbuspath;
@@ -68,6 +64,10 @@ private:
     QString dbusmethod;
     QString dbusbus;
 
+    xcb_keycode_t keycode;
+    quint32 modmask;
+
+    xcb_keycode_t lastkeypressed = 0;
 
     quint32 nativeKeycode(Qt::Key keycode);
     quint32 nativeModifiers(Qt::KeyboardModifiers modifiers);
