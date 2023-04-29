@@ -44,15 +44,15 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 
     QHBoxLayout *hlayout = new QHBoxLayout;
     slider = new QSlider(Qt::Vertical);
-    hlayout->addStretch(5);
+    //hlayout->addStretch(5);
     hlayout->addWidget(slider);
-    hlayout->addStretch(5);
+    //hlayout->addStretch(5);
 
     slider->setRange(0,audioengine->volumeMax(audiodevice));
     slider->setValue(volume);
     connect(slider, SIGNAL(valueChanged(int)), audiodevice, SLOT(setVolume(int)));
     popupbox = new popup(hlayout, this, CenteredOnWidget);
-    popupbox->setFixedSize(50,150);
+    //popupbox->setFixedSize(50,150);
 
     pmenu = new popupmenu(this, CenteredOnWidget);
     foreach (pmenuitem *item, itemlist)

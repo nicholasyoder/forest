@@ -25,25 +25,19 @@
 #include <QSettings>
 #include <QGenericPlugin>
 
-SensorWidget::SensorWidget()
-{
+SensorWidget::SensorWidget(){
 }
 
-void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
-{
+void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     setText(QChar(0x00B0)+QString::number(100));
 
     mDetectedChips = mSensors.getDetectedChips();
     int sensornum = 0;
-    for (unsigned int i = 0; i < mDetectedChips.size(); ++i)
-    {
+    for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
         const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
-        for (unsigned int j = 0; j < features.size(); ++j)
-        {
+        for (unsigned int j = 0; j < features.size(); ++j){
             if (features[j].getType() == SENSORS_FEATURE_TEMP)
-            {
                 sensornum++;
-            }
         }
     }
 
@@ -65,9 +59,8 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 
     pmenu = new popupmenu(pbutton, CenteredOnWidget);
     foreach (pmenuitem *item, itemlist)
-    {
         pmenu->additem(item);
-    }
+
     pmenu->addseperator();
     pmenuitem *item = new pmenuitem("Sensors Settings", QIcon::fromTheme("configure"));
     connect(item, &pmenuitem::clicked, this, &SensorWidget::showsettingswidget);
@@ -81,27 +74,22 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
     loadSettings();
 }
 
-QHash<QString, QString> SensorWidget::getpluginfo()
-{
+QHash<QString, QString> SensorWidget::getpluginfo(){
     QHash<QString, QString> info;
     info["name"] = "Sensor Monitor";
     return info;
 }
 
-void SensorWidget::paintEvent(QPaintEvent *)
-{
-    if (displaytype == "bars")
-    {
-        if (layoutdirection == QBoxLayout::TopToBottom)
-        {
+void SensorWidget::paintEvent(QPaintEvent *){
+    if (displaytype == "bars"){
+        if (layoutdirection == QBoxLayout::TopToBottom){
             int displayheight = this->width();
 
             QPainter painter1(this);
             painter1.fillRect(0, 0, displayheight, this->height(), backcolor);
 
             int y = margin;
-            foreach (int temp, temps)
-            {
+            foreach (int temp, temps){
                 double percentage = double(temp) / maxtemp;
                 double barheight = double(displayheight) * percentage;
 
@@ -116,8 +104,7 @@ void SensorWidget::paintEvent(QPaintEvent *)
                 y += barwidth + barspacing;
             }
         }
-        else
-        {
+        else{
             int displayheight = this->height();
 
             QPainter painter1(this);
@@ -141,8 +128,7 @@ void SensorWidget::paintEvent(QPaintEvent *)
             }
         }
     }
-    else
-    {
+    else{
         QPainter painter(this);
         QPen pen;
         if (cicontemp < warningtemp)
@@ -157,8 +143,7 @@ void SensorWidget::paintEvent(QPaintEvent *)
     }
 }
 
-void SensorWidget::loadSettings()
-{
+void SensorWidget::loadSettings(){
     timer->stop();
 
     QSettings settings("Forest", "Temperature Monitor");
@@ -184,16 +169,12 @@ void SensorWidget::loadSettings()
     timer->start(mTimeUpdat);
 }
 
-void SensorWidget::showsettingswidget()
-{
+void SensorWidget::showsettingswidget(){
     QStringList list;
-    for (unsigned int i = 0; i < mDetectedChips.size(); ++i)
-    {
+    for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
         const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
-        for (unsigned int j = 0; j < features.size(); ++j)
-        {
-            if (features[j].getType() == SENSORS_FEATURE_TEMP)
-            {
+        for (unsigned int j = 0; j < features.size(); ++j){
+            if (features[j].getType() == SENSORS_FEATURE_TEMP){
                 QString name= QString::fromStdString(features[j].getLabel());
                 list.append(name);
             }
@@ -204,84 +185,71 @@ void SensorWidget::showsettingswidget()
     dlg->show();
 }
 
-void SensorWidget::updateSensor()
-{
+void SensorWidget::updateSensor(){
     temps.clear();
-    popuptext = "";
+    popuptext = "<table cellspacing='0' cellpadding='3'>";
 
     int index=-1;
     double curTemp = 0;
 
-    for (unsigned int i = 0; i < mDetectedChips.size(); ++i)
-    {
+    for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
         const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
-        for (unsigned int j = 0; j < features.size(); ++j)
-        {
-            if (features[j].getType() == SENSORS_FEATURE_TEMP)
-            {
+        for (unsigned int j = 0; j < features.size(); ++j){
+            if (features[j].getType() == SENSORS_FEATURE_TEMP){
                 index++;
                 QString name= QString::fromStdString(features[j].getLabel());
-                popuptext +=name + " - - - - ";
+
+                QString border = (index != 0) ? "style='border-top: 1px solid #aaa;'" : "";
+
+                popuptext += "<tr><td "+border+">"+name+"</td><td "+border+">&nbsp;&nbsp;&nbsp;</td>";
 
                 curTemp = features[j].getValue(SENSORS_SUBFEATURE_TEMP_INPUT);
 
-                if (mFahrenheit)
-                {
-                    popuptext += QString::number(int(celsius2fahrenheit(curTemp))) + QChar(0x00B0)+"F";
-                }
-                else
-                {
-                    popuptext += QString::number(int(curTemp)) +" C"+ QChar(0x00B0);
-                }
+                popuptext += "<td "+border+">";
+                if (mFahrenheit) popuptext += QString::number(int(celsius2fahrenheit(curTemp))) + QChar(0x00B0)+"F";
+                else popuptext += QString::number(int(curTemp)) +" C"+ QChar(0x00B0);
+                popuptext += "</td>";
 
                 if (enabledbars[name] == true || enabledbars.isEmpty())
-                {
-                    temps.append(int(features[j].getValue(SENSORS_SUBFEATURE_TEMP_INPUT)));
-                }
+                    temps.append(int(curTemp));
 
-                if(mChipIndex==index)
-                {
-                    if (mFahrenheit)
-                    {
+                if(mChipIndex==index){
+                    if (mFahrenheit){
                         iconTemp = celsius2fahrenheit(curTemp);
                         cicontemp = curTemp;
                     }
-                    else
-                    {
-                        iconTemp=curTemp;
+                    else{
+                        iconTemp = curTemp;
                         cicontemp = curTemp;
                     }
                 }
 
-                popuptext += "\n";
+                popuptext += "</tr>";
             }
         }
     }
-    popuptext.chop(1);
+    popuptext += "</table>";
 
     mLabelInfo->setText(popuptext);
 
-    if (displaytype == "text")
-    {
+    if (displaytype == "text"){
         if(mFahrenheit)
             setText(QString::number(int(iconTemp)) +"F"+ QChar(0x00B0));
         else
             setText(QString::number(int(iconTemp)) +"C"+ QChar(0x00B0));
-        this->setFixedWidth(this->sizeHint().width());
+        setFixedWidth(sizeHint().width());
     }
-    else
-    {
+    else{
         setText("");
+        int size = temps.length() * (barwidth + barspacing) + margin*2 - barspacing;
         if (layoutdirection == QBoxLayout::TopToBottom)
-            this->setFixedHeight(temps.length() * (barwidth + barspacing) + margin*2 - barspacing);
+            setFixedHeight(size);
         else
-            this->setFixedWidth(temps.length() * (barwidth + barspacing) + margin*2 - barspacing);
-        this->update();
+            setFixedWidth(size);
+        update();
     }
-
 }
 
-double SensorWidget::celsius2fahrenheit(double celsius)
-{
+double SensorWidget::celsius2fahrenheit(double celsius){
     return 32 + 1.8 * celsius;
 }

@@ -23,93 +23,73 @@
 
 #include "polkitagent.h"
 
-polkitagent::polkitagent(QObject *parent) : PolkitQt1::Agent::Listener(parent), m_inProgress(false)//, m_gui(0)
-{
+polkitagent::polkitagent(QObject *parent) : PolkitQt1::Agent::Listener(parent), m_inProgress(false){
     PolkitQt1::UnixSessionSubject session(getpid());
     registerListener(session, "/org/forest/PolicyKit1/AuthenticationAgent");
 }
 
-polkitagent::~polkitagent()
-{
-    if (pkwidget)
-    {
+polkitagent::~polkitagent(){
+    if (pkwidget){
         pkwidget->blockSignals(true);
         pkwidget->deleteLater();
     }
 }
 
 
-void polkitagent::initiateAuthentication(const QString &actionId, const QString &message, const QString &iconName, const PolkitQt1::Details &details,
-                                            const QString &cookie, const PolkitQt1::Identity::List &identities, PolkitQt1::Agent::AsyncResult *result)
-{
-    if (m_inProgress)
-    {
+void polkitagent::initiateAuthentication(const QString &actionId, const QString &message, const QString &iconName,
+        const PolkitQt1::Details &details, const QString &cookie, const PolkitQt1::Identity::List &identities, PolkitQt1::Agent::AsyncResult *result){
+
+    if (m_inProgress){
         QMessageBox::information(nullptr, tr("PolicyKit Information"), "Another authentization in progress. Please try it again later");
         return;
     }
+
     m_inProgress = true;
     m_SessionIdentity.clear();
 
-    if (pkwidget)
-    {
+    if (pkwidget){
         delete pkwidget;
         pkwidget = nullptr;
     }
     pkwidget = new polkitdialog(actionId, message, iconName, details, identities);
 
-    foreach (PolkitQt1::Identity i, identities)
-    {
-        PolkitQt1::Agent::Session *session;
-        session = new PolkitQt1::Agent::Session(i, cookie, result);
-        Q_ASSERT(session);
-        m_SessionIdentity[session] = i;
-        connect(session, SIGNAL(request(QString, bool)), this, SLOT(request(QString, bool)));
-        connect(session, SIGNAL(completed(bool)), this, SLOT(completed(bool)));
-        connect(session, SIGNAL(showError(QString)), this, SLOT(showError(QString)));
-        connect(session, SIGNAL(showInfo(QString)), this, SLOT(showInfo(QString)));
-        session->initiate();
-    }
+    m_cookie = cookie;
+    m_identities = identities;
+    m_result = result;
+
+    doAuth();
 }
 
-bool polkitagent::initiateAuthenticationFinish()
-{
-    // dunno what are those for...
+bool polkitagent::initiateAuthenticationFinish(){
     m_inProgress = false;
     return true;
 }
 
-void polkitagent::cancelAuthentication()
-{
-    // dunno what are those for...
+void polkitagent::cancelAuthentication(){
     m_inProgress = false;
 }
 
-void polkitagent::request(const QString &request, bool echo)
-{
+void polkitagent::request(const QString &request, bool echo){
     PolkitQt1::Agent::Session *session = qobject_cast<PolkitQt1::Agent::Session *>(sender());
     Q_ASSERT(session);
     Q_ASSERT(pkwidget);
 
     PolkitQt1::Identity identity = m_SessionIdentity[session];
     pkwidget->setPrompt(identity, request, echo);
-    if (pkwidget->exec())
-    {
+    if (pkwidget->exec()){
         session->setResponse(pkwidget->response());
     }
-    else
-    {
+    else{
         canceled = true;
         session->cancel();
     }
 }
 
-void polkitagent::completed(bool gainedAuthorization)
-{
+void polkitagent::completed(bool gainedAuthorization){
     PolkitQt1::Agent::Session * session = qobject_cast<PolkitQt1::Agent::Session *>(sender());
     Q_ASSERT(session);
 
-    if (!gainedAuthorization && !canceled)
-    {
+    if (!gainedAuthorization && !canceled){
         QMessageBox::information(nullptr, tr("Authorization Failed"), tr("Authorization failed for some reason"));
     }
 
@@ -121,12 +101,24 @@ void polkitagent::completed(bool gainedAuthorization)
     canceled = false;
 }
 
-void polkitagent::showError(const QString &text)
-{
+void polkitagent::showError(const QString &text){
     QMessageBox::warning(nullptr, tr("PolicyKit Error"), text);
 }
 
-void polkitagent::showInfo(const QString &text)
-{
+void polkitagent::showInfo(const QString &text){
     QMessageBox::information(nullptr, tr("PolicyKit Information"), text);
+}
+
+void polkitagent::doAuth(){
+    foreach (PolkitQt1::Identity i, m_identities){
+        PolkitQt1::Agent::Session *session;
+        session = new PolkitQt1::Agent::Session(i, m_cookie, m_result);
+        Q_ASSERT(session);
+        m_SessionIdentity[session] = i;
+        connect(session, SIGNAL(request(QString, bool)), this, SLOT(request(QString, bool)));
+        connect(session, SIGNAL(completed(bool)), this, SLOT(completed(bool)));
+        connect(session, SIGNAL(showError(QString)), this, SLOT(showError(QString)));
+        connect(session, SIGNAL(showInfo(QString)), this, SLOT(showInfo(QString)));
+        session->initiate();
+    }
 }

@@ -56,11 +56,18 @@ public slots:
     void showError(const QString &text);
     void showInfo(const QString &text);
 
+private slots:
+    void doAuth();
+
 private:
     bool m_inProgress;
     bool canceled = false;
     polkitdialog * pkwidget = nullptr;
     QHash<PolkitQt1::Agent::Session*,PolkitQt1::Identity> m_SessionIdentity;
+
+    QString m_cookie;
+    PolkitQt1::Identity::List m_identities;
+    PolkitQt1::Agent::AsyncResult *m_result;
 };
 
 #endif // POLKITAGENT_H

@@ -17,10 +17,10 @@ public:
         QRegularExpressionMatch match = re.match(stylesheet);
         if (match.hasMatch()) {
             QString matched = match.captured(0);
-            qDebug() << matched;
+            //qDebug() << matched;
             QStringList items = matched.split(";");
             foreach(QString item, items){
-                qDebug() << item;
+                //qDebug() << item;
                 QStringList key_value = item.split(":");
                 if(key_value[0].contains("icon-size")){
                     QString s = key_value[1].remove("px").trimmed();
