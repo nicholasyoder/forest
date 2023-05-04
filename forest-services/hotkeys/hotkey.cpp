@@ -82,7 +82,7 @@ void globalhotkey::XcbEventFilter(xcb_generic_event_t *event){
         xcb_key_release_event_t *keyevent = (xcb_key_release_event_t*)event;
         xcb_keycode_t nativeKey = keyevent->detail;
 
-        if(nativeKey == keycode && keycode == 133 && lastkeypressed == keycode)
+        if((nativeKey == 133 || nativeKey == 134) && keycode == 133 && lastkeypressed == nativeKey)
             exec();
     }
 }
@@ -95,6 +95,7 @@ void globalhotkey::setShortcut(const QKeySequence& shortcut){
     if(key == Qt::Key_Meta){
         keycode = 133;
         modmask = XCB_MOD_MASK_ANY;
+        registerShortcut(134, modmask);
     }
     else{
         keycode = nativeKeycode(key);
@@ -105,6 +106,9 @@ void globalhotkey::setShortcut(const QKeySequence& shortcut){
 }
 
 void globalhotkey::unsetShortcut(){
+    if(keycode == 133)
+        unregisterShortcut(134, modmask);
+
     unregisterShortcut(keycode, modmask);
     keycode = nativeKeycode(Qt::Key(0));
     modmask = nativeModifiers(Qt::KeyboardModifiers());
