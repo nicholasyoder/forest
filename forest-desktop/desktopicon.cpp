@@ -10,37 +10,14 @@ desktopicon::desktopicon(QString text, QIcon ico, QString ID, QMenu *contextmenu
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->setMargin(0);
     vlayout->addSpacing(46);
-    //vlayout->addStretch(5);
-    //vlayout->setMargin(2);
-    //QHBoxLayout *labellayout = new QHBoxLayout;
-    //labellayout->setMargin(0);
-    //labellayout->addStretch(5);
-    //QWidget *w = new QWidget;
-    //shadowlabel = new elidedlabel(text);
-    //settext(text);
-    //shadowlabel->setFixedWidth(96 - (vlayout->margin()*2));
-    //shadowlabel->setFixedSize(100,30);
-    //shadowlabel->setWordWrap(true);
-    //shadowlabel->setAlignment(Qt::AlignCenter);
-    //shadowlabel->setParent(w);
-    //shadowlabel->move(1, 1);
 
     setToolTip(text);
     tlabel = new elidedlabel(text);
-    //tlabel->setFixedWidth(96 - (vlayout->margin()*2));
-    //tlabel->setWordWrap(true);
-    //tlabel->setAlignment(Qt::AlignCenter);
     tlabel->setForegroundRole(QPalette::Light);
-    //tlabel->setParent(w);
-    //w->setFixedSize(tlabel->sizeHint());
     stkwidget->addWidget(tlabel);
     stkwidget->addWidget(renametBox);
     connect(renametBox, &QLineEdit::editingFinished, this, &desktopicon::handleTextEditFinished);
-    //labellayout->addWidget(stkwidget);
-    //labellayout->addStretch(5);
-    //vlayout->addLayout(labellayout);
     vlayout->addWidget(stkwidget, 1);
-    //vlayout->addStretch(5);
     this->setLayout(vlayout);
 
     setObjectName("desktopIcon");

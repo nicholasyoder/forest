@@ -240,13 +240,10 @@ QRect desktop::getusabledesktopspace(){
 }
 
 void desktop::handleAvailableGeoChange(QRect geo){
-    if (showicons){
-        int iconmargin = 10;
-        QRect r = QRect(geo.left() + iconmargin, geo.top() + iconmargin,
-                        geo.size().width() - (geo.left()+geo.right() + iconmargin*2),
-                        geo.size().height() - (geo.top()+geo.bottom() + iconmargin*2));
+    Q_UNUSED(geo);
 
-        iwidget->setusabledesktopspace(r);
+    if (showicons){
+        iwidget->setusabledesktopspace(getusabledesktopspace());
         updateicons();
     }
 }
