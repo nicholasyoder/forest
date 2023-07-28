@@ -198,9 +198,7 @@ void SensorWidget::updateSensor(){
             if (features[j].getType() == SENSORS_FEATURE_TEMP){
                 index++;
                 QString name= QString::fromStdString(features[j].getLabel());
-
                 QString border = (index != 0) ? "style='border-top: 1px solid #aaa;'" : "";
-
                 popuptext += "<tr><td "+border+">"+name+"</td><td "+border+">&nbsp;&nbsp;&nbsp;</td>";
 
                 curTemp = features[j].getValue(SENSORS_SUBFEATURE_TEMP_INPUT);
