@@ -22,34 +22,26 @@
 
 #include "battery.h"
 
-battery::battery(QString path)
-{
+battery::battery(QString path){
     pathtobatdir = path;
-
-    this->setScaledContents(true);
-    this->setFixedWidth(10);
+    setScaledContents(true);
+    setFixedWidth(10);
 }
 
-void battery::updatedata()
-{
-    if (pathtobatdir == "")
-    {
+void battery::updatedata(){
+    if (pathtobatdir == ""){
         QPainter painter;
         QPixmap pix(15,this->sizeHint().height());
         pix.fill(Qt::transparent);
-
         qreal batheight = pix.height() - 2;
         painter.begin(&pix);
         painter.setPen(Qt::white);
         painter.drawRect(4,0,6,1);
         painter.drawRect(0,1,14, int(batheight));
-
         painter.end();
-
-        this->setPixmap(pix);
+        setPixmap(pix);
     }
-    else
-    {
+    else{
         QPainter painter;
         QPixmap pix(15,this->height());
         pix.fill(Qt::transparent);
@@ -63,52 +55,34 @@ void battery::updatedata()
         batheight = batheight - 1; // now we need the height of the space inside the battery
 
         qreal percentage = getpercentfull();
-        //qreal percentage = counter;
-
         qreal fillheight = batheight * percentage;
-
         int ifill = int(fillheight);
 
-        //qDebug() << "batheight: " << batheight << "fillheight: " << fillheight;
-
-
-
-        if (percentage < 0.15)
-        {
+        if (percentage < 0.15){
             painter.fillRect(1, 2 + int(batheight) - ifill, 13, ifill, Qt::red);
             trynotifylow();
         }
-        else
-        {
+        else{
             if (!getstatus().startsWith("Full"))
-                painter.fillRect(1, 2 + int(batheight) - ifill, 13, ifill, QColor(255,200,0));
+                painter.fillRect(1, 2 + int(batheight) - ifill, 13, ifill, QColor(230,150,0));
             else
                 painter.fillRect(1, 2 + int(batheight) - ifill, 13, ifill, QColor(0,200,0));
 
             sentnotification = false;
         }
 
-        //qDebug() << getstatus();
-
-        if (getstatus().startsWith("Charging"))
-        {
-            //qDebug() << "charging";
+        if (getstatus().startsWith("Charging")){
             qreal height = batheight + 3;
             qreal middle = height/2;
 
             QPointF topright1(12, 1);
-
             QPointF middleleft1(2, middle);
             QPointF middleright1(7,middle + 0.7);
-
-
             QPointF middleleft2(7,middle - 0.7);
             QPointF middleright2(12, middle);
-
             QPointF bottomleft(2,height);
 
             /*
-             *
              * topright:- - - - - - - - - - > /
              *                             ///
              *                          /////
@@ -120,63 +94,46 @@ void battery::updatedata()
              *                       /////
              *                      ///
              * bottomleft- - - - > /
-             *
-             * */
+             */
 
             QPolygonF polygon;
             polygon << topright1 << middleleft1 << middleright1 << topright1;
-
             QPolygonF polygon2;
             polygon << bottomleft << middleleft2 << middleright2 << bottomleft;
 
             QPainterPath myPath;
-
             myPath.addPolygon(polygon);
             myPath.addPolygon(polygon2);
-            painter.setBrush(Qt::yellow);
-
+            painter.setBrush(QColor(255,255,0));
             painter.drawPath(myPath);
         }
 
         painter.end();
 
-        this->setPixmap(pix);
-
-        /*if (counter > 0)
-        {
-            counter = counter - 0.01;
-        }
-        else
-        {
-            counter = 1;
-        }*/
+        setPixmap(pix);
     }
 }
 
-qreal battery::getpercentfull()
-{
-    QFile file(pathtobatdir + "/charge_full");
+qreal battery::getpercentfull(){
+    QString fname = (QFile::exists(pathtobatdir + "/charge_full")) ?  "charge" : "energy";
+    QFile file(pathtobatdir + "/"+fname+"_full");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return 0;
     QString scapacity = file.readLine();
     qreal capacity = scapacity.toDouble();
     file.close();
 
-
-    QFile file2(pathtobatdir + "/charge_now");
+    QFile file2(pathtobatdir + "/"+fname+"_now");
     if (!file2.open(QIODevice::ReadOnly | QIODevice::Text))
         return 0;
     QString slevel = file2.readLine();
     qreal level = slevel.toDouble();
     file2.close();
 
-    //qDebug() << capacity << level;
-
     return level / capacity;
 }
 
-QString battery::getstatus()
-{
+QString battery::getstatus(){
     QFile file(pathtobatdir + "/status");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return "";
@@ -185,33 +142,19 @@ QString battery::getstatus()
     return status;
 }
 
-void battery::trynotifylow()
-{
-    if (!sentnotification)
-    {
+void battery::trynotifylow(){
+    if (!sentnotification){
         sentnotification = true;
         notifylow();
     }
 }
 
-void battery::notifylow()
-{
-    if (QDBusConnection::sessionBus().isConnected())
-    {
+void battery::notifylow(){
+    if (QDBusConnection::sessionBus().isConnected()){
         QDBusInterface iface("org.freedesktop.Notifications", "/org/freedesktop/Notifications");
         if (iface.isValid())
-        {
-            iface.call("Notify", "Battery Monitor", uint(1234), "dialog-warning", "Battery Low", "Please connect to external power or shutdown soon", QStringList(), QVariantMap(), -1);
-        }
+            iface.call("Notify", "Battery Monitor", uint(1234), "dialog-warning", "Battery Low", "Connect to external power or shutdown soon", QStringList(), QVariantMap(), -1);
         else
-        {
             fprintf(stderr, "%s\n", qPrintable(QDBusConnection::sessionBus().lastError().message()));
-        }
-    }
-    else
-    {
-        fprintf(stderr, "Cannot connect to the D-Bus session bus.\n"
-                "To start it, run:\n"
-                "\teval `dbus-launch --auto-syntax`\n");
     }
 }
