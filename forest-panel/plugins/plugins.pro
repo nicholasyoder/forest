@@ -4,6 +4,7 @@ SUBDIRS += \
     batterymonitor \
     mainmenu \
     clock \
+    nmcontrol \
     volume \
     cpumonitor \
     memorymonitor \

@@ -101,15 +101,12 @@ public:
     }
 
     void setupiconsize(int customiconsize){
-        qDebug() << customiconsize;
         QSize iconsize;
         if (customiconsize != 0){ iconsize = QSize(customiconsize, customiconsize);}
         else{
             QString type = this->property("buttontype").toString();
-            qDebug() << type;
             iconsize = futils::get_iconsize_stylesheet("#"+objectName()+"\\[buttontype=\""+type+"\"\\]", qApp->styleSheet());
         }
-        qDebug() << iconsize;
         setIconSize(iconsize);
     }
 
