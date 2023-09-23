@@ -42,6 +42,8 @@
 #include "wallpaperwidget.h"
 #include "iconswidget.h"
 
+#include "global_settings.h"
+
 #include "../library/fpluginterface/fpluginterface.h"
 #include "../library/fmutils/fmutils.h"
 #include "../library/fstyleloader/fstyleloader.h"
@@ -64,10 +66,9 @@ public:
 
 public slots:
     Q_SCRIPTABLE void reloadwallpaper();
-    Q_SCRIPTABLE void reloadsettings(){loadsettings();}
+    Q_SCRIPTABLE void reloadsettings(){ GS::load(); }
 
 private slots:
-    void loadsettings();
     void loadwallpaperwidgets();
     void setupmenus();
     void showsettings();
@@ -100,18 +101,12 @@ private slots:
 private:
     bool ctrldown = false;
     bool shiftdown = false;
-    bool showicons = true;
     bool updatepaused = false;
-    int iconsize = 48;
-    QImage *wallpaper = new QImage();
-    ImageMode imagemode = Fill;
+
     QList <wallpaperwidget *> wallwidgetlist;
     iconswidget *iwidget;
     QSettings *settings = new QSettings("Forest", "Forest");
     QMenu *deskmenu = new QMenu;
     QMenu *iconmenu = new QMenu;
-    //QString stylesheet;
-
-
 };
 #endif // DESKTOP_H

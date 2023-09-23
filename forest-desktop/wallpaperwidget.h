@@ -8,7 +8,7 @@
 #include <QMouseEvent>
 #include <QDebug>
 
-enum ImageMode { Fill, Fit, Stretch, Tile, Center};
+#include "global_settings.h"
 
 class wallpaperwidget : public QWidget
 {
@@ -17,23 +17,23 @@ public:
     wallpaperwidget(QImage *image, ImageMode imode = Fill);
 
 public slots:
-    void setwallpaper(QImage *image){wallpaper = image; setupwallpaper();}
-    void setimagemode(ImageMode imode){imagemode = imode; setupwallpaper();}
-    void setcontextmenu(QMenu *contextmenu){cmenu = contextmenu;}
+    void setwallpaper(QImage *image){ wallpaper = image; setup_wallpaper(); }
+    void setimagemode(ImageMode imode){ imagemode = imode; setup_wallpaper(); }
+    void setcontextmenu(QMenu *contextmenu){ cmenu = contextmenu;}
 
 protected:
     void paintEvent(QPaintEvent *);
     void mouseReleaseEvent(QMouseEvent *event);
-    void resizeEvent(QResizeEvent *){setupwallpaper();}
+    void resizeEvent(QResizeEvent *){ setup_wallpaper(); }
 
 private slots:
-    void paintFill();
-    void paintFit();
-    void paintStretch();
-    void paintTile();
-    void paintCenter();
+    void do_fill();
+    void do_fit();
+    void do_stretch();
+    void do_tile();
+    void do_center();
 
-    void setupwallpaper();
+    void setup_wallpaper();
 
 private:
     QImage *wallpaper = new QImage();

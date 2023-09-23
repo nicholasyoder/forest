@@ -31,7 +31,7 @@ desktop::~desktop(){
 }
 
 void desktop::setupPlug(){
-    loadsettings();
+    GS::load();
     loadwallpaperwidgets();
     setupmenus();
 
@@ -44,7 +44,7 @@ void desktop::setupPlug(){
 
     QDBusConnection::sessionBus().registerObject("/org/forest/desktop", this, QDBusConnection::ExportScriptableSlots);
 
-    connect(qApp->primaryScreen(), &QScreen::availableGeometryChanged, this, &desktop::handleAvailableGeoChange);
+    connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &desktop::handleAvailableGeoChange);
 }
 
 QHash<QString, QString> desktop::getpluginfo(){
@@ -57,45 +57,22 @@ QHash<QString, QString> desktop::getpluginfo(){
 
 //called by dbus to load new wallpaper
 void desktop::reloadwallpaper(){
-    loadsettings();
+    GS::load();
     foreach (wallpaperwidget *wallwidget, wallwidgetlist){
-        wallwidget->setwallpaper(wallpaper);
-        wallwidget->setimagemode(imagemode);
+        wallwidget->setwallpaper(GS::WALLPAPER);
+        wallwidget->setimagemode(GS::IMAGE_MODE);
     }
-}
-
-void desktop::loadsettings(){
-    settings->sync();
-    wallpaper = new QImage(settings->value("desktop/wallpaper").toString());
-    QString imode = settings->value("desktop/imagemode", "Fill").toString();
-    if (imode == "Fill")
-        imagemode = Fill;
-    else if (imode == "Fit")
-        imagemode = Fit;
-    else if (imode == "Stretch")
-        imagemode = Stretch;
-    else if (imode == "Tile")
-        imagemode = Tile;
-    else if (imode == "Center")
-        imagemode = Center;
-
-    showicons = settings->value("desktop/showicons", true).toBool();
-    //if (showicons)
-    //{
-
-    //}
-
-    iconsize = settings->value("desktop/iconsize", 48).toInt();
 }
 
 void desktop::loadwallpaperwidgets(){
     foreach (QScreen *screen, qApp->screens()){
-        wallpaperwidget *wallwidget = new wallpaperwidget(wallpaper, imagemode);
+        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE);
         wallwidgetlist << wallwidget;
         wallwidget->setGeometry(screen->geometry());
         wallwidget->setFixedSize(screen->size());
 
-        if (screen == qApp->primaryScreen() && showicons){
+        if (screen == qApp->primaryScreen()){
+            qDebug() << "got primary screen" << screen->size() << getusabledesktopspace();
             iwidget = new iconswidget(screen->size(), getusabledesktopspace());
             QVBoxLayout *vlayout = new QVBoxLayout;
             vlayout->setMargin(0);
@@ -114,7 +91,7 @@ void desktop::loadwallpaperwidgets(){
 }
 
 void desktop::setupmenus(){
-    if (showicons){
+
         //iconmenu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
         QAction *openaction = new QAction(QIcon::fromTheme("document-open"), "Open", this);
         connect(openaction, &QAction::triggered, this, &desktop::openselected);
@@ -175,7 +152,7 @@ void desktop::setupmenus(){
         connect(opendesktopaction, &QAction::triggered, this, &desktop::opendesktopfolder);
         deskmenu->addAction(opendesktopaction);
         deskmenu->addSeparator();
-    }
+
 
     QAction *desktopsettingsaction = new QAction(QIcon::fromTheme("preferences-desktop"), "Desktop settings", this);
     connect(desktopsettingsaction, &QAction::triggered, this, &desktop::showsettings);
@@ -192,17 +169,15 @@ void desktop::updateicons(){
         return;
     }
 
-    if (showicons){
-        iwidget->removeall();
+    iwidget->removeall();
 
-        QDir dir(XdgDirs::userDir(XdgDirs::Desktop));
-        QStringList files(dir.entryList());
-        files.removeAt(0);
-        files.removeAt(0);//for some reason the QDir::NoDotAndDotDot doesn't work - so we have to do this :(
+    QDir dir(XdgDirs::userDir(XdgDirs::Desktop));
+    QStringList files(dir.entryList());
+    files.removeAt(0);
+    files.removeAt(0);//for some reason the QDir::NoDotAndDotDot doesn't work - so we have to do this :(
 
-        foreach (QString file, files)
-            loadicon(XdgDirs::userDir(XdgDirs::Desktop) + "/" + file);
-    }
+    foreach (QString file, files)
+        loadicon(XdgDirs::userDir(XdgDirs::Desktop) + "/" + file);
 }
 
 void desktop::loadicon(QString file){
@@ -242,10 +217,15 @@ QRect desktop::getusabledesktopspace(){
 void desktop::handleAvailableGeoChange(QRect geo){
     Q_UNUSED(geo);
 
-    if (showicons){
-        iwidget->setusabledesktopspace(getusabledesktopspace());
-        updateicons();
+    qDebug() << "geo change";
+
+    foreach(wallpaperwidget *ww, wallwidgetlist){
+        ww->close();
+        ww->deleteLater();
     }
+    wallwidgetlist.clear();
+    loadwallpaperwidgets();
+    updateicons();
 }
 
 void desktop::handlekeypressed(QKeyEvent *event){

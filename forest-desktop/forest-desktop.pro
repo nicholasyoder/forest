@@ -22,13 +22,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
-    desktop.cpp \ 
+    desktop.cpp \
+    global_settings.cpp \
     wallpaperwidget.cpp \
     iconswidget.cpp \
     desktopicon.cpp
 
 HEADERS += \
-    desktop.h \ 
+    desktop.h \
+    global_settings.h \
     wallpaperwidget.h \
     iconswidget.h \
     desktopicon.h

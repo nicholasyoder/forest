@@ -1,7 +1,6 @@
 #include "wallpaperwidget.h"
 
-wallpaperwidget::wallpaperwidget(QImage *image, ImageMode imode)
-{
+wallpaperwidget::wallpaperwidget(QImage *image, ImageMode imode){
     Qt::WindowFlags flags;
     flags |= Qt::FramelessWindowHint;
     flags |= Qt::WindowStaysOnBottomHint;
@@ -11,52 +10,37 @@ wallpaperwidget::wallpaperwidget(QImage *image, ImageMode imode)
     wallpaper = image;
     imagemode = imode;
 
-    setupwallpaper();
+    setup_wallpaper();
 }
 
-void wallpaperwidget::paintEvent(QPaintEvent *)
-{
-    QRectF target(0.0, 0.0, this->width(), this->height());
+void wallpaperwidget::paintEvent(QPaintEvent *){
+    QRectF target(0.0, 0.0, width(), height());
     QRectF source(0.0, 0.0, scaledwallpaper->width(), scaledwallpaper->height());
     QPainter painter(this);
     painter.drawImage(target, *scaledwallpaper, source);
 }
 
-void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event)
-{
+void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event){
     if (event->button() == Qt::RightButton)
         if (cmenu) cmenu->exec(event->pos());
 }
 
-void wallpaperwidget::setupwallpaper()
-{
+void wallpaperwidget::setup_wallpaper(){
     scaledwallpaper = new QImage(width(), height(), wallpaper->format());
     scaledwallpaper->fill(Qt::black);
 
-    switch (imagemode)
-    {
-    case Fill:
-        paintFill();
-        break;
-    case Fit:
-        paintFit();
-        break;
-    case Stretch:
-        paintStretch();
-        break;
-    case Tile:
-        paintTile();
-        break;
-    case Center:
-        paintCenter();
-        break;
+    switch (imagemode){
+    case Fill: do_fill(); break;
+    case Fit: do_fit(); break;
+    case Stretch: do_stretch(); break;
+    case Tile: do_tile(); break;
+    case Center: do_center(); break;
     }
 
     update();
 }
 
-void wallpaperwidget::paintFill()
-{
+void wallpaperwidget::do_fill(){
     QImage scaledw = wallpaper->scaled(this->width(), this->height(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
 
     int x = 0, y = 0;
@@ -71,8 +55,7 @@ void wallpaperwidget::paintFill()
     painter.drawImage(target, scaledw, source);
 }
 
-void wallpaperwidget::paintFit()
-{
+void wallpaperwidget::do_fit(){
     QImage scaledw = wallpaper->scaled(this->width(), this->height(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
 
     int x = this->width()/2 - scaledw.width()/2;
@@ -84,8 +67,7 @@ void wallpaperwidget::paintFit()
     painter.drawImage(target, scaledw, source);
 }
 
-void wallpaperwidget::paintStretch()
-{
+void wallpaperwidget::do_stretch(){
     QImage scaledw = wallpaper->scaled(this->width(), this->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
 
     QRectF target(0.0, 0.0, this->width(), this->height());
@@ -94,13 +76,11 @@ void wallpaperwidget::paintStretch()
     painter.drawImage(target, scaledw, source);
 }
 
-void wallpaperwidget::paintTile()
-{
-
+void wallpaperwidget::do_tile(){
+    // unimplemented
 }
 
-void wallpaperwidget::paintCenter()
-{
+void wallpaperwidget::do_center(){
     int x = this->width()/2 - wallpaper->width()/2;
     int y = this->height()/2 - wallpaper->height()/2;
 
