@@ -63,6 +63,7 @@ private:
     QUuid itemID;
     QIcon itemIcon;
     QString itemText;
+    QSize itemIconSize;
     bool itemSelected = false;
     bool allowDrag = false;
     QPoint dragStartPos;

@@ -29,7 +29,7 @@ menuitem::menuitem(QUuid id, QIcon icon, QString text){
     itemID = id;
     itemIcon = icon;
     itemText = text;
-
+    itemIconSize = futils::get_iconsize_stylesheet("#popupMenuItem", qApp->styleSheet());
     setContextMenuPolicy(Qt::CustomContextMenu);
     setObjectName("popupMenuItem");
 }
@@ -60,7 +60,7 @@ void menuitem::paintEvent(QPaintEvent *){
 
     option.icon = itemIcon;
     option.text = itemText;
-    option.iconSize = futils::get_iconsize_stylesheet("#popupMenuItem", qApp->styleSheet());
+    option.iconSize = itemIconSize;
 
     QPainter painter(this);
     style()->drawControl(QStyle::CE_PushButton, &option, &painter, this);
