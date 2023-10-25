@@ -66,6 +66,7 @@ fi
 
 #export XDG_MENU_PREFIX="forest-"
 export XDG_CURRENT_DESKTOP="Forest"
+export QT_QPA_PLATFORMTHEME="qt5ct"
 
 # Start the Forest session
 #exec /usr/bin/forest-setstyle
