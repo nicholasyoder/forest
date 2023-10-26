@@ -1,20 +1,22 @@
-#include "fsettings.h"
-#include <QApplication>
-#include "../library/fstyleloader/fstyleloader.h"
+#include <QGuiApplication>
+#include <QQmlApplicationEngine>
+
 
 int main(int argc, char *argv[])
 {
-    QApplication a(argc, argv);
+#if QT_VERSION < QT_VERSION_CHECK(6, 0, 0)
+    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+#endif
+    QGuiApplication app(argc, argv);
 
-    a.setStyleSheet(fstyleloader::loadstyle("settings"));
+    QQmlApplicationEngine engine;
+    const QUrl url(QStringLiteral("qrc:/main.qml"));
+    QObject::connect(&engine, &QQmlApplicationEngine::objectCreated,
+                     &app, [url](QObject *obj, const QUrl &objUrl) {
+        if (!obj && url == objUrl)
+            QCoreApplication::exit(-1);
+    }, Qt::QueuedConnection);
+    engine.load(url);
 
-    fsettings w;
-    if (a.arguments().count() > 1)
-        w.go2page(a.arguments().at(1));
-    else
-        w.go2page("General");
-
-    w.show();
-
-    return a.exec();
+    return app.exec();
 }

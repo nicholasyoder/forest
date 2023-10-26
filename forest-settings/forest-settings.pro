@@ -1,45 +1,29 @@
-QT       += core gui widgets dbus
+QT += quick
 
-TARGET = forest-settings
-TEMPLATE = app
-
-DESTDIR = ../usr/bin
-
-# The following define makes your compiler emit warnings if you use
-# any feature of Qt which has been marked as deprecated (the exact warnings
-# depend on your compiler). Please consult the documentation of the
-# deprecated API in order to know how to port your code away from it.
-DEFINES += QT_DEPRECATED_WARNINGS
-
-# You can also make your code fail to compile if you use deprecated APIs.
+# You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.
-# You can also select to disable deprecated APIs only up to a certain version of Qt.
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
-CONFIG += c++11
+CONFIG += qmltypes
+QML_IMPORT_NAME = forest.settings.backend
+QML_IMPORT_MAJOR_VERSION = 1
 
 SOURCES += \
-    actionmanager.cpp \
-        main.cpp \
-        fsettings.cpp \
-        listwidget.cpp \
-    page.cpp \
-    settingsmanager.cpp \
-    widgets/keysequenceinput.cpp \
-    widgets/lineedit.cpp \
-    widgets/pluginlist.cpp
+        backend.cpp \
+        main.cpp
 
-HEADERS += \
-    actionmanager.h \
-        fsettings.h \
-        listwidget.h \
-    page.h \
-    settingsmanager.h \
-    widgets/keysequenceinput.h \
-    widgets/lineedit.h \
-    widgets/pluginlist.h
+RESOURCES += qml.qrc
+
+# Additional import path used to resolve QML modules in Qt Creator's code model
+QML_IMPORT_PATH =
+
+# Additional import path used to resolve QML modules just for Qt Quick Designer
+QML_DESIGNER_IMPORT_PATH =
 
 # Default rules for deployment.
-target.path = /usr/bin
+qnx: target.path = /tmp/$${TARGET}/bin
+else: unix:!android: target.path = /opt/$${TARGET}/bin
+!isEmpty(target.path): INSTALLS += target
 
-INSTALLS += target
+HEADERS += \
+    backend.h
