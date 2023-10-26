@@ -35,8 +35,6 @@
 #include "popup.h"
 #include "popupmenu.h"
 
-#include "vpopupwidget.h"
-
 #include "audioengine.h"
 #include "audiodevice.h"
 #include "alsaengine.h"

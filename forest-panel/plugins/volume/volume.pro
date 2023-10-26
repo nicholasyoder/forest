@@ -27,8 +27,7 @@ SOURCES += \
     alsaengine.cpp \
     audiodevice.cpp \
     audioengine.cpp \
-    fvolume.cpp \
-    vpopupwidget.cpp
+    fvolume.cpp
 
 HEADERS += \
     ../../library/panelbutton.h \
@@ -39,8 +38,7 @@ HEADERS += \
     alsaengine.h \
     audiodevice.h \
     audioengine.h \
-    fvolume.h \
-    vpopupwidget.h
+    fvolume.h
 
 # Default rules for deployment.
 
