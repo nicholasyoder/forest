@@ -47,12 +47,8 @@ void desktop::setupPlug(){
     connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &desktop::handleAvailableGeoChange);
 }
 
-QHash<QString, QString> desktop::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Desktop";
-    info["icon"] = "preferences-desktop-wallpaper";
-    info["needsXcbEvents"] = "true";
-    return info;
+fpluginfo desktop::getpluginfo(){
+    return fpluginfo("Desktop", "preferences-desktop-wallpaper", false);
 }
 
 //called by dbus to load new wallpaper

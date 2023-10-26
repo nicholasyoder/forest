@@ -26,8 +26,24 @@
 #include <QObject>
 #include <xcb/xcb.h>
 
-class fpluginterface
-{
+class fpluginfo {
+
+public:
+    fpluginfo(QString p_name, QString p_icon, bool needs_xcb_events = false){
+        name = p_name;
+        icon = p_icon;
+        xcb_events = needs_xcb_events;
+    }
+
+    ~fpluginfo(){}
+
+    QString name;
+    QString icon;
+    bool xcb_events;
+};
+
+
+class fpluginterface {
 
 public:
 
@@ -38,10 +54,10 @@ public:
     virtual void setupPlug() = 0;
 
     //pass xcb events on to plugins
-    virtual void XcbEventFilter(xcb_generic_event_t* /*event*/)= 0;
+    virtual void XcbEventFilter(xcb_generic_event_t* /*event*/) = 0;
 
     //should return at least info[name] = plugname
-    virtual QHash<QString, QString> getpluginfo() = 0;
+    virtual fpluginfo getpluginfo() = 0;
 
 };
 

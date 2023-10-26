@@ -22,13 +22,11 @@
 
 #include "services.h"
 
-services::services()
-{
+services::services(){
 
 }
 
-void services::setupPlug()
-{
+void services::setupPlug(){
     fhotkeys = new foresthotkeys;
     fhotkeys->setup();
 
@@ -38,16 +36,10 @@ void services::setupPlug()
     fpolkit = new polkitagent;
 }
 
-void services::XcbEventFilter(xcb_generic_event_t *event)
-{
+void services::XcbEventFilter(xcb_generic_event_t *event){
     fhotkeys->XcbEventFilter(event);
 }
 
-QHash<QString, QString> services::getpluginfo()
-{
-    QHash<QString, QString> info;
-    info["name"] = "Services";
-    info["icon"] = "preferences-system-session-services";
-    info["needsXcbEvents"] = "true";
-    return info;
+fpluginfo services::getpluginfo(){
+    return fpluginfo("Services", "preferences-system-session-services", true);
 }

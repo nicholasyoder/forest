@@ -61,7 +61,7 @@ public:
     //begin pluginterface
     void setupPlug();
     void XcbEventFilter(xcb_generic_event_t* /*event*/){}
-    QHash<QString, QString> getpluginfo();
+    fpluginfo getpluginfo();
     //end pluginterface
 
 public slots:

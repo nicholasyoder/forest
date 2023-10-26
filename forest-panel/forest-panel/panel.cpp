@@ -70,12 +70,8 @@ void panel::XcbEventFilter(xcb_generic_event_t *event){
     }
 }
 
-QHash<QString, QString> panel::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Panel";
-    info["icon"] = "preferences-desktop";
-    info["needsXcbEvents"] = "true";
-    return info;
+fpluginfo panel::getpluginfo(){
+    return fpluginfo("Panel", "preferences-desktop", true);
 }
 
 void panel::showsettings(){

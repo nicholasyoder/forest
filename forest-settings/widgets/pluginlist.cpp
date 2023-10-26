@@ -48,9 +48,9 @@ void pluginlist::loadui(){
                         delete pluginterface;
                     }
                     else if (fpluginterface *pluginterface = qobject_cast<fpluginterface *>(plugin)){
-                        QHash<QString, QString> info = pluginterface->getpluginfo();
-                        addCheckableItem(info["name"], enabled);
-                        pathhash[info["name"]] = path;
+                        fpluginfo info = pluginterface->getpluginfo();
+                        addCheckableItem(info.name, enabled);
+                        pathhash[info.name] = path;
                         delete pluginterface;
                     }
                 }

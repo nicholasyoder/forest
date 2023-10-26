@@ -32,8 +32,7 @@
 #include "notifications/notify.h"
 #include "polkit/polkitagent.h"
 
-class services : public QObject, fpluginterface
-{
+class services : public QObject, fpluginterface{
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.services.plugin")
     Q_INTERFACES(fpluginterface)
@@ -44,13 +43,8 @@ public:
     //begin pluginterface
     void setupPlug();
     void XcbEventFilter(xcb_generic_event_t *event);
-    QHash<QString, QString> getpluginfo();
+    fpluginfo getpluginfo();
     //end pluginterface
-
-
-signals:
-
-public slots:
 
 private:
     foresthotkeys *fhotkeys;

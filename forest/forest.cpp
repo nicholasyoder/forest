@@ -103,8 +103,8 @@ void forest::loadplugins(){
             pluginterface = qobject_cast<fpluginterface *>(plugin);
             if (!pluginterface) continue;
 
-            QHash<QString, QString> info = pluginterface->getpluginfo();
-            if (info["needsXcbEvents"] == "true")
+            fpluginfo info = pluginterface->getpluginfo();
+            if (info.xcb_events == true)
                 xcbpluglist.append(pluginterface);
 
             pluginterface->setupPlug();
