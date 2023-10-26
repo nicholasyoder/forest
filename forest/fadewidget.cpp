@@ -23,35 +23,30 @@
 #include "fadewidget.h"
 #include <QScreen>
 
-fadewidget::fadewidget(QScreen *screen)
-{
-    this->setWindowOpacity(0.0);
-    this->setWindowFlags(Qt::X11BypassWindowManagerHint);
-
+fadewidget::fadewidget(QScreen *screen){
+    setWindowOpacity(0.0);
+    setWindowFlags(Qt::X11BypassWindowManagerHint);
     wscreen = screen;
 }
 
-void fadewidget::paintEvent(QPaintEvent *)
-{
+void fadewidget::paintEvent(QPaintEvent *){
     QRectF target1(0.0, 0.0, this->width(), this->height());
     QRectF source1(0.0, 0.0, backimage->width(), backimage->height());
     QPainter painter1(this);
     painter1.drawImage(target1, *backimage, source1);
 
     QRectF target(0.0, 0.0, this->width(), this->height());
-    QRectF source(0.0, 0.0, scaledwallpaper->width(), scaledwallpaper->height());
+    QRectF source(0.0, 0.0, wallpaper->width(), wallpaper->height());
     QPainter painter(this);
     painter.setOpacity(opacity);
-    painter.drawImage(target, *scaledwallpaper, source);
+    painter.drawImage(target, *wallpaper, source);
 }
 
-//grab screenshot - maybe this can get deleted after i write a session manager
-void fadewidget::getimage()
-{
-    QSettings settings("Forest","Forest");
-    *wallpaper = QImage(settings.value("desktop/wallpaper", "").toString());
+void fadewidget::getimage(){
+    //grab screenshot - maybe this can get deleted after i write a session manager
     *backimage = wscreen->grabWindow(QApplication::desktop()->winId(), wscreen->geometry().x(), wscreen->geometry().y(), width(), height()).toImage();
 
+    QSettings settings("Forest","Forest");
     QString imode = settings.value("desktop/imagemode", "Fill").toString();
     if (imode == "Fill")
         imagemode = Fill;
@@ -64,123 +59,38 @@ void fadewidget::getimage()
     else if (imode == "Center")
         imagemode = Center;
 
-    setupwallpaper();
-    this->setWindowOpacity(1.0);
+    QString wallpaper_file = settings.value("desktop/wallpaper", "").toString();
+    if(!wallpaper_file.isEmpty())
+        wallpaper = futils::get_wallpaper_scaled(wallpaper_file, imagemode, this->size());
+
+    setWindowOpacity(1.0);
 }
 
-void fadewidget::setupwallpaper()
-{
-    scaledwallpaper = new QImage(width(), height(), wallpaper->format());
-    scaledwallpaper->fill(Qt::black);
-
-    switch (imagemode)
-    {
-    case Fill:
-        paintFill();
-        break;
-    case Fit:
-        paintFit();
-        break;
-    case Stretch:
-        paintStretch();
-        break;
-    case Tile:
-        paintTile();
-        break;
-    case Center:
-        paintCenter();
-        break;
-    }
-
-    update();
-}
-
-void fadewidget::paintFill()
-{
-    QImage scaledw = wallpaper->scaled(this->width(), this->height(), Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-
-    int x = 0, y = 0;
-    if (scaledw.width() > this->width())
-        x =  (scaledw.width() - this->width()) / 2;
-    else if (scaledw.height() > this->height())
-        y =  (scaledw.height() - this->height()) / 2;
-
-    QRectF target(0, 0, this->width(), this->height());
-    QRectF source(x, y, this->width(), this->height());
-    QPainter painter(scaledwallpaper);
-    painter.drawImage(target, scaledw, source);
-}
-
-void fadewidget::paintFit()
-{
-    QImage scaledw = wallpaper->scaled(this->width(), this->height(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
-
-    int x = this->width()/2 - scaledw.width()/2;
-    int y = this->height()/2 - scaledw.height()/2;
-
-    QRectF target(x, y, scaledw.width(), scaledw.height());
-    QRectF source(0, 0, scaledw.width(), scaledw.height());
-    QPainter painter(scaledwallpaper);
-    painter.drawImage(target, scaledw, source);
-}
-
-void fadewidget::paintStretch()
-{
-    QImage scaledw = wallpaper->scaled(this->width(), this->height(), Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-
-    QRectF target(0.0, 0.0, this->width(), this->height());
-    QRectF source(0.0, 0.0, scaledw.width(), scaledw.height());
-    QPainter painter(scaledwallpaper);
-    painter.drawImage(target, scaledw, source);
-}
-
-void fadewidget::paintTile()
-{
-
-}
-
-void fadewidget::paintCenter()
-{
-    int x = this->width()/2 - wallpaper->width()/2;
-    int y = this->height()/2 - wallpaper->height()/2;
-
-    QRectF target(x, y, wallpaper->width(), wallpaper->height());
-    QRectF source(0, 0, wallpaper->width(), wallpaper->height());
-    QPainter painter(scaledwallpaper);
-    painter.drawImage(target, *wallpaper, source);
-}
-
-void fadewidget::start()
-{
+void fadewidget::start(){
     connect(t, SIGNAL(timeout()), this, SLOT(fadein()));
     t->start(40);
 }
 
-void fadewidget::blackout()
-{
+void fadewidget::blackout(){
     delete t;
     t = new QTimer;
     connect(t, SIGNAL(timeout()), this, SLOT(fadeblack()));
     t->start(40);
 }
 
-void fadewidget::stop()
-{
+void fadewidget::stop(){
     delete t;
     t = new QTimer;
     connect(t, SIGNAL(timeout()), this, SLOT(fadeout()));
     t->start(40);
 }
 
-void fadewidget::fadein()
-{
-    if (opacity < 1.0)
-    {
+void fadewidget::fadein(){
+    if (opacity < 1.0){
         opacity = opacity + 0.05;
         update();
     }
-    else
-    {
+    else{
         t->stop();
         delete backimage;
         delete wallpaper;
@@ -188,28 +98,22 @@ void fadewidget::fadein()
     }
 }
 
-void fadewidget::fadeblack()
-{
-    if (opacity < 1.0)
-    {
+void fadewidget::fadeblack(){
+    if (opacity < 1.0){
         opacity = opacity + 0.05;
         update();
     }
-    else
-    {
+    else{
         t->stop();
     }
 }
 
-void fadewidget::fadeout()
-{
-    if (opacity > 0.0)
-    {
+void fadewidget::fadeout(){
+    if (opacity > 0.0){
         opacity = opacity - 0.05;
         update();
     }
-    else
-    {
+    else{
         t->stop();
         this->close();
     }

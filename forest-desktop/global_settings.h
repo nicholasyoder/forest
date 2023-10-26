@@ -4,13 +4,13 @@
 #include <QImage>
 #include <QSettings>
 
-enum ImageMode { Fill, Fit, Stretch, Tile, Center};
+#include "../library/futils/futils.h"
 
 class GS {
 
 public:
     static QImage * WALLPAPER;
-    static ImageMode IMAGE_MODE;
+    static WALLPAPER_MODE IMAGE_MODE;
     static int ICON_SIZE;
 
     static void load();

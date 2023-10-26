@@ -92,24 +92,25 @@ void forest::setdefaults(){
 void forest::loadplugins(){
     settings->beginGroup("plugins");
     foreach(QString key, settings->childGroups()){
-        if (settings->value(key+"/enabled", false).toBool()){
-            QPluginLoader plugloader(settings->value(key+"/path").toString());
-            if (plugloader.load()) {
-                 QObject *plugin = plugloader.instance();
-                 if (plugin) {
-                     pluginterface = qobject_cast<fpluginterface *>(plugin);
-                     if (pluginterface) {
-                         QHash<QString, QString> info = pluginterface->getpluginfo();
-                         if (info["needsXcbEvents"] == "true")
-                             xcbpluglist.append(pluginterface);
+        if (!settings->value(key+"/enabled", false).toBool())
+            continue;
 
-                         pluginterface->setupPlug();
-                     }
-                 }
-            }
-            else {
-                qDebug() << plugloader.errorString();
-            }
+        QPluginLoader plugloader(settings->value(key+"/path").toString());
+        if (plugloader.load()) {
+            QObject *plugin = plugloader.instance();
+            if (!plugin) continue;
+
+            pluginterface = qobject_cast<fpluginterface *>(plugin);
+            if (!pluginterface) continue;
+
+            QHash<QString, QString> info = pluginterface->getpluginfo();
+            if (info["needsXcbEvents"] == "true")
+                xcbpluglist.append(pluginterface);
+
+            pluginterface->setupPlug();
+        }
+        else {
+            qDebug() << plugloader.errorString();
         }
     }
     settings->endGroup();

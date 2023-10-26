@@ -14,11 +14,11 @@ class wallpaperwidget : public QWidget
 {
     Q_OBJECT
 public:
-    wallpaperwidget(QImage *image, ImageMode imode = Fill);
+    wallpaperwidget(QImage *image, WALLPAPER_MODE imode = Fill);
 
 public slots:
     void setwallpaper(QImage *image){ wallpaper = image; setup_wallpaper(); }
-    void setimagemode(ImageMode imode){ imagemode = imode; setup_wallpaper(); }
+    void setimagemode(WALLPAPER_MODE imode){ imagemode = imode; setup_wallpaper(); }
     void setcontextmenu(QMenu *contextmenu){ cmenu = contextmenu;}
 
 protected:
@@ -27,19 +27,13 @@ protected:
     void resizeEvent(QResizeEvent *){ setup_wallpaper(); }
 
 private slots:
-    void do_fill();
-    void do_fit();
-    void do_stretch();
-    void do_tile();
-    void do_center();
-
     void setup_wallpaper();
 
 private:
     QImage *wallpaper = new QImage();
     QImage *scaledwallpaper = new QImage();
     QMenu *cmenu = nullptr;
-    ImageMode imagemode;
+    WALLPAPER_MODE imagemode;
 };
 
 #endif // WALLPAPERWIDGET_H

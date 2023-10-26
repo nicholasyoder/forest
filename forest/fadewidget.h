@@ -29,9 +29,9 @@
 #include <QApplication>
 #include <QDesktopWidget>
 #include <QSettings>
-//#include <QScreen>
 
-enum ImageMode { Fill, Fit, Stretch, Tile, Center};
+#include "../library/futils/futils.h"
+
 
 class fadewidget : public QWidget
 {
@@ -59,18 +59,8 @@ private slots:
     void fadeblack();
     void fadeout();
 
-    void paintFill();
-    void paintFit();
-    void paintStretch();
-    void paintTile();
-    void paintCenter();
-
-    void setupwallpaper();
-
 private:
-    //QImage *wallpaper = new QImage();
-    QImage *scaledwallpaper = new QImage();
-    ImageMode imagemode;
+    WALLPAPER_MODE imagemode;
     QScreen *wscreen;
 };
 
