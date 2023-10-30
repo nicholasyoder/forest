@@ -75,7 +75,7 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     popupid = id;
 
     if (timeout > 0 && timeout < 3000) timeout = 3000;
-    else if(timeout > 8000) timeout = 8000;
+    else if(timeout <= 0 || timeout > 8000) timeout = 8000;
 
     QTimer::singleShot(timeout, this, SLOT(closepopup()));
 }
