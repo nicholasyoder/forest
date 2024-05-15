@@ -44,9 +44,9 @@
 
 #include "global_settings.h"
 
-#include "../library/fpluginterface/fpluginterface.h"
-#include "../library/fmutils/fmutils.h"
-#include "../library/fstyleloader/fstyleloader.h"
+#include "../../library/fpluginterface/fpluginterface.h"
+#include "../../library/fmutils/fmutils.h"
+#include "../../library/fstyleloader/fstyleloader.h"
 
 class desktop : public QObject, fpluginterface
 {

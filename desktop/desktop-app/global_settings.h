@@ -4,7 +4,7 @@
 #include <QImage>
 #include <QSettings>
 
-#include "../library/futils/futils.h"
+#include "../../library/futils/futils.h"
 
 class GS {
 

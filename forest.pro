@@ -1,9 +1,10 @@
 TEMPLATE    = subdirs
 SUBDIRS	    =\
+    desktop \
 	forest\
 	library \
     forest-panel \
-    forest-desktop \
+#    forest-desktop \
     forest-services \
     forest-logout \
     forest-session \ 
