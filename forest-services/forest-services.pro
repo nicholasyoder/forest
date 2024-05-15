@@ -35,8 +35,7 @@ SOURCES += \
     notifications/notifyadapter.cpp \
     notifications/notifypopup.cpp \
     polkit/polkitagent.cpp \ 
-    polkit/polkitdialog.cpp \
-    ../library/xcbutills/xcbutills.cpp
+    polkit/polkitdialog.cpp
 
 HEADERS += \
     hotkeys/foresthotkeys.h \
@@ -48,8 +47,7 @@ HEADERS += \
     notifications/notifyadapter.h \
     notifications/notifypopup.h \
     polkit/polkitagent.h \ 
-    polkit/polkitdialog.h \
-    ../library/xcbutills/xcbutills.h
+    polkit/polkitdialog.h
 
 FORMS += \
     hotkeys/editshortcutwidget.ui \
@@ -60,9 +58,8 @@ target.path = /usr/lib/forest
 
 INSTALLS += target
 
-#unix:!macx: LIBS += -L$$OUT_PWD/../library/xcbutills/ -lxcbutills
-
-#INCLUDEPATH += $$PWD/../library/xcbutills
-#DEPENDPATH += $$PWD/../library/xcbutills
-
-#unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../library/xcbutills/libxcbutills.a
+# xcbutils
+LIBS += -L$$OUT_PWD/../library/xcbutills/ -lxcbutills
+INCLUDEPATH += $$PWD/../library/xcbutills
+DEPENDPATH += $$PWD/../library/xcbutills
+PRE_TARGETDEPS += $$OUT_PWD/../library/xcbutills/libxcbutills.a

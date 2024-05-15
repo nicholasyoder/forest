@@ -32,24 +32,21 @@ CONFIG += c++11
 
 SOURCES += \
         systray.cpp \
-    trayicon.cpp \
-    ../../../library/xcbutills/xcbutills.cpp
+    trayicon.cpp
 
 HEADERS += \
         systray.h \
     trayicon.h \
     ../../library/panelbutton.h \
-    ../../library/buttonrender.h \
-    ../../../library/xcbutills/xcbutills.h
+    ../../library/buttonrender.h
 
 # Default rules for deployment.
 target.path = /usr/lib/forest/panel
 
 INSTALLS += target
 
-#unix:!macx: LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
-
-#INCLUDEPATH += $$PWD/../../../library/xcbutills
-#DEPENDPATH += $$PWD/../../../library/xcbutills
-
-#unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a
+# xcbutils
+LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
+INCLUDEPATH += $$PWD/../../../library/xcbutills
+DEPENDPATH += $$PWD/../../../library/xcbutills
+PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a

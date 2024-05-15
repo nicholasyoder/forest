@@ -30,8 +30,7 @@ CONFIG += c++11
 
 SOURCES += \
     deskswitch.cpp \
-    deskbutton.cpp \
-    ../../../library/xcbutills/xcbutills.cpp
+    deskbutton.cpp
 
 HEADERS += \
     deskswitch.h \
@@ -39,17 +38,15 @@ HEADERS += \
     ../../library/popup.h \
     ../../library/popuprender.h \
     ../../library/popupmenu.h \
-    deskbutton.h \
-    ../../../library/xcbutills/xcbutills.h
+    deskbutton.h
 
 # Default rules for deployment.
 target.path = /usr/lib/forest/panel
 
 INSTALLS += target
 
-#unix:!macx: LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
-
-#INCLUDEPATH += $$PWD/../../../library/xcbutills
-#DEPENDPATH += $$PWD/../../../library/xcbutills
-
-#unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a
+# xcbutils
+LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
+INCLUDEPATH += $$PWD/../../../library/xcbutills
+DEPENDPATH += $$PWD/../../../library/xcbutills
+PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a

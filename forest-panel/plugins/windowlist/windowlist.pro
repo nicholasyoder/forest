@@ -16,9 +16,6 @@ DEPENDPATH += /usr/include/KF5/KWindowSystem
 CONFIG += c++11 \
             plugin
 
-#LIBS += $(SUBLIBS)  -L../../../usr/lib -L$$PWD/../../../usr/lib -lforestx11utills
-#QMAKE_INCDIR += $$PWD/../../../library/include $$PWD/../../../library
-
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -34,8 +31,7 @@ SOURCES += \
     imagepopup.cpp \
     settingswidget.cpp \
     windowbutton.cpp \
-    windowlist.cpp \
-    ../../../library/xcbutills/xcbutills.cpp
+    windowlist.cpp
 
 HEADERS += \
     closebutton.h \
@@ -43,7 +39,6 @@ HEADERS += \
     settingswidget.h \
     windowbutton.h \
     windowlist.h \
-    ../../../library/xcbutills/xcbutills.h \
     ../../library/panelbutton.h \
     ../../library/popup.h \
     ../../library/popupmenu.h
@@ -57,9 +52,9 @@ INSTALLS += target
 FORMS += \
     settingswidget.ui
 
-#unix:!macx: LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
 
-#INCLUDEPATH += $$PWD/../../../library/xcbutills
-#DEPENDPATH += $$PWD/../../../library/xcbutills
-
-#unix:!macx: PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a
+# xcbutils
+LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
+INCLUDEPATH += $$PWD/../../../library/xcbutills
+DEPENDPATH += $$PWD/../../../library/xcbutills
+PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a

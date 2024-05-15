@@ -30,11 +30,9 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-    ../../library/xcbutills/xcbutills.cpp \
     panel.cpp
 
 HEADERS += \
-    ../../library/xcbutills/xcbutills.h \
     panel.h \
     ../library/panelbutton.h \
     ../library/popupmenu.h \
@@ -47,9 +45,8 @@ target.path = /usr/lib/forest
 
 INSTALLS += target
 
-#LIBS += -L$$OUT_PWD/../../library/xcbutills/ -lxcbutills
-
-#INCLUDEPATH += $$PWD/../../library/xcbutills
-#DEPENDPATH += $$PWD/../../library/xcbutills
-
-#PRE_TARGETDEPS += $$OUT_PWD/../../library/xcbutills/libxcbutills.a
+# xcbutils
+LIBS += -L$$OUT_PWD/../../library/xcbutills/ -lxcbutills
+INCLUDEPATH += $$PWD/../../library/xcbutills
+DEPENDPATH += $$PWD/../../library/xcbutills
+PRE_TARGETDEPS += $$OUT_PWD/../../library/xcbutills/libxcbutills.a
