@@ -5,5 +5,6 @@ SUBDIRS += \
     fstyleloader \
     futils \
     fwidgets \
+    pluginutills \
     xcbutills \
     fmutils \

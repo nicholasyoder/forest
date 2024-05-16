@@ -1,6 +1,6 @@
 QT       += core gui widgets dbus
 
-TARGET = forest-settings
+TARGET = forest-settings-old
 TEMPLATE = app
 
 DESTDIR = ../usr/bin

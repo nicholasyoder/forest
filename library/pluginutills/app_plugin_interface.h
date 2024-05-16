@@ -20,26 +20,50 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#ifndef DESKTOPSETTINGS_H
-#define DESKTOPSETTINGS_H
+#ifndef APP_PLUGIN_INTERFACE_H
+#define APP_PLUGIN_INTERFACE_H
 
+#include <QObject>
+#include <xcb/xcb.h>
 
-#include "../../library/pluginutills/settings_plugin_interface.h"
-
-class DesktopSettings : public QObject, settings_plugin_infterace
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.settings.desktop.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+class fpluginfo {
 
 public:
-    DesktopSettings();
+    fpluginfo(QString p_name, QString p_icon, bool needs_xcb_events = false){
+        name = p_name;
+        icon = p_icon;
+        xcb_events = needs_xcb_events;
+    }
 
-    // settings_plugin_infterace functions
-    QWidget* get_settings_widget();
-    QString get_name(){ return "Desktop"; }
-    QString get_icon(){ return "preferences-desktop-wallpaper"; }
+    ~fpluginfo(){}
+
+    QString name;
+    QString icon;
+    bool xcb_events;
+};
+
+
+class app_plugin_interface {
+
+public:
+
+    //destructor
+    virtual ~app_plugin_interface() {}
+
+    //called soon after plugin constuctor runs
+    virtual void setupPlug() = 0;
+
+    //pass xcb events on to plugins
+    virtual void XcbEventFilter(xcb_generic_event_t* /*event*/) = 0;
+
+    //should return at least info[name] = plugname
+    virtual fpluginfo getpluginfo() = 0;
 
 };
 
-#endif // DESKTOPSETTINGS_H
+QT_BEGIN_NAMESPACE
+Q_DECLARE_INTERFACE(app_plugin_interface, "forest.app.plugin.interface")
+QT_END_NAMESPACE
+
+
+#endif // APP_PLUGIN_INTERFACE_H

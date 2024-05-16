@@ -20,26 +20,32 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#ifndef DESKTOPSETTINGS_H
-#define DESKTOPSETTINGS_H
+#ifndef SETTINGS_PLUGIN_INTERFACE_H
+#define SETTINGS_PLUGIN_INTERFACE_H
 
+#include <QObject>
+#include <QWidget>
 
-#include "../../library/pluginutills/settings_plugin_interface.h"
-
-class DesktopSettings : public QObject, settings_plugin_infterace
-{
-    Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.settings.desktop.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+class settings_plugin_infterace {
 
 public:
-    DesktopSettings();
 
-    // settings_plugin_infterace functions
-    QWidget* get_settings_widget();
-    QString get_name(){ return "Desktop"; }
-    QString get_icon(){ return "preferences-desktop-wallpaper"; }
+    // Destructor
+    virtual ~settings_plugin_infterace() {}
+
+    // Get settings widget
+    virtual QWidget* get_settings_widget() = 0;
+
+    // Get plugin name
+    virtual QString get_name() = 0;
+
+    // Get plugin icon
+    virtual QString get_icon() = 0;
 
 };
 
-#endif // DESKTOPSETTINGS_H
+QT_BEGIN_NAMESPACE
+Q_DECLARE_INTERFACE(settings_plugin_infterace, "forest.settings.plugin.interface")
+QT_END_NAMESPACE
+
+#endif // SETTINGS_PLUGIN_INTERFACE_H

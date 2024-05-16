@@ -1,13 +1,13 @@
 TEMPLATE    = subdirs
-SUBDIRS	    =\
+SUBDIRS	    = \
     desktop \
-	forest\
-	library \
+    forest\
+    library \
     forest-panel \
-#    forest-desktop \
     forest-services \
     forest-logout \
-    forest-session \ 
+    forest-session \
+    settings \
     forest-settings
 
 INCLUDEPATH += common

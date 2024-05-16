@@ -1,6 +1,6 @@
 QT += widgets dbus
 
-TARGET = forest-desktop-settings
+TARGET = desktop-settings
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
