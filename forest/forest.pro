@@ -34,3 +34,10 @@ HEADERS += \
 target.path = /usr/bin
 
 INSTALLS += target
+
+
+# pluginutills
+LIBS += -L$$OUT_PWD/../library/pluginutills/ -lpluginutills
+INCLUDEPATH += $$PWD/../library/pluginutills
+DEPENDPATH += $$PWD/../library/pluginutills
+PRE_TARGETDEPS += $$OUT_PWD/../library/pluginutills/libpluginutills.a

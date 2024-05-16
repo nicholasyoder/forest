@@ -27,15 +27,16 @@
 #include <QtDBus>
 #include <QLayout>
 
-#include "../../library/fpluginterface/fpluginterface.h"
+#include "../../library/pluginutills/app_plugin_interface.h"
 #include "hotkeys/foresthotkeys.h"
 #include "notifications/notify.h"
 #include "polkit/polkitagent.h"
 
-class services : public QObject, fpluginterface{
+class services : public QObject, app_plugin_interface
+{
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.services.plugin")
-    Q_INTERFACES(fpluginterface)
+    Q_PLUGIN_METADATA(IID "forest.app.services.plugin")
+    Q_INTERFACES(app_plugin_interface)
 
 public:
     services();
@@ -43,7 +44,7 @@ public:
     //begin pluginterface
     void setupPlug();
     void XcbEventFilter(xcb_generic_event_t *event);
-    fpluginfo getpluginfo();
+    bool needs_xcb_events(){ return true; }
     //end pluginterface
 
 private:

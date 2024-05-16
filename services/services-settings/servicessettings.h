@@ -37,7 +37,7 @@ public:
     // settings_plugin_infterace functions
     QWidget* get_settings_widget();
     QString get_name(){ return "Services"; }
-    QString get_icon(){ return "preferences-desktop-wallpaper"; }
+    QString get_icon(){ return "preferences-system-session-services"; }
 
 };
 

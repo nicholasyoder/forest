@@ -33,10 +33,7 @@
 #include <QtDBus>
 #include <QScreen>
 
-#include "fadewidget.h"
-#include "../library/fpluginterface/fpluginterface.h"
-
-#include "../library/fstyleloader/fstyleloader.h"
+#include "app_plugin_interface.h"
 
 #include <xcb/xcb.h>
 
@@ -59,8 +56,7 @@ private:
     void loadplugins();
 
     QSettings *settings = new QSettings("Forest","Forest");
-    fpluginterface *pluginterface;
-    QList<fpluginterface*> xcbpluglist;
+    QList<app_plugin_interface*> xcbpluglist;
 };
 
 

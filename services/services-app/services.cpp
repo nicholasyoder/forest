@@ -39,7 +39,3 @@ void services::setupPlug(){
 void services::XcbEventFilter(xcb_generic_event_t *event){
     fhotkeys->XcbEventFilter(event);
 }
-
-fpluginfo services::getpluginfo(){
-    return fpluginfo("Services", "preferences-system-session-services", true);
-}

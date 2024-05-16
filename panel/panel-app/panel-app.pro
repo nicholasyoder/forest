@@ -2,7 +2,7 @@ QT       += core gui x11extras dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = forest-panel
+TARGET = panel-app
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
@@ -34,6 +34,7 @@ SOURCES += \
 
 HEADERS += \
     panel.h \
+    ../panel-library/panelpluginterface.h \
     ../panel-library/panelbutton.h \
     ../panel-library/popupmenu.h \
     ../panel-library/popup.h \

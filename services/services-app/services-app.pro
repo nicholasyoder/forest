@@ -1,6 +1,6 @@
 QT += widgets dbus x11extras
 
-TARGET = forest-services
+TARGET = services-app
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 

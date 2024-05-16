@@ -7,8 +7,7 @@ SUBDIRS	    = \
     forest-session \
     panel \
     services \
-    settings \
-    forest-settings
+    settings
 
 INCLUDEPATH += common
 

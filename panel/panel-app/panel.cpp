@@ -70,10 +70,6 @@ void panel::XcbEventFilter(xcb_generic_event_t *event){
     }
 }
 
-fpluginfo panel::getpluginfo(){
-    return fpluginfo("Panel", "preferences-desktop", true);
-}
-
 void panel::showsettings(){
     QProcess::startDetached("forest-settings", QStringList("Panel"));
 }

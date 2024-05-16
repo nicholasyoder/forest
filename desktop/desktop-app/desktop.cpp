@@ -47,10 +47,6 @@ void desktop::setupPlug(){
     connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &desktop::handleAvailableGeoChange);
 }
 
-fpluginfo desktop::getpluginfo(){
-    return fpluginfo("Desktop", "preferences-desktop-wallpaper", false);
-}
-
 //called by dbus to load new wallpaper
 void desktop::reloadwallpaper(){
     GS::load();

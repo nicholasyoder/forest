@@ -31,7 +31,7 @@
 #include <QtX11Extras>
 #include <QtX11Extras/QX11Info>
 
-#include "../../library/fpluginterface/fpluginterface.h"
+#include "../../library/pluginutills/app_plugin_interface.h"
 #include "../panel-library/panelpluginterface.h"
 
 #include "../../library/xcbutills/xcbutills.h"
@@ -50,11 +50,11 @@ protected:
     void resizeEvent(QResizeEvent*){emit resized();}
 };
 
-class panel : public QWidget, fpluginterface
+class panel : public QWidget, app_plugin_interface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.plugin")
-    Q_INTERFACES(fpluginterface)
+    Q_PLUGIN_METADATA(IID "forest.app.panel.plugin")
+    Q_INTERFACES(app_plugin_interface)
 
 public:
     panel();
@@ -63,7 +63,7 @@ public:
     //begin pluginterface
     void setupPlug();
     void XcbEventFilter(xcb_generic_event_t *event);
-    fpluginfo getpluginfo();
+    bool needs_xcb_events(){ return true; }
     //end pluginterface
 
 public slots:

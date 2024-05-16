@@ -44,15 +44,14 @@
 
 #include "global_settings.h"
 
-#include "../../library/fpluginterface/fpluginterface.h"
+#include "../../library/pluginutills/app_plugin_interface.h"
 #include "../../library/fmutils/fmutils.h"
-#include "../../library/fstyleloader/fstyleloader.h"
 
-class desktop : public QObject, fpluginterface
+class desktop : public QObject, app_plugin_interface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.desktop.plugin")
-    Q_INTERFACES(fpluginterface)
+    Q_PLUGIN_METADATA(IID "forest.app.desktop.plugin")
+    Q_INTERFACES(app_plugin_interface)
 
 public:
     desktop();
@@ -61,7 +60,7 @@ public:
     //begin pluginterface
     void setupPlug();
     void XcbEventFilter(xcb_generic_event_t* /*event*/){}
-    fpluginfo getpluginfo();
+    bool needs_xcb_events(){ return false; }
     //end pluginterface
 
 public slots:
