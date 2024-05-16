@@ -21,7 +21,7 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "foresthotkeys.h"
-#include "../library/xcbutills/xcbutills.h"
+#include "../../library/xcbutills/xcbutills.h"
 
 foresthotkeys::foresthotkeys(){
 }

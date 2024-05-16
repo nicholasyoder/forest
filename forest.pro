@@ -4,7 +4,6 @@ SUBDIRS	    = \
     forest\
     library \
     forest-panel \
-    forest-services \
     forest-logout \
     forest-session \
     panel \
