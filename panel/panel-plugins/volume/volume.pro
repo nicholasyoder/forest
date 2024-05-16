@@ -32,7 +32,6 @@ SOURCES += \
 HEADERS += \
     ../../panel-library/panelbutton.h \
     ../../panel-library/popup.h \
-    ../../panel-library/popuprender.h \
     ../../panel-library/popupmenu.h \
     alsadevice.h \
     alsaengine.h \

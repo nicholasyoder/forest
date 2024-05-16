@@ -43,7 +43,6 @@ HEADERS += \
     itemhandler.h \
         mainmenu.h \
     ../../panel-library/popup.h \
-    ../../panel-library/popuprender.h \
     ../../panel-library/popupmenu.h \
     ../../panel-library/panelbutton.h \
     menuitem.h \

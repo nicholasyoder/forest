@@ -22,7 +22,6 @@ HEADERS += \
     nmcontrol.h \
     ../../panel-library/panelbutton.h \
     ../../panel-library/popup.h \
-    ../../panel-library/popuprender.h \
     ../../panel-library/popupmenu.h
 
 # Default rules for deployment.

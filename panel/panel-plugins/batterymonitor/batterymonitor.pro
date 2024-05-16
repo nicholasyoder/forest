@@ -32,7 +32,6 @@ HEADERS += \
     ../../panel-library/panelbutton.h \
     ../../panel-library/popup.h \
     ../../panel-library/popupmenu.h \
-    ../../panel-library/popuprender.h \
     ../../panel-library/buttonrender.h
 
 # Default rules for deployment.

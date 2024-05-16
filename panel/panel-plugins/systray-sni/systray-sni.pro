@@ -12,7 +12,6 @@ LIBS += $(SUBLIBS) -lxcb-composite -lxcb-image -lxcb-damage -lxcb-shape
 
 INCLUDEPATH = ../../panel-library
 INCLUDEPATH += ../../../library
-INCLUDEPATH += ../../../library/xcbutills
 
 LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
 INCLUDEPATH += /usr/include/KF5/KWindowSystem
