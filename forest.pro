@@ -3,7 +3,6 @@ SUBDIRS	    = \
     desktop \
     forest\
     library \
-    forest-panel \
     forest-logout \
     forest-session \
     panel \

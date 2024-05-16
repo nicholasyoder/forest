@@ -1,16 +1,18 @@
-QT       += core gui x11extras dbus
+QT       += core gui dbus widgets x11extras
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = forest-panel
+TARGET = systray-sni
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
-DESTDIR = ../../usr/lib/forest
+DESTDIR = ../../../usr/lib/forest/panel
 
 CONFIG += plugin
 
-#LIBS += -lX11
+LIBS += $(SUBLIBS) -lxcb-composite -lxcb-image -lxcb-damage -lxcb-shape
+
+INCLUDEPATH = ../../panel-library
+INCLUDEPATH += ../../../library
+INCLUDEPATH += ../../../library/xcbutills
 
 LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
 INCLUDEPATH += /usr/include/KF5/KWindowSystem
@@ -30,23 +32,24 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-    panel.cpp
+        systray.cpp \
+    trayicon.cpp
 
 HEADERS += \
-    panel.h \
-    ../panel-library/panelbutton.h \
-    ../panel-library/popupmenu.h \
-    ../panel-library/popup.h \
-
-FORMS +=
+        systray.h \
+    trayicon.h \
+    ../../panel-library/panelbutton.h \
+    ../../panel-library/buttonrender.h
 
 # Default rules for deployment.
-target.path = /usr/lib/forest
+target.path = /usr/lib/forest/panel
 
 INSTALLS += target
 
 # xcbutils
-LIBS += -L$$OUT_PWD/../../library/xcbutills/ -lxcbutills
-INCLUDEPATH += $$PWD/../../library/xcbutills
-DEPENDPATH += $$PWD/../../library/xcbutills
-PRE_TARGETDEPS += $$OUT_PWD/../../library/xcbutills/libxcbutills.a
+LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
+INCLUDEPATH += $$PWD/../../../library/xcbutills
+DEPENDPATH += $$PWD/../../../library/xcbutills
+PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a
+
+

@@ -1,21 +1,19 @@
-QT       += core gui x11extras dbus
+QT       += core gui dbus
 
 greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
 
-TARGET = forest-panel
+TARGET = mainmenu
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
-DESTDIR = ../../usr/lib/forest
+DESTDIR = ../../../usr/lib/forest/panel
 
 CONFIG += plugin
 
-#LIBS += -lX11
+INCLUDEPATH += ../../panel-library
+INCLUDEPATH += ../../../library
 
-LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
-DEPENDPATH += /usr/include/KF5/KWindowSystem
-
+LIBS += -lQt5Xdg
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -30,23 +28,32 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-    panel.cpp
+    apploader.cpp \
+    contextmenu.cpp \
+    itemhandler.cpp \
+        mainmenu.cpp \
+    menuitem.cpp \
+    menupage.cpp \
+    propertieswidget.cpp
 
 HEADERS += \
-    panel.h \
-    ../panel-library/panelbutton.h \
-    ../panel-library/popupmenu.h \
-    ../panel-library/popup.h \
+    apploader.h \
+    contextmenu.h \
+    globals.h \
+    itemhandler.h \
+        mainmenu.h \
+    ../../panel-library/popup.h \
+    ../../panel-library/popuprender.h \
+    ../../panel-library/popupmenu.h \
+    ../../panel-library/panelbutton.h \
+    menuitem.h \
+    menupage.h \
+    propertieswidget.h
 
-FORMS +=
+FORMS += \
+    propertieswidget.ui
 
 # Default rules for deployment.
-target.path = /usr/lib/forest
+target.path = /usr/lib/forest/panel
 
 INSTALLS += target
-
-# xcbutils
-LIBS += -L$$OUT_PWD/../../library/xcbutills/ -lxcbutills
-INCLUDEPATH += $$PWD/../../library/xcbutills
-DEPENDPATH += $$PWD/../../library/xcbutills
-PRE_TARGETDEPS += $$OUT_PWD/../../library/xcbutills/libxcbutills.a

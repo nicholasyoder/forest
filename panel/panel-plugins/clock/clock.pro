@@ -1,20 +1,14 @@
-QT       += core gui x11extras dbus
+QT       += core gui dbus widgets
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-TARGET = forest-panel
+TARGET = clock
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
-DESTDIR = ../../usr/lib/forest
+DESTDIR = ../../../usr/lib/forest/panel
 
 CONFIG += plugin
 
-#LIBS += -lX11
-
-LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
-DEPENDPATH += /usr/include/KF5/KWindowSystem
+INCLUDEPATH = ../../panel-library
 
 # The following define makes your compiler emit warnings if you use
 # any feature of Qt which has been marked as deprecated (the exact warnings
@@ -30,23 +24,21 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
-    panel.cpp
+    clock.cpp \
+    clocksettingswidget.cpp
 
 HEADERS += \
-    panel.h \
-    ../panel-library/panelbutton.h \
-    ../panel-library/popupmenu.h \
-    ../panel-library/popup.h \
-
-FORMS +=
+    clock.h \
+    ../../panel-library/panelbutton.h \
+    ../../panel-library/popup.h \
+    ../../panel-library/popuprender.h \
+    ../../panel-library/popupmenu.h \
+    clocksettingswidget.h
 
 # Default rules for deployment.
-target.path = /usr/lib/forest
+target.path = /usr/lib/forest/panel
 
 INSTALLS += target
 
-# xcbutils
-LIBS += -L$$OUT_PWD/../../library/xcbutills/ -lxcbutills
-INCLUDEPATH += $$PWD/../../library/xcbutills
-DEPENDPATH += $$PWD/../../library/xcbutills
-PRE_TARGETDEPS += $$OUT_PWD/../../library/xcbutills/libxcbutills.a
+FORMS += \
+    clocksettingswidget.ui
