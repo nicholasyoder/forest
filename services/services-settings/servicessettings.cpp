@@ -20,13 +20,14 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#include "desktopsettings.h"
+#include "servicessettings.h"
 
-DesktopSettings::DesktopSettings(){
+ServicesSettings::ServicesSettings()
+{
 
 }
 
-QWidget* DesktopSettings::get_settings_widget(){
+QWidget* ServicesSettings::get_settings_widget(){
     QWidget *base_widget = new QWidget;
     return base_widget;
 }

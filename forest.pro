@@ -7,6 +7,8 @@ SUBDIRS	    = \
     forest-services \
     forest-logout \
     forest-session \
+    panel \
+    services \
     settings \
     forest-settings
 

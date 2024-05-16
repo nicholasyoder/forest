@@ -20,13 +20,25 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#include "desktopsettings.h"
+#ifndef SERVICESSETTINGS_H
+#define SERVICESSETTINGS_H
 
-DesktopSettings::DesktopSettings(){
+#include "../../library/pluginutills/settings_plugin_interface.h"
 
-}
+class ServicesSettings : public QObject, settings_plugin_infterace
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "forest.settings.services.plugin")
+    Q_INTERFACES(settings_plugin_infterace)
 
-QWidget* DesktopSettings::get_settings_widget(){
-    QWidget *base_widget = new QWidget;
-    return base_widget;
-}
+public:
+    ServicesSettings();
+
+    // settings_plugin_infterace functions
+    QWidget* get_settings_widget();
+    QString get_name(){ return "Services"; }
+    QString get_icon(){ return "preferences-desktop-wallpaper"; }
+
+};
+
+#endif // SERVICESSETTINGS_H

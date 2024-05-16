@@ -1,0 +1,12 @@
+#ifndef SERVICESAPP_GLOBAL_H
+#define SERVICESAPP_GLOBAL_H
+
+#include <QtCore/qglobal.h>
+
+#if defined(SERVICESAPP_LIBRARY)
+#  define SERVICESAPP_EXPORT Q_DECL_EXPORT
+#else
+#  define SERVICESAPP_EXPORT Q_DECL_IMPORT
+#endif
+
+#endif // SERVICESAPP_GLOBAL_H

@@ -20,13 +20,25 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#include "desktopsettings.h"
+#ifndef PANELSETTINGS_H
+#define PANELSETTINGS_H
 
-DesktopSettings::DesktopSettings(){
+#include "../../library/pluginutills/settings_plugin_interface.h"
 
-}
+class PanelSettings : public QObject, settings_plugin_infterace
+{
+    Q_OBJECT
+    Q_PLUGIN_METADATA(IID "forest.settings.panel.plugin")
+    Q_INTERFACES(settings_plugin_infterace)
 
-QWidget* DesktopSettings::get_settings_widget(){
-    QWidget *base_widget = new QWidget;
-    return base_widget;
-}
+public:
+    PanelSettings();
+
+    // settings_plugin_infterace functions
+    QWidget* get_settings_widget();
+    QString get_name(){ return "Panel"; }
+    QString get_icon(){ return "preferences-desktop-wallpaper"; }
+
+};
+
+#endif // PANELSETTINGS_H
