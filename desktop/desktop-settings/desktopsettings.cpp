@@ -21,12 +21,42 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "desktopsettings.h"
+#include <QLabel>
+#include <QComboBox>
 
 DesktopSettings::DesktopSettings(){
 
 }
 
+DesktopSettings::~DesktopSettings(){
+    swidget->deleteLater();
+}
+/*
 QWidget* DesktopSettings::get_settings_widget(){
-    QWidget *base_widget = new QWidget;
-    return base_widget;
+    if (!swidget)
+        swidget = new settingswidget;
+    return swidget;
+}*/
+
+QList<settings_item*> DesktopSettings::get_settings_items(){
+    QList<settings_item*> items;
+    settings_category *desktop_cat = new settings_category("Desktop", "", "preferences-desktop-wallpaper");
+    items.append(desktop_cat);
+
+    settings_category *wallpaper_cat = new settings_category("Wallpaper", "Change the desktop wallpaper", "preferences-desktop-wallpaper");
+    desktop_cat->add_child(wallpaper_cat);
+
+    QLabel *wallpaper_preview = new QLabel();
+    settings_widget *preview_widget = new settings_widget("", "", wallpaper_preview);
+    wallpaper_cat->add_child(preview_widget);
+
+    QComboBox *wallpaper_mode = new QComboBox();
+    wallpaper_mode->addItem("Stretch");
+    settings_widget *mode_widget = new settings_widget("", "", wallpaper_mode);
+    wallpaper_cat->add_child(mode_widget);
+
+    settings_category *icons_cat = new settings_category("Icons", "Configure desktop icons", "preferences-desktop-icons");
+    desktop_cat->add_child(icons_cat);
+
+    return items;
 }

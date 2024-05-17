@@ -23,8 +23,8 @@
 #ifndef DESKTOPSETTINGS_H
 #define DESKTOPSETTINGS_H
 
-
 #include "../../library/pluginutills/settings_plugin_interface.h"
+#include "settingswidget.h"
 
 class DesktopSettings : public QObject, settings_plugin_infterace
 {
@@ -34,12 +34,17 @@ class DesktopSettings : public QObject, settings_plugin_infterace
 
 public:
     DesktopSettings();
+    ~DesktopSettings();
 
     // settings_plugin_infterace functions
-    QWidget* get_settings_widget();
-    QString get_name(){ return "Desktop"; }
-    QString get_icon(){ return "preferences-desktop-wallpaper"; }
+    //QWidget* get_settings_widget();
+    //QString get_name(){ return "Desktop"; }
+    //QString get_icon(){ return "preferences-desktop-wallpaper"; }
 
+    QList<settings_item*> get_settings_items();
+
+private:
+    settingswidget *swidget = nullptr;
 };
 
 #endif // DESKTOPSETTINGS_H

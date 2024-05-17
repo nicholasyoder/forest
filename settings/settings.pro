@@ -12,10 +12,13 @@ CONFIG += c++17
 #DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
 
 SOURCES += \
+    listwidget.cpp \
     main.cpp \
     settingsmanager.cpp
 
 HEADERS += \
+    ../library/pluginutills/settings_plugin_interface.h \
+    listwidget.h \
     settingsmanager.h
 
 # Default rules for deployment.

@@ -25,6 +25,72 @@
 
 #include <QObject>
 #include <QWidget>
+#include <QUuid>
+
+// Base settings item class with name and optional description (used for search)
+class settings_item : public QObject {
+    Q_OBJECT
+public:
+    settings_item(QString name, QString description = ""){ set_name(name); set_description(description); item_id = QUuid::createUuid(); }
+    void set_name(QString name){ item_name = name; }
+    void set_description(QString description){ item_description = description; }
+    QString name(){ return item_name; }
+    QString description(){ return item_description; }
+    QUuid id(){ return item_id; }
+private:
+    QString item_name;
+    QString item_description;
+    QUuid item_id;
+};
+
+// Settings category with icon and child settings items
+class settings_category : public settings_item {
+    Q_OBJECT
+public:
+    settings_category(QString name, QString description = "", QString icon = "")
+        : settings_item(name, description) { set_icon(icon); }
+    void set_icon(QString icon){ item_icon = icon; }
+    void add_child(settings_item *child){ item_children.append(child); }
+    QString icon(){ return item_icon; }
+    QList<settings_item*> child_items(){ return item_children; }
+private:
+    QString item_icon;
+    QList<settings_item*> item_children;
+};
+
+// Settings item with custom widget
+class settings_widget : public settings_item {
+    Q_OBJECT
+public:
+    settings_widget(QString name, QString description = "", QWidget *widget = nullptr)
+        : settings_item(name, description) { set_widget(widget); }
+signals:
+    void widget_ready(QWidget *widget);
+    void widget_request();
+public slots:
+    // Request item widget
+    // Called when item is ready to be shown and widget is needed
+    // If item_widget is already prepared, emit widget_ready passing item_widget
+    // Other wise emit a widget_request signal to notify the relevent plugin-settings to setup this widget
+    void request_widget(){
+        if (item_widget)
+            emit widget_ready(item_widget);
+        else
+            emit widget_request();
+    }
+
+    void set_widget(QWidget *widget){
+        item_widget = widget;
+        emit widget_ready(item_widget);
+    }
+
+private:
+    QWidget *item_widget = nullptr;
+};
+
+class settings_control : public settings_widget {
+    Q_OBJECT
+};
 
 class settings_plugin_infterace {
 
@@ -33,14 +99,8 @@ public:
     // Destructor
     virtual ~settings_plugin_infterace() {}
 
-    // Get settings widget
-    virtual QWidget* get_settings_widget() = 0;
-
-    // Get plugin name
-    virtual QString get_name() = 0;
-
-    // Get plugin icon
-    virtual QString get_icon() = 0;
+    // Get settings items
+    virtual QList<settings_item*> get_settings_items() = 0;
 
 };
 

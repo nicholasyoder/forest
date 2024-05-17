@@ -4,7 +4,7 @@ TARGET = services-app
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
 
-DESTDIR = ../usr/lib/forest
+DESTDIR = ../../usr/lib/forest
 
 CONFIG += c++11 \
             plugin
