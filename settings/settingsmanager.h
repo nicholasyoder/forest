@@ -6,8 +6,10 @@
 #include <QHBoxLayout>
 #include <QVBoxLayout>
 #include <QHash>
+#include <QMap>
 #include <QStackedLayout>
 
+#include "breadcrumbwidget.h"
 #include "listwidget.h"
 #include "settings_plugin_interface.h"
 
@@ -23,12 +25,14 @@ public:
     void load_items(QList<settings_item*> items);
     void display_categories(QUuid parent_id, QList<settings_item*> items, bool show_back_button = false);
     void display_widgets(QUuid parent_id, QList<settings_item*> items);
-    QWidget* create_control(settings_widget* item);
+    QWidget* create_control(settings_widget* item, QString groupposition = "middle");
 
 private slots:
     void open_item(QUuid id);
+    void open_home(){ open_item(home_id); }
 
 private:
+    breadcrumbwidget *bcw = nullptr;
     listwidget *listw = nullptr;
     QStackedLayout *stacked_layout = nullptr;
     QHash<QUuid, settings_item*> item_hash;

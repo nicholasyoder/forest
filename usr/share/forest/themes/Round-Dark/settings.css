@@ -1,21 +1,60 @@
 #SettingsWindow { padding: 0;}
 
+/*
 QTabWidget::pane { background: solid #ffffff; border: 1px solid #ffffff;  margin: 0;}
 QTabWidget::tab-bar { alignment: center; }
 QTabBar::tab { background : solid #eeeeee; min-width: 8ex; padding: 2px; border: 0px solid #ffffff; }
 QTabBar::tab:hover { background: solid #f7f7f7; }
 QTabBar::tab:selected { background: solid #ffffff; }
 QTabBar::scroller { width: 15px; }
+*/
+
+#LeftPane {
 
 
-#CategoryPane {
-    background: rgba(250,250,250, 100%);
-    border-right: 1px solid rgba(225,225,225, 100%);
 }
 
-#ControlsPane {
+#RightPane {
     background: rgba(240,240,240, 100%);
     padding: 30px;
+}
+
+#CategoryList {
+    background: rgba(250,250,250, 100%);
+    border: 1px solid rgba(225,225,225, 100%);
+    border-left: none;
+    border-bottom: none;
+    padding: 8px;
+}
+
+#BreadCrumbWidget {
+    background: rgba(240,240,240, 100%);
+    /*border-bottom: 1px solid rgba(150,150,150, 40%);*/
+    padding: 6px 6px 4px 6px;
+}
+
+#BreadCrumbItem {
+    background: rgba(0,0,0, 0%);
+    border: 1px solid transparent;
+    padding: 4px;
+    font-size: 10.5pt;
+
+    border-radius: 3px;
+}
+
+#BreadCrumbItem:hover {
+    color: rgba(60,60,60, 100%);
+}
+
+#BreadCrumbItem:pressed {
+    color: rgba(3,3,3, 100%);
+}
+
+#BreadCrumbDivider {
+    background: rgba(0,0,0, 0%);
+    border: 1px solid transparent;
+    padding: 4px 0px 4px 0px;
+    font-size: 10.5pt;
 }
 
 #CategoryButton {
@@ -26,10 +65,8 @@ QTabBar::scroller { width: 15px; }
     padding-left: 3px;
     padding-right: 3px;
     margin-bottom: 2px;
-    margin-left: 8px;
-    margin-right: 8px;
     min-height: 30px;
-    min-width: 150px;
+    min-width: 200px;
     icon-size: 22px;
 }
 
@@ -62,12 +99,45 @@ QTabBar::scroller { width: 15px; }
 #ControlWidget {
     background: rgba(255,255,255, 80%);
     border: 1px solid rgba(180,180,180, 60%);
-    border-radius: 3px;
+    border-radius: 4px;
     margin-bottom: 5px;
-
+    padding: 12px;
     max-width: 700px;
 }
 
+#WidgetGroup {
+    background: rgba(255,255,255, 80%);
+    border: 1px solid rgba(180,180,180, 60%);
+    border-radius: 3px;
+    margin-bottom: 5px;
+}
+
+#WidgetGroup #ControlWidget {
+    margin: 0px;
+}
+
+#WidgetGroup #ControlWidget[groupposition="first"] {
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    background: rgba(0,0,0,0%);
+
+    border: none;
+    border-bottom: 1px solid rgba(180,180,180, 40%);
+}
+
+#WidgetGroup #ControlWidget[groupposition="middle"] {
+    border-radius: 0px;
+    background: rgba(0,0,0,0%);
+
+    border: none;
+    border-bottom: 1px solid rgba(180,180,180, 40%);
+}
+
+#WidgetGroup #ControlWidget[groupposition="last"] {
+    border: none;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
 
 /* Plugin specific stuff - this should really be moved to be with the plugin itself somehow. Maybe? */
 
@@ -81,4 +151,9 @@ QTabBar::scroller { width: 15px; }
     border-radius: 4px;
     padding: 5px;
     margin: 18px;
+}
+
+
+#SystemInfoLabel {
+    color: #777;
 }

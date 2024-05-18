@@ -28,8 +28,6 @@ listwidget::listwidget(){
     basevlayout->setMargin(0);
     basevlayout->setSpacing(0);
     basevlayout->addStretch(5);
-
-    setObjectName("CategoryPane");
 }
 
 void listwidget::clear(){

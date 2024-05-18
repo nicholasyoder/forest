@@ -62,6 +62,13 @@ private:
     QList<settings_item*> item_children;
 };
 
+// Group of widgets
+class settings_widget_group : public settings_category {
+    Q_OBJECT
+public:
+    settings_widget_group() : settings_category("") {}
+};
+
 // Settings item with custom widget
 class settings_widget : public settings_item {
     Q_OBJECT

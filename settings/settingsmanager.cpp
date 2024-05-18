@@ -13,15 +13,28 @@ SettingsManager::SettingsManager(){
 
     stacked_layout = new QStackedLayout;
     stacked_layout->setMargin(0);
-    listw = new listwidget;
+
 
     QHBoxLayout *hlayout = new QHBoxLayout(this);
     hlayout->setMargin(0);
     hlayout->setSpacing(0);
-    hlayout->addWidget(listw);
+
+    QFrame *left_pane = new QFrame;
+    left_pane->setObjectName("LeftPane");
+    QVBoxLayout *left_v_layout = new QVBoxLayout(left_pane);
+    left_v_layout->setMargin(0);
+    left_v_layout->setSpacing(0);
+    bcw = new breadcrumbwidget;
+    connect(bcw, &breadcrumbwidget::level1_activated, this, &SettingsManager::open_home);
+    left_v_layout->addWidget(bcw);
+    listw = new listwidget;
+    listw->setObjectName("CategoryList");
+    left_v_layout->addWidget(listw);
+
+    hlayout->addWidget(left_pane);
 
     QFrame *controls_pane = new QFrame;
-    controls_pane->setObjectName("ControlsPane");
+    controls_pane->setObjectName("RightPane");
     controls_pane->setLayout(stacked_layout);
     hlayout->addWidget(controls_pane, 1);
 
@@ -64,7 +77,7 @@ void SettingsManager::load_settings_ui(){
             qDebug() << plugloader.errorString();
         }
     }
-    open_item(home_id);
+    open_home();
 }
 
 void SettingsManager::load_items(QList<settings_item*> items){
@@ -83,16 +96,25 @@ void SettingsManager::load_items(QList<settings_item*> items){
 void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> items, bool show_back_button){
     listw->clear();
     if(parent_id == home_id)
-        listw->addseperator("Forest Settings");
+        bcw->set_level2_text("");
     else if(item_hash.contains(parent_id))
-        listw->addseperator(item_hash[parent_id]->name());
+        bcw->set_level2_text(item_hash[parent_id]->name());
+    //    listw->addseperator(item_hash[parent_id]->name());
+
     if(show_back_button)
         listw->additem(home_id, "Back", QIcon::fromTheme("go-previous"));
+
+    QMap<QString, settings_category*> cat_map;
     foreach(settings_item* item, items){
         settings_category *cat_item = dynamic_cast<settings_category*>(item);
         if(cat_item != nullptr){
-            listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()));
+            cat_map[cat_item->name()] = cat_item;
         }
+    }
+
+    foreach (QString name, cat_map.keys()) {
+        settings_category *cat_item = cat_map[name];
+        listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()));
     }
 }
 
@@ -108,6 +130,30 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
             if(widget_item != nullptr){
                 QWidget *widget = (widget_item->is_custom()) ? widget_item->widget() : create_control(widget_item);
                 page_layout->addWidget(widget);
+                continue;
+            }
+
+            settings_widget_group *widget_group = dynamic_cast<settings_widget_group*>(item);
+            if(widget_group != nullptr){
+                QFrame *widget_group_frame = new QFrame;
+                widget_group_frame->setObjectName("WidgetGroup");
+                QVBoxLayout *group_v_layout = new QVBoxLayout(widget_group_frame);
+                group_v_layout->setSpacing(0);
+                group_v_layout->setMargin(0);
+                foreach (settings_item* sub_item, widget_group->child_items()) {
+                    settings_widget *sub_widget_item = dynamic_cast<settings_widget*>(sub_item);
+                    if(sub_widget_item != nullptr){
+                        QString groupposition = "middle";
+                        if (sub_item == widget_group->child_items().first())
+                            groupposition = "first";
+                        else if (sub_item == widget_group->child_items().last())
+                            groupposition = "last";
+                        QWidget *widget = (sub_widget_item->is_custom()) ? sub_widget_item->widget() : create_control(sub_widget_item, groupposition);
+                        group_v_layout->addWidget(widget);
+                        continue;
+                    }
+                }
+                page_layout->addWidget(widget_group_frame);
             }
         }
         page_layout->addStretch(1);
@@ -118,7 +164,7 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
     }
 }
 
-QWidget* SettingsManager::create_control(settings_widget* item){
+QWidget* SettingsManager::create_control(settings_widget* item, QString groupposition){
     QFrame *base_widget = new QFrame;
     QHBoxLayout *base_layout = new QHBoxLayout(base_widget);
     base_layout->setMargin(0);
@@ -126,7 +172,10 @@ QWidget* SettingsManager::create_control(settings_widget* item){
     base_layout->addStretch(0);
     QFrame *control_widget = new QFrame;
     control_widget->setObjectName("ControlWidget");
+    control_widget->setProperty("groupposition", groupposition);
     QHBoxLayout *h_layout = new QHBoxLayout(control_widget);
+    h_layout->setMargin(0);
+    h_layout->setSpacing(0);
     QLabel *name_label = new QLabel(item->name());
     h_layout->addWidget(name_label, 1);
     h_layout->addWidget(item->widget());

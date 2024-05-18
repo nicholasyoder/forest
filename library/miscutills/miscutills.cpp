@@ -1,5 +1,7 @@
 #include "miscutills.h"
 
+#include <QProcess>
+
 miscutills::miscutills()
 {
 }
@@ -16,4 +18,11 @@ void miscutills::call_dbus(QString path){
     else {
         fprintf(stderr, "Cannot connect to the D-Bus session bus.\nTo start it, run:\n\teval `dbus-launch --auto-syntax`\n");
     }
+}
+
+QString miscutills::run_shell_command(QString command){
+    QProcess process;
+    process.start("bash", QStringList() << "-c" << command);
+    process.waitForFinished();
+    return process.readAllStandardOutput();
 }
