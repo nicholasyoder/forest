@@ -4,7 +4,9 @@
 #include <QMainWindow>
 #include <QSettings>
 #include <QHBoxLayout>
+#include <QVBoxLayout>
 #include <QHash>
+#include <QStackedLayout>
 
 #include "listwidget.h"
 #include "settings_plugin_interface.h"
@@ -19,16 +21,19 @@ public:
 
     void load_settings_ui();
     void load_items(QList<settings_item*> items);
-    void display_categories(QList<settings_item*> items, bool show_back_button = false);
+    void display_categories(QUuid parent_id, QList<settings_item*> items, bool show_back_button = false);
+    void display_widgets(QUuid parent_id, QList<settings_item*> items);
+    QWidget* create_control(settings_widget* item);
 
 private slots:
     void open_item(QUuid id);
 
 private:
     listwidget *listw = nullptr;
-    QHBoxLayout *widget_layout = nullptr;
+    QStackedLayout *stacked_layout = nullptr;
     QHash<QUuid, settings_item*> item_hash;
     QList<settings_item*> top_level_items;
     QUuid home_id = QUuid::createUuid();
+    QHash<QUuid, int> stack_hash;
 };
 #endif // SETTINGSMANAGER_H

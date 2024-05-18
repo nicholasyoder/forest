@@ -53,11 +53,31 @@ public:
     void add_child(settings_item *child){ item_children.append(child); }
     QString icon(){ return item_icon; }
     QList<settings_item*> child_items(){ return item_children; }
+signals:
+    void opened();
+public slots:
+    void notify_opened(){ emit opened(); }
 private:
     QString item_icon;
     QList<settings_item*> item_children;
 };
 
+// Settings item with custom widget
+class settings_widget : public settings_item {
+    Q_OBJECT
+public:
+    settings_widget(QString name, QString description = "", QWidget *widget = nullptr, bool custom = false)
+        : settings_item(name, description) { set_widget(widget); set_custom(custom); }
+    QWidget* widget(){ return item_widget; }
+    bool is_custom(){ return custom_widget; }
+    void set_widget(QWidget *widget){ item_widget = widget; }
+    void set_custom(bool custom){ custom_widget = custom; }
+private:
+    QWidget *item_widget = nullptr;
+    bool custom_widget = false;
+};
+
+/*
 // Settings item with custom widget
 class settings_widget : public settings_item {
     Q_OBJECT
@@ -91,6 +111,7 @@ private:
 class settings_control : public settings_widget {
     Q_OBJECT
 };
+*/
 
 class settings_plugin_infterace {
 

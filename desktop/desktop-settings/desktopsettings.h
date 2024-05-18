@@ -23,8 +23,13 @@
 #ifndef DESKTOPSETTINGS_H
 #define DESKTOPSETTINGS_H
 
+#include <QLabel>
+#include <QComboBox>
+#include <QPushButton>
+#include <QSettings>
+#include <QFileDialog>
+
 #include "../../library/pluginutills/settings_plugin_interface.h"
-#include "settingswidget.h"
 
 class DesktopSettings : public QObject, settings_plugin_infterace
 {
@@ -36,15 +41,19 @@ public:
     DesktopSettings();
     ~DesktopSettings();
 
-    // settings_plugin_infterace functions
-    //QWidget* get_settings_widget();
-    //QString get_name(){ return "Desktop"; }
-    //QString get_icon(){ return "preferences-desktop-wallpaper"; }
-
     QList<settings_item*> get_settings_items();
 
+private slots:
+    void load_wallpaper_settings();
+    void set_wallpaper(QString file_path);
+    void set_wallpaper_mode(QString mode);
+
+    void call_dbus(QString path);
+
 private:
-    settingswidget *swidget = nullptr;
+    QLabel *wallpaper_preview = nullptr;
+    QComboBox *wallpaper_mode = nullptr;
+    QFileDialog *open_photo_dialog = nullptr;
 };
 
 #endif // DESKTOPSETTINGS_H

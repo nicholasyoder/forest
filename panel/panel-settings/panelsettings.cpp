@@ -26,8 +26,3 @@ PanelSettings::PanelSettings()
 {
 
 }
-
-QWidget* PanelSettings::get_settings_widget(){
-    QWidget *base_widget = new QWidget;
-    return base_widget;
-}

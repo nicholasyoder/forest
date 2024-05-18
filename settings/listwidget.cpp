@@ -22,12 +22,14 @@
 
 #include "listwidget.h"
 
+#include <QStyleOptionButton>
+
 listwidget::listwidget(){
     basevlayout->setMargin(0);
     basevlayout->setSpacing(0);
     basevlayout->addStretch(5);
 
-    setObjectName("settingsSideBar");
+    setObjectName("CategoryPane");
 }
 
 void listwidget::clear(){
@@ -36,6 +38,12 @@ void listwidget::clear(){
         delete item;
     }
     item_list.clear();
+
+    foreach (QLabel *item, seperator_list) {
+        basevlayout->removeWidget(item);
+        delete item;
+    }
+    seperator_list.clear();
 }
 
 void listwidget::additem(QUuid id, QString text, QIcon icon){
@@ -51,19 +59,12 @@ void listwidget::additem(QUuid id, QString text, QIcon icon){
 
 void listwidget::addseperator(QString text){
     QLabel *textlabel = new QLabel(text);
-    QFont f;
-    f.setBold(true);
-    textlabel->setFont(f);
-    //basevlayout->addWidget(textlabel);
-    QHBoxLayout *hlayout = new QHBoxLayout;
-    hlayout->setMargin(2);
-    hlayout->addSpacing(2);
-    hlayout->addWidget(textlabel);
-
+    textlabel->setObjectName("CategoryDivider");
     if (basevlayout->count() < 2)
-        basevlayout->insertLayout(0, hlayout);
+        basevlayout->insertWidget(0, textlabel);
     else
-        basevlayout->insertLayout(basevlayout->count()-1, hlayout);
+        basevlayout->insertWidget(basevlayout->count()-1, textlabel);
+    seperator_list.append(textlabel);
 }
 
 void listwidget::handleitemclicked(QUuid id){
@@ -73,17 +74,20 @@ void listwidget::handleitemclicked(QUuid id){
 //listitem class~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
 listitem::listitem(QUuid id, QString text, QIcon icon){
-    itemtext = text;
     item_id = id;
+    item_text = text;
+    item_icon = icon;
 
-    QHBoxLayout *hlayout = new QHBoxLayout;
+    setObjectName("CategoryButton");
+
+    /*QHBoxLayout *hlayout = new QHBoxLayout;
     QLabel *iconlabel = new QLabel;
     QLabel *textlabel = new QLabel(text);
     iconlabel->setPixmap(icon.pixmap(22,22));
     hlayout->addWidget(iconlabel);
     hlayout->addWidget(textlabel);
     hlayout->addStretch(5);
-    this->setLayout(hlayout);
+    this->setLayout(hlayout);*/
 }
 
 void listitem::updatepressed(QUuid id){
@@ -124,11 +128,34 @@ void listitem::mouseReleaseEvent(QMouseEvent *event){
 }
 
 void listitem::paintEvent(QPaintEvent *){
-    QPainter painter(this);
+    /*QPainter painter(this);
     if (mousepressed)
         painter.fillRect(0,0, this->width(), this->height(), QColor::fromRgb(220,220,220));
     else if (highlight)
         painter.fillRect(0,0, this->width(), this->height(), QColor::fromRgb(225,225,225));
     else if (pressed)
         painter.fillRect(0,0, this->width(), this->height(), QColor::fromRgb(220,220,220));
+    */
+
+
+    QStyleOptionButton option;
+    option.initFrom(this);
+    if (mousepressed || pressed)
+        option.state |= QStyle::State_Sunken;
+    else if (highlight)
+        option.state |= QStyle::State_MouseOver;
+    else
+        option.state |= QStyle::State_Raised;
+
+    QSize iconsize = QSize(22,22);
+    if (item_text!="" && !item_icon.isNull())
+        option.text = option.fontMetrics.elidedText(item_text, Qt::ElideRight, style()->subElementRect(QStyle::SE_PushButtonContents, &option, this).width() - iconsize.width()-2);
+    else
+        option.text = item_text;
+
+    option.icon = item_icon;
+    option.iconSize = iconsize;
+
+    QPainter painter(this);
+    style()->drawControl(QStyle::CE_PushButton, &option, &painter, this);
 }

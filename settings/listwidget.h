@@ -32,7 +32,7 @@
 #include <QDebug>
 #include <QUuid>
 
-class listitem : public QWidget
+class listitem : public QFrame
 {
     Q_OBJECT
 public:
@@ -55,7 +55,8 @@ private:
     bool highlight = false;
     bool pressed = false;
     bool mousepressed = false;
-    QString itemtext;
+    QString item_text;
+    QIcon item_icon;
     QUuid item_id;
 };
 
@@ -82,6 +83,7 @@ private slots:
 private:
     QVBoxLayout *basevlayout = new QVBoxLayout(this);
     QList<listitem*> item_list;
+    QList<QLabel*> seperator_list;
 };
 
 #endif // LISTWIDGET_H

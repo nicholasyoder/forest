@@ -37,10 +37,6 @@ public:
     // settings_plugin_infterace functions
     QList<settings_item*> get_settings_items(){ return QList<settings_item*>(); }
 
-    QWidget* get_settings_widget();
-    //QString get_name(){ return "Panel"; }
-    //QString get_icon(){ return "preferences-desktop"; }
-
 };
 
 #endif // PANELSETTINGS_H
