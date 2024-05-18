@@ -21,8 +21,45 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "panelsettings.h"
+#include <QSettings>
 
 PanelSettings::PanelSettings()
 {
 
+}
+
+QList<settings_item*> PanelSettings::get_settings_items(){
+    QList<settings_item*> items;
+
+    settings_category *panel_cat = new settings_category("Panel", "", "preferences-desktop");
+    items.append(panel_cat);
+
+    settings_category *behavior_cat = new settings_category("Behavior", "", "configure");
+    connect(behavior_cat, &settings_category::opened, this, &PanelSettings::load_behavior_settings);
+    panel_cat->add_child(behavior_cat);
+
+    position_select = new QComboBox();
+    position_select->addItem("Top");
+    position_select->addItem("Bottom");
+    settings_widget *position_item = new settings_widget("Position", "", position_select);
+    behavior_cat->add_child(position_item);
+
+    return items;
+}
+
+void PanelSettings::load_behavior_settings(){
+    QSettings settings("Forest", "Panel");
+
+    QString position = settings.value("position").toString();
+    position_select->setCurrentText(position);
+
+    connect(position_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings);
+}
+
+void PanelSettings::set_behavior_settings(){
+    QSettings settings("Forest", "Panel");
+    settings.setValue("position", position_select->currentText());
+    settings.sync();
+
+    miscutills::call_dbus("forest/panel/reloadsettings");
 }

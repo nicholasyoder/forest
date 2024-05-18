@@ -29,6 +29,7 @@
 #include <QSettings>
 #include <QFileDialog>
 
+#include "miscutills.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
 class DesktopSettings : public QObject, settings_plugin_infterace
@@ -47,8 +48,6 @@ private slots:
     void load_wallpaper_settings();
     void set_wallpaper(QString file_path);
     void set_wallpaper_mode(QString mode);
-
-    void call_dbus(QString path);
 
 private:
     QLabel *wallpaper_preview = nullptr;

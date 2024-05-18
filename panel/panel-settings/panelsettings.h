@@ -23,6 +23,9 @@
 #ifndef PANELSETTINGS_H
 #define PANELSETTINGS_H
 
+#include <QComboBox>
+
+#include "miscutills.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
 class PanelSettings : public QObject, settings_plugin_infterace
@@ -35,8 +38,14 @@ public:
     PanelSettings();
 
     // settings_plugin_infterace functions
-    QList<settings_item*> get_settings_items(){ return QList<settings_item*>(); }
+    QList<settings_item*> get_settings_items();
 
+public slots:
+    void load_behavior_settings();
+    void set_behavior_settings();
+
+private:
+    QComboBox *position_select = nullptr;
 };
 
 #endif // PANELSETTINGS_H
