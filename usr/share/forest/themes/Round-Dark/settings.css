@@ -9,13 +9,17 @@ QTabBar::tab:selected { background: solid #ffffff; }
 QTabBar::scroller { width: 15px; }
 */
 
-#LeftPane {
+#CategoriesPane {
 
 
 }
 
-#RightPane {
+#ControlsScrollArea {
+    border: none;
     background: rgba(240,240,240, 100%);
+}
+
+#ControlsPane {
     padding: 30px;
 }
 
@@ -95,9 +99,48 @@ QTabBar::scroller { width: 15px; }
     font-style: bold;
 }
 
+#ControlsScrollArea {
+
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    border: none;
+    width: 10px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: rgb(175,175,175);
+    border-radius: 2px;
+    margin: 2px 2px 2px 0px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+
+QScrollBar::sub-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: none;
+    width: 0;
+    height: 0;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+
 
 #ControlWidget {
-    background: rgba(255,255,255, 80%);
+    background: #fdfdfd;
     border: 1px solid rgba(180,180,180, 60%);
     border-radius: 4px;
     margin-bottom: 5px;
@@ -135,8 +178,44 @@ QTabBar::scroller { width: 15px; }
 
 #WidgetGroup #ControlWidget[groupposition="last"] {
     border: none;
+    background: rgba(0,0,0,0%);
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
+}
+
+
+#ControlWidget QListWidget {
+    background: #fdfdfd;
+    border: none;
+    outline: 0;
+}
+
+#ControlWidget QListWidget::item {
+    background: #fdfdfd;
+    padding: 6px;
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+#ControlWidget QListWidget::item:selected {
+    background: #fdfdfd;
+    border: 1px solid #ccc;
+    color: black;
+}
+
+#ControlWidget QListWidget::indicator {
+    border: 1px solid #888;
+    border-radius: 8px;
+    width: 16px;
+    height: 16px;
+}
+
+#ControlWidget QListWidget::indicator:checked {
+    background: #3e3;
+}
+
+#ControlWidget QListWidget::indicator:unchecked {
+    background: #eee;
 }
 
 /* Plugin specific stuff - this should really be moved to be with the plugin itself somehow. Maybe? */

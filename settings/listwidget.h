@@ -40,6 +40,8 @@ public:
 
 public slots:
     void updatepressed(QUuid id);
+    void activate(){ pressed = true; update(); emit clicked(item_id); }
+    QString text(){ return item_text; }
 
 signals:
     void clicked(QUuid id);
@@ -76,6 +78,7 @@ public slots:
     void additem(QUuid id, QString text, QIcon icon);
     void addseperator(QString text);
     void setcurrentitem(QString itemtext){handleitemclicked(itemtext);}
+    QList<listitem*> items(){ return item_list; }
 
 private slots:
     void handleitemclicked(QUuid id);

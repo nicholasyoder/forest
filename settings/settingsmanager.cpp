@@ -20,7 +20,7 @@ SettingsManager::SettingsManager(){
     hlayout->setSpacing(0);
 
     QFrame *left_pane = new QFrame;
-    left_pane->setObjectName("LeftPane");
+    left_pane->setObjectName("CategoriesPane");
     QVBoxLayout *left_v_layout = new QVBoxLayout(left_pane);
     left_v_layout->setMargin(0);
     left_v_layout->setSpacing(0);
@@ -30,13 +30,21 @@ SettingsManager::SettingsManager(){
     listw = new listwidget;
     listw->setObjectName("CategoryList");
     left_v_layout->addWidget(listw);
-
     hlayout->addWidget(left_pane);
 
+
     QFrame *controls_pane = new QFrame;
-    controls_pane->setObjectName("RightPane");
+    controls_pane->setObjectName("ControlsPane");
     controls_pane->setLayout(stacked_layout);
-    hlayout->addWidget(controls_pane, 1);
+
+    controls_area = new QScrollArea;
+    controls_area->setObjectName("ControlsScrollArea");
+    controls_area->setWidget(controls_pane);
+    controls_area->setWidgetResizable(true);
+    controls_area->setFocusPolicy(Qt::NoFocus);
+    hlayout->addWidget(controls_area, 1);
+
+    //hlayout->addWidget(controls_pane, 1);
 
     listw->setMinimumWidth(175);
     //connect(listw, SIGNAL(currentRowChanged(int)), slayout, SLOT(setCurrentIndex(int)));
@@ -116,6 +124,14 @@ void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> 
         settings_category *cat_item = cat_map[name];
         listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()));
     }
+
+    // Automaticly open first item - but do second if first item is back button
+    //listitem *first_item = (listw->items().first()->text() != "Back") ? listw->items().first() : listw->items().at(1);
+    //first_item->activate();
+
+    // Activate first item if were on toplevel
+    if (parent_id == home_id)
+        listw->items().first()->activate();
 }
 
 void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> items){
@@ -176,8 +192,10 @@ QWidget* SettingsManager::create_control(settings_widget* item, QString grouppos
     QHBoxLayout *h_layout = new QHBoxLayout(control_widget);
     h_layout->setMargin(0);
     h_layout->setSpacing(0);
-    QLabel *name_label = new QLabel(item->name());
-    h_layout->addWidget(name_label, 1);
+    if(item->name() != ""){
+        QLabel *name_label = new QLabel(item->name());
+        h_layout->addWidget(name_label, 1);
+    }
     h_layout->addWidget(item->widget());
     base_layout->addWidget(control_widget, 1);
     base_layout->addStretch(0);

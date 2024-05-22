@@ -8,6 +8,8 @@
 #include <QHash>
 #include <QMap>
 #include <QStackedLayout>
+#include <QScrollArea>
+
 
 #include "breadcrumbwidget.h"
 #include "listwidget.h"
@@ -35,6 +37,7 @@ private:
     breadcrumbwidget *bcw = nullptr;
     listwidget *listw = nullptr;
     QStackedLayout *stacked_layout = nullptr;
+    QScrollArea *controls_area = nullptr;
     QHash<QUuid, settings_item*> item_hash;
     QList<settings_item*> top_level_items;
     QUuid home_id = QUuid::createUuid();
