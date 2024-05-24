@@ -24,6 +24,7 @@
 
 
 #include <KWindowInfo>
+#include <kx11extras.h>
 
 windowlist::windowlist(){}
 
@@ -57,11 +58,15 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
     currentdesk = Xcbutills::getCurrentDesktop();
 
-    connect(KWindowSystem::self(), &KWindowSystem::windowAdded, this, &windowlist::onWindowAdded);
-    connect(KWindowSystem::self(), &KWindowSystem::windowRemoved, this, &windowlist::onWindowRemoved);
-    connect(KWindowSystem::self(), static_cast<void (KWindowSystem::*)(WId, NET::Properties, NET::Properties2)>(&KWindowSystem::windowChanged),
-            this, &windowlist::onWindowChanged);
-    connect(KWindowSystem::self(), &KWindowSystem::currentDesktopChanged, this, &windowlist::onDesktopChanged);
+    connect(KX11Extras::self(), &KX11Extras::windowAdded, this, &windowlist::onWindowAdded);
+    connect(KX11Extras::self(), &KX11Extras::windowRemoved, this, &windowlist::onWindowRemoved);
+    connect(KX11Extras::self(), &KX11Extras::windowChanged, this, &windowlist::onWindowChanged);
+    connect(KX11Extras::self(), &KX11Extras::currentDesktopChanged, this, &windowlist::onDesktopChanged);
+
+    // Load current windows (if any)
+    foreach(WId window, KX11Extras::windows()){
+        onWindowAdded(window);
+    }
 }
 
 QHash<QString, QString> windowlist::getpluginfo(){
