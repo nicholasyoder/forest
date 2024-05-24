@@ -7,8 +7,6 @@ DESTDIR = ../../../usr/lib/forest/panel
 INCLUDEPATH += ../../panel-library
 INCLUDEPATH += ../../../library
 
-LIBS += -lxcb-image
-
 LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
 INCLUDEPATH += /usr/include/KF5/KWindowSystem
 DEPENDPATH += /usr/include/KF5/KWindowSystem
@@ -58,3 +56,5 @@ LIBS += -L$$OUT_PWD/../../../library/xcbutills/ -lxcbutills
 INCLUDEPATH += $$PWD/../../../library/xcbutills
 DEPENDPATH += $$PWD/../../../library/xcbutills
 PRE_TARGETDEPS += $$OUT_PWD/../../../library/xcbutills/libxcbutills.a
+
+LIBS += -lxcb-image

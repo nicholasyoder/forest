@@ -51,7 +51,7 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     connect(item, &pmenuitem::clicked, this, &windowlist::showsettingswidget);
     pmenu->additem(item);
 
-    //ipopup = new imagepopup(this);
+    ipopup = new imagepopup(this);
 
     loadsettings();
 
@@ -86,7 +86,7 @@ void windowlist::mouseReleaseEvent(QMouseEvent *event){
 void windowlist::loadsettings(){
     QSettings settings("Forest", "Window List");
     settings.sync();
-    bttype = settings.value("buttontype", "twopart").toString();
+    ipopup->set_enabled(settings.value("showthumbnails", true).toBool());
     maxbtsize = settings.value("maxbuttonsize", 170).toInt();
 }
 
@@ -141,8 +141,8 @@ void windowlist::onWindowAdded(WId window){
     if(!button_list.contains(window)){
         windowbutton *wbt = new windowbutton(window, desktop, Xcbutills::getWindowIcon(window), Xcbutills::getWindowTitle(window));
         connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
-        //connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
-        //connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
+        connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
+        connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
         wbt->setMaximumWidth(maxbtsize);
         mainlayout->addWidget(wbt, 1);
         button_list[window] = wbt;

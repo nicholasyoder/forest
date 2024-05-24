@@ -23,6 +23,7 @@ public slots:
     void btmouseEnter(windowbutton *bt);
     void btmouseLeave();
     void btclicked();
+    void set_enabled(bool enabled = true){ popup_enabled = enabled; }
 
 private slots:
     void showpopup();
@@ -34,6 +35,10 @@ private slots:
     //void resizepbox(){pbox->resize(pbox->sizeHint()); pbox->positionOnLauncher();}
 
 private:
+    QPixmap get_window_image();
+
+    bool popup_enabled = true;
+
     windowbutton *currentbt = nullptr;
     bool open = false;
 

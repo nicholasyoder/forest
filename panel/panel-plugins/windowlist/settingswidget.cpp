@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2024 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -23,47 +23,28 @@
 #include "settingswidget.h"
 #include "ui_settingswidget.h"
 
-settingswidget::settingswidget(QWidget *parent) :
-    QWidget(parent),
-    ui(new Ui::settingswidget)
-{
+settingswidget::settingswidget(QWidget *parent) : QWidget(parent), ui(new Ui::settingswidget){
     ui->setupUi(this);
     loadsettings();
 }
 
-settingswidget::~settingswidget()
-{
+settingswidget::~settingswidget(){
     delete ui;
 }
 
-void settingswidget::loadsettings()
-{
+void settingswidget::loadsettings(){
     QSettings settings("Forest", "Window List");
     settings.sync();
 
-    QString bttype = settings.value("buttontype", "twopart").toString();
-    if (bttype == "tab")
-        ui->tabRbt->setChecked(true);
-    else if (bttype == "icononly")
-        ui->icononlyRbt->setChecked(true);
-    else
-        ui->textandiconRbt->setChecked(true);
-
-    ui->maxsizesbox->setValue(settings.value("maxbuttonsize", 150).toInt());
+    ui->preview_cbox->setChecked(settings.value("showthumbnails").toBool());
+    ui->maxsizesbox->setValue(settings.value("maxbuttonsize", 170).toInt());
     QString seps = settings.value("seperators", "None").toString();
 }
 
-void settingswidget::on_applybt_clicked()
-{
+void settingswidget::on_applybt_clicked(){
     QSettings settings("Forest", "Window List");
+    settings.setValue("showthumbnails", ui->preview_cbox->isChecked());
     settings.setValue("maxbuttonsize",ui->maxsizesbox->value());
-
-    if (ui->tabRbt->isChecked())
-        settings.setValue("buttontype", "tab");
-    else if (ui->icononlyRbt->isChecked())
-        settings.setValue("buttontype", "icononly");
-    else
-        settings.setValue("buttontype", "twopart");
-
+    settings.sync();
     emit settingschanged();
 }

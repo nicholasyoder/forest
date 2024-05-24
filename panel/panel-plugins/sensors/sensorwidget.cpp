@@ -31,7 +31,8 @@ SensorWidget::SensorWidget(){
 void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     setText(QChar(0x00B0)+QString::number(100));
 
-    mDetectedChips = mSensors.getDetectedChips();
+    mSensors = new Sensors;
+    mDetectedChips = mSensors->getDetectedChips();
     int sensornum = 0;
     for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
         const std::vector<Feature>& features = mDetectedChips[i].getFeatures();

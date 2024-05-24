@@ -1,7 +1,7 @@
 #include "imagepopup.h"
+#include <QGraphicsDropShadowEffect>
 
-imagepopup::imagepopup(QWidget *parentw)
-{
+imagepopup::imagepopup(QWidget *parentw){
     parentwidget = parentw;
 
     popupglayout = new QGridLayout;
@@ -12,7 +12,13 @@ imagepopup::imagepopup(QWidget *parentw)
     cbt->setFixedSize(18,18);
     popupglayout->addWidget(cbt, 0,1);
 
+    QGraphicsDropShadowEffect *ds_effect = new QGraphicsDropShadowEffect();
+    ds_effect->setBlurRadius(18);
+    ds_effect->setOffset(0,0);
+    ds_effect->setColor(Qt::black);
     scrshotlabel = new QLabel;
+    scrshotlabel->setStyleSheet("margin: 10px;");
+    scrshotlabel->setGraphicsEffect(ds_effect);
     popupglayout->addWidget(scrshotlabel, 1,0, 1, 2);
     pbox = new popup(popupglayout, parentwidget, CenteredOnWidget);
     pbox->setWindowFlag(Qt::Popup, false);
@@ -23,8 +29,9 @@ imagepopup::imagepopup(QWidget *parentw)
     connect(pbox, &popup::mousereleased, this, &imagepopup::raisewindow);
 }
 
-void imagepopup::btmouseEnter(windowbutton *bt)
-{
+void imagepopup::btmouseEnter(windowbutton *bt){
+    if (!popup_enabled) return;
+
     currentbt = bt;
 
     if (!open){
@@ -34,10 +41,10 @@ void imagepopup::btmouseEnter(windowbutton *bt)
         openptimer = new QTimer;
         openptimer->setSingleShot(true);
         connect(openptimer, &QTimer::timeout, this, &imagepopup::showpopup);
-        openptimer->start(500);
+        openptimer->start(450);
     }
     else {
-        QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->windowId())).scaledToHeight(100, Qt::SmoothTransformation);
+        QPixmap pix = get_window_image();
 
         scrshotlabel->setPixmap(QPixmap());
         pbox->setMinimumSize(0,0);
@@ -52,13 +59,12 @@ void imagepopup::btmouseEnter(windowbutton *bt)
     }
 }
 
-void imagepopup::btmouseLeave()
-{
+void imagepopup::btmouseLeave(){
+    if (!popup_enabled) return;
     deleteopenptimer();
 }
 
-void imagepopup::btclicked()
-{
+void imagepopup::btclicked(){
     if (!currentbt) return;
 
     if (pbox->isVisible())
@@ -67,11 +73,10 @@ void imagepopup::btclicked()
         deleteopenptimer();
 }
 
-void imagepopup::showpopup()
-{
+void imagepopup::showpopup(){
     if (!currentbt) return;
 
-    QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->windowId())).scaledToHeight(100, Qt::SmoothTransformation);
+    QPixmap pix = get_window_image();
 
     scrshotlabel->resize(pix.size());
     scrshotlabel->setPixmap(pix);
@@ -80,13 +85,16 @@ void imagepopup::showpopup()
 
     open = true;
 
+    if (closeptimer){
+        closeptimer->stop();
+        delete closeptimer;
+    }
     closeptimer = new QTimer;
     connect(closeptimer, &QTimer::timeout, this, &imagepopup::tryclosepopup);
-    closeptimer->start(200);
+    closeptimer->start(450);
 }
 
-void imagepopup::tryclosepopup()
-{
+void imagepopup::tryclosepopup(){
     if (!currentbt){
         if (closeptimer)
         {
@@ -105,8 +113,7 @@ void imagepopup::tryclosepopup()
     }
 }
 
-void imagepopup::closepopup()
-{
+void imagepopup::closepopup(){
     open = false;
 
     if (closeptimer)
@@ -124,11 +131,16 @@ void imagepopup::closepopup()
     pbox->closepopup();
 }
 
-void imagepopup::deleteopenptimer()
-{
+void imagepopup::deleteopenptimer(){
     if (openptimer){
         openptimer->stop();
         delete openptimer;
         openptimer = nullptr;
     }
+}
+
+QPixmap imagepopup::get_window_image(){
+    QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->windowId()));
+    if (pix.height() > 120) pix = pix.scaledToHeight(120, Qt::SmoothTransformation);
+    return pix;
 }

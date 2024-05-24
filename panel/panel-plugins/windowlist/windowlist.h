@@ -35,13 +35,12 @@
 
 #include "windowbutton.h"
 
-//#include "imagepopup.h"
+#include "imagepopup.h"
 #include "settingswidget.h"
 #include "panelpluginterface.h"
 #include "xcbutills/xcbutills.h"
 
-class windowlist : public QWidget, panelpluginterface
-{
+class windowlist : public QWidget, panelpluginterface{
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.panel.windowlist.plugin")
     Q_INTERFACES(panelpluginterface)
@@ -61,7 +60,6 @@ public slots:
     void reloadsettings();
 
 signals:
-    //void closepopups();
     void changehighlight(xcb_window_t window);
     void updatebuttondata();
 
@@ -83,8 +81,6 @@ private slots:
     void onButtonEnter(windowbutton *wbt);
     void onButtonLeave(windowbutton *);
 
-    void previewWindow();
-
 private:
     QWidget *stretchwidget = new QWidget;
     QHBoxLayout *mainlayout = new QHBoxLayout();
@@ -95,11 +91,10 @@ private:
     int currentdesk = 0;
     int olddesk = 0;
 
-    QString bttype = "twopart";
     int maxbtsize;
 
     popupmenu *pmenu = nullptr;
-    //imagepopup *ipopup = nullptr;
+    imagepopup *ipopup = nullptr;
 
     settingswidget *swidget = new settingswidget;
 

@@ -2,11 +2,9 @@
 #define WINDOWBUTTON_H
 
 #include "panelbutton.h"
-
 #include "popupmenu.h"
 
-class windowbutton : public panelbutton
-{
+class windowbutton : public panelbutton{
     Q_OBJECT
 
 public:

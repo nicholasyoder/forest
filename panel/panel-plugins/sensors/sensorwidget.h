@@ -68,7 +68,7 @@ private:
     popup *popupbox;
     popupmenu *pmenu;
 
-    Sensors mSensors;
+    Sensors *mSensors = nullptr;
     std::vector<Chip> mDetectedChips;
 
     bool mFahrenheit;

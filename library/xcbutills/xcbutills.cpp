@@ -23,6 +23,8 @@
 #include "xcbutills.h"
 #include <KWindowSystem>
 
+#include <netwm.h>
+
 #include "xcb/xcb_image.h"
 
 xcb_connection_t* Xcbutills::xcbconnection = QX11Info::connection();
@@ -124,72 +126,28 @@ int Xcbutills::getWindowDesktop(xcb_window_t window)
     }
 }
 
-QImage Xcbutills::getWindowImage(xcb_window_t window)
-{
+QImage Xcbutills::getWindowImage(xcb_window_t window){
     const xcb_get_geometry_cookie_t geoCookie = xcb_get_geometry_unchecked(xcbconnection,  window);
     xcb_get_geometry_reply_t* geo(xcb_get_geometry_reply(xcbconnection, geoCookie, nullptr));
     if (!geo){
         return QImage();
     }
 
-
-    //xcb_connection_t *con = xcb_connect(nullptr, nullptr);
-
-    //xcb_map_window(xcbconnection, window);
-    //xcb_clear_area(xcbconnection, 1, window, 0, 0, geo->width, geo->height);
-    //xcb_flush(xcbconnection);
-
-
     xcb_image_t *image = xcb_image_get(xcbconnection, window, 0, 0, geo->width, geo->height, 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
 
     if (image) {
         return QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
     } else {
-        return QImage();
+        QIcon ico = getWindowIcon(window);
+        return QImage(ico.pixmap(100,100).toImage());
+
+        //NETWinInfo win_info(xcbconnection, window, QX11Info::appRootWindow(), NET::Properties());
+
+        //QIcon::fromTheme(win_info.iconName());
+
+        //unsigned char *data = win_info.icon().data;
+        //return QImage::fromData(data, sizeof(*data));
     }
-
-    /*const xcb_get_image_cookie_t imageCookie = xcb_get_image_unchecked(con, XCB_IMAGE_FORMAT_Z_PIXMAP, window, 0, 0, geo->width, geo->height, uint32_t(~0));
-    xcb_get_image_reply_t* xImage(xcb_get_image_reply(con, imageCookie, nullptr));
-    if (!xImage) { // for some unknown reason, xcb_get_image failed. try another less efficient method.
-        qDebug() << "Xcbutils: falling back to screen->grabWindow";
-        xcb_clear_area(xcbconnection, 1, window, 0, 0, geo->width, geo->height);
-        return qApp->primaryScreen()->grabWindow(window).toImage();
-    }
-
-    QImage::Format format = QImage::Format_Invalid;
-    switch (xImage->depth) {
-    case 1: format = QImage::Format_MonoLSB; break;
-    case 16: format = QImage::Format_RGB16; break;
-    case 24: format = QImage::Format_RGB32; break;
-    case 30: {
-        // Qt doesn't have a matching image format. We need to convert manually
-        uint32_t *pixels = reinterpret_cast<uint32_t *>(xcb_get_image_data(xImage));
-        for (uint i = 0; i < xImage->length; ++i)
-        {
-            int r = (pixels[i] >> 22) & 0xff;
-            int g = (pixels[i] >> 12) & 0xff;
-            int b = (pixels[i] >>  2) & 0xff;
-
-            pixels[i] = qRgba(r, g, b, 0xff);
-        }
-        // fall through, Qt format is still Format_ARGB32_Premultiplied
-        Q_FALLTHROUGH();
-    }
-    case 32: format = QImage::Format_ARGB32_Premultiplied; break;
-    default: return QImage(); // we don't know
-    }
-
-    QImage image(xcb_get_image_data(xImage), geo->width, geo->height, xcb_get_image_data_length(xImage) / geo->height, format, free, xImage);
-
-    if (image.isNull()) {return QImage();}
-
-    if (image.format() == QImage::Format_MonoLSB) {
-        // work around an abort in QImage::color
-        image.setColorCount(2);
-        image.setColor(0, QColor(Qt::white).rgb());
-        image.setColor(1, QColor(Qt::black).rgb());
-    }
-    return image;*/
 }
 
 int Xcbutills::getNumDesktops()
