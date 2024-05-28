@@ -25,10 +25,12 @@ public slots:
     void btclicked();
     void set_enabled(bool enabled = true){ popup_enabled = enabled; }
 
+    void closepopup();
+
 private slots:
     void showpopup();
     void tryclosepopup();
-    void closepopup();
+
     void deleteopenptimer();
     void closewindow(){if(currentbt){ Xcbutills::closeWindow(currentbt->windowId()); closepopup();}}
     void raisewindow(){if(currentbt){ Xcbutills::raiseWindow(currentbt->windowId()); closepopup();}}

@@ -61,6 +61,8 @@ void windowbutton::mouseReleaseEvent(QMouseEvent *event){
         return;
     }
 
+    emit request_ipopup_close();
+
     if (event->button() == Qt::LeftButton){
         raise_w();
     }

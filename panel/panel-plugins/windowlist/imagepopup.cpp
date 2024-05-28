@@ -114,6 +114,7 @@ void imagepopup::tryclosepopup(){
 }
 
 void imagepopup::closepopup(){
+    if (!popup_enabled) return;
     open = false;
 
     if (closeptimer)

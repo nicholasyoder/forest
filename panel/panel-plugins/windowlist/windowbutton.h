@@ -19,6 +19,7 @@ signals:
 
     void mouseEnter(windowbutton *wbt);
     void mouseLeave(windowbutton *wbt);
+    void request_ipopup_close();
 
 private slots:
     void handleEnterEvent(){emit mouseEnter(this);}

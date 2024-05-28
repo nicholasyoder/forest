@@ -148,6 +148,7 @@ void windowlist::onWindowAdded(WId window){
         connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
         connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
         connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
+        connect(wbt, &windowbutton::request_ipopup_close, ipopup, &imagepopup::closepopup);
         wbt->setMaximumWidth(maxbtsize);
         mainlayout->addWidget(wbt, 1);
         button_list[window] = wbt;
