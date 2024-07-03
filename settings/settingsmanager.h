@@ -23,11 +23,13 @@ public:
     SettingsManager();
     ~SettingsManager();
 
-    void load_settings_ui();
     void load_items(QList<settings_item*> items);
     void display_categories(QUuid parent_id, QList<settings_item*> items, bool show_back_button = false);
     void display_widgets(QUuid parent_id, QList<settings_item*> items);
     QWidget* create_control(settings_widget* item, QString groupposition = "middle");
+
+public slots:
+    void load_settings_ui();
 
 private slots:
     void open_item(QUuid id);
@@ -37,7 +39,7 @@ private:
     breadcrumbwidget *bcw = nullptr;
     listwidget *listw = nullptr;
     QStackedLayout *stacked_layout = nullptr;
-    QScrollArea *controls_area = nullptr;
+
     QHash<QUuid, settings_item*> item_hash;
     QList<settings_item*> top_level_items;
     QUuid home_id = QUuid::createUuid();

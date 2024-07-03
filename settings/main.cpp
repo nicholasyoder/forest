@@ -11,7 +11,7 @@ int main(int argc, char *argv[])
     a.setStyleSheet(fstyleloader::loadstyle("settings"));
 
     SettingsManager w;
-    w.load_settings_ui();
     w.show();
+
     return a.exec();
 }

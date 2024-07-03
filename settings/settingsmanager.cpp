@@ -2,6 +2,7 @@
 
 #include <QDebug>
 #include <QPluginLoader>
+#include <QTimer>
 
 #include "pluginutills.h"
 
@@ -13,7 +14,6 @@ SettingsManager::SettingsManager(){
 
     stacked_layout = new QStackedLayout;
     stacked_layout->setMargin(0);
-
 
     QHBoxLayout *hlayout = new QHBoxLayout(this);
     hlayout->setMargin(0);
@@ -31,20 +31,7 @@ SettingsManager::SettingsManager(){
     listw->setObjectName("CategoryList");
     left_v_layout->addWidget(listw);
     hlayout->addWidget(left_pane);
-
-
-    QFrame *controls_pane = new QFrame;
-    controls_pane->setObjectName("ControlsPane");
-    controls_pane->setLayout(stacked_layout);
-
-    controls_area = new QScrollArea;
-    controls_area->setObjectName("ControlsScrollArea");
-    controls_area->setWidget(controls_pane);
-    controls_area->setWidgetResizable(true);
-    controls_area->setFocusPolicy(Qt::NoFocus);
-    hlayout->addWidget(controls_area, 1);
-
-    //hlayout->addWidget(controls_pane, 1);
+    hlayout->addLayout(stacked_layout, 1);
 
     listw->setMinimumWidth(175);
     //connect(listw, SIGNAL(currentRowChanged(int)), slayout, SLOT(setCurrentIndex(int)));
@@ -53,6 +40,7 @@ SettingsManager::SettingsManager(){
     this->resize(850,600);
 
     //loadui();
+    QTimer::singleShot(0, this, &SettingsManager::load_settings_ui);
 }
 
 SettingsManager::~SettingsManager()
@@ -60,14 +48,15 @@ SettingsManager::~SettingsManager()
 }
 
 void SettingsManager::load_settings_ui(){
+    qDebug() << 1;
     QStringList plugin_paths = pluginutills::get_plugin_paths(SETTINGS_PLUGIN);
     foreach (QString plugin_path, plugin_paths) {
-
+        qDebug() << 2;
         QPluginLoader plugloader(plugin_path);
         if (plugloader.load()) {
             QObject *plugin = plugloader.instance();
             if (!plugin) continue;
-
+            qDebug() << 3;
             settings_plugin_infterace *pluginterface = qobject_cast<settings_plugin_infterace *>(plugin);
             if (!pluginterface) continue;
 
@@ -76,7 +65,7 @@ void SettingsManager::load_settings_ui(){
             QList<settings_item*> items = pluginterface->get_settings_items();
             //interface_hash[plugin_name] = pluginterface;
             //listw->additem(plugin_name, QIcon::fromTheme(plugin_icon));
-
+            qDebug() << 4;
             // load items into hash
             load_items(items);
             top_level_items.append(items);
@@ -139,8 +128,8 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
         stacked_layout->setCurrentIndex(stack_hash[parent_id]);
     }
     else{
-        QWidget *page_widget = new QWidget;
-        QVBoxLayout *page_layout = new QVBoxLayout(page_widget);
+
+        QVBoxLayout *page_layout = new QVBoxLayout();
         foreach(settings_item* item, items){
             settings_widget *widget_item = dynamic_cast<settings_widget*>(item);
             if(widget_item != nullptr){
@@ -173,8 +162,21 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
             }
         }
         page_layout->addStretch(1);
-        stacked_layout->addWidget(page_widget);
-        int index = stacked_layout->indexOf(page_widget);
+
+
+        QFrame *controls_pane = new QFrame;
+        controls_pane->setObjectName("ControlsPane");
+        controls_pane->setLayout(page_layout);
+
+        QScrollArea *controls_area = new QScrollArea;
+        controls_area->setObjectName("ControlsScrollArea");
+        controls_area->setWidget(controls_pane);
+        controls_area->setWidgetResizable(true);
+        controls_area->setFocusPolicy(Qt::NoFocus);
+
+
+        stacked_layout->addWidget(controls_area);
+        int index = stacked_layout->indexOf(controls_area);
         stack_hash[parent_id] = index;
         stacked_layout->setCurrentIndex(index);
     }
@@ -203,6 +205,7 @@ QWidget* SettingsManager::create_control(settings_widget* item, QString grouppos
 }
 
 void SettingsManager::open_item(QUuid id){
+    qDebug() << "open";
     if(id == home_id){
         display_categories(home_id, top_level_items);
     }
