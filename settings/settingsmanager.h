@@ -12,7 +12,7 @@
 
 
 #include "breadcrumbwidget.h"
-#include "listwidget.h"
+#include "catlistwidget.h"
 #include "settings_plugin_interface.h"
 
 class SettingsManager : public QFrame
@@ -37,7 +37,7 @@ private slots:
 
 private:
     breadcrumbwidget *bcw = nullptr;
-    listwidget *listw = nullptr;
+    catlistwidget *listw = nullptr;
     QStackedLayout *stacked_layout = nullptr;
 
     QHash<QUuid, settings_item*> item_hash;

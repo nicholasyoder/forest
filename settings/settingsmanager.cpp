@@ -27,7 +27,7 @@ SettingsManager::SettingsManager(){
     bcw = new breadcrumbwidget;
     connect(bcw, &breadcrumbwidget::level1_activated, this, &SettingsManager::open_home);
     left_v_layout->addWidget(bcw);
-    listw = new listwidget;
+    listw = new catlistwidget;
     listw->setObjectName("CategoryList");
     left_v_layout->addWidget(listw);
     hlayout->addWidget(left_pane);
@@ -35,7 +35,7 @@ SettingsManager::SettingsManager(){
 
     listw->setMinimumWidth(175);
     //connect(listw, SIGNAL(currentRowChanged(int)), slayout, SLOT(setCurrentIndex(int)));
-    connect(listw, &listwidget::currentRowChanged, this, &SettingsManager::open_item);
+    connect(listw, &catlistwidget::currentRowChanged, this, &SettingsManager::open_item);
 
     this->resize(850,600);
 
@@ -48,25 +48,15 @@ SettingsManager::~SettingsManager()
 }
 
 void SettingsManager::load_settings_ui(){
-    qDebug() << 1;
     QStringList plugin_paths = pluginutills::get_plugin_paths(SETTINGS_PLUGIN);
     foreach (QString plugin_path, plugin_paths) {
-        qDebug() << 2;
         QPluginLoader plugloader(plugin_path);
         if (plugloader.load()) {
             QObject *plugin = plugloader.instance();
             if (!plugin) continue;
-            qDebug() << 3;
             settings_plugin_infterace *pluginterface = qobject_cast<settings_plugin_infterace *>(plugin);
             if (!pluginterface) continue;
-
-            //QString plugin_name = pluginterface->get_name();
-            //QString plugin_icon = pluginterface->get_icon();
             QList<settings_item*> items = pluginterface->get_settings_items();
-            //interface_hash[plugin_name] = pluginterface;
-            //listw->additem(plugin_name, QIcon::fromTheme(plugin_icon));
-            qDebug() << 4;
-            // load items into hash
             load_items(items);
             top_level_items.append(items);
         }
@@ -205,7 +195,6 @@ QWidget* SettingsManager::create_control(settings_widget* item, QString grouppos
 }
 
 void SettingsManager::open_item(QUuid id){
-    qDebug() << "open";
     if(id == home_id){
         display_categories(home_id, top_level_items);
     }

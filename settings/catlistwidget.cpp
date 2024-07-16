@@ -20,18 +20,18 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#include "listwidget.h"
+#include "catlistwidget.h"
 
 #include <QStyleOptionButton>
 
-listwidget::listwidget(){
+catlistwidget::catlistwidget(){
     basevlayout->setMargin(0);
     basevlayout->setSpacing(0);
     basevlayout->addStretch(5);
 }
 
-void listwidget::clear(){
-    foreach (listitem *item, item_list) {
+void catlistwidget::clear(){
+    foreach (catlistitem *item, item_list) {
         basevlayout->removeWidget(item);
         delete item;
     }
@@ -44,8 +44,8 @@ void listwidget::clear(){
     seperator_list.clear();
 }
 
-void listwidget::additem(QUuid id, QString text, QIcon icon){
-    listitem *item = new listitem(id, text, icon);
+void catlistwidget::additem(QUuid id, QString text, QIcon icon){
+    catlistitem *item = new catlistitem(id, text, icon);
     connect(item, SIGNAL(clicked(QUuid)), this, SLOT(handleitemclicked(QUuid)));
     connect(this, SIGNAL(currentRowChanged(QUuid)), item, SLOT(updatepressed(QUuid)));
     if (basevlayout->count() < 2)
@@ -55,7 +55,7 @@ void listwidget::additem(QUuid id, QString text, QIcon icon){
     item_list.append(item);
 }
 
-void listwidget::addseperator(QString text){
+void catlistwidget::addseperator(QString text){
     QLabel *textlabel = new QLabel(text);
     textlabel->setObjectName("CategoryDivider");
     if (basevlayout->count() < 2)
@@ -65,30 +65,21 @@ void listwidget::addseperator(QString text){
     seperator_list.append(textlabel);
 }
 
-void listwidget::handleitemclicked(QUuid id){
+void catlistwidget::handleitemclicked(QUuid id){
     emit currentRowChanged(id);
 }
 
 //listitem class~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-listitem::listitem(QUuid id, QString text, QIcon icon){
+catlistitem::catlistitem(QUuid id, QString text, QIcon icon){
     item_id = id;
     item_text = text;
     item_icon = icon;
 
     setObjectName("CategoryButton");
-
-    /*QHBoxLayout *hlayout = new QHBoxLayout;
-    QLabel *iconlabel = new QLabel;
-    QLabel *textlabel = new QLabel(text);
-    iconlabel->setPixmap(icon.pixmap(22,22));
-    hlayout->addWidget(iconlabel);
-    hlayout->addWidget(textlabel);
-    hlayout->addStretch(5);
-    this->setLayout(hlayout);*/
 }
 
-void listitem::updatepressed(QUuid id){
+void catlistitem::updatepressed(QUuid id){
     if (id != item_id){
         pressed = false;
         update();
@@ -99,17 +90,17 @@ void listitem::updatepressed(QUuid id){
     }
 }
 
-void listitem::enterEvent(QEvent *){
+void catlistitem::enterEvent(QEvent *){
     highlight = true;
     update();
 }
 
-void listitem::leaveEvent(QEvent *){
+void catlistitem::leaveEvent(QEvent *){
     highlight = false;
     update();
 }
 
-void listitem::mousePressEvent(QMouseEvent *event){
+void catlistitem::mousePressEvent(QMouseEvent *event){
     if (event->button() == Qt::LeftButton){
         pressed = true;
         mousepressed = true;
@@ -117,7 +108,7 @@ void listitem::mousePressEvent(QMouseEvent *event){
     }
 }
 
-void listitem::mouseReleaseEvent(QMouseEvent *event){
+void catlistitem::mouseReleaseEvent(QMouseEvent *event){
     if (event->button() == Qt::LeftButton){
         mousepressed = false;
         update();
@@ -125,17 +116,7 @@ void listitem::mouseReleaseEvent(QMouseEvent *event){
     }
 }
 
-void listitem::paintEvent(QPaintEvent *){
-    /*QPainter painter(this);
-    if (mousepressed)
-        painter.fillRect(0,0, this->width(), this->height(), QColor::fromRgb(220,220,220));
-    else if (highlight)
-        painter.fillRect(0,0, this->width(), this->height(), QColor::fromRgb(225,225,225));
-    else if (pressed)
-        painter.fillRect(0,0, this->width(), this->height(), QColor::fromRgb(220,220,220));
-    */
-
-
+void catlistitem::paintEvent(QPaintEvent *){
     QStyleOptionButton option;
     option.initFrom(this);
     if (mousepressed || pressed)

@@ -20,8 +20,8 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#ifndef LISTWIDGET_H
-#define LISTWIDGET_H
+#ifndef CATLISTWIDGET_H
+#define CATLISTWIDGET_H
 
 #include <QWidget>
 #include <QIcon>
@@ -32,11 +32,11 @@
 #include <QDebug>
 #include <QUuid>
 
-class listitem : public QFrame
+class catlistitem : public QFrame
 {
     Q_OBJECT
 public:
-    listitem(QUuid id, QString text, QIcon icon);
+    catlistitem(QUuid id, QString text, QIcon icon);
 
 public slots:
     void updatepressed(QUuid id);
@@ -63,11 +63,11 @@ private:
 };
 
 
-class listwidget : public QFrame
+class catlistwidget : public QFrame
 {
     Q_OBJECT
 public:
-    listwidget();
+    catlistwidget();
 
 signals:
     //void currentRowChanged(int row);
@@ -78,15 +78,15 @@ public slots:
     void additem(QUuid id, QString text, QIcon icon);
     void addseperator(QString text);
     void setcurrentitem(QString itemtext){handleitemclicked(itemtext);}
-    QList<listitem*> items(){ return item_list; }
+    QList<catlistitem*> items(){ return item_list; }
 
 private slots:
     void handleitemclicked(QUuid id);
 
 private:
     QVBoxLayout *basevlayout = new QVBoxLayout(this);
-    QList<listitem*> item_list;
+    QList<catlistitem*> item_list;
     QList<QLabel*> seperator_list;
 };
 
-#endif // LISTWIDGET_H
+#endif // CATLISTWIDGET_H

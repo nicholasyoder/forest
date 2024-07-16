@@ -4,6 +4,7 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QLabel>
+#include "../../settings/widgets/listwidget.h"
 
 #include "../../library/pluginutills/settings_plugin_interface.h"
 #include "miscutills.h"
@@ -20,8 +21,12 @@ public:
 
 private slots:
     void load_about_data();
+    void load_desktop_themes();
+    void set_desktop_theme(QListWidgetItem *theme_item);
 
 private:
+
+    // About page widgets
     QLabel *logo_image = nullptr;
     QLabel *os_name_label = nullptr;
     QLabel *kernel_version_label = nullptr;
@@ -29,6 +34,9 @@ private:
     QLabel *architecture_label = nullptr;
     QLabel *memory_label = nullptr;
     QLabel *hostname_label = nullptr;
+
+    // Desktop theme widgets
+    ListWidget *desktop_theme_list = nullptr;
 };
 
 #endif // SYSTEMSETTINGS_H

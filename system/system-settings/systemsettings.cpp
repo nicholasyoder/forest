@@ -1,6 +1,9 @@
 #include "systemsettings.h"
 
 #include <QProcess>
+#include <QDir>
+#include <QSettings>
+#include <QDebug>
 
 SystemSettings::SystemSettings()
 {
@@ -69,8 +72,32 @@ QList<settings_item*> SystemSettings::get_settings_items(){
     info_wg->add_child(hostname_item);
 
 
-    settings_category *system_cat = new settings_category("System", "", "preferences-system");
-    items.append(system_cat);
+    settings_category *themes_cat = new settings_category("Themes", "", "preferences-desktop-theme");
+    items.append(themes_cat);
+
+    settings_category *desktop_cat = new settings_category("Desktop", "", "preferences-desktop-color");
+    connect(desktop_cat, &settings_category::opened, this, &SystemSettings::load_desktop_themes);
+    themes_cat->add_child(desktop_cat);
+    desktop_theme_list = new ListWidget();
+    desktop_theme_list->setMinimumHeight(5);
+    desktop_theme_list->setExclusiveCheck(true);
+    desktop_theme_list->setSelectionMode(QAbstractItemView::NoSelection);
+    settings_widget *theme_list_item = new settings_widget("","", desktop_theme_list);
+    desktop_cat->add_child(theme_list_item);
+
+    settings_category *widget_cat = new settings_category("Widget", "", "preferences-desktop-theme");
+    themes_cat->add_child(widget_cat);
+
+    settings_category *icon_cat = new settings_category("Icon", "", "preferences-desktop-icons");
+    themes_cat->add_child(icon_cat);
+
+    settings_category *cursor_cat = new settings_category("Mouse Cursor", "", "preferences-desktop-mouse");
+    themes_cat->add_child(cursor_cat);
+
+    connect(desktop_theme_list, &ListWidget::itemExclusivlySelected, this, &SystemSettings::set_desktop_theme);
+
+    //settings_category *system_cat = new settings_category("System", "", "preferences-system");
+    //items.append(system_cat);
 
     return items;
 }
@@ -103,4 +130,28 @@ void SystemSettings::load_about_data(){
     QString hostname = miscutills::run_shell_command("hostname");
     hostname = hostname.remove("\n");
     hostname_label->setText(hostname);
+}
+
+void SystemSettings::load_desktop_themes(){
+    desktop_theme_list->clear();
+
+    QSettings settings("Forest", "Forest");
+    QString current_theme = settings.value("theme").toString();
+
+    QDir theme_dir("/usr/share/forest/themes");
+    QStringList entrylist = theme_dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
+    foreach (QString entry, entrylist) {
+        QListWidgetItem *item = new QListWidgetItem(entry);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(entry == current_theme ? Qt::Checked : Qt::Unchecked);
+        desktop_theme_list->addItem(item);
+    }
+}
+
+void SystemSettings::set_desktop_theme(QListWidgetItem *theme_item){
+    QString new_theme = theme_item->text();
+    QSettings settings("Forest", "Forest");
+    settings.setValue("theme", new_theme);
+    settings.sync();
+    miscutills::call_dbus("forest/loadstylesheet");
 }

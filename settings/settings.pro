@@ -13,15 +13,16 @@ CONFIG += c++17
 
 SOURCES += \
     breadcrumbwidget.cpp \
-    listwidget.cpp \
+    catlistwidget.cpp \
     main.cpp \
     settingsmanager.cpp
 
 HEADERS += \
     ../library/pluginutills/settings_plugin_interface.h \
     breadcrumbwidget.h \
-    listwidget.h \
-    settingsmanager.h
+    catlistwidget.h \
+    settingsmanager.h \
+    widgets/listwidget.h
 
 # Default rules for deployment.
 target.path = /usr/bin

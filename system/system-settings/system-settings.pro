@@ -15,6 +15,7 @@ SOURCES += \
 
 HEADERS += \
     ../../library/pluginutills/settings_plugin_interface.h \
+    ../../settings/widgets/listwidget.h \
     systemsettings.h
 
 target.path = /usr/lib/forest

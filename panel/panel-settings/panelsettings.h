@@ -24,7 +24,7 @@
 #define PANELSETTINGS_H
 
 #include <QComboBox>
-#include <QListWidget>
+#include "../../settings/widgets/listwidget.h"
 #include <QDebug>
 #include <QDropEvent>
 #include <QTimer>
@@ -85,7 +85,7 @@ public slots:
 private:
     QString padwithzeros(int number);
     QComboBox *position_select = nullptr;
-    QListWidget *applet_list_w = nullptr;
+    ListWidget *applet_list_w = nullptr;
     QHash <QString, QString> path_hash;
 };
 

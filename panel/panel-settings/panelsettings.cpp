@@ -54,7 +54,7 @@ QList<settings_item*> PanelSettings::get_settings_items(){
     connect(applets_cat, &settings_category::opened, this, &PanelSettings::load_applets);
     panel_cat->add_child(applets_cat);
 
-    applet_list_w = new QListWidget;
+    applet_list_w = new ListWidget;
     applet_list_w->setDragDropMode(QAbstractItemView::InternalMove);
     connect(applet_list_w, &QListWidget::itemChanged, this, &PanelSettings::set_applets);
     ReorderListener *rl = new ReorderListener(applet_list_w);
@@ -84,6 +84,8 @@ void PanelSettings::set_behavior_settings(){
 }
 
 void PanelSettings::load_applets(){
+    applet_list_w->clear();
+
     QSettings settings("Forest", "Panel");
     settings.beginGroup("plugins");
 
@@ -116,13 +118,6 @@ void PanelSettings::load_applets(){
             plugloader.unload();
         }
     }
-
-    // Have to wait to run the resize until the widget has been painted and the styles applied
-    QTimer::singleShot(0, this, &PanelSettings::resize_applet_list);
-}
-
-void PanelSettings::resize_applet_list(){
-    applet_list_w->setMinimumHeight(applet_list_w->count() * applet_list_w->sizeHintForRow(0));
 }
 
 void PanelSettings::set_applets(){
