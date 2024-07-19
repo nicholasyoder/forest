@@ -69,12 +69,14 @@ void SettingsManager::load_settings_ui(){
 
 void SettingsManager::load_items(QList<settings_item*> items){
     foreach(settings_item* item, items){
+        if(!item){
+            qDebug() << "Error: invalid settings item";
+            continue;
+        }
         // TODO: add name and category to search hash
         item_hash[item->id()] = item;
-
         settings_category *cat_item = dynamic_cast<settings_category*>(item);
         if(cat_item != nullptr){
-
             load_items(cat_item->child_items());
         }
     }

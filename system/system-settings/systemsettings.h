@@ -1,13 +1,11 @@
 #ifndef SYSTEMSETTINGS_H
 #define SYSTEMSETTINGS_H
 
-#include <QFrame>
-#include <QHBoxLayout>
-#include <QLabel>
-#include "../../settings/widgets/listwidget.h"
-
 #include "../../library/pluginutills/settings_plugin_interface.h"
-#include "miscutills.h"
+
+#include "aboutpage.h"
+#include "forestthemesettings.h"
+#include "cursorthemesettings.h"
 
 class SystemSettings : public QObject, settings_plugin_infterace
 {
@@ -16,27 +14,14 @@ class SystemSettings : public QObject, settings_plugin_infterace
     Q_INTERFACES(settings_plugin_infterace)
 public:
     SystemSettings();
+    ~SystemSettings();
 
     QList<settings_item*> get_settings_items();
 
-private slots:
-    void load_about_data();
-    void load_desktop_themes();
-    void set_desktop_theme(QListWidgetItem *theme_item);
-
 private:
-
-    // About page widgets
-    QLabel *logo_image = nullptr;
-    QLabel *os_name_label = nullptr;
-    QLabel *kernel_version_label = nullptr;
-    QLabel *cpu_model_label = nullptr;
-    QLabel *architecture_label = nullptr;
-    QLabel *memory_label = nullptr;
-    QLabel *hostname_label = nullptr;
-
-    // Desktop theme widgets
-    ListWidget *desktop_theme_list = nullptr;
+    AboutPage *about_page = nullptr;
+    CursorThemeSettings *cursor_theme_settings = nullptr;
+    ForestThemeSettings *forest_theme_settings = nullptr;
 };
 
 #endif // SYSTEMSETTINGS_H
