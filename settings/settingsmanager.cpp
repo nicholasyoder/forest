@@ -206,7 +206,8 @@ void SettingsManager::open_item(QUuid id){
             cat_item->notify_opened();
             if(cat_item->child_items().isEmpty()) return;
             QList<settings_item*> child_items = cat_item->child_items();
-            if (dynamic_cast<settings_category*>(child_items.first())){
+            if (dynamic_cast<settings_category*>(child_items.first()) &&
+                    !dynamic_cast<settings_widget_group*>(child_items.first())){
                 // Handle item containing sub categories
                 display_categories(cat_item->id(), child_items, true);
             }

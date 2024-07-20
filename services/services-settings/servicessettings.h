@@ -24,6 +24,7 @@
 #define SERVICESSETTINGS_H
 
 #include "../../library/pluginutills/settings_plugin_interface.h"
+#include "hotkeysettings.h"
 
 class ServicesSettings : public QObject, settings_plugin_infterace
 {
@@ -33,14 +34,16 @@ class ServicesSettings : public QObject, settings_plugin_infterace
 
 public:
     ServicesSettings();
+    ~ServicesSettings();
 
     // settings_plugin_infterace functions
-    QList<settings_item*> get_settings_items(){ return QList<settings_item*>(); }
+    QList<settings_item*> get_settings_items();
 
-    QWidget* get_settings_widget();
     //QString get_name(){ return "Services"; }
     //QString get_icon(){ return "preferences-system-session-services"; }
 
+private:
+    HotkeySettings* hotkey_settings = nullptr;
 };
 
 #endif // SERVICESSETTINGS_H
