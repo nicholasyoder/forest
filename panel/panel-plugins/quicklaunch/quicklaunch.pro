@@ -39,3 +39,8 @@ target.path = /usr/lib/forest/panel
 INSTALLS += target
 
 FORMS +=
+
+LIBS += -L$$OUT_PWD/../../../library/miscutills/ -lmiscutills
+INCLUDEPATH += $$PWD/../../../library/miscutills
+DEPENDPATH += $$PWD/../../../library/miscutills
+PRE_TARGETDEPS += $$OUT_PWD/../../../library/miscutills/libmiscutills.a

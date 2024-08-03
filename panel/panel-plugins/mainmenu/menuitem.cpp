@@ -23,13 +23,13 @@
 #include "menuitem.h"
 
 #include <QDebug>
-#include "futils/futils.h"
+#include "miscutills/miscutills.h"
 
 menuitem::menuitem(QUuid id, QIcon icon, QString text){
     itemID = id;
     itemIcon = icon;
     itemText = text;
-    itemIconSize = futils::get_iconsize_stylesheet("#popupMenuItem", qApp->styleSheet());
+    itemIconSize = miscutills::get_iconsize_stylesheet("#popupMenuItem", qApp->styleSheet());
     setContextMenuPolicy(Qt::CustomContextMenu);
     setObjectName("popupMenuItem");
 }

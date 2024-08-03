@@ -61,7 +61,7 @@ void fadewidget::getimage(){
 
     QString wallpaper_file = settings.value("desktop/wallpaper", "").toString();
     if(!wallpaper_file.isEmpty())
-        wallpaper = futils::get_wallpaper_scaled(wallpaper_file, imagemode, this->size());
+        wallpaper = miscutills::get_wallpaper_scaled(wallpaper_file, imagemode, this->size());
 
     setWindowOpacity(1.0);
 }

@@ -26,7 +26,7 @@ void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event){
 }
 
 void wallpaperwidget::setup_wallpaper(){
-    scaledwallpaper = futils::get_wallpaper_scaled(wallpaper, imagemode, size());
+    scaledwallpaper = miscutills::get_wallpaper_scaled(wallpaper, imagemode, size());
     update();
 }
 

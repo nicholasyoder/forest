@@ -36,7 +36,7 @@
 #include <QStyleOptionButton>
 
 #include <qt5xdg/XdgIcon>
-#include "../../library/futils/futils.h"
+#include "../../library/miscutills/miscutills.h"
 #include "QApplication"
 
 class panelbutton : public QFrame
@@ -105,7 +105,7 @@ public:
         if (customiconsize != 0){ iconsize = QSize(customiconsize, customiconsize);}
         else{
             QString type = this->property("buttontype").toString();
-            iconsize = futils::get_iconsize_stylesheet("#"+objectName()+"\\[buttontype=\""+type+"\"\\]", qApp->styleSheet());
+            iconsize = miscutills::get_iconsize_stylesheet("#"+objectName()+"\\[buttontype=\""+type+"\"\\]", qApp->styleSheet());
         }
         setIconSize(iconsize);
     }

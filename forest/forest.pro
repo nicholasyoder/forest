@@ -41,3 +41,9 @@ LIBS += -L$$OUT_PWD/../library/pluginutills/ -lpluginutills
 INCLUDEPATH += $$PWD/../library/pluginutills
 DEPENDPATH += $$PWD/../library/pluginutills
 PRE_TARGETDEPS += $$OUT_PWD/../library/pluginutills/libpluginutills.a
+
+# miscutills
+LIBS += -L$$OUT_PWD/../library/miscutills/ -lmiscutills
+INCLUDEPATH += $$PWD/../library/miscutills
+DEPENDPATH += $$PWD/../library/miscutills
+PRE_TARGETDEPS += $$OUT_PWD/../library/miscutills/libmiscutills.a
