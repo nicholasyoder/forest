@@ -7,6 +7,7 @@ SUBDIRS	    = \
     forest-session \
     panel \
     services \
+    session \
     settings \
     system
 

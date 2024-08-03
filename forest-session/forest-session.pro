@@ -1,6 +1,6 @@
 QT       += gui dbus widgets x11extras
 
-TARGET = forest-session
+TARGET = forest-session-old
 TEMPLATE = app
 
 DESTDIR = ../usr/bin
