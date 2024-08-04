@@ -95,6 +95,7 @@ public:
     //Move window so top of window (title bar) is on screen
     static void fitWindowOnScreen(xcb_window_t window);
 
+    // Switch virtual desktop
     static void setCurrentDesktop(int desknum);
 
     //not sure what this actually does -- setPartialStrut seems to be what should be used
@@ -102,6 +103,9 @@ public:
 
     static void setPartialStrut(xcb_window_t window, int left_width, int right_width, int top_width, int bottom_width,
                                 int left_start, int left_end, int right_start, int right_end, int top_start, int top_end, int bottom_start, int bottom_end);
+
+    // Enable keyboard numlock
+    static void enableNumlock();
 
     // from kwindowsystem - mostly unmodified ---------------------------------------------------------------------------------------------------
     template <typename T>

@@ -21,6 +21,7 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "xcbutills.h"
+#include "numlock.h"
 
 #include <QApplication>
 #include <QScreen>
@@ -325,8 +326,9 @@ void Xcbutills::setPartialStrut(xcb_window_t window, int left_width, int right_w
     xcb_change_property(xcbconnection, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT_PARTIAL"), XCB_ATOM_CARDINAL, 32, 12, (const void *) data);
 }
 
-
-
+void Xcbutills::enableNumlock(){
+    numlock::enableNumlock();
+}
 
 QByteArray Xcbutills::get_string_reply(xcb_connection_t *c, const xcb_get_property_cookie_t cookie, xcb_atom_t type){
     xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, nullptr);
