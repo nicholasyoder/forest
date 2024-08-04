@@ -21,6 +21,9 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "xcbutills.h"
+
+#include <QApplication>
+#include <QScreen>
 #include <KWindowSystem>
 
 #include <netwm.h>
@@ -322,3 +325,79 @@ void Xcbutills::setPartialStrut(xcb_window_t window, int left_width, int right_w
     xcb_change_property(xcbconnection, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT_PARTIAL"), XCB_ATOM_CARDINAL, 32, 12, (const void *) data);
 }
 
+
+
+
+QByteArray Xcbutills::get_string_reply(xcb_connection_t *c, const xcb_get_property_cookie_t cookie, xcb_atom_t type){
+    xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, nullptr);
+    if (!reply)
+        return QByteArray();
+
+    QByteArray value;
+
+    if (reply->type == type && reply->format == 8 && reply->value_len > 0){
+        const char *data = static_cast<const char *>(xcb_get_property_value(reply));
+        int len = int(reply->value_len);
+        if (data)
+            value = QByteArray(data, data[len - 1] ? len : len - 1);
+    }
+
+    free(reply);
+    return value;
+}
+
+char *Xcbutills::nstrndup(const char *s1, int l){
+    if (! s1 || l == 0) {
+        return static_cast<char *>(nullptr);
+    }
+
+    char *s2 = new char[ulong(l + 1)];
+    strncpy(s2, s1, ulong(l));
+    s2[l] = '\0';
+    return s2;
+}
+
+void Xcbutills::send_client_message(xcb_connection_t *c, uint32_t mask, xcb_window_t destination, xcb_window_t window, xcb_atom_t message, const uint32_t data[]){
+    xcb_client_message_event_t event;
+    event.response_type = XCB_CLIENT_MESSAGE;
+    event.format = 32;
+    event.sequence = 0;
+    event.window = window;
+    event.type = message;
+
+    for (int i = 0; i < 5; i++) {
+        event.data.data32[i] = data[i];
+    }
+
+    xcb_send_event(c, false, destination, mask, (const char *) &event);
+}
+
+QVector<Xcbutills::xicon> Xcbutills::readxicon(xcb_connection_t *c, const xcb_get_property_cookie_t cookie){
+    QVector<xicon> xicons;
+
+    xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, nullptr);
+    if (!reply || reply->value_len < 3 || reply->format != 32 || reply->type != XCB_ATOM_CARDINAL) {
+        if (reply)
+            free(reply);
+        return xicons;
+    }
+
+    uint32_t *data = (uint32_t *) xcb_get_property_value(reply);
+    for (unsigned int i = 0, j = 0; j < reply->value_len - 2; i++) {
+        uint32_t width  = data[j++];
+        uint32_t height = data[j++];
+        uint32_t size   = width * height * sizeof(uint32_t);
+        if (j + width * height > reply->value_len) {
+            fprintf(stderr, "Ill-encoded icon data; proposed size leads to out of bounds access. Skipping. (%d x %d)\n", width, height);
+            break;
+        }
+
+        xicon ico(QSize(width, height), new unsigned char[size]);
+        memcpy((void *)ico.data, (const void *)&data[j], size);
+        xicons.append(ico);
+
+        j += width * height;
+    }
+    free(reply);
+    return xicons;
+}
