@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2021-2024 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -21,6 +21,7 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "panel.h"
+#include "hiddenpanel.h"
 
 panel::panel(){}
 
@@ -35,14 +36,9 @@ void panel::setupPlug(){
     flags |= Qt::FramelessWindowHint;
     this->setWindowFlags(flags);
 
-    panelposition = settings->value("position", "bottom").toString().toLower();
-    panelsize = sizeHint().height();
+    geometry_manager = new GeometryManager(this);
 
-    if (panelposition == "left" || panelposition == "right")
-        wlayout = new QVBoxLayout;
-    else
-        wlayout = new QHBoxLayout;
-
+    wlayout = new QHBoxLayout;
     wlayout->setMargin(0);
     wlayout->setSpacing(0);
 
@@ -52,16 +48,14 @@ void panel::setupPlug(){
     pframe->setObjectName("panel");
     pframe->setLayout(wlayout);
     vlayout->addWidget(pframe);
-    connect(pframe, &panelQFrame::resized, this, &panel::resetgeometry);
+    connect(pframe, &panelQFrame::resized, geometry_manager, &GeometryManager::update_geometry);
 
     loadsettings();
     loadplugins();
 
     QDBusConnection::sessionBus().registerObject("/org/forest/panel", this, QDBusConnection::ExportAllSlots);
 
-    connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &panel::reloadsettings);
-
-    this->show();
+    show();
 }
 
 void panel::XcbEventFilter(xcb_generic_event_t *event){
@@ -75,34 +69,48 @@ void panel::showsettings(){
 }
 
 void panel::loadsettings(){
-    QSettings s("Forest", "Panel");
-    panelposition = s.value("position").toString().toLower();
+    bool autohide = settings->value("autohide").toBool();
 
-    this->setMinimumSize(0,0);
-    this->setMaximumSize(QWIDGETSIZE_MAX,QWIDGETSIZE_MAX);
-    resetgeometry();
-}
+    // only reserve screen space for panel if it is always visible
+    geometry_manager->set_reserve_screen_space(!autohide);
 
-void panel::resetgeometry(){
-    panelsize = sizeHint().height();
+    if (autohide && !autohide_manager){
+        autohide_manager = new AutoHideManager(this);
+        connect(autohide_manager, &AutoHideManager::show, this, &panel::show);
+        connect(autohide_manager, &AutoHideManager::hide, this, &panel::hide);
+        installEventFilter(autohide_manager);
 
-    QSize scsize = qApp->primaryScreen()->size();
-    if (panelposition == "top"){
-        this->move(0,0);
-        this->setFixedSize(scsize.width(), panelsize);
-        Xcbutills::setPartialStrut(winId(),0,0,height(),0,0,0,0,0,geometry().left(),geometry().right(),0,0);
-    } else if (panelposition == "left"){
-        this->move(0,0);
-        this->setFixedSize(panelsize, scsize.height());
-        //Xcbutills::setPartialStrut(winId(),height(),0,0,0,geometry().top(),geometry().bottom(),0,0,0,0,0,0);
-    } else if (panelposition == "right"){
-        this->move(scsize.width() - panelsize,0);
-        this->setFixedSize(panelsize, scsize.height());
-        //Xcbutills::setPartialStrut(winId(),0,height(),0,0,0,0,geometry().top(),geometry().bottom(),0,0,0,0);
-    } else{//bottom
-        this->move(0,scsize.height() - panelsize);
-        this->setFixedSize(scsize.width(), panelsize);
-        Xcbutills::setPartialStrut(winId(),0,0,0,height(),0,0,0,0,0,0,geometry().left(),geometry().right());
+        HiddenPanel* hidden_panel = new HiddenPanel;
+        connect(autohide_manager, &AutoHideManager::show, hidden_panel, &HiddenPanel::hide);
+        connect(autohide_manager, &AutoHideManager::hide, hidden_panel, &HiddenPanel::show);
+        connect(hidden_panel, &HiddenPanel::activated, this, &panel::show);
+
+        hp_geometry_manager = new GeometryManager(hidden_panel);
+        hp_geometry_manager->set_fixed_size(1);
+
+        if(this->isVisible()) // During settings reload
+            autohide_manager->close_eventually(); // Start autohide process
+        // During normal startup settings load, close_eventually will be
+        // called by the show event filter in AutoHideManager
+    }
+    else if (!autohide && autohide_manager){
+        autohide_manager->disconnect();
+        delete autohide_manager;
+        autohide_manager = nullptr;
+
+        hp_geometry_manager->disconnect();
+        delete hp_geometry_manager;
+        hp_geometry_manager = nullptr;
+
+        this->show();
+    }
+
+    QString position = settings->value("position", "bottom").toString().toLower();
+    geometry_manager->set_panel_position(position);
+    geometry_manager->update_geometry();
+    if (hp_geometry_manager){
+        hp_geometry_manager->set_panel_position(position);
+        hp_geometry_manager->update_geometry();
     }
 }
 
@@ -149,38 +157,6 @@ void panel::reloadplugins(){
     loadplugins();
 }
 
-/*void panel::movepluginup(int plugnum)
-{
-    QLayoutItem *currentitem = wlayout->itemAt(plugnum);
-    wlayout->removeItem(currentitem);
-    if (currentitem->widget())
-        wlayout->insertWidget(plugnum -1, currentitem->widget());
-    else if (currentitem->layout())
-        wlayout->insertLayout(plugnum -1, currentitem->layout());
-    else if (currentitem->spacerItem())
-        wlayout->insertSpacerItem(plugnum -1, currentitem->spacerItem());
-
-    pluglist.move(plugnum, plugnum -1);
-
-    this->update();
-}
-
-void panel::moveplugindown(int plugnum)
-{
-    QLayoutItem *currentitem = wlayout->itemAt(plugnum);
-    wlayout->removeItem(currentitem);
-    if (currentitem->widget())
-        wlayout->insertWidget(plugnum +1, currentitem->widget());
-    else if (currentitem->layout())
-        wlayout->insertLayout(plugnum +1, currentitem->layout());
-    else if (currentitem->spacerItem())
-        wlayout->insertSpacerItem(plugnum +1, currentitem->spacerItem());
-
-    pluglist.move(plugnum, plugnum +1);
-
-    this->update();
-}*/
-
 void panel::addplugin(QString path){
     QPluginLoader *plugloader = new QPluginLoader(path);
     if (plugloader->load()){
@@ -214,36 +190,3 @@ void panel::addplugin(QString path){
     }
     else { qDebug() << plugloader->errorString(); }
 }
-
-/*void panel::addseperator(int plugnum)
-{
-    settings->beginGroup("seperators");
-
-    int size = settings->value("seperator" + QString::number(plugnum) + "size").toInt();
-    QSpacerItem *item = new QSpacerItem(size, size, QSizePolicy::Fixed, QSizePolicy::Fixed);
-    wlayout->insertSpacerItem(plugnum, item);
-
-    settings->endGroup();
-
-    this->update();
-}
-
-void panel::setseperatorsettings(int plugnum, int size)
-{
-    QLayoutItem *item = wlayout->itemAt(plugnum);
-    if (item->spacerItem())
-        item->spacerItem()->changeSize(size,size, QSizePolicy::Fixed, QSizePolicy::Fixed);
-
-    this->update();
-}
-
-void panel::removeplugin(int num)
-{
-    panelpluginterface *plug = pluglist.at(num);
-    pluglist.removeAt(num);
-
-    if (xcbpluglist.contains(plug))
-        xcbpluglist.removeOne(plug);
-
-    plug->closePlug();
-}*/

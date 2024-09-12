@@ -88,7 +88,6 @@ public slots:
 
         QRect panelRect = getpanelRect();
         QString panelpos = psettings->value("position").toString().toLower();
-        //qDebug() << panelRect <<panelpos;
         if (panelpos == "top")
             popupRect.moveTo(QPoint(launcherRect.x() + edgeoffset, panelRect.height()));
         else //if (panelpos == "bottom")
@@ -110,30 +109,12 @@ public slots:
         if (popupRect.y() < 0)
             newpos.setY(0);
 
-        //qDebug() << newpos <<edgeoffset;
         move(newpos);
     }
 
 protected:
     void keyPressEvent(QKeyEvent *event){emit keypressed(event);}//so the object controlling the popup can use keystokes
     void mouseReleaseEvent(QMouseEvent *event){emit mousereleased(event);}//and mouse clicks
-    //void showEvent(QShowEvent *){allowclose = false;}
-    /*void closeEvent(QCloseEvent *event){
-        if (psettings->value("popups/animationtype", "none") == "none"){
-            event->accept();
-        }
-        else{
-            if (allowclose == false){
-                event->ignore();
-                allowclose = true;
-                //prender->closeanim();
-                this->close();
-            }
-            else{
-                event->accept();
-            }
-        }
-    }*/
 
 private slots:
     QRect getpanelRect(){

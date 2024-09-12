@@ -49,6 +49,12 @@ QList<settings_item*> PanelSettings::get_settings_items(){
     settings_widget *position_item = new settings_widget("Position", "", position_select);
     behavior_cat->add_child(position_item);
 
+    autohide_select = new QComboBox();
+    autohide_select->addItem("Enable");
+    autohide_select->addItem("Disable");
+    settings_widget *autohide_item = new settings_widget("Hide when not in use", "", autohide_select);
+    behavior_cat->add_child(autohide_item);
+
 
     settings_category *applets_cat = new settings_category("Applets", "", "preferences-plugin");
     connect(applets_cat, &settings_category::opened, this, &PanelSettings::load_applets);
@@ -69,15 +75,17 @@ QList<settings_item*> PanelSettings::get_settings_items(){
 void PanelSettings::load_behavior_settings(){
     QSettings settings("Forest", "Panel");
 
-    QString position = settings.value("position").toString();
-    position_select->setCurrentText(position);
+    position_select->setCurrentText(settings.value("position").toString());
+    autohide_select->setCurrentText(settings.value("autohide", false).toBool() ? "Enable" : "Disable");
 
     connect(position_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings);
+    connect(autohide_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings);
 }
 
 void PanelSettings::set_behavior_settings(){
     QSettings settings("Forest", "Panel");
     settings.setValue("position", position_select->currentText());
+    settings.setValue("autohide", autohide_select->currentText() == "Enable");
     settings.sync();
 
     miscutills::call_dbus("forest/panel/reloadsettings");

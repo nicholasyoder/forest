@@ -85,6 +85,7 @@ public slots:
 private:
     QString padwithzeros(int number);
     QComboBox *position_select = nullptr;
+    QComboBox *autohide_select = nullptr;
     ListWidget *applet_list_w = nullptr;
     QHash <QString, QString> path_hash;
 };

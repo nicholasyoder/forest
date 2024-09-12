@@ -30,9 +30,15 @@ DEFINES += QT_DEPRECATED_WARNINGS
 CONFIG += c++11
 
 SOURCES += \
+    autohidemanager.cpp \
+    geometrymanager.cpp \
+    hiddenpanel.cpp \
     panel.cpp
 
 HEADERS += \
+    autohidemanager.h \
+    geometrymanager.h \
+    hiddenpanel.h \
     panel.h \
     ../panel-library/panelpluginterface.h \
     ../panel-library/panelbutton.h \

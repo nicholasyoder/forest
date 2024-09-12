@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2021-2024 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -23,18 +23,17 @@
 #ifndef PANEL_H
 #define PANEL_H
 
-#include <QFrame>
-#include <QDebug>
-#include <QSettings>
 #include <QBoxLayout>
+#include <QFrame>
+#include <QSettings>
 #include <QtDBus>
 #include <QtX11Extras>
 #include <QtX11Extras/QX11Info>
 
 #include "../../library/pluginutills/app_plugin_interface.h"
 #include "../panel-library/panelpluginterface.h"
-
-#include "../../library/xcbutills/xcbutills.h"
+#include "autohidemanager.h"
+#include "geometrymanager.h"
 
 class panelQFrame : public QFrame
 {
@@ -67,19 +66,12 @@ public:
     //end pluginterface
 
 public slots:
-    void reloadsettings(){loadsettings();}
+    void reloadsettings(){settings->sync(); loadsettings();}
     void reloadplugins();
-
-    //void movepluginup(int plugnum);
-    //void moveplugindown(int plugnum);
     void addplugin(QString path);
-    //void addseperator(int plugnum);
-    //void setseperatorsettings(int plugnum, int size);
-    //void removeplugin(int plugnum);
 
 private slots:
     void showsettings();
-    void resetgeometry();
 
 private:
     void loadsettings();
@@ -89,13 +81,14 @@ private:
     QString pnum(int number) {if(number<10) return "0"+QString::number(number); else return QString::number(number);}
 
     int numofstretchplugs = 0;
-    QString panelposition;
-    int panelsize = 0;
     QSettings *settings = new QSettings("Forest","Panel");
     QBoxLayout *wlayout;
     panelpluginterface *pluginterface;
     QList<panelpluginterface*> xcbpluglist;
     QList<panelpluginterface*> pluglist;
+    AutoHideManager* autohide_manager = nullptr;
+    GeometryManager* geometry_manager = nullptr;
+    GeometryManager *hp_geometry_manager = nullptr;
 };
 
 #endif // PANEL_H
