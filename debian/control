@@ -9,7 +9,7 @@ Rules-Requires-Root: no
 
 Package: forest
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, xfwm4, gtk2-engines-murrine, qt5ct, oxygen-icon-theme, brightnessctl, gnome-screenshot, lxterminal
+Depends: ${shlibs:Depends}, ${misc:Depends}, xfwm4, gtk2-engines-murrine, qt5ct, papirus-icon-theme, brightnessctl, gnome-screenshot, lxterminal
 Description: Forest desktop environment
  Forest is a desktop environment built using Qt.
  It is still very much a work in progress so expect
