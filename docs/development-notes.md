@@ -2,6 +2,11 @@
 
 ## Build deb package
 
+### Install dependancies
+
+1. `sudo apt install dh-make devscripts`
+
+### Create package
 Note: replace `0.7.8` with the correct version number of the release.
 
 1. Modify `debian/changelog`
