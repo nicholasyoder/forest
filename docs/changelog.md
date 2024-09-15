@@ -26,10 +26,17 @@ Changelog
   - Rebuilt mainmenu plugin
 
 * Release 0.7.1 - 2022-06-11
+
 * Release 0.7.0 - 2022-05-26
+
 * Release 0.6 - 2021-10-21
+
 * Release 0.5 - 2021-07-14
+
 * Release 0.4 - 2020-07-13
+
 * Release 0.3 - 2020-05-05
+
 * Release 0.2 - 2020-03-13
+
 * Release 0.1 - 2020-02-05
