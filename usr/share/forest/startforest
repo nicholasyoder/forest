@@ -10,13 +10,6 @@ if [ -z "$XDG_DATA_HOME" ]; then
 	export XDG_DATA_HOME="$HOME/.local/share"
 fi
 
-# Ensure the existance of openbox config file
-#OPENBOX_CONF_DIR="$XDG_CONFIG_HOME/openbox"
-#if [ ! -f "$OPENBOX_CONF_DIR/rc.xml" ]; then
-#	mkdir -p "$OPENBOX_CONF_DIR"
-#	cp /etc/xdg/openbox/forest/rc.xml "$OPENBOX_CONF_DIR/rc.xml"
-#fi
-
 # Ensure the existance of xfwm4 config file
 XFWM4_CONF_DIR="$XDG_CONFIG_HOME/xfce4/xfconf/xfce-perchannel-xml"
 if [ ! -f "$XFWM4_CONF_DIR/xfwm4.xml" ]; then
@@ -31,43 +24,12 @@ if [ ! -f "$QT5CT_CONF_DIR/qt5ct.conf" ]; then
 	cp /usr/share/forest/qt5ct.conf "$QT5CT_CONF_DIR/qt5ct.conf"
 fi
 
-#set qt widget style
-#if [ -f "$XDG_CONFIG_HOME/Trolltech.conf" ]; then
-#	cat $XDG_CONFIG_HOME/Trolltech.conf > tempfile1;
-#	echo [qt]$'\n'style=GTK+ > tempfile2;
-#	cat tempfile1 tempfile2 > $XDG_CONFIG_HOME/Trolltech.conf;
-#	rm testfile1 testfile2;
-#fi
-
-# Ensure the existance of the 'Desktop' folder
-if [ -e "$XDG_CONFIG_HOME/user-dirs.dirs" ]; then
-	. "$XDG_CONFIG_HOME/user-dirs.dirs"
-else
-	XDG_DESKTOP_DIR="$HOME/Desktop"
-fi
-mkdir -p "$XDG_DESKTOP_DIR"
-
-# Ensure the existance of the user applications folder
-USER_APPS_DIR="$XDG_DATA_HOME/applications"
-mkdir -p "$USER_APPS_DIR"
-
 # Clean up after GDM (GDM sets the number of desktops to one)
 xprop -root -remove _NET_NUMBER_OF_DESKTOPS -remove _NET_DESKTOP_NAMES -remove _NET_CURRENT_DESKTOP 2> /dev/null
-
-# Enable GTK+2 integration for OpenOffice.org, if available.
-export SAL_USE_VCLPLUGIN=gtk
-
-# Launch DBus if needed
-if which dbus-launch >/dev/null && test -z "$DBUS_SESSION_BUS_ADDRESS"; then
-	if test -z "$XDG_RUNTIME_DIR" -o ! -S "$XDG_RUNTIME_DIR/bus" -o ! -O "$XDG_RUNTIME_DIR/bus"; then
-		eval "$(dbus-launch --sh-syntax --exit-with-session)"
-	fi
-fi
 
 #export XDG_MENU_PREFIX="forest-"
 export XDG_CURRENT_DESKTOP="Forest"
 export QT_QPA_PLATFORMTHEME="qt5ct"
 
 # Start the Forest session
-#exec /usr/bin/forest-setstyle
-exec /usr/bin/lxsession -s forest -e forest
+exec forest-session
