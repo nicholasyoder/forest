@@ -10,6 +10,10 @@ CONFIG += c++11 \
             plugin
 
 LIBS += -lQt5Xdg
+
+include(../../shared-variables.pri)
+include(../../library/miscutills/miscutills.pri)
+
 # The following define makes your compiler emit warnings if you use
 # any Qt feature that has been marked deprecated (the exact warnings
 # depend on your compiler). Please consult the documentation of the
@@ -39,9 +43,3 @@ HEADERS += \
 target.path = /usr/lib/forest
 
 INSTALLS += target
-
-
-LIBS += -L$$OUT_PWD/../../library/miscutills/ -lmiscutills
-INCLUDEPATH += $$PWD/../../library/miscutills
-DEPENDPATH += $$PWD/../../library/miscutills
-PRE_TARGETDEPS += $$OUT_PWD/../../library/miscutills/libmiscutills.a

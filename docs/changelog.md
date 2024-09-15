@@ -3,12 +3,12 @@ Changelog
 ============
 
 * Unreleased
+  - Fix library linking
   - Add docs directory with changelog and development notes
   - Add auto-hide functionality to panel
   - Add session manager
   - Rebuild the settings app
   - Restructure project
-  - Fix some incorrect library linking
   - Improve notifications
   - Add support for Meta single key global hotkey
 

@@ -17,3 +17,6 @@ unix {
 }
 !isEmpty(target.path): INSTALLS += target
 
+DISTFILES += \
+    pluginutills.pri
+

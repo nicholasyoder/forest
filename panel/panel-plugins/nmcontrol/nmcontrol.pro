@@ -11,9 +11,8 @@ CONFIG += c++11
 
 INCLUDEPATH = ../../panel-library
 
-# You can make your code fail to compile if it uses deprecated APIs.
-# In order to do so, uncomment the following line.
-#DEFINES += QT_DISABLE_DEPRECATED_BEFORE=0x060000    # disables all the APIs deprecated before Qt 6.0.0
+include(../../../shared-variables.pri)
+include(../../../library/miscutills/miscutills.pri)
 
 SOURCES += \
     nmcontrol.cpp
@@ -28,8 +27,3 @@ HEADERS += \
 target.path = /usr/lib/forest/panel
 
 INSTALLS += target
-
-LIBS += -L$$OUT_PWD/../../../library/miscutills/ -lmiscutills
-INCLUDEPATH += $$PWD/../../../library/miscutills
-DEPENDPATH += $$PWD/../../../library/miscutills
-PRE_TARGETDEPS += $$OUT_PWD/../../../library/miscutills/libmiscutills.a

@@ -15,3 +15,6 @@ unix {
 }
 !isEmpty(target.path): INSTALLS += target
 
+DISTFILES += \
+    miscutills.pri
+

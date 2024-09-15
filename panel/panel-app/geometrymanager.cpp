@@ -25,7 +25,7 @@
 #include <QApplication>
 #include <QScreen>
 
-#include "../../library/xcbutills/xcbutills.h"
+#include "xcbutills.h"
 
 GeometryManager::GeometryManager(QWidget *panel) : panel_widget(panel) {
     connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &GeometryManager::update_geometry);
