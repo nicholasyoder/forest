@@ -1,3 +1,10 @@
+forest (0.7.8-1) unstable; urgency=medium
+
+  * Bla bla bla
+
+ -- Nicholas <nicholas@compassfoundation.io>  Sun, 15 Sep 2024 17:10:00 -0000
+
+
 forest (0.7.7-1) unstable; urgency=medium
 
   * Started using KWindowSystem for some stuff

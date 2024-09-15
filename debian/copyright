@@ -1,15 +1,7 @@
 Format: https://www.debian.org/doc/packaging-manuals/copyright-format/1.0/
-Upstream-Name: forest
-Source: 
 
 Files: *
-Copyright: 2020-2022 Nicholas Yoder <nicholas@compassfoundation.io>
-License: LGPL-3.0+
-
-Files: debian/*
-Copyright: 2022 Nicholas <nicholas@compassfoundation.io>
-License: LGPL-3.0+
-
+Copyright: 2020-2024 Nicholas Yoder <nicholasyoder@proton.me>
 License: LGPL-3.0+
  This package is free software; you can redistribute it and/or
  modify it under the terms of the GNU Lesser General Public
