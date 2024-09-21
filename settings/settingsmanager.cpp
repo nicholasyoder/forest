@@ -115,6 +115,17 @@ void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> 
         listw->items().first()->activate();
 }
 
+void SettingsManager::update_widgets(QUuid parent_id, QList<settings_item*> items){
+    if(stack_hash.contains(parent_id)){
+        QLayoutItem *layout_item = stacked_layout->itemAt(stack_hash[parent_id]);
+        if(layout_item){
+            delete layout_item->widget();
+        }
+        stack_hash.remove(parent_id);
+    }
+    display_widgets(parent_id, items);
+}
+
 void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> items){
     if(stack_hash.contains(parent_id)){
         stacked_layout->setCurrentIndex(stack_hash[parent_id]);
@@ -213,6 +224,7 @@ void SettingsManager::open_item(QUuid id){
             }
             else {
                 // Handle other item
+                connect(cat_item, &settings_category::updated, this, &SettingsManager::update_widgets);
                 display_widgets(cat_item->id(), child_items);
             }
         }

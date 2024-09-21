@@ -109,3 +109,10 @@ QImage* miscutills::get_wallpaper_scaled(QString wallpaper_file, WALLPAPER_MODE 
     QImage *wallpaper_image = new QImage(wallpaper_file);
     return get_wallpaper_scaled(wallpaper_image, mode, target_size);
 }
+
+QString miscutills::pad_with_zeros(int number){
+    if (number < 10) return "000" + QString::number(number);
+    else if (number < 100) return "00" + QString::number(number);
+    else if (number < 1000) return "0" + QString::number(number);
+    else return QString::number(number);
+}

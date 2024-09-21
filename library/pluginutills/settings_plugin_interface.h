@@ -49,14 +49,18 @@ class settings_category : public settings_item {
 public:
     settings_category(QString name, QString description = "", QString icon = "")
         : settings_item(name, description) { set_icon(icon); }
+    ~settings_category(){ clear(); }
     void set_icon(QString icon){ item_icon = icon; }
     void add_child(settings_item *child){ item_children.append(child); }
+    void clear(){ foreach(settings_item* item, item_children){ delete item; } item_children.clear(); }
     QString icon(){ return item_icon; }
     QList<settings_item*> child_items(){ return item_children; }
 signals:
     void opened();
+    void updated(QUuid id, QList<settings_item*> new_child_items);
 public slots:
     void notify_opened(){ emit opened(); }
+    void notify_updated(){ emit updated(id(), child_items()); }
 private:
     QString item_icon;
     QList<settings_item*> item_children;
@@ -75,6 +79,7 @@ class settings_widget : public settings_item {
 public:
     settings_widget(QString name, QString description = "", QWidget *widget = nullptr, bool custom = false)
         : settings_item(name, description) { set_widget(widget); set_custom(custom); }
+    ~settings_widget(){ delete item_widget; }
     QWidget* widget(){ return item_widget; }
     bool is_custom(){ return custom_widget; }
     void set_widget(QWidget *widget){ item_widget = widget; }

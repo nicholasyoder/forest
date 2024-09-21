@@ -22,6 +22,9 @@ public:
     // Scale image according to specified mode and target size
     static QImage* get_wallpaper_scaled(QImage *source_image, WALLPAPER_MODE mode, QSize target_size);
     static QImage* get_wallpaper_scaled(QString wallpaper_file, WALLPAPER_MODE mode, QSize target_size);
+
+    // Pad value with zeros
+    static QString pad_with_zeros(int number);
 };
 
 #endif // MISCUTILLS_H

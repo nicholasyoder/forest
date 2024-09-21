@@ -26,6 +26,7 @@ public:
     void load_items(QList<settings_item*> items);
     void display_categories(QUuid parent_id, QList<settings_item*> items, bool show_back_button = false);
     void display_widgets(QUuid parent_id, QList<settings_item*> items);
+    void update_widgets(QUuid parent_id, QList<settings_item*> items);
     QWidget* create_control(settings_widget* item, QString groupposition = "middle");
 
 public slots:

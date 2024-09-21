@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <ui version="4.0">
- <class>editshortcutwidget</class>
- <widget class="QWidget" name="editshortcutwidget">
+ <class>edithotkeywidget</class>
+ <widget class="QWidget" name="edithotkeywidget">
   <property name="geometry">
    <rect>
     <x>0</x>

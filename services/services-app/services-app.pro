@@ -23,7 +23,6 @@ DEFINES += QT_DEPRECATED_WARNINGS
 SOURCES += \
     hotkeys/foresthotkeys.cpp \
     hotkeys/hotkey.cpp \
-    hotkeys/editshortcutwidget.cpp \
     services.cpp \
     notifications/notify.cpp \
     notifications/notifyadapter.cpp \
@@ -35,7 +34,6 @@ HEADERS += \
     hotkeys/foresthotkeys.h \
     hotkeys/hotkey.h \
     hotkeys/qxt/keymapper_x11.h \
-    hotkeys/editshortcutwidget.h \
     services.h \
     notifications/notify.h \
     notifications/notifyadapter.h \
@@ -44,7 +42,6 @@ HEADERS += \
     polkit/polkitdialog.h
 
 FORMS += \
-    hotkeys/editshortcutwidget.ui \
     polkit/polkitdialog.ui
 
 # Default rules for deployment.
