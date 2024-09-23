@@ -53,3 +53,6 @@ INSTALLS += sessionData \
         applicationsData\
         forestConfig\
         sessionConfig\
+
+OTHER_FILES += \
+    docs/*
