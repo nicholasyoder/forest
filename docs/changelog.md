@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Fix panel on top of fullscreen windows
   - Fix library linking
   - Add docs directory with changelog and development notes
   - Add auto-hide functionality to panel

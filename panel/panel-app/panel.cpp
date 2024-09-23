@@ -30,11 +30,7 @@ panel::~panel(){}
 void panel::setupPlug(){
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_X11NetWmWindowTypeDock);
-
-    Qt::WindowFlags flags;
-    flags |= Qt::WindowStaysOnTopHint;
-    flags |= Qt::FramelessWindowHint;
-    this->setWindowFlags(flags);
+    setWindowFlags(Qt::FramelessWindowHint);
 
     geometry_manager = new GeometryManager(this);
 

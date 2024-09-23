@@ -24,11 +24,8 @@
 
 HiddenPanel::HiddenPanel(QWidget *parent) : QWidget{parent}{
     setAttribute(Qt::WA_TranslucentBackground);
-
-    Qt::WindowFlags flags;
-    flags |= Qt::WindowStaysOnTopHint;
-    flags |= Qt::FramelessWindowHint;
-    setWindowFlags(flags);
+    setAttribute(Qt::WA_X11NetWmWindowTypeDock);
+    setWindowFlags(Qt::FramelessWindowHint);
     setMouseTracking(true);
 }
 
