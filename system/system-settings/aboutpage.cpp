@@ -25,7 +25,7 @@ AboutPage::AboutPage(){
     logo_center_layout->addWidget(logo_image);
     logo_center_layout->addStretch(1);
     logo_v_layout->addLayout(logo_center_layout);
-    QLabel *logo_label = new QLabel("Forest 0.8");
+    QLabel *logo_label = new QLabel("Forest 0.7.8");
     QFont f;
     f.setPointSize(26);
     logo_label->setFont(f);

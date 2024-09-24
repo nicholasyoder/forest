@@ -2,7 +2,7 @@
 Changelog
 ============
 
-* Unreleased
+* Release 0.7.8 - 2024-09-23
   - Fix panel on top of fullscreen windows
   - Fix library linking
   - Add docs directory with changelog and development notes
