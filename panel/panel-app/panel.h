@@ -69,6 +69,7 @@ public slots:
     void reloadsettings(){settings->sync(); loadsettings();}
     void reloadplugins();
     void addplugin(QString path);
+    void update_panel_size();
 
 private slots:
     void showsettings();
@@ -89,6 +90,7 @@ private:
     AutoHideManager* autohide_manager = nullptr;
     GeometryManager* geometry_manager = nullptr;
     GeometryManager *hp_geometry_manager = nullptr;
+    panelQFrame *pframe = nullptr;
 };
 
 #endif // PANEL_H

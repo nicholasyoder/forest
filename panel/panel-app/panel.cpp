@@ -40,11 +40,11 @@ void panel::setupPlug(){
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setMargin(0);
-    panelQFrame *pframe = new panelQFrame;
+    pframe = new panelQFrame();
     pframe->setObjectName("panel");
     pframe->setLayout(wlayout);
     vlayout->addWidget(pframe);
-    connect(pframe, &panelQFrame::resized, geometry_manager, &GeometryManager::update_geometry);
+    connect(pframe, &panelQFrame::resized, this, &panel::update_panel_size);
 
     loadsettings();
     loadplugins();
@@ -185,4 +185,12 @@ void panel::addplugin(QString path){
         }
     }
     else { qDebug() << plugloader->errorString(); }
+}
+
+void panel::update_panel_size() {
+    // Hacky way to make the panel size change when the theme changes
+    if (geometry_manager && pframe) {
+        geometry_manager->set_fixed_size(pframe->height());
+        geometry_manager->update_geometry();
+    }
 }
