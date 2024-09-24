@@ -1,23 +1,85 @@
-forest (0.7.7-1) unstable; urgency=medium
+forest (0.7.8) unstable; urgency=medium
 
-  * Started using KWindowSystem for some stuff
-  * Allow window reordering on the taskbar
-  * Built SNI systemtray but left the old one in as an option
+  * Fix panel on top of fullscreen windows
+  * Fix library linking
+  * Add docs directory with changelog and development notes
+  * Add auto-hide functionality to panel
+  * Add session manager
+  * Rebuild the settings app
+  * Restructure project
+  * Improve notifications
+  * Add support for Meta single key global hotkey
 
- -- Nicholas <nicholas@compassfoundation.io>  Mon, 30 Jan 2023 17:10:00 -0000
- 
- 
-forest (0.7.6-1) unstable; urgency=medium
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Mon, 23 Sep 2024 00:00:00 -0400
+
+
+forest (0.7.7) unstable; urgency=medium
+
+  * Start using KWindowSystem for some things
+  * Allow window reordering on the windowlist
+  * Add SNI systemtray but keep the old one available as well
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Mon, 30 Jan 2023 00:00:00 -0500
+
+
+forest (0.7.6) unstable; urgency=medium
 
   * Fixed mainmenu name
   * Added hotkeys for screen brightness and screenshot
   * Enabled seperator between menu and quicklaunch
 
- -- Nicholas <nicholas@compassfoundation.io>  Sat, 17 Dec 2022 17:10:00 -0000
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Sat, 17 Dec 2022 00:00:00 -0500
 
 
-forest (0.7.5-1) unstable; urgency=medium
+forest (0.7.5) unstable; urgency=medium
 
-  * Mainmenu rebuilt and not crashing
+  * Rebuilt mainmenu plugin
 
- -- Nicholas <nicholas@compassfoundation.io>  Sat, 17 Dec 2022 12:15:00 -0000
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Thu, 26 May 2022 00:00:00 -0400
+
+
+forest (0.7.1) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Sat, 11 Jun 2022 00:00:00 -0400
+
+
+forest (0.7.0) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Thu, 26 May 2022 00:00:00 -0400
+
+
+forest (0.6) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Thu, 21 Oct 2021 00:00:00 -0400
+
+
+forest (0.5) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Wed, 14 Jul 2021 00:00:00 -0400
+
+
+forest (0.4) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Mon, 13 Jul 2020 00:00:00 -0400
+
+
+forest (0.3) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Tue, 05 May 2020 00:00:00 -0400
+
+
+forest (0.2) unstable; urgency=medium
+
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Fri, 13 Mar 2020 00:00:00 -0400
+
+
+forest (0.1) unstable; urgency=medium
+
+

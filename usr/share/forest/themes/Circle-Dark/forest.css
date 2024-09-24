@@ -144,6 +144,7 @@
     border-top-left-radius: 14px;
     border-top-right-radius: 14px;
     margin-left: 5px;
+    min-height: 500px;
 }
 
 #panelMainMenuListWidget #popupMenuItem{
@@ -153,6 +154,10 @@
 #panelMainMenuScrollWidget {
     background: transparent;
     padding: 3px;
+}
+
+#panelMainMenuPopup {
+    min-width: 600px;
 }
 
 #notifyPopup {

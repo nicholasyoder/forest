@@ -21,6 +21,9 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "forest.h"
+#include "fadewidget.h"
+#include "pluginutills.h"
+#include "../library/fstyleloader/fstyleloader.h"
 
 forest::forest(){
 }
@@ -54,7 +57,7 @@ void forest::setup(){
 }
 
 void forest::XcbEventFilter(xcb_generic_event_t *event){
-    foreach (fpluginterface *interface, xcbpluglist)
+    foreach (app_plugin_interface *interface, xcbpluglist)
         interface->XcbEventFilter(event);
 }
 
@@ -90,27 +93,23 @@ void forest::setdefaults(){
 }
 
 void forest::loadplugins(){
-    settings->beginGroup("plugins");
-    foreach(QString key, settings->childGroups()){
-        if (settings->value(key+"/enabled", false).toBool()){
-            QPluginLoader plugloader(settings->value(key+"/path").toString());
-            if (plugloader.load()) {
-                 QObject *plugin = plugloader.instance();
-                 if (plugin) {
-                     pluginterface = qobject_cast<fpluginterface *>(plugin);
-                     if (pluginterface) {
-                         QHash<QString, QString> info = pluginterface->getpluginfo();
-                         if (info["needsXcbEvents"] == "true")
-                             xcbpluglist.append(pluginterface);
+    QStringList plugin_paths = pluginutills::get_plugin_paths(APP_PLUGIN);
+    foreach (QString plugin_path, plugin_paths) {
+        QPluginLoader plugloader(plugin_path);
+        if (plugloader.load()) {
+            QObject *plugin = plugloader.instance();
+            if (!plugin) continue;
 
-                         pluginterface->setupPlug();
-                     }
-                 }
-            }
-            else {
-                qDebug() << plugloader.errorString();
-            }
+            app_plugin_interface *pluginterface = qobject_cast<app_plugin_interface *>(plugin);
+            if (!pluginterface) continue;
+
+            if (pluginterface->needs_xcb_events())
+                xcbpluglist.append(pluginterface);
+
+            pluginterface->setupPlug();
+        }
+        else {
+            qDebug() << plugloader.errorString();
         }
     }
-    settings->endGroup();
 }

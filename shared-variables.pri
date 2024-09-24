@@ -1,0 +1,1 @@
+LIBRARY_BUILD_DIR = $$shadowed($$PWD/library)

@@ -1,9 +1,8 @@
 TEMPLATE    = subdirs
 
 SUBDIRS += \
-    fpluginterface \
     fstyleloader \
-    futils \
-    fwidgets \
+    miscutills \
+    pluginutills \
     xcbutills \
     fmutils \

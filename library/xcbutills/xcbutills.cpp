@@ -21,7 +21,13 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "xcbutills.h"
+#include "numlock.h"
+
+#include <QApplication>
+#include <QScreen>
 #include <KWindowSystem>
+
+#include <netwm.h>
 
 #include "xcb/xcb_image.h"
 
@@ -124,72 +130,28 @@ int Xcbutills::getWindowDesktop(xcb_window_t window)
     }
 }
 
-QImage Xcbutills::getWindowImage(xcb_window_t window)
-{
+QImage Xcbutills::getWindowImage(xcb_window_t window){
     const xcb_get_geometry_cookie_t geoCookie = xcb_get_geometry_unchecked(xcbconnection,  window);
     xcb_get_geometry_reply_t* geo(xcb_get_geometry_reply(xcbconnection, geoCookie, nullptr));
     if (!geo){
         return QImage();
     }
 
-
-    //xcb_connection_t *con = xcb_connect(nullptr, nullptr);
-
-    //xcb_map_window(xcbconnection, window);
-    //xcb_clear_area(xcbconnection, 1, window, 0, 0, geo->width, geo->height);
-    //xcb_flush(xcbconnection);
-
-
     xcb_image_t *image = xcb_image_get(xcbconnection, window, 0, 0, geo->width, geo->height, 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
 
     if (image) {
         return QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
     } else {
-        return QImage();
+        QIcon ico = getWindowIcon(window);
+        return QImage(ico.pixmap(100,100).toImage());
+
+        //NETWinInfo win_info(xcbconnection, window, QX11Info::appRootWindow(), NET::Properties());
+
+        //QIcon::fromTheme(win_info.iconName());
+
+        //unsigned char *data = win_info.icon().data;
+        //return QImage::fromData(data, sizeof(*data));
     }
-
-    /*const xcb_get_image_cookie_t imageCookie = xcb_get_image_unchecked(con, XCB_IMAGE_FORMAT_Z_PIXMAP, window, 0, 0, geo->width, geo->height, uint32_t(~0));
-    xcb_get_image_reply_t* xImage(xcb_get_image_reply(con, imageCookie, nullptr));
-    if (!xImage) { // for some unknown reason, xcb_get_image failed. try another less efficient method.
-        qDebug() << "Xcbutils: falling back to screen->grabWindow";
-        xcb_clear_area(xcbconnection, 1, window, 0, 0, geo->width, geo->height);
-        return qApp->primaryScreen()->grabWindow(window).toImage();
-    }
-
-    QImage::Format format = QImage::Format_Invalid;
-    switch (xImage->depth) {
-    case 1: format = QImage::Format_MonoLSB; break;
-    case 16: format = QImage::Format_RGB16; break;
-    case 24: format = QImage::Format_RGB32; break;
-    case 30: {
-        // Qt doesn't have a matching image format. We need to convert manually
-        uint32_t *pixels = reinterpret_cast<uint32_t *>(xcb_get_image_data(xImage));
-        for (uint i = 0; i < xImage->length; ++i)
-        {
-            int r = (pixels[i] >> 22) & 0xff;
-            int g = (pixels[i] >> 12) & 0xff;
-            int b = (pixels[i] >>  2) & 0xff;
-
-            pixels[i] = qRgba(r, g, b, 0xff);
-        }
-        // fall through, Qt format is still Format_ARGB32_Premultiplied
-        Q_FALLTHROUGH();
-    }
-    case 32: format = QImage::Format_ARGB32_Premultiplied; break;
-    default: return QImage(); // we don't know
-    }
-
-    QImage image(xcb_get_image_data(xImage), geo->width, geo->height, xcb_get_image_data_length(xImage) / geo->height, format, free, xImage);
-
-    if (image.isNull()) {return QImage();}
-
-    if (image.format() == QImage::Format_MonoLSB) {
-        // work around an abort in QImage::color
-        image.setColorCount(2);
-        image.setColor(0, QColor(Qt::white).rgb());
-        image.setColor(1, QColor(Qt::black).rgb());
-    }
-    return image;*/
 }
 
 int Xcbutills::getNumDesktops()
@@ -364,3 +326,80 @@ void Xcbutills::setPartialStrut(xcb_window_t window, int left_width, int right_w
     xcb_change_property(xcbconnection, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT_PARTIAL"), XCB_ATOM_CARDINAL, 32, 12, (const void *) data);
 }
 
+void Xcbutills::enableNumlock(){
+    numlock::enableNumlock();
+}
+
+QByteArray Xcbutills::get_string_reply(xcb_connection_t *c, const xcb_get_property_cookie_t cookie, xcb_atom_t type){
+    xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, nullptr);
+    if (!reply)
+        return QByteArray();
+
+    QByteArray value;
+
+    if (reply->type == type && reply->format == 8 && reply->value_len > 0){
+        const char *data = static_cast<const char *>(xcb_get_property_value(reply));
+        int len = int(reply->value_len);
+        if (data)
+            value = QByteArray(data, data[len - 1] ? len : len - 1);
+    }
+
+    free(reply);
+    return value;
+}
+
+char *Xcbutills::nstrndup(const char *s1, int l){
+    if (! s1 || l == 0) {
+        return static_cast<char *>(nullptr);
+    }
+
+    char *s2 = new char[ulong(l + 1)];
+    strncpy(s2, s1, ulong(l));
+    s2[l] = '\0';
+    return s2;
+}
+
+void Xcbutills::send_client_message(xcb_connection_t *c, uint32_t mask, xcb_window_t destination, xcb_window_t window, xcb_atom_t message, const uint32_t data[]){
+    xcb_client_message_event_t event;
+    event.response_type = XCB_CLIENT_MESSAGE;
+    event.format = 32;
+    event.sequence = 0;
+    event.window = window;
+    event.type = message;
+
+    for (int i = 0; i < 5; i++) {
+        event.data.data32[i] = data[i];
+    }
+
+    xcb_send_event(c, false, destination, mask, (const char *) &event);
+}
+
+QVector<Xcbutills::xicon> Xcbutills::readxicon(xcb_connection_t *c, const xcb_get_property_cookie_t cookie){
+    QVector<xicon> xicons;
+
+    xcb_get_property_reply_t *reply = xcb_get_property_reply(c, cookie, nullptr);
+    if (!reply || reply->value_len < 3 || reply->format != 32 || reply->type != XCB_ATOM_CARDINAL) {
+        if (reply)
+            free(reply);
+        return xicons;
+    }
+
+    uint32_t *data = (uint32_t *) xcb_get_property_value(reply);
+    for (unsigned int i = 0, j = 0; j < reply->value_len - 2; i++) {
+        uint32_t width  = data[j++];
+        uint32_t height = data[j++];
+        uint32_t size   = width * height * sizeof(uint32_t);
+        if (j + width * height > reply->value_len) {
+            fprintf(stderr, "Ill-encoded icon data; proposed size leads to out of bounds access. Skipping. (%d x %d)\n", width, height);
+            break;
+        }
+
+        xicon ico(QSize(width, height), new unsigned char[size]);
+        memcpy((void *)ico.data, (const void *)&data[j], size);
+        xicons.append(ico);
+
+        j += width * height;
+    }
+    free(reply);
+    return xicons;
+}
