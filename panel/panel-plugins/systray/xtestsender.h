@@ -1,12 +1,16 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL3+
+ * (c)LGPL2.1+
  *
- * Copyright: 2021 Nicholas Yoder
+ * LXQt - a lightweight, Qt based, desktop toolset
+ * https://lxqt.org
+ *
+ * Copyright: 2017 David Edmundson <davidedmundson@kde.org>
+ *            2022 LXQt team
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
  * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
+ * version 2.1 of the License, or (at your option) any later version.
  *
  * This library is distributed in the hope that it will be useful,
  * but WITHOUT ANY WARRANTY; without even the implied warranty of
@@ -20,34 +24,9 @@
  *
  * END_COMMON_COPYRIGHT_HEADER */
 
-#include "systray.h"
+#pragma once
 
+typedef struct _XDisplay Display;
 
-systray::systray()
-{
-}
-
-systray::~systray()
-{
-
-}
-
-void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
-{
-    Q_UNUSED(itemlist);
-
-    fdo_selection_manager = new FdoSelectionManager();
-}
-
-void systray::XcbEventFilter(xcb_generic_event_t *event)
-{
-
-}
-
-QHash<QString, QString> systray::getpluginfo()
-{
-    QHash<QString, QString> info;
-    info["name"] = "System Tray";
-    info["needsXcbEvents"] = "true";
-    return info;
-}
+void sendXTestPressed(Display *display, int button);
+void sendXTestReleased(Display *display, int button);

@@ -27,11 +27,19 @@ CONFIG += c++11
 
 SOURCES += \
         systray.cpp \
-    trayicon.cpp
+    fdoselectionmanager.cpp \
+    snidbus.cpp \
+    sniproxy.cpp \
+    xtestsender.cpp \
 
 HEADERS += \
         systray.h \
     trayicon.h \
+    snidbus.h \
+    sniproxy.h \
+    xtestsender.h \
+    xcbutils.h \
+    fdoselectionmanager.h \
     ../../panel-library/panelbutton.h \
     ../../panel-library/buttonrender.h
 

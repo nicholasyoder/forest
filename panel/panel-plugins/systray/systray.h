@@ -26,25 +26,8 @@
 #include <QWidget>
 #include <QHBoxLayout>
 
-//#include "panelbutton.h"
 #include "panelpluginterface.h"
-#include "trayicon.h"
-#include "xcbutills/xcbutills.h"
-
-#include <QtX11Extras/QX11Info>
-
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/Xdamage.h>
-#include <xcb/xcb.h>
-#include <xcb/damage.h>
-
-#undef Bool // defined as int in X11/Xlib.h
-
-typedef long unsigned int luint;
+#include "fdoselectionmanager.h"
 
 class systray : public QWidget, panelpluginterface
 {
@@ -64,27 +47,9 @@ public:
     //end plugininterface
 
 private slots:
-    void starttray();
-    void stoptray();
-    void onIconDestroyed(QObject * icon);
-    void clientMessageEvent(xcb_generic_event_t *e);
-    int clientMessage(WId _wid, Atom _msg, luint data0, luint data1 = 0, luint data2 = 0, luint data3 = 0, luint data4 = 0) const;
-    void addIcon(Window id);
-    TrayIcon* findIcon(Window trayId);
 
 private:
-    VisualID getVisual();
-    void setIconSize(QSize icosize);
-
-    QList<TrayIcon*> mIcons;
-
-    QSize iconsize;
-    Display* mDisplay;
-    Window mTrayId = 0;
-    int mDamageEvent = 0;
-    int mDamageError = 0;
-    Atom _NET_SYSTEM_TRAY_OPCODE;
-    QHBoxLayout *traylayout;
+    FdoSelectionManager *fdo_selection_manager = nullptr;
 };
 
 #endif // SYSTRAY_H
