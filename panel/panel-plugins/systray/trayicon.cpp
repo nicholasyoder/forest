@@ -39,10 +39,14 @@
 #include <X11/extensions/Xcomposite.h>
 #include <X11/extensions/Xrender.h>
 
+#include <xcb/xcb.h>
 #include <xcb/composite.h>
+#include <xcb/xcb_image.h>
 
 #define XEMBED_EMBEDDED_NOTIFY 0
 static bool xError;
+
+xcb_connection_t * xcon = QX11Info::connection();
 
 int windowErrorHandler(Display *d, XErrorEvent *e)
 {
@@ -189,8 +193,7 @@ void TrayIcon::init()
     this->updateicon();
 }
 
-TrayIcon::~TrayIcon()
-{
+TrayIcon::~TrayIcon(){
     Display* dsp = mDisplay;
     XSelectInput(dsp, mIconId, NoEventMask);
 
@@ -210,14 +213,12 @@ TrayIcon::~TrayIcon()
     XSetErrorHandler(old);
 }
 
-QSize TrayIcon::sizeHint() const
-{
+QSize TrayIcon::sizeHint() const{
     QMargins margins = contentsMargins();
     return QSize(margins.left() + mIconSize.width() + margins.right(), margins.top() + mIconSize.height() + margins.bottom());
 }
 
-void TrayIcon::setIconSize(QSize iconSize)
-{
+void TrayIcon::setIconSize(QSize iconSize){
     mIconSize = iconSize;
 
     const QSize req_size{mIconSize * metric(PdmDevicePixelRatio)};
@@ -228,40 +229,19 @@ void TrayIcon::setIconSize(QSize iconSize)
         Xcbutills::resizeWindow(xcb_window_t(mIconId), req_size.width(), req_size.height());
 }
 
-QRect TrayIcon::iconGeometry()
-{
+QRect TrayIcon::iconGeometry(){
     QRect res = QRect(QPoint(0, 0), mIconSize);
 
     res.moveCenter(QRect(0, 0, width(), height()).center());
     return res;
 }
 
-void TrayIcon::updateicon()
-{
+void TrayIcon::updateicon(){
     update();
 }
 
-void TrayIcon::paintEvent(QPaintEvent* event)
-{
-    //panelbutton::paintEvent(event);
-
-    Display* dsp = mDisplay;
-    XWindowAttributes attr;
-    if (!XGetWindowAttributes(dsp, mIconId, &attr))
-    {
-        qWarning() << "systray: Paint error";
-        return;
-    }
-
-    XImage* ximage = XGetImage(dsp, mIconId, 0, 0, uint(attr.width), uint(attr.height), AllPlanes, ZPixmap);
-    if(ximage)
-    {
-        iconimage = QImage((const uchar*) ximage->data, ximage->width, ximage->height, ximage->bytes_per_line,  QImage::Format_ARGB32_Premultiplied);
-    }
-    else {
-        iconimage = qApp->primaryScreen()->grabWindow(mIconId, 0,0, attr.width, attr.height).toImage();
-    }
-
+void TrayIcon::paintEvent(QPaintEvent*){
+    QImage iconimage = getImageNonComposite();
 
     QPainter painter(this);
     QRect iconRect = iconGeometry();
@@ -282,8 +262,40 @@ void TrayIcon::windowDestroyed(Window w)
         mDamage = 0;
 }
 
-bool TrayIcon::isXCompositeAvailable()
-{
-    int eventBase, errorBase;
-    return XCompositeQueryExtension(QX11Info::display(), &eventBase, &errorBase );
+QSize TrayIcon::calculateClientWindowSize(){
+    auto cookie = xcb_get_geometry(xcon, mIconId);
+    xcb_get_geometry_reply_t* clientGeom(xcb_get_geometry_reply(xcon, cookie, nullptr));
+
+    QSize clientWindowSize;
+    if (clientGeom) {
+        clientWindowSize = QSize(clientGeom->width, clientGeom->height);
+    }
+    // if the window is a clearly stupid size resize to mIconSize
+    if (clientWindowSize.isEmpty() || clientWindowSize.width() > mIconSize.width() || clientWindowSize.height() > mIconSize.height()) {
+        const uint32_t windowSizeConfigVals[2] = {uint32_t(mIconSize.width()), uint32_t(mIconSize.height())};
+        xcb_configure_window(xcon, mIconId, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, windowSizeConfigVals);
+        xcb_flush(xcon);
+        clientWindowSize = mIconSize;
+    }
+
+    return clientWindowSize;
+}
+
+void sni_cleanup_xcb_image(void *data){
+    xcb_image_destroy(static_cast<xcb_image_t *>(data));
+}
+
+QImage TrayIcon::getImageNonComposite(){
+    QSize clientWindowSize = calculateClientWindowSize();
+    xcb_image_t *image = xcb_image_get(xcon, mIconId, 0, 0, clientWindowSize.width(), clientWindowSize.height(), 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
+
+    QImage naiveConversion;
+    if (image) {
+        naiveConversion = QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
+    } else {
+        qDebug() << "System Tray: Falling back to grabWindow for" << mIconId;
+        return qApp->primaryScreen()->grabWindow(mIconId, 0,0, clientWindowSize.width(), clientWindowSize.height()).toImage();
+    }
+
+    return QImage(image->data, image->width, image->height, image->stride, QImage::Format_ARGB32, sni_cleanup_xcb_image, image);
 }

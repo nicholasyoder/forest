@@ -55,7 +55,7 @@ public:
     QSize sizeHint() const;
 
 protected:
-    void paintEvent(QPaintEvent*event);
+    void paintEvent(QPaintEvent*);
     void enterEvent(QEvent *){
         //setMouseOver(true);
         //emit enterevent();
@@ -87,8 +87,8 @@ private:
     QSize mIconSize;
     Damage mDamage;
     Display* mDisplay;
-    QImage iconimage;
-    static bool isXCompositeAvailable();
+    QImage getImageNonComposite();
+    QSize calculateClientWindowSize();
 };
 
 #endif // TRAYICON_H
