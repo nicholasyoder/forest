@@ -2,6 +2,9 @@
 Changelog
 ============
 
+* UNRELEASED
+  - Fix random pixels in tray icons
+
 * Release 0.7.8 - 2024-09-23
   - Fix panel on top of fullscreen windows
   - Fix library linking
