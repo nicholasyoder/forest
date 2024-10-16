@@ -8,7 +8,7 @@ DESTDIR = ../../../usr/lib/forest/panel
 
 CONFIG += plugin
 
-LIBS += $(SUBLIBS) -lXrender -lxcb-composite -lXdamage -lXfixes
+LIBS += $(SUBLIBS) -lXrender -lxcb-composite -lXdamage -lXfixes -lxcb-image
 
 INCLUDEPATH = ../../panel-library
 INCLUDEPATH += ../../../library
