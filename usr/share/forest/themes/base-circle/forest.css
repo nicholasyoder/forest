@@ -1,0 +1,146 @@
+#panel {
+    border-radius: 24px;
+    padding: 4px;
+    margin-left: 2px;
+    margin-right: 2px;
+    min-height: 40;
+    max-height: 40;
+}
+
+#panelSeparator {
+    margin: 2px 4px 2px 4px;
+}
+
+#panelButton { 
+    border: 1px solid transparent;
+    border-radius: 20px; 
+} 
+
+#panelButton[buttontype="Custom"] { 
+    padding: 7px;
+    min-width: 25px;
+} 
+
+#panelButton[buttontype="Icon"] { 
+    min-width: 40px;
+} 
+
+#panelButton[buttontype="Text"] { 
+    padding-left: 7px;
+    padding-right: 7px;
+    min-width: 20px;
+} 
+
+#panelButton[buttontype="IconAndText"] {
+    padding-left: 7px;
+    padding-right: 7px;
+}
+
+#popup {
+    border: 1px solid lightgrey;
+    border-radius: 20px;
+    margin: 5px;
+    padding: 7px;
+}  
+
+#popupMenuItem {
+    min-height: 18px;
+    max-height: 18px;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 6px;
+}
+
+#panelMainmenuSearchbox {
+    border: 1px solid lightgrey;
+    border-bottom-left-radius: 14px;
+    border-bottom-right-radius: 14px;
+    padding: 8px 6px;
+    margin-left: 5px;
+}
+
+#panelMainMenuListWidget {
+    border: 1px solid lightgrey;
+    border-bottom: none;
+    border-top-left-radius: 14px;
+    border-top-right-radius: 14px;
+    margin-left: 5px;
+}
+
+#notifyPopup {
+    border: 1px solid lightgrey;
+    border-radius: 20px;
+    margin: 5px;
+    padding: 7px;
+}
+
+#notifyPopup #closeButton {
+    border: 1px solid transparent;
+    border-radius: 15px;
+}
+
+QSlider::groove:vertical {
+	background: rgba(90,90,90, 70%);
+	position: absolute; /* absolutely position 4px from the left and right of the widget. setting margins on the widget should work too... */
+	left: 4px; right: 4px;
+	border-radius: 3px;
+}
+
+QSlider::handle:vertical {
+	height: 14px;
+	background: rgba(180,180,180, 100%);
+    border-radius: 6px;
+	margin: 0 -4px; /* expand outside the groove */
+}
+
+QSlider::add-page:vertical {
+	background: rgba(140,140,140, 100%);
+	border-radius: 3px;
+}
+
+QSlider::sub-page:vertical {
+	background: rgba(90,90,90, 70%);
+	border-radius: 3px;
+}
+
+QScrollBar:vertical {
+    background: transparent;
+    border: none;
+    width: 14px;
+    margin: 0;
+}
+QScrollBar::handle:vertical {
+    background: rgb(100,100,100);
+    border-top-right-radius: 10px;
+    border-bottom-right-radius: 10px;
+    border-top-left-radius: 2px;
+    border-bottom-left-radius: 2px;
+    margin: 2px 2px 2px 0px;
+    min-height: 20px;
+}
+QScrollBar::add-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+
+QScrollBar::sub-line:vertical {
+    background: none;
+    border: none;
+    height: 0;
+}
+QScrollBar::up-arrow:vertical, QScrollBar::down-arrow:vertical {
+    border: none;
+    width: 0;
+    height: 0;
+    background: none;
+}
+
+QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
+    background: none;
+}
+
+QScrollArea {
+    border: none;
+    background: transparent;
+}

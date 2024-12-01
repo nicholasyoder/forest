@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Implement base themes with functional light/dark variations of Circle and Rounded themes
   - Fix random pixels in tray icons
 
 * Release 0.7.8 - 2024-09-23

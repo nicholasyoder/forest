@@ -51,7 +51,6 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     layout->addWidget(pbutton);
 
     mLabelInfo=new QLabel;
-    mLabelInfo->setForegroundRole(QPalette::Light);
     mLabelInfo->setAlignment(Qt::AlignCenter);
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->addWidget(mLabelInfo);
@@ -70,7 +69,6 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
     timer=new QTimer;
     connect(timer,SIGNAL(timeout()),this,SLOT(updateSensor()));
-    this->setForegroundRole(QPalette::Light);
 
     loadSettings();
 }

@@ -1,0 +1,17 @@
+#logout_MainWindow {
+    background: grey;
+    padding: 8px;
+}
+
+#logout_TitleLabel {
+    margin: 0px 0px 0px 8px;
+}
+
+#logout_MainWindow iconbutton {
+    min-width: 90px;
+}
+
+#logout_MainWindow iconbutton#logout_CloseButton {
+    min-width: 10px;
+    margin: 0px 0px 8px 0px;
+}

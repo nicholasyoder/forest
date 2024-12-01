@@ -1,0 +1,121 @@
+#panel {
+    background: rgba(235,235,235, 98%);
+}
+
+#panelSeparator {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0, 0%), stop:0.15 rgba(100,100,100, 80%), stop:0.85 rgba(100,100,100, 80%), stop:1 rgba(0,0,0, 0%));
+}
+
+#panelButton {
+    color: black;
+}
+
+#panelButton:hover  {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#panelButton:pressed  {
+    background: rgba(245,245,245, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#popup {
+    background: rgba(235,235,235, 98%);
+    border-color: rgba(255,255,255, 90%);
+}
+
+#popup QLabel {
+    color: black;
+}
+
+#popupMenuItem {
+    color: black;
+}
+
+#popupMenuItem:hover  {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#popupMenuItem:pressed  {
+    background: rgba(245,245,245, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#popupMenuSeperator {
+    background: rgba(180,180,180, 80%);
+}
+
+#panelMainmenuSearchbox {
+    background: rgb(220,220,220);
+    border-color: rgb(200,200,200);
+    color: black;
+}
+
+#panelMainMenuListWidget {
+    background: rgb(220,220,220);
+    border-color: rgb(200,200,200);
+}
+
+#notifyPopup {
+    background: rgba(235,235,235, 98%);
+    border-color: rgba(255,255,255, 90%);
+    color: white;
+}
+
+#notifyPopup QLabel{
+    color: black;
+}
+
+#notifyPopup #summaryLabel{
+    color: black;
+}
+
+#notifyPopup #closeButton {
+    color: black;
+}
+
+#notifyPopup #closeButton:hover  {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#notifyPopup #closeButton:pressed  {
+    background: rgba(245,245,245, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+QSlider::handle:vertical {
+    background: rgba(180,180,180, 100%);
+}
+
+QSlider::add-page:vertical {
+    background: rgba(110,110,110, 100%);
+}
+
+QSlider::sub-page:vertical {
+    background: rgba(150,150,150, 100%);
+}
+
+QScrollBar::handle:vertical {
+    background: rgb(150,150,150);
+}
