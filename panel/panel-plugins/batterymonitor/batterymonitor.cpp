@@ -70,7 +70,6 @@ void batterymonitor::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
 
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->addWidget(popuplabel);
-    popuplabel->setForegroundRole(QPalette::Light);
     pbox = new popup(vlayout, this, CenteredOnWidget);
     connect(pb, &panelbutton::leftclicked, this, &batterymonitor::showpopup);
 }

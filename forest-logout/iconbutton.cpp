@@ -40,7 +40,6 @@ iconbutton::iconbutton(QIcon icon, int w, int h, bool havetext, QString text)
         QHBoxLayout *texthlayout = new QHBoxLayout;
         texthlayout->addStretch(5);
         textlabel->setText(text);
-        textlabel->setForegroundRole(QPalette::Light);
         texthlayout->addWidget(textlabel);
         texthlayout->addStretch(5);
         basevlayout->addLayout(texthlayout);

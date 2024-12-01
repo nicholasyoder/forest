@@ -1,0 +1,125 @@
+#panel {
+    background: rgba(30,30,30, 98%);
+}
+
+#panelSeparator {
+    background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0, 0%), stop:0.15 rgba(100,100,100, 80%), stop:0.85 rgba(100,100,100, 80%), stop:1 rgba(0,0,0, 0%));
+}
+
+#panelButton {
+    color: white;
+}
+
+#panelButton:hover  { 
+    background: rgba(50,50,50, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+} 
+
+#panelButton:pressed  { 
+    background: rgba(40,40,40, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+#popup {
+    background: rgba(30,30,30, 100%);
+    border-color: rgba(0,0,0, 40%);
+}
+
+#popup QLabel {
+    color: white;
+}
+
+#popupMenuItem {
+    color: white;
+} 
+
+#popupMenuItem:hover  { 
+    background: rgba(50,50,50, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+} 
+
+#popupMenuItem:pressed  { 
+    background: rgba(40,40,40, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+#popupMenuSeperator { 
+    background: rgba(200,200,200, 80%); 
+}
+
+#panelMainmenuSearchbox {
+    background: rgb(22,22,22);
+    border-color: rgb(15,15,15);
+    color: white;
+}
+
+#panelMainMenuListWidget {
+    background: rgb(22,22,22);
+    border-color: rgb(15,15,15);
+}
+
+#notifyPopup {
+    background: rgba(30,30,30, 100%);
+    border-color: rgba(0,0,0, 40%);
+    color: white;
+}
+
+#notifyPopup QLabel{
+    color: white;
+}
+
+#notifyPopup #summaryLabel{
+    color: white;
+}
+
+#notifyPopup #closeButton {
+    color: white;
+}
+
+#notifyPopup #closeButton:hover  { 
+    background: rgba(50,50,50, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+} 
+
+#notifyPopup #closeButton:pressed  { 
+    background: rgba(40,40,40, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+QSlider::groove:vertical {
+    background: rgba(90,90,90, 70%);
+}
+
+QSlider::handle:vertical {
+    background: rgba(180,180,180, 100%);
+}
+
+QSlider::add-page:vertical {
+    background: rgba(140,140,140, 100%);
+}
+
+QSlider::sub-page:vertical {
+    background: rgba(90,90,90, 70%);
+}
+
+QScrollBar::handle:vertical {
+    background: rgb(80,80,80);
+}

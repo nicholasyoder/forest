@@ -1,0 +1,28 @@
+#logout_MainWindow {
+    background: rgba(235,235,235, 98%);
+    border-color: rgba(255,255,255, 90%);
+}
+
+#logout_TitleLabel {
+    color: black;
+}
+
+#logout_MainWindow iconbutton QLabel {
+    color: black;
+}
+
+#logout_MainWindow iconbutton:hover {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#logout_MainWindow iconbutton:pressed {
+    background: rgba(245,245,245, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}

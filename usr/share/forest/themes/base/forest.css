@@ -1,0 +1,144 @@
+#panel {
+    background: grey;
+    min-height: 30;
+    max-height: 30;
+    padding: 3px;
+}
+
+#panelSeparator {
+    min-width: 1px;
+    max-width: 1px;
+    margin: 3px;
+    background: black;
+}
+
+#panelButton {
+    height: auto;
+}
+
+#panelButton[buttontype="Custom"] {
+    text-align: center; 
+    padding: 2px;
+}
+
+#panelButton[buttontype="Icon"] {
+    text-align: center; 
+    min-width: 28px;
+    icon-size: 22px;
+}
+
+#panelButton[buttontype="Text"] {
+    text-align: center; 
+    padding-left: 3px;
+    padding-right: 3px;
+    min-width: 20px;
+}
+
+#panelButton[buttontype="IconAndText"] {
+    text-align: left;
+    padding-left: 3px;
+    padding-right: 3px;
+    margin-right: 3px;
+    icon-size: 22px;
+}
+
+#popup {
+    background: grey;
+    padding: 3px;
+}
+
+#popupMenuItem {
+    min-height: 22px;
+    max-height: 22px;
+    text-align: left; 
+    padding: 4px;
+    font-size: 10pt;
+    icon-size: 22px;
+} 
+
+#popupMenuSeperator { 
+    background: black;
+    min-height: 1px;
+    max-height: 1px;
+    margin-top: 4px;
+    margin-right: 2px;
+    margin-bottom: 4px;
+    margin-left: 2px;
+}
+
+/* Desktop icons stuff is identical across themes for now */
+#desktopIcon {
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
+
+#desktopIcon:hover  {
+    background: rgba(180,180,180, 25%);
+    border-top: 1px solid rgba(100,100,100, 70%);
+    border-right: 1px solid rgba(100,100,100, 70%);
+    border-bottom: 1px solid rgba(100,100,100, 60%);
+    border-left: 1px solid rgba(100,100,100, 60%);
+}
+
+#desktopDragBox {
+    background: rgba(200,200,200, 60%);
+}
+
+#panelMainMenuListWidget {
+    background: lightgrey;
+    min-height: 500px;
+}
+
+#panelMainMenuListWidget #popupMenuItem{
+    min-width: 150px;
+}
+
+#panelMainMenuScrollWidget {
+    background: transparent;
+    padding: 3px;
+}
+
+#panelMainMenuPopup {
+    min-width: 600px;
+}
+
+#notifyPopup {
+    background: grey;
+    margin: 3px;
+    padding: 5px;
+}
+
+#notifyPopup #iconLabel{
+    margin-right: 4px;
+    margin-left: 8px;
+}
+
+#notifyPopup #summaryLabel{
+    font-weight: bold;
+    margin-right: 4px;
+}
+
+#notifyPopup #bodyLabel{
+    margin-right: 4px;
+}
+
+#notifyPopup #appnameLabel{
+    font-style: italic;
+    font-size: 8pt;
+    margin-bottom: 3px;
+    margin-right: 4px;
+}
+
+#notifyPopup #closeButton {
+    padding: 3px; 
+    text-align: center;
+    min-width: 24px;
+    max-width: 24px;
+    min-height: 24px;
+    max-height: 24px;
+}
+
+QScrollArea {
+    border: none;
+    background: transparent;
+}

@@ -1,0 +1,9 @@
+#logout_MainWindow {
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}
+
+#logout_MainWindow iconbutton {
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
