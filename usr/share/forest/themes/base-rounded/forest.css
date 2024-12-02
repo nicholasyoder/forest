@@ -50,24 +50,40 @@ QSlider:vertical {
     min-height: 120px;
 }
 
-QSlider::groove:vertical {
+QSlider::groove {
     border-radius: 3px;
     position: absolute;
+}
+
+QSlider::groove:vertical {
     left: 4px;
     right: 4px;
 }
 
+QSlider::groove:horizontal {
+    top: 4px;
+    bottom: 4px;
+}
+
+QSlider::handle {
+    border-radius: 3px;
+}
+
 QSlider::handle:vertical {
     height: 15px;
-    border-radius: 3px;
     margin: 0 -4px; /* expand outside the groove */
 }
 
-QSlider::add-page:vertical {
+QSlider::handle:horizontal {
+    width: 15px;
+    margin: -4px 0px; /* expand outside the groove */
+}
+
+QSlider::add-page {
     border-radius: 3px;
 }
 
-QSlider::sub-page:vertical {
+QSlider::sub-page {
     border-radius: 3px;
 }
 

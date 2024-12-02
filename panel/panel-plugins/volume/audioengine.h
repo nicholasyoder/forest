@@ -54,9 +54,6 @@ public slots:
     void unmute(AudioDevice *device);
     virtual void setIgnoreMaxVolume(bool ignore);
 
-signals:
-    void sinkListChanged();
-
 protected:
     QList<AudioDevice*> m_sinks;
 };

@@ -22,7 +22,8 @@ SOURCES += \
     alsaengine.cpp \
     audiodevice.cpp \
     audioengine.cpp \
-    fvolume.cpp
+    fvolume.cpp \
+    settingswidget.cpp
 
 HEADERS += \
     ../../panel-library/panelbutton.h \
@@ -32,10 +33,14 @@ HEADERS += \
     alsaengine.h \
     audiodevice.h \
     audioengine.h \
-    fvolume.h
+    fvolume.h \
+    settingswidget.h
 
 # Default rules for deployment.
 
 target.path = /usr/lib/forest/panel
 
 INSTALLS += target
+
+FORMS += \
+    settingswidget.ui

@@ -56,14 +56,16 @@ public:
     //end plugin interface
 
 public slots:
-    Q_SCRIPTABLE void volumeup(){setvolume(volume+2);}
-    Q_SCRIPTABLE void volumedown(){setvolume(volume-2);}
+    Q_SCRIPTABLE void volumeup(){setvolume(master_volume+2);}
+    Q_SCRIPTABLE void volumedown(){setvolume(master_volume-2);}
     Q_SCRIPTABLE void togglemuted();
 
 protected:
     void wheelEvent(QWheelEvent *event);
 
 private slots:
+    void loadsettings();
+    void showsettings();
     void setvolume(int value);
     //void togglemuted();
     void volumechanged(int value);
@@ -72,14 +74,14 @@ private slots:
     void handlemouseReleased(QMouseEvent *event);
 
 private:
-    int volume = 0;
-    bool muted = false;
+    int master_volume = 0;
+    bool master_muted = false;
 
-    AudioEngine *audioengine;
-    AudioDevice *audiodevice;
+    AudioEngine *audioengine = nullptr;
+    AudioDevice *master_device = nullptr;
 
     popup *popupbox;
+    QVBoxLayout * popup_layout = nullptr;
     popupmenu *pmenu;
-    QSlider *slider;
 };
 #endif // FVOLUME_H
