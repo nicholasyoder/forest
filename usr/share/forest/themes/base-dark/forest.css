@@ -104,22 +104,22 @@
     border-left: 1px solid rgba(55,55,55, 60%);
 }
 
-QSlider::groove:vertical {
+QSlider::groove {
     background: rgba(90,90,90, 70%);
 }
 
-QSlider::handle:vertical {
+QSlider::handle {
     background: rgba(180,180,180, 100%);
 }
 
-QSlider::add-page:vertical {
+QSlider::add-page {
     background: rgba(140,140,140, 100%);
 }
 
-QSlider::sub-page:vertical {
+QSlider::sub-page {
     background: rgba(90,90,90, 70%);
 }
 
-QScrollBar::handle:vertical {
+QScrollBar::handle {
     background: rgb(80,80,80);
 }
