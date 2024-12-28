@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2021-2024 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -97,15 +97,15 @@ public slots:
         else if (panelpos == "left")
             popupRect.moveTo(QPoint(panelRect.width(), launcherRect.x() + edgeoffset));*/
 
-        QSize screensize(qApp->desktop()->screenGeometry(launcherwidget).size());
+        QRect screen_geo(qApp->desktop()->screenGeometry(launcherwidget));
         QPoint newpos(popupRect.topLeft());
 
-        if (popupRect.x() + popupRect.width() > screensize.width())
-            newpos.setX(screensize.width() - popupRect.width());
-        if (popupRect.y() + popupRect.height() > screensize.height())
-            newpos.setY(screensize.height() - popupRect.height());
-        if (popupRect.x() < 0)
-            newpos.setX(0);
+        if (popupRect.x() + popupRect.width() > screen_geo.right())
+            newpos.setX(screen_geo.right() - popupRect.width());
+        if (popupRect.y() + popupRect.height() > screen_geo.height())
+            newpos.setY(screen_geo.height() - popupRect.height());
+        if (popupRect.x() < screen_geo.left())
+            newpos.setX(screen_geo.left());
         if (popupRect.y() < 0)
             newpos.setY(0);
 

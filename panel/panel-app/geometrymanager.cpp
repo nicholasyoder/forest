@@ -58,10 +58,10 @@ void GeometryManager::update_geometry(){
     if(fixed_panel_size == 0)
         fixed_panel_size = panel_widget->sizeHint().height();
 
-    QSize scsize = qApp->primaryScreen()->size();
+    QRect sc_geo = qApp->primaryScreen()->geometry();
     if (panel_position == "top"){
-        panel_widget->move(0,0);
-        panel_widget->setFixedSize(scsize.width(), fixed_panel_size);
+        panel_widget->move(sc_geo.left(), 0);
+        panel_widget->setFixedSize(sc_geo.width(), fixed_panel_size);
         if(reserve_screen_space)
             Xcbutills::setPartialStrut(panel_widget->winId(),0,0,panel_widget->height(),0,0,0,0,0,panel_widget->geometry().left(),panel_widget->geometry().right(),0,0);
         else
@@ -75,8 +75,8 @@ void GeometryManager::update_geometry(){
         panel_widget->setFixedSize(fixed_panel_size, scsize.height());
         //Xcbutills::setPartialStrut(winId(),0,height(),0,0,0,0,geometry().top(),geometry().bottom(),0,0,0,0);*/
     } else{//bottom
-        panel_widget->move(0,scsize.height() - fixed_panel_size);
-        panel_widget->setFixedSize(scsize.width(), fixed_panel_size);
+        panel_widget->move(sc_geo.left(), sc_geo.height() - fixed_panel_size);
+        panel_widget->setFixedSize(sc_geo.width(), fixed_panel_size);
         if(reserve_screen_space)
             Xcbutills::setPartialStrut(panel_widget->winId(),0,0,0,panel_widget->height(),0,0,0,0,0,0,panel_widget->geometry().left(),panel_widget->geometry().right());
         else

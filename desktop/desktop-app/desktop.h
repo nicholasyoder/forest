@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2021-2024 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -75,7 +75,7 @@ private slots:
     void loadicon(QString file);
     void saveiconlocations(QHash<QString, QString> poshash);
     QRect getusabledesktopspace();
-    void handleAvailableGeoChange(QRect geo);
+    void handleScreenChange();
 
     void handleiconactivated(QString iconID){fmutils::openfile(iconID);}
     void paste2desktop(){fmutils::pastefromclipboard(QDir::homePath() + "/Desktop");}
@@ -102,6 +102,7 @@ private:
     bool shiftdown = false;
     bool updatepaused = false;
 
+    QList <QRect> screen_geos;
     QList <wallpaperwidget *> wallwidgetlist;
     iconswidget *iwidget;
     QSettings *settings = new QSettings("Forest", "Forest");

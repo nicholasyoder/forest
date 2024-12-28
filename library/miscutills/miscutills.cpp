@@ -116,3 +116,16 @@ QString miscutills::pad_with_zeros(int number){
     else if (number < 1000) return "0" + QString::number(number);
     else return QString::number(number);
 }
+
+
+RunOnce::RunOnce(int delay){
+    run_delay = delay;
+}
+
+void RunOnce::try_activate(){
+    if(timer && timer->isActive()){timer->stop(); delete timer;}
+    timer = new QTimer();
+    connect(timer, &QTimer::timeout, this, &RunOnce::activated);
+    timer->setSingleShot(true);
+    timer->start(run_delay);
+}
