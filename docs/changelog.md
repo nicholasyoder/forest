@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Improve multi monitor support
   - Implement base themes with functional light/dark variations of Circle and Rounded themes
   - Fix random pixels in tray icons
 

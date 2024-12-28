@@ -2,6 +2,7 @@
 #define MISCUTILLS_H
 
 #include <QImage>
+#include <QTimer>
 
 enum WALLPAPER_MODE { Fill, Fit, Stretch, Tile, Center};
 
@@ -25,6 +26,19 @@ public:
 
     // Pad value with zeros
     static QString pad_with_zeros(int number);
+};
+
+class RunOnce: public QObject {
+    Q_OBJECT
+public:
+    RunOnce(int delay = 200);
+signals:
+    void activated();
+public slots:
+    void try_activate();
+private:
+    int run_delay;
+    QTimer *timer = nullptr;
 };
 
 #endif // MISCUTILLS_H

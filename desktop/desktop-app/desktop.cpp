@@ -1,7 +1,7 @@
 /* BEGIN_COMMON_COPYRIGHT_HEADER
  * (c)LGPL3+
  *
- * Copyright: 2021 Nicholas Yoder
+ * Copyright: 2021-2024 Nicholas Yoder
  *
  * This program or library is free software; you can redistribute it
  * and/or modify it under the terms of the GNU Lesser General Public
@@ -44,7 +44,11 @@ void desktop::setupPlug(){
 
     QDBusConnection::sessionBus().registerObject("/org/forest/desktop", this, QDBusConnection::ExportScriptableSlots);
 
-    connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &desktop::handleAvailableGeoChange);
+    RunOnce* runner = new RunOnce(2000);
+    connect(qApp, &QGuiApplication::screenAdded, runner, &RunOnce::try_activate);
+    connect(qApp, &QGuiApplication::screenRemoved, runner, &RunOnce::try_activate);
+    connect(qApp->primaryScreen(), &QScreen::geometryChanged, runner, &RunOnce::try_activate);
+    connect(runner, &RunOnce::activated, this, &desktop::handleScreenChange);
 }
 
 //called by dbus to load new wallpaper
@@ -57,14 +61,15 @@ void desktop::reloadwallpaper(){
 }
 
 void desktop::loadwallpaperwidgets(){
+    screen_geos.clear();
     foreach (QScreen *screen, qApp->screens()){
+        screen_geos.append(screen->geometry());
         wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE);
         wallwidgetlist << wallwidget;
         wallwidget->setGeometry(screen->geometry());
         wallwidget->setFixedSize(screen->size());
 
         if (screen == qApp->primaryScreen()){
-            qDebug() << "got primary screen" << screen->size() << getusabledesktopspace();
             iwidget = new iconswidget(screen->size(), getusabledesktopspace());
             QVBoxLayout *vlayout = new QVBoxLayout;
             vlayout->setMargin(0);
@@ -206,10 +211,18 @@ QRect desktop::getusabledesktopspace(){
     return QRect(iconmargin, iconmargin, qApp->primaryScreen()->size().width() - (iconmargin*2), qApp->primaryScreen()->size().height() - (iconmargin*2));
 }
 
-void desktop::handleAvailableGeoChange(QRect geo){
-    Q_UNUSED(geo);
+void desktop::handleScreenChange(){
+    // Check if anything actually changed and skip reloading if not
+    if(qApp->screens().length() == screen_geos.length()){
+        bool skip = true;
+        foreach (QScreen *screen, qApp->screens()){
+            if (!screen_geos.contains(screen->geometry())){
+                skip = false;
+            }
+        }
 
-    qDebug() << "geo change";
+        if(skip) return;
+    }
 
     foreach(wallpaperwidget *ww, wallwidgetlist){
         ww->close();
