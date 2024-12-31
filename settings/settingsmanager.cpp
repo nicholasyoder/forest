@@ -6,6 +6,18 @@
 
 #include "pluginutills.h"
 
+bool has_child_cats(settings_category* cat_item){
+    if(!cat_item || cat_item->child_items().isEmpty()) return false;
+
+    QList<settings_item*> child_items = cat_item->child_items();
+    if (dynamic_cast<settings_category*>(child_items.first()) &&
+            !dynamic_cast<settings_widget_group*>(child_items.first())){
+        return true;
+    }
+
+    return false;
+}
+
 SettingsManager::SettingsManager(){
     this->setWindowTitle("Forest Settings");
     this->setWindowIcon(QIcon::fromTheme("preferences-system"));
@@ -103,7 +115,7 @@ void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> 
 
     foreach (QString name, cat_map.keys()) {
         settings_category *cat_item = cat_map[name];
-        listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()));
+        listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()), has_child_cats(cat_item));
     }
 
     // Automaticly open first item - but do second if first item is back button
@@ -216,16 +228,14 @@ void SettingsManager::open_item(QUuid id){
         if(cat_item){
             cat_item->notify_opened();
             if(cat_item->child_items().isEmpty()) return;
-            QList<settings_item*> child_items = cat_item->child_items();
-            if (dynamic_cast<settings_category*>(child_items.first()) &&
-                    !dynamic_cast<settings_widget_group*>(child_items.first())){
+            if (has_child_cats(cat_item)){
                 // Handle item containing sub categories
-                display_categories(cat_item->id(), child_items, true);
+                display_categories(cat_item->id(), cat_item->child_items(), true);
             }
             else {
                 // Handle other item
                 connect(cat_item, &settings_category::updated, this, &SettingsManager::update_widgets);
-                display_widgets(cat_item->id(), child_items);
+                display_widgets(cat_item->id(), cat_item->child_items());
             }
         }
     }
