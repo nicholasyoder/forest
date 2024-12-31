@@ -44,8 +44,8 @@ void catlistwidget::clear(){
     seperator_list.clear();
 }
 
-void catlistwidget::additem(QUuid id, QString text, QIcon icon){
-    catlistitem *item = new catlistitem(id, text, icon);
+void catlistwidget::additem(QUuid id, QString text, QIcon icon, bool has_subitems){
+    catlistitem *item = new catlistitem(id, text, icon, has_subitems);
     connect(item, SIGNAL(clicked(QUuid)), this, SLOT(handleitemclicked(QUuid)));
     connect(this, SIGNAL(currentRowChanged(QUuid)), item, SLOT(updatepressed(QUuid)));
     if (basevlayout->count() < 2)
@@ -71,10 +71,11 @@ void catlistwidget::handleitemclicked(QUuid id){
 
 //listitem class~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
-catlistitem::catlistitem(QUuid id, QString text, QIcon icon){
+catlistitem::catlistitem(QUuid id, QString text, QIcon icon, bool has_subitems){
     item_id = id;
     item_text = text;
     item_icon = icon;
+    item_has_subitems = has_subitems;
 
     setObjectName("CategoryButton");
 }
@@ -137,4 +138,12 @@ void catlistitem::paintEvent(QPaintEvent *){
 
     QPainter painter(this);
     style()->drawControl(QStyle::CE_PushButton, &option, &painter, this);
+
+    if (item_has_subitems){
+        QSize arrow_size = QSize(16,16);
+        QPixmap arrow_pixmap = QIcon::fromTheme("arrow-right").pixmap(arrow_size);
+        QRect pixmap_rect = option.rect;
+        pixmap_rect.setWidth(pixmap_rect.width()-5); // TODO: find a better way to do this can use stylesheet margins
+        style()->drawItemPixmap(&painter, pixmap_rect, Qt::AlignVCenter | Qt::AlignRight, arrow_pixmap);
+    }
 }

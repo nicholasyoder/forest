@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Add arrow to settings items containing subitems
   - Improve volume control applet
   - Improve multi monitor support
   - Implement base themes with functional light/dark variations of Circle and Rounded themes

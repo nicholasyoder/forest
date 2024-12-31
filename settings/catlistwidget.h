@@ -36,7 +36,7 @@ class catlistitem : public QFrame
 {
     Q_OBJECT
 public:
-    catlistitem(QUuid id, QString text, QIcon icon);
+    catlistitem(QUuid id, QString text, QIcon icon, bool has_subitems = false);
 
 public slots:
     void updatepressed(QUuid id);
@@ -60,6 +60,7 @@ private:
     QString item_text;
     QIcon item_icon;
     QUuid item_id;
+    bool item_has_subitems;
 };
 
 
@@ -75,7 +76,7 @@ signals:
 
 public slots:
     void clear();
-    void additem(QUuid id, QString text, QIcon icon);
+    void additem(QUuid id, QString text, QIcon icon, bool has_subitems = false);
     void addseperator(QString text);
     void setcurrentitem(QString itemtext){handleitemclicked(itemtext);}
     QList<catlistitem*> items(){ return item_list; }
