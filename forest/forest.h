@@ -52,10 +52,8 @@ public slots:
     void loadstylesheet();
 
 private:
-    void setdefaults();
     void loadplugins();
 
-    QSettings *settings = new QSettings("Forest","Forest");
     QList<app_plugin_interface*> xcbpluglist;
 };
 

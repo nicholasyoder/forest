@@ -18,12 +18,14 @@ CONFIG += c++11
 SOURCES += \
         main.cpp \
         forest.cpp \
-        fadewidget.cpp
+        fadewidget.cpp \
+        settings_upgrade_manager.cpp
 
 HEADERS += \
         forest.h \
     forestxcbeventfilter.h \
-        fadewidget.h
+        fadewidget.h \
+    settings_upgrade_manager.h
 
 # Default rules for deployment.
 target.path = /usr/bin

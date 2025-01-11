@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Support settings upgrades between versions
   - Add arrow to settings items containing subitems
   - Improve volume control applet
   - Improve multi monitor support
