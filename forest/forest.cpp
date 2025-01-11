@@ -24,6 +24,7 @@
 #include "fadewidget.h"
 #include "pluginutills.h"
 #include "../library/fstyleloader/fstyleloader.h"
+#include "settings_upgrade_manager.h"
 
 forest::forest(){
 }
@@ -42,14 +43,13 @@ void forest::setup(){
         fwidget->getimage();
     }
 
-    QDBusConnection::sessionBus().registerService("org.forest");
-
-    if (settings->value("needDefaults", "true").toString() == "true")
-        setdefaults();
+    SettingsUpgradeManager upgrade_manager(this);
+    upgrade_manager.perform_upgrades();
 
     loadstylesheet();
     loadplugins();
 
+    QDBusConnection::sessionBus().registerService("org.forest");
     QDBusConnection::sessionBus().registerObject("/org/forest", this, QDBusConnection::ExportAllSlots);
 
     foreach (fadewidget* fwidget, fwidgetlist)
@@ -63,33 +63,6 @@ void forest::XcbEventFilter(xcb_generic_event_t *event){
 
 void forest::loadstylesheet(){
     qApp->setStyleSheet(fstyleloader::loadstyle("forest"));
-}
-
-void forest::setdefaults(){
-    QDir dir("/etc/forest");
-    if (dir.exists()) {
-        QStringList dirs = dir.entryList();
-
-        QDir destdir(QDir::homePath() + "/.config/Forest");
-        if (!destdir.exists()) {
-            QDir dir2;
-            dir2.mkdir(QDir::homePath() + "/.config/Forest");
-        }
-
-        int c = 2;
-        while (c < dirs.length()) {
-            QProcess cp;
-            cp.start("cp /etc/forest/" + dirs.at(c) + " \"" + QDir::homePath() + "/.config/Forest/" + dirs.at(c) + "\"");
-            cp.waitForFinished();
-            c++;
-        }
-
-        settings = new QSettings("Forest","Forest");
-        settings->setValue("needDefaults", "false");
-    }
-    else {
-        qDebug() << "forest::setdefaults - No default settings";
-    }
 }
 
 void forest::loadplugins(){
