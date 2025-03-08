@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Rewrite logout manager code
   - Support settings upgrades between versions
   - Add arrow to settings items containing subitems
   - Improve volume control applet

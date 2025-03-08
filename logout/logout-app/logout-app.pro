@@ -1,9 +1,8 @@
-QT       += core gui dbus x11extras
+QT += core gui widgets dbus x11extras
 
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
-
-DESTDIR = ../usr/bin
-
+TARGET = forest-logout
+TEMPLATE = app
+DESTDIR = ../../usr/bin
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
