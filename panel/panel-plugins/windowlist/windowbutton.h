@@ -45,6 +45,7 @@ private:
     QPoint dragPos;
 
     popupmenu *pmenu = nullptr;
+    popupmenu *desk_menu = nullptr;
 };
 
 #endif // WINDOWBUTTON_H

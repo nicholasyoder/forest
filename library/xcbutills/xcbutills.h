@@ -1,25 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL3+
- *
- * Copyright: 2021 Nicholas Yoder
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #ifndef XCBUTILLS_H
 #define XCBUTILLS_H
 
@@ -38,8 +16,7 @@
 #define XEMBED_FOCUS_NEXT               6
 #define XEMBED_FOCUS_PREV               7
 
-class Xcbutills
-{
+class Xcbutills {
 public:
     Xcbutills(){}
 
@@ -77,32 +54,26 @@ public:
     //get active window
     static xcb_window_t getActiveWindow();
 
-    //activate window
+    // Window management
     static void raiseWindow(xcb_window_t window);
-
     static void maximizeWindow(xcb_window_t window);
-
     static void demaximizeWindow(xcb_window_t window);
-
     static void minimizeWindow(xcb_window_t window);
-
     static void closeWindow(xcb_window_t window);
-
     static void resizeWindow(xcb_window_t window, int w, int h);
-
     static void moveWindow(xcb_window_t window, int x, int y);
+    static void moveWindowToDesktop(xcb_window_t window, int desktop);
 
-    //Move window so top of window (title bar) is on screen
+    // Move window so top of window (title bar) is on screen
     static void fitWindowOnScreen(xcb_window_t window);
 
     // Switch virtual desktop
     static void setCurrentDesktop(int desknum);
 
-    //not sure what this actually does -- setPartialStrut seems to be what should be used
-    //static void setStrut(xcb_window_t window, QRect strut);
-
-    static void setPartialStrut(xcb_window_t window, int left_width, int right_width, int top_width, int bottom_width,
-                                int left_start, int left_end, int right_start, int right_end, int top_start, int top_end, int bottom_start, int bottom_end);
+    static void setPartialStrut(xcb_window_t window,
+                                int left_width, int right_width, int top_width, int bottom_width,
+                                int left_start, int left_end, int right_start, int right_end,
+                                int top_start, int top_end, int bottom_start, int bottom_end);
 
     // Enable keyboard numlock
     static void enableNumlock();
@@ -158,7 +129,7 @@ public:
 
     static QVector<xicon> readxicon(xcb_connection_t *c, const xcb_get_property_cookie_t cookie);
 
-    static xcb_connection_t* xcbconnection;
+    static xcb_connection_t* conn;
 };
 
 #endif // XCBUTILLS_H

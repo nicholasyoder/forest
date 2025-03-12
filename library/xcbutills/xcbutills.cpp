@@ -1,25 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL3+
- *
- * Copyright: 2021 Nicholas Yoder
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "xcbutills.h"
 #include "numlock.h"
 
@@ -31,25 +9,27 @@
 
 #include "xcb/xcb_image.h"
 
-xcb_connection_t* Xcbutills::xcbconnection = QX11Info::connection();
+xcb_connection_t* Xcbutills::conn = QX11Info::connection();
 
 xcb_atom_t Xcbutills::atom(QString name){
-    xcb_intern_atom_cookie_t cookie = xcb_intern_atom(xcbconnection, 1, uint16_t(name.toLatin1().length()), name.toLatin1().data());
-    xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(xcbconnection, cookie, nullptr);
-    return reply->atom;
+    QByteArray name_bytes = name.toLatin1();
+    xcb_intern_atom_cookie_t cookie = xcb_intern_atom(conn, 0, uint16_t(name_bytes.length()), name_bytes.data());
+    xcb_intern_atom_reply_t *reply = xcb_intern_atom_reply(conn, cookie, nullptr);
+    xcb_atom_t atom = reply->atom;
+    free(reply);
+    return atom;
 }
 
 char* Xcbutills::getAtomName(xcb_atom_t atom){
-    xcb_get_atom_name_cookie_t cookie = xcb_get_atom_name(xcbconnection, atom);
-    return xcb_get_atom_name_name(xcb_get_atom_name_reply(xcbconnection, cookie, nullptr));
+    xcb_get_atom_name_cookie_t cookie = xcb_get_atom_name(conn, atom);
+    return xcb_get_atom_name_name(xcb_get_atom_name_reply(conn, cookie, nullptr));
 }
 
 QList<xcb_window_t> Xcbutills::getClientList(){
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_CLIENT_LIST"), XCB_ATOM_WINDOW, 0, 100000);
-    QVector<xcb_window_t> clients = get_array_reply<xcb_window_t>(xcbconnection, cookie, XCB_ATOM_WINDOW);
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_CLIENT_LIST"), XCB_ATOM_WINDOW, 0, 100000);
+    QVector<xcb_window_t> clients = get_array_reply<xcb_window_t>(conn, cookie, XCB_ATOM_WINDOW);
     QList<xcb_window_t> clientlist = clients.toList();
-    foreach(xcb_window_t window, clientlist)
-    {
+    foreach(xcb_window_t window, clientlist){
         if (!isWindow4Taskbar(window))
             clientlist.removeOne(window);
     }
@@ -57,8 +37,8 @@ QList<xcb_window_t> Xcbutills::getClientList(){
 }
 
 bool Xcbutills::isWindow4Taskbar(xcb_window_t window){
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, window, atom("_NET_WM_WINDOW_TYPE"), XCB_ATOM_ATOM, 0, 2048);
-    const QVector<xcb_atom_t> types = get_array_reply<xcb_atom_t>(xcbconnection, cookie, XCB_ATOM_ATOM);
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, atom("_NET_WM_WINDOW_TYPE"), XCB_ATOM_ATOM, 0, 2048);
+    const QVector<xcb_atom_t> types = get_array_reply<xcb_atom_t>(conn, cookie, XCB_ATOM_ATOM);
 
     if (types.contains(atom("_NET_WM_WINDOW_TYPE_DESKTOP")) || types.contains(atom("_NET_WM_WINDOW_TYPE_DOCK")) ||
             types.contains(atom("_NET_WM_WINDOW_TYPE_SPLASH")) || types.contains(atom("_NET_WM_WINDOW_TYPE_TOOLBAR")) ||
@@ -70,10 +50,10 @@ bool Xcbutills::isWindow4Taskbar(xcb_window_t window){
 
 QString Xcbutills::getWindowTitle(xcb_window_t window){
     //TODO: try _NET_WM_VISIBLE_NAME, _NET_WM_NAME, WM_NAME before returning empty
-    /*xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 0, 100000);
+    /*xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 0, 100000);
 
     QString s = "unknown";
-    const QByteArray str = get_string_reply(xcbconnection, cookie, XCB_ATOM_STRING);
+    const QByteArray str = get_string_reply(conn, cookie, XCB_ATOM_STRING);
     if (str.length() > 0)
         s = nstrndup(str.constData(), str.length());
     //else
@@ -85,15 +65,11 @@ QString Xcbutills::getWindowTitle(xcb_window_t window){
     return title;
 }
 
-QIcon Xcbutills::getWindowIcon(xcb_window_t window)
-{
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, window, atom("_NET_WM_ICON"), XCB_ATOM_CARDINAL, 0, 0xffffffff);
-
-    QVector<xicon> icons = readxicon(xcbconnection, cookie);
-
+QIcon Xcbutills::getWindowIcon(xcb_window_t window){
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, atom("_NET_WM_ICON"), XCB_ATOM_CARDINAL, 0, 0xffffffff);
+    QVector<xicon> icons = readxicon(conn, cookie);
     QIcon ico;
-    for (int c = 0; c < icons.size(); c++)
-    {
+    for (int c = 0; c < icons.size(); c++){
         uchar *data = icons[c].data;
         int width = icons[c].size.width();
         int height = icons[c].size.height();
@@ -106,20 +82,16 @@ QIcon Xcbutills::getWindowIcon(xcb_window_t window)
 
         delete data;
     }
-
-    if (ico.isNull())
-        return QIcon::fromTheme("unknown");
+    if (ico.isNull()) return QIcon::fromTheme("unknown");
 
     return ico;
 }
 
-int Xcbutills::getWindowDesktop(xcb_window_t window)
-{
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, window, atom("_NET_WM_DESKTOP"), XCB_ATOM_CARDINAL, 0, 100000);
+int Xcbutills::getWindowDesktop(xcb_window_t window){
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, atom("_NET_WM_DESKTOP"), XCB_ATOM_CARDINAL, 0, 100000);
     bool success;
-    uint32_t desktop = get_value_reply<uint32_t>(xcbconnection, cookie, XCB_ATOM_CARDINAL, 0, &success);
-    if (success)
-    {
+    uint32_t desktop = get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0, &success);
+    if (success){
         if (desktop != 0xffffffff)
             return int(desktop) + 1;
         else
@@ -131,21 +103,20 @@ int Xcbutills::getWindowDesktop(xcb_window_t window)
 }
 
 QImage Xcbutills::getWindowImage(xcb_window_t window){
-    const xcb_get_geometry_cookie_t geoCookie = xcb_get_geometry_unchecked(xcbconnection,  window);
-    xcb_get_geometry_reply_t* geo(xcb_get_geometry_reply(xcbconnection, geoCookie, nullptr));
+    const xcb_get_geometry_cookie_t geoCookie = xcb_get_geometry_unchecked(conn,  window);
+    xcb_get_geometry_reply_t* geo(xcb_get_geometry_reply(conn, geoCookie, nullptr));
     if (!geo){
         return QImage();
     }
 
-    xcb_image_t *image = xcb_image_get(xcbconnection, window, 0, 0, geo->width, geo->height, 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
-
+    xcb_image_t *image = xcb_image_get(conn, window, 0, 0, geo->width, geo->height, 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
     if (image) {
         return QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
     } else {
         QIcon ico = getWindowIcon(window);
         return QImage(ico.pixmap(100,100).toImage());
 
-        //NETWinInfo win_info(xcbconnection, window, QX11Info::appRootWindow(), NET::Properties());
+        //NETWinInfo win_info(conn, window, QX11Info::appRootWindow(), NET::Properties());
 
         //QIcon::fromTheme(win_info.iconName());
 
@@ -154,24 +125,21 @@ QImage Xcbutills::getWindowImage(xcb_window_t window){
     }
 }
 
-int Xcbutills::getNumDesktops()
-{
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_NUMBER_OF_DESKTOPS"), XCB_ATOM_CARDINAL, 0, 1);
-    return int(get_value_reply<uint32_t>(xcbconnection, cookie, XCB_ATOM_CARDINAL, 0));
+int Xcbutills::getNumDesktops(){
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_NUMBER_OF_DESKTOPS"), XCB_ATOM_CARDINAL, 0, 1);
+    return int(get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0));
 }
 
 //get the active desktop
-int Xcbutills::getCurrentDesktop()
-{
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_CURRENT_DESKTOP"), XCB_ATOM_CARDINAL, 0, 1);
-    return int(get_value_reply<uint32_t>(xcbconnection, cookie, XCB_ATOM_CARDINAL, 0) + 1);
+int Xcbutills::getCurrentDesktop(){
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_CURRENT_DESKTOP"), XCB_ATOM_CARDINAL, 0, 1);
+    return int(get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0) + 1);
 }
 
 //show/unshow desktop
-void Xcbutills::showDesktop()
-{
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_SHOWING_DESKTOP"), XCB_ATOM_CARDINAL, 0, 1);
-    bool shown = bool(get_value_reply<uint32_t>(xcbconnection, cookie, XCB_ATOM_CARDINAL, 0));
+void Xcbutills::showDesktop(){
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_SHOWING_DESKTOP"), XCB_ATOM_CARDINAL, 0, 1);
+    bool shown = bool(get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0));
 
     xcb_client_message_event_t event;
     event.response_type = XCB_CLIENT_MESSAGE;
@@ -182,29 +150,26 @@ void Xcbutills::showDesktop()
     event.data.data32[0] = !shown;
 
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    xcb_send_event(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, (const char *) &event);
+    xcb_send_event(conn, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, (const char *) &event);
 }
 
 //get active window
-xcb_window_t Xcbutills::getActiveWindow()
-{
-    xcb_get_property_cookie_t cookie = xcb_get_property(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_ACTIVE_WINDOW"), XCB_ATOM_WINDOW, 0, 1);
-    return get_value_reply<xcb_window_t>(xcbconnection, cookie, XCB_ATOM_WINDOW, 0);
+xcb_window_t Xcbutills::getActiveWindow(){
+    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(QX11Info::appRootWindow()), atom("_NET_ACTIVE_WINDOW"), XCB_ATOM_WINDOW, 0, 1);
+    return get_value_reply<xcb_window_t>(conn, cookie, XCB_ATOM_WINDOW, 0);
 }
 
 //activate window
-void Xcbutills::raiseWindow(xcb_window_t window)
-{
+void Xcbutills::raiseWindow(xcb_window_t window){
     uint source = 0;//0 = unknown, 1 = normal application, 2 = pager or similer
     xcb_timestamp_t timestamp = uint(QX11Info::appUserTime());
     xcb_window_t active_window = XCB_WINDOW_NONE;
     const uint32_t data[5] = {source, timestamp, active_window, 0, 0};
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    send_client_message(xcbconnection, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_ACTIVE_WINDOW"), data);
+    send_client_message(conn, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_ACTIVE_WINDOW"), data);
 }
 
-void Xcbutills::maximizeWindow(xcb_window_t window)
-{
+void Xcbutills::maximizeWindow(xcb_window_t window){
     xcb_client_message_event_t event;
     event.response_type = XCB_CLIENT_MESSAGE;
     event.format = 32;
@@ -217,11 +182,10 @@ void Xcbutills::maximizeWindow(xcb_window_t window)
     event.data.data32[3] = 0;
     event.data.data32[4] = 0;
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    xcb_send_event(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, (const char *) &event);
+    xcb_send_event(conn, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, (const char *) &event);
 }
 
-void Xcbutills::demaximizeWindow(xcb_window_t window)
-{
+void Xcbutills::demaximizeWindow(xcb_window_t window){
     xcb_client_message_event_t event;
     event.response_type = XCB_CLIENT_MESSAGE;
     event.format = 32;
@@ -234,11 +198,10 @@ void Xcbutills::demaximizeWindow(xcb_window_t window)
     event.data.data32[3] = 0;
     event.data.data32[4] = 0;
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    xcb_send_event(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, (const char *) &event);
+    xcb_send_event(conn, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, (const char *) &event);
 }
 
-void Xcbutills::minimizeWindow(xcb_window_t window)
-{
+void Xcbutills::minimizeWindow(xcb_window_t window){
     xcb_client_message_event_t ev;
     memset(&ev, 0, sizeof(ev));
     ev.response_type = XCB_CLIENT_MESSAGE;
@@ -251,29 +214,32 @@ void Xcbutills::minimizeWindow(xcb_window_t window)
     ev.data.data32[3] = 0;
     ev.data.data32[4] = 0;
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    xcb_send_event(xcbconnection, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, reinterpret_cast<const char*>(&ev));
+    xcb_send_event(conn, false, xcb_window_t(QX11Info::appRootWindow()), sendevent_mask, reinterpret_cast<const char*>(&ev));
 }
 
-void Xcbutills::closeWindow(xcb_window_t window)
-{
+void Xcbutills::closeWindow(xcb_window_t window){
     const uint32_t data[5] = { 0, 0, 0, 0, 0 };
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    send_client_message(xcbconnection, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_CLOSE_WINDOW"), data);
+    send_client_message(conn, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_CLOSE_WINDOW"), data);
 }
 
-void Xcbutills::resizeWindow(xcb_window_t window, int w, int h)
-{
+void Xcbutills::resizeWindow(xcb_window_t window, int w, int h){
     const uint32_t data[5] = { uint32_t(w), uint32_t(h), uint32_t(6), 0, 0 };
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    send_client_message(xcbconnection, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_WM_MOVERESIZE"), data);
+    send_client_message(conn, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_WM_MOVERESIZE"), data);
 }
 
-void Xcbutills::moveWindow(xcb_window_t window, int x, int y)
-{
+void Xcbutills::moveWindow(xcb_window_t window, int x, int y){
     uint32_t configVals[2] = {0, 0};
     configVals[0] = static_cast<uint32_t>(x);
     configVals[1] = static_cast<uint32_t>(y);
-    xcb_configure_window(xcbconnection, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, configVals);
+    xcb_configure_window(conn, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, configVals);
+}
+
+void Xcbutills::moveWindowToDesktop(xcb_window_t window, int desktop){
+    uint32_t desktop_value = static_cast<uint32_t>(desktop - 1);
+    uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
+    send_client_message(conn, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()), window, atom("_NET_WM_DESKTOP"), &desktop_value);
 }
 
 void Xcbutills::fitWindowOnScreen(xcb_window_t window){
@@ -286,29 +252,17 @@ void Xcbutills::fitWindowOnScreen(xcb_window_t window){
     moveWindow(window, x, y);
 }
 
-void Xcbutills::setCurrentDesktop(int desknum)
-{
+void Xcbutills::setCurrentDesktop(int desknum){
     const uint32_t data[5] = {uint32_t(desknum - 1), 0, 0, 0, 0};
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    send_client_message(xcbconnection, sendevent_mask, xcb_window_t(QX11Info::appRootWindow()),
-                        xcb_window_t(QX11Info::appRootWindow()), atom("_NET_CURRENT_DESKTOP"), data);
+    xcb_window_t root_w = QX11Info::appRootWindow();
+    send_client_message(conn, sendevent_mask, root_w, root_w, atom("_NET_CURRENT_DESKTOP"), data);
 }
 
-//not sure what this actually does -- setPartialStrut seems to be what should be used
-/*void Xcbutills::setStrut(xcb_window_t window, QRect strut)
-{
-    uint32_t data[4];
-    data[0] = strut.left();
-    data[1] = strut.right();
-    data[2] = strut.top();
-    data[3] = strut.bottom();
-
-    xcb_change_property(xcbconnection, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT"), XCB_ATOM_CARDINAL, 32, 4, (const void *) data);
-}*/
-
-void Xcbutills::setPartialStrut(xcb_window_t window, int left_width, int right_width, int top_width, int bottom_width,
-                            int left_start, int left_end, int right_start, int right_end, int top_start, int top_end, int bottom_start, int bottom_end)
-{
+void Xcbutills::setPartialStrut(xcb_window_t window,
+        int left_width, int right_width, int top_width, int bottom_width,
+        int left_start, int left_end, int right_start, int right_end,
+        int top_start, int top_end, int bottom_start, int bottom_end){
     uint32_t data[12];
     data[0] = left_width;
     data[1] = right_width;
@@ -323,7 +277,7 @@ void Xcbutills::setPartialStrut(xcb_window_t window, int left_width, int right_w
     data[10] = bottom_start;
     data[11] = bottom_end;
 
-    xcb_change_property(xcbconnection, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT_PARTIAL"), XCB_ATOM_CARDINAL, 32, 12, (const void *) data);
+    xcb_change_property(conn, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT_PARTIAL"), XCB_ATOM_CARDINAL, 32, 12, (const void *) data);
 }
 
 void Xcbutills::enableNumlock(){

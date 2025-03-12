@@ -3,6 +3,8 @@ Changelog
 ============
 
 * UNRELEASED
+  - Improve detection of window movements in desktop switcher
+  - Add 'Move to desktop' option in the window list menu
   - Rewrite logout manager code
   - Support settings upgrades between versions
   - Add arrow to settings items containing subitems
