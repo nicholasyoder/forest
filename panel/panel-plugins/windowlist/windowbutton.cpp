@@ -2,26 +2,40 @@
 
 #include "xcbutills/xcbutills.h"
 
+struct MenuItem {
+    QString text;
+    QString icon;
+    void (windowbutton::*slot)();
+};
+
 windowbutton::windowbutton(ulong windowid, int desktop, QIcon icon, QString text) : window_id(windowid), window_desktop(desktop){
     setupIconAndTextButton(text, icon);
 
     pmenu = new popupmenu(this, CenteredOnWidget);
+    desk_menu = new popupmenu(this, CenteredOnWidget);
 
-    pmenuitem *item = new pmenuitem("Raise", QIcon::fromTheme("arrow-up"));
-    connect(item, &pmenuitem::clicked, this, &windowbutton::raise_w);
-    pmenu->additem(item);
-    pmenuitem *item2 = new pmenuitem("Maximize", QIcon::fromTheme("arrow-up-double"));
-    connect(item2, &pmenuitem::clicked, this, &windowbutton::maximize_w);
-    pmenu->additem(item2);
-    pmenuitem *item3 = new pmenuitem("Demaximize", QIcon::fromTheme("arrow-down"));
-    connect(item3, &pmenuitem::clicked, this, &windowbutton::demaximize_w);
-    pmenu->additem(item3);
-    pmenuitem *item4 = new pmenuitem("Minimize", QIcon::fromTheme("arrow-down-double"));
-    connect(item4, &pmenuitem::clicked, this, &windowbutton::minimize_w);
-    pmenu->additem(item4);
-    pmenuitem *item5 = new pmenuitem("Close", QIcon::fromTheme("application-exit"));
-    connect(item5, &pmenuitem::clicked, this, &windowbutton::close_w);
-    pmenu->additem(item5);
+    pmenuitem *desk_item = new pmenuitem("Move to desktop", QIcon::fromTheme("window-next"));
+    connect(desk_item, &pmenuitem::clicked, desk_menu, &popupmenu::show);
+    pmenu->additem(desk_item);
+
+    MenuItem pmenu_items[] = {
+        {"Raise", "arrow-up", &windowbutton::raise_w},
+        {"Maximize", "arrow-up-double", &windowbutton::maximize_w},
+        {"Demaximize", "arrow-down", &windowbutton::demaximize_w},
+        {"Minimize", "arrow-down-double", &windowbutton::minimize_w},
+        {"Close", "window-close", &windowbutton::close_w}
+    };
+    for (const auto& item : pmenu_items) {
+        pmenuitem *menu_item = new pmenuitem(item.text, QIcon::fromTheme(item.icon));
+        connect(menu_item, &pmenuitem::clicked, this, item.slot);
+        pmenu->additem(menu_item);
+    }
+
+    for(int i = 1; i <= Xcbutills::getNumDesktops(); i++){
+        pmenuitem *item = new pmenuitem("Desktop " + QString::number(i));
+        connect(item, &pmenuitem::clicked, this, [this, i](){Xcbutills::moveWindowToDesktop(window_id, i);});
+        desk_menu->additem(item);
+    }
 
     connect(this, &windowbutton::enterevent, this, &windowbutton::handleEnterEvent);
     connect(this, &windowbutton::leaveevent, this, &windowbutton::handleLeaveEvent);
