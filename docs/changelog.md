@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Fix wallpaper fade in on launch
   - Improve detection of window movements in desktop switcher
   - Add 'Move to desktop' option in the window list menu
   - Rewrite logout manager code
