@@ -22,6 +22,7 @@ private slots:
     void load_about_data();
 
 private:
+    QLabel *logo_label = nullptr;
     QLabel *logo_image = nullptr;
     QLabel *os_name_label = nullptr;
     QLabel *kernel_version_label = nullptr;

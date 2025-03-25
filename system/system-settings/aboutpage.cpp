@@ -2,6 +2,7 @@
 
 #include <QFrame>
 #include <QHBoxLayout>
+#include <QSettings>
 
 #include "miscutills.h"
 
@@ -25,7 +26,7 @@ AboutPage::AboutPage(){
     logo_center_layout->addWidget(logo_image);
     logo_center_layout->addStretch(1);
     logo_v_layout->addLayout(logo_center_layout);
-    QLabel *logo_label = new QLabel("Forest 0.7.8");
+    logo_label = new QLabel("Forest 0.0.0");
     QFont f;
     f.setPointSize(26);
     logo_label->setFont(f);
@@ -65,6 +66,8 @@ AboutPage::AboutPage(){
 }
 
 void AboutPage::load_about_data(){
+    QSettings settings("Forest", "Forest");
+    logo_label->setText("Forest " + settings.value("version", "0.0.0").toString());
     logo_image->setPixmap(QPixmap("/usr/share/forest/pics/logo.png"));
 
     QString os_name = miscutills::run_shell_command("cat /etc/os-release | grep PRETTY_NAME");
