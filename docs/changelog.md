@@ -2,7 +2,7 @@
 Changelog
 ============
 
-* UNRELEASED
+* Release 0.7.9 - 2025-03-25
   - Fix wallpaper fade in on launch
   - Improve detection of window movements in desktop switcher
   - Add 'Move to desktop' option in the window list menu

@@ -1,3 +1,19 @@
+forest (0.7.9) unstable; urgency=medium
+
+  * Fix wallpaper fade in on launch
+  * Improve detection of window movements in desktop switcher
+  * Add 'Move to desktop' option in the window list menu
+  * Rewrite logout manager code
+  * Support settings upgrades between versions
+  * Add arrow to settings items containing subitems
+  * Improve volume control applet
+  * Improve multi monitor support
+  * Implement base themes with functional light/dark variations of Circle and Rounded themes
+  * Fix random pixels in tray icons
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Tue, 25 Mar 2025 00:00:00 -0400
+
+
 forest (0.7.8) unstable; urgency=medium
 
   * Fix panel on top of fullscreen windows
