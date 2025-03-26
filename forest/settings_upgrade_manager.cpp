@@ -47,24 +47,30 @@ void SettingsUpgradeManager::perform_upgrades(){
 
 void SettingsUpgradeManager::load_defaults(){
     qDebug() << "Loading default settings...";
-    QDir dir("/etc/forest");
-    if (dir.exists()) {
-        QStringList dirs = dir.entryList();
 
-        QDir destdir(QDir::homePath() + "/.config/Forest");
-        if (!destdir.exists())
-            destdir.mkdir(destdir.absolutePath());
-
-        int c = 2;
-        while (c < dirs.length()) {
-            QProcess cp;
-            cp.start("/usr/bin/cp", QStringList() << dir.absolutePath() + dirs.at(c) << destdir.absolutePath() + dirs.at(c));
-            cp.waitForFinished();
-            c++;
-        }
+    QString defaults_dir_path = "/etc/forest";
+    QDir defaults_dir(defaults_dir_path);
+    if (!defaults_dir.exists()) {
+        qDebug() << "Failed to load default settings. " << defaults_dir_path << " does not exist.";
+        return;
     }
-    else {
-        qDebug() << "Failed to load default settings. " + dir.absolutePath() + " does not exist.";
+
+    QString dest_dir_path = QDir::homePath() + "/.config/Forest";
+    QDir dest_dir(dest_dir_path);
+    if (dest_dir.exists()){
+        QString bkup_path = dest_dir_path + "_backup";
+        qDebug() << "Found existing settings. Moving them to " << bkup_path;
+        dest_dir.rename(dest_dir_path, bkup_path);
+    }
+    qDebug() << "Creating settings directory: " << dest_dir_path;
+    dest_dir.mkdir(dest_dir_path);
+
+    foreach(QString conf_file, defaults_dir.entryList(QDir::Files)){
+        QString src_path = defaults_dir_path + "/" + conf_file;
+        QString dest_path = dest_dir_path + "/" + conf_file;
+        qDebug() << "Copying " << src_path << "to" << dest_path;
+        if(!QFile::copy(src_path, dest_path))
+            qDebug() << "Failed to copy " << src_path << "to" << dest_path;
     }
 }
 

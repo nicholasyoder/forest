@@ -9,15 +9,15 @@ forest::forest(){}
 forest::~forest(){}
 
 void forest::setup(){
+    SettingsUpgradeManager upgrade_manager(this);
+    upgrade_manager.perform_upgrades();
+
     QList<fadewidget*> fwidgetlist;
     foreach (QScreen *screen, qApp->screens()){
         fadewidget *fwidget = new fadewidget(screen);
         fwidgetlist << fwidget;
         fwidget->show();
     }
-
-    SettingsUpgradeManager upgrade_manager(this);
-    upgrade_manager.perform_upgrades();
 
     loadstylesheet();
     loadplugins();
