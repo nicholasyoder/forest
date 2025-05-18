@@ -31,6 +31,9 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     layout->addWidget(this);
     setupIconButton("audio-volume-muted");
 
+    save_runner = new RunOnce(1000);
+    connect(save_runner, &RunOnce::activated, this, &fvolume::save_volumes);
+
     popup_layout = new QVBoxLayout;
     popupbox = new popup(popup_layout, this, CenteredOnWidget);
 
@@ -85,6 +88,7 @@ void fvolume::loadsettings(){
 
     QSettings settings("Forest", "Volume Manager");
     settings.sync();
+    autosave = settings.value("autosave", true).toBool();
 
     AudioDevice * first_dev = audioengine->sinks().first();
     QString master = settings.value("master", (first_dev) ? first_dev->description() : "").toString();
@@ -118,7 +122,17 @@ void fvolume::loadsettings(){
             QSlider *slider = new QSlider(Qt::Horizontal);
             device_layout->addWidget(slider);
             slider->setRange(0, audioengine->volumeMax(dev));
-            slider->setValue(dev->volume());
+            if(autosave){
+                int current_volume = dev->volume();
+                int saved_volume = settings.value(dev->description() + "/volume", current_volume).toInt();
+                slider->setValue(saved_volume);
+                if(current_volume != saved_volume)
+                    dev->setVolume(saved_volume);
+                connect(dev, &AudioDevice::volumeChanged, save_runner, &RunOnce::try_activate);
+            }
+            else{
+                slider->setValue(dev->volume());
+            }
             connect(slider, &QSlider::valueChanged, dev, &AudioDevice::setVolume);
             connect(dev, &AudioDevice::volumeChanged, slider, &QSlider::setValue);
             popup_layout->addLayout(device_layout);
@@ -144,6 +158,14 @@ void fvolume::showsettings(){
     SettingsWidget* s_widget = new SettingsWidget(sink_list);
     connect(s_widget, &SettingsWidget::settings_changed, this, &fvolume::loadsettings);
     s_widget->show();
+}
+
+void fvolume::save_volumes(){
+    QSettings settings("Forest", "Volume Manager");
+    foreach(AudioDevice *dev, audioengine->sinks()){
+        if (settings.value(dev->description() + "/show", true).toBool() == true)
+            settings.setValue(dev->description() + "/volume", dev->volume());
+    }
 }
 
 void fvolume::setvolume(int value){

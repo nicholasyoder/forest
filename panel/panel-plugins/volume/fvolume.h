@@ -66,6 +66,7 @@ protected:
 private slots:
     void loadsettings();
     void showsettings();
+    void save_volumes();
     void setvolume(int value);
     //void togglemuted();
     void volumechanged(int value);
@@ -76,6 +77,7 @@ private slots:
 private:
     int master_volume = 0;
     bool master_muted = false;
+    bool autosave = false;
 
     AudioEngine *audioengine = nullptr;
     AudioDevice *master_device = nullptr;
@@ -83,5 +85,7 @@ private:
     popup *popupbox;
     QVBoxLayout * popup_layout = nullptr;
     popupmenu *pmenu;
+
+    RunOnce* save_runner = nullptr;
 };
 #endif // FVOLUME_H
