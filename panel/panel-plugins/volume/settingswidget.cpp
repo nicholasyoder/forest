@@ -13,6 +13,7 @@ SettingsWidget::SettingsWidget(QStringList devices) : ui(new Ui::SettingsWidget)
 
     ui->master_select->addItems(devices);
     ui->master_select->setCurrentText(settings.value("master", devices.first()).toString());
+    ui->autosave_checkBox->setChecked(settings.value("autosave", true).toBool());
 
     foreach(QString device, devices){
         QStringList strings;
@@ -33,6 +34,7 @@ SettingsWidget::~SettingsWidget(){
 void SettingsWidget::save_settings(){
     QSettings settings("Forest", "Volume Manager");
     settings.setValue("master", ui->master_select->currentText());
+    settings.setValue("autosave", ui->autosave_checkBox->isChecked());
 
     int c = 0;
     while (c < ui->devices_widget->topLevelItemCount()){
