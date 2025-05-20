@@ -102,27 +102,42 @@ int Xcbutills::getWindowDesktop(xcb_window_t window){
     }
 }
 
-QImage Xcbutills::getWindowImage(xcb_window_t window){
+// Check if all pixels in an image are transparent
+bool is_all_transparent(QImage image){
+    for(int x = 0; x < image.width(); x++){
+        for(int y = 0; y < image.height(); y++){
+            if(image.pixelColor(x,y).alpha() != 0)
+                return false;
+        }
+    }
+    return true;
+}
+
+// Get a screenshot of the specified window and scale it to the target height.
+// Falls back to the window icon when unable to retrieve a screenshot (minimized windows).
+QPixmap Xcbutills::getWindowImage(xcb_window_t window, int target_height){
     const xcb_get_geometry_cookie_t geoCookie = xcb_get_geometry_unchecked(conn,  window);
     xcb_get_geometry_reply_t* geo(xcb_get_geometry_reply(conn, geoCookie, nullptr));
-    if (!geo){
-        return QImage();
-    }
+    if (!geo) return QPixmap();
 
     xcb_image_t *image = xcb_image_get(conn, window, 0, 0, geo->width, geo->height, 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
     if (image) {
-        return QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
-    } else {
-        QIcon ico = getWindowIcon(window);
-        return QImage(ico.pixmap(100,100).toImage());
+        QImage q_image = QImage(image->data, image->width, image->height, QImage::Format_ARGB32);
+        if(!q_image.isNull()){
+            // Get rid of alpha channel if entire image is transparent. Happens for some hidden windows.
+            if(q_image.pixelColor(0,0).alpha() == 0 && is_all_transparent(q_image))
+                q_image = q_image.convertToFormat(QImage::Format_RGB32);
 
-        //NETWinInfo win_info(conn, window, QX11Info::appRootWindow(), NET::Properties());
-
-        //QIcon::fromTheme(win_info.iconName());
-
-        //unsigned char *data = win_info.icon().data;
-        //return QImage::fromData(data, sizeof(*data));
+            QPixmap pix = QPixmap::fromImage(q_image);
+            if (pix.height() > target_height) // Scale image if needed.
+                pix = pix.scaledToHeight(target_height, Qt::SmoothTransformation);
+            return pix;
+        }
     }
+
+    // Fall back to window icon
+    QIcon ico = getWindowIcon(window);
+    return ico.pixmap(target_height, target_height);
 }
 
 int Xcbutills::getNumDesktops(){

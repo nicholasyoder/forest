@@ -36,7 +36,7 @@ void settingswidget::loadsettings(){
     QSettings settings("Forest", "Window List");
     settings.sync();
 
-    ui->preview_cbox->setChecked(settings.value("showthumbnails").toBool());
+    ui->preview_cbox->setChecked(settings.value("showthumbnails", true).toBool());
     ui->maxsizesbox->setValue(settings.value("maxbuttonsize", 170).toInt());
     QString seps = settings.value("seperators", "None").toString();
 }

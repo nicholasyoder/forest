@@ -41,8 +41,10 @@ public:
     //get which desktop a window is on
     static int getWindowDesktop(xcb_window_t window);
 
-    static QImage getWindowImage(xcb_window_t window);
+    //get screenshot of window
+    static QPixmap getWindowImage(xcb_window_t window, int target_height);
 
+    //get the number of virtual desktops
     static int getNumDesktops();
 
     //get the active desktop
