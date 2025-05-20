@@ -66,11 +66,8 @@ void imagepopup::btmouseLeave(){
 
 void imagepopup::btclicked(){
     if (!currentbt) return;
-
-    if (pbox->isVisible())
-        closepopup();
-    else
-        deleteopenptimer();
+    if (pbox->isVisible()) closepopup();
+    else deleteopenptimer();
 }
 
 void imagepopup::showpopup(){
@@ -96,8 +93,7 @@ void imagepopup::showpopup(){
 
 void imagepopup::tryclosepopup(){
     if (!currentbt){
-        if (closeptimer)
-        {
+        if (closeptimer){
             closeptimer->stop();
             delete closeptimer;
             closeptimer = nullptr;
@@ -106,19 +102,15 @@ void imagepopup::tryclosepopup(){
     }
 
     QRect r(0,0, currentbt->width(), currentbt->height());
-
     if (!(r.contains(currentbt->mapFromGlobal(QCursor::pos())) || pbox->geometry().contains(QCursor::pos())))
-    {
         closepopup();
-    }
 }
 
 void imagepopup::closepopup(){
     if (!popup_enabled) return;
     open = false;
 
-    if (closeptimer)
-    {
+    if (closeptimer){
         closeptimer->stop();
         delete closeptimer;
         closeptimer = nullptr;
@@ -141,7 +133,5 @@ void imagepopup::deleteopenptimer(){
 }
 
 QPixmap imagepopup::get_window_image(){
-    QPixmap pix = QPixmap::fromImage(Xcbutills::getWindowImage(currentbt->windowId()));
-    if (pix.height() > 120) pix = pix.scaledToHeight(120, Qt::SmoothTransformation);
-    return pix;
+    return Xcbutills::getWindowImage(currentbt->windowId(), 120);
 }

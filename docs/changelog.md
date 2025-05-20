@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Properly get window previews on some hidden windows
   - Save volume levels
 
 * Release 0.7.9 - 2025-03-25
