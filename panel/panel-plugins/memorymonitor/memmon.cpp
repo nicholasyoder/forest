@@ -23,27 +23,22 @@
 #include "memmon.h"
 #include <QGenericPlugin>
 
-memmon::memmon()
-{
-}
+using namespace miscutills;
 
-memmon::~memmon()
-{
-}
+memmon::memmon(){}
+memmon::~memmon(){}
 
 //beginning of plugin interface
-void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
-{
+void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     gwidget = new graphwidget;
+    settings = new QSettings("Forest", "Memory Monitor");
 
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->setMargin(0);
     vlayout->addWidget(gwidget);
-    this->setLayout(vlayout);
-
+    setLayout(vlayout);
     layout->addWidget(this);
 
-    //popup menu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     pmenu = new popupmenu(this, CenteredOnWidget);
     foreach (pmenuitem *item, itemlist)
         pmenu->additem(item);
@@ -52,7 +47,6 @@ void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
     pmenuitem *item = new pmenuitem("Memory Monitor Settings", QIcon::fromTheme("configure"));
     connect(item, &pmenuitem::clicked, this, &memmon::showsettingswidget);
     pmenu->additem(item);
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     connect(this, &memmon::leftclicked, this, &memmon::runcommand);
     connect(this, &memmon::rightclicked, pmenu, &popupmenu::show);
@@ -60,61 +54,35 @@ void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
     loadsettings();
 }
 
-QHash<QString, QString> memmon::getpluginfo()
-{
+QHash<QString, QString> memmon::getpluginfo(){
     QHash<QString, QString> info;
     info["name"] = "Memmory monitor";
     return info;
 }
 //end of plugin interface
 
-void memmon::loadsettings()
-{
+void memmon::loadsettings(){
     settings->sync();
 
-    //colors~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    QColor backcolor;
-    QStringList sbackcolor = settings->value("backgroundcolor", "0,0,0").toString().split(",");
-    backcolor.setRed(sbackcolor.at(0).toInt());
-    backcolor.setGreen(sbackcolor.at(1).toInt());
-    backcolor.setBlue(sbackcolor.at(2).toInt());
-
-    QColor ramcolor;
-    QStringList sramcolor = settings->value("RAMcolor", "255,0,0").toString().split(",");
-    ramcolor.setRed(sramcolor.at(0).toInt());
-    ramcolor.setGreen(sramcolor.at(1).toInt());
-    ramcolor.setBlue(sramcolor.at(2).toInt());
-
-    QColor swapcolor;
-    QStringList sswapcolor = settings->value("Swapcolor", "100,0,0").toString().split(",");
-    swapcolor.setRed(sswapcolor.at(0).toInt());
-    swapcolor.setGreen(sswapcolor.at(1).toInt());
-    swapcolor.setBlue(sswapcolor.at(2).toInt());
-
-    QList<QColor> colorlist;
-    colorlist << ramcolor << swapcolor;
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+    QColor backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
+    QColor ramcolor = string_to_color(settings->value("RAMcolor", "255,0,0").toString());
+    QColor swapcolor = string_to_color(settings->value("Swapcolor", "100,0,0").toString());
+    QList<QColor> colorlist = {ramcolor, swapcolor};
     qreal backopacity = settings->value("backgroundopacity", 1).toDouble();
     qreal ramopacity = settings->value("RAMopacity", 1).toDouble();
     qreal swapopacity = settings->value("Swapopacity", 1).toDouble();
-    QList<qreal> opacitylist;
-    opacitylist << ramopacity << swapopacity;
-
+    QList<qreal> opacitylist = {ramopacity, swapopacity};
 
     QString sbehavior = settings->value("swapbehavior", "combine").toString();
-    if (sbehavior == "disabled")
-    {
+    if (sbehavior == "disabled"){
         swapbehavior = 0;
         gwidget->setupgraphs(1, colorlist, opacitylist, backcolor, backopacity);
     }
-    else if (sbehavior == "combine")
-    {
+    else if (sbehavior == "combine"){
         swapbehavior = 1;
         gwidget->setupgraphs(1, colorlist, opacitylist, backcolor, backopacity);
     }
-    else if (sbehavior == "showseperate")
-    {
+    else if (sbehavior == "showseperate"){
         swapbehavior = 2;
         gwidget->setupgraphs(2, colorlist, opacitylist, backcolor, backopacity);
     }
@@ -129,8 +97,7 @@ void memmon::loadsettings()
     gwidget->setFixedWidth(settings->value("width", 40).toInt());
 }
 
-void memmon::showsettingswidget()
-{
+void memmon::showsettingswidget(){
     settingswidget *swidget = new settingswidget;
     connect(swidget, SIGNAL(colorschanged()), this, SLOT(reloadcolors()));
     connect(swidget, SIGNAL(settingschanged()), this, SLOT(reloadsettings()));
@@ -140,59 +107,37 @@ void memmon::showsettingswidget()
     swidget->show();
 }
 
-void memmon::reloadcolors()
-{
-    QColor backcolor;
-    QStringList sbackcolor = settings->value("backgroundcolor", "0,0,0").toString().split(",");
-    backcolor.setRed(sbackcolor.at(0).toInt());
-    backcolor.setGreen(sbackcolor.at(1).toInt());
-    backcolor.setBlue(sbackcolor.at(2).toInt());
-
-    QColor ramcolor;
-    QStringList sramcolor = settings->value("RAMcolor", "255,0,0").toString().split(",");
-    ramcolor.setRed(sramcolor.at(0).toInt());
-    ramcolor.setGreen(sramcolor.at(1).toInt());
-    ramcolor.setBlue(sramcolor.at(2).toInt());
-
-    QColor swapcolor;
-    QStringList sswapcolor = settings->value("Swapcolor", "100,0,0").toString().split(",");
-    swapcolor.setRed(sswapcolor.at(0).toInt());
-    swapcolor.setGreen(sswapcolor.at(1).toInt());
-    swapcolor.setBlue(sswapcolor.at(2).toInt());
-
-    QList<QColor> colorlist;
-    colorlist << ramcolor << swapcolor;
+void memmon::reloadcolors(){
+    QColor backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
+    QColor ramcolor = string_to_color(settings->value("RAMcolor", "255,0,0").toString());
+    QColor swapcolor = string_to_color(settings->value("Swapcolor", "100,0,0").toString());
+    QList<QColor> colorlist = {ramcolor, swapcolor};
 
     gwidget->backcolor = backcolor;
     gwidget->colors = colorlist;
     gwidget->update();
 }
 
-void memmon::setbackop(qreal opacity)
-{
+void memmon::setbackop(qreal opacity){
     gwidget->backopacity = opacity;
     gwidget->update();
 }
 
-void memmon::setramop(qreal opacity)
-{
+void memmon::setramop(qreal opacity){
     gwidget->opacitys[0] = opacity;
     gwidget->update();
 }
 
-void memmon::setswapop(qreal opacity)
-{
+void memmon::setswapop(qreal opacity){
     gwidget->opacitys[1] = opacity;
     gwidget->update();
 }
 
-void memmon::reloadsettings()
-{
+void memmon::reloadsettings(){
     loadsettings();
 }
 
-void memmon::updatemem()
-{
+void memmon::updatemem(){
     QFile file("/proc/meminfo");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
@@ -227,23 +172,18 @@ void memmon::updatemem()
     swapfree.chop(3);
     swapfree.remove(" ");
 
-
     QList<qreal> values;
-
-    if (swapbehavior == 0)//disabled
-    {
+    if (swapbehavior == 0){ // disabled
         double free = memfree.toDouble();
         double total = memtotal.toDouble();
         values << (total - free) / total;
     }
-    else if (swapbehavior == 1)//combine
-    {
+    else if (swapbehavior == 1){ // combine
         double free = memfree.toDouble() + swapfree.toDouble();
         double total = memtotal.toDouble() + swaptotal.toDouble();
         values << (total - free) / total;
     }
-    else//seperate
-    {
+    else { // seperate
         double mfree = memfree.toDouble();
         double mtotal = memtotal.toDouble();
         values << (mtotal - mfree) / mtotal;
@@ -252,12 +192,10 @@ void memmon::updatemem()
         double stotal = swapfree.toDouble();
         values << (stotal - sfree) / stotal;
     }
-
     gwidget->updategraph(values);
 }
 
-void memmon::runcommand()
-{
+void memmon::runcommand(){
     if (clickedcommand != "")
         QProcess::startDetached(clickedcommand);
 }

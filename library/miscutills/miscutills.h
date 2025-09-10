@@ -6,26 +6,32 @@
 
 enum WALLPAPER_MODE { Fill, Fit, Stretch, Tile, Center};
 
-class miscutills
-{
-public:
-    miscutills();
+namespace miscutills {
 
     // Call forest dbus method, path should start with 'forest/'
-    static void call_dbus(QString path);
+    void call_dbus(QString path);
 
     // Run bash command, wait for finished, and return output
-    static QString run_shell_command(QString command);
+    QString run_shell_command(QString command);
 
     // Load a custom iconsize directive in a stylesheet
-    static QSize get_iconsize_stylesheet(QString selector, QString stylesheet);
+    QSize get_iconsize_stylesheet(QString selector, QString stylesheet);
 
     // Scale image according to specified mode and target size
-    static QImage* get_wallpaper_scaled(QImage *source_image, WALLPAPER_MODE mode, QSize target_size);
-    static QImage* get_wallpaper_scaled(QString wallpaper_file, WALLPAPER_MODE mode, QSize target_size);
+    QImage* get_wallpaper_scaled(QImage *source_image, WALLPAPER_MODE mode, QSize target_size);
+    QImage* get_wallpaper_scaled(QString wallpaper_file, WALLPAPER_MODE mode, QSize target_size);
 
     // Pad value with zeros
-    static QString pad_with_zeros(int number);
+    QString pad_with_zeros(int number);
+
+    // Create a small 30x20 icon of the specified color
+    QIcon make_color_icon(QColor color);
+
+    // Convert QColor to "r,g,b" string
+    QString color_to_string(QColor color);
+
+    // Convert "r,g,b" string to QColor
+    QColor string_to_color(QString color_string);
 };
 
 class RunOnce: public QObject {

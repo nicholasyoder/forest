@@ -7,11 +7,11 @@
     <x>0</x>
     <y>0</y>
     <width>527</width>
-    <height>454</height>
+    <height>333</height>
    </rect>
   </property>
   <property name="windowTitle">
-   <string>Memory Monitor Settings</string>
+   <string>CPU Monitor Settings</string>
   </property>
   <property name="windowIcon">
    <iconset theme="preferences-system">
@@ -178,51 +178,10 @@
         </property>
        </widget>
       </item>
-      <item row="2" column="1">
-       <widget class="QSpinBox" name="marginSbox">
-        <property name="suffix">
-         <string> px</string>
-        </property>
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
-      <item row="2" column="0">
-       <widget class="QLabel" name="label_9">
-        <property name="text">
-         <string>Margin:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="1">
-       <widget class="QSpinBox" name="heightSbox">
-        <property name="suffix">
-         <string> px</string>
-        </property>
-        <property name="maximum">
-         <number>10000</number>
-        </property>
-       </widget>
-      </item>
       <item row="0" column="0">
        <widget class="QLabel" name="label_2">
         <property name="text">
-         <string>Display width:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="1" column="0">
-       <widget class="QLabel" name="label_8">
-        <property name="text">
-         <string>Display height:</string>
-        </property>
-       </widget>
-      </item>
-      <item row="3" column="0" colspan="5">
-       <widget class="QCheckBox" name="resizetofitCbox">
-        <property name="text">
-         <string>Resize to fit panel size</string>
+         <string>Size</string>
         </property>
        </widget>
       </item>
@@ -339,7 +298,4 @@
    </hints>
   </connection>
  </connections>
- <buttongroups>
-  <buttongroup name="swapbuttongroup"/>
- </buttongroups>
 </ui>

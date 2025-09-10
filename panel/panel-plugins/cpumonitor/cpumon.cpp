@@ -23,31 +23,30 @@
 #include "cpumon.h"
 #include <QGenericPlugin>
 
-cpumon::cpumon(){}
+using namespace miscutills;
 
+cpumon::cpumon(){}
 cpumon::~cpumon(){}
 
 //beginning of plugin interface
 void cpumon::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist){
     gwidget = new graphwidget;
+    settings = new QSettings("Forest", "CPU Monitor");
+
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->setMargin(0);
     vlayout->addWidget(gwidget);
-    this->setLayout(vlayout);
-
+    setLayout(vlayout);
     layout->addWidget(this);
 
-    //popup menu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
     pmenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-    {
+    foreach (pmenuitem *item, itemlist){
         pmenu->additem(item);
     }
     pmenu->addseperator();
     pmenuitem *item = new pmenuitem("CPU Monitor Settings", QIcon::fromTheme("configure"));
     connect(item, &pmenuitem::clicked, this, &cpumon::showsettingswidget);
     pmenu->additem(item);
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
     connect(this, &cpumon::leftclicked, this, &cpumon::runcommand);
     connect(this, &cpumon::rightclicked, pmenu, &popupmenu::show);
@@ -65,38 +64,18 @@ QHash<QString, QString> cpumon::getpluginfo(){
 void cpumon::loadsettings(){
     settings->sync();
 
-    //colors~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    QColor backcolor;
-    QStringList sbackcolor = settings->value("backgroundcolor", "0,0,0").toString().split(",");
-    backcolor.setRed(sbackcolor.at(0).toInt());
-    backcolor.setGreen(sbackcolor.at(1).toInt());
-    backcolor.setBlue(sbackcolor.at(2).toInt());
-
-    QColor forecolor;
-    QStringList sforecolor = settings->value("foregroundcolor", "0,255,0").toString().split(",");
-    forecolor.setRed(sforecolor.at(0).toInt());
-    forecolor.setGreen(sforecolor.at(1).toInt());
-    forecolor.setBlue(sforecolor.at(2).toInt());
-
-    QList<QColor> colorlist;
-    colorlist << forecolor;
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-
+    QColor backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
+    QColor forecolor = string_to_color(settings->value("foregroundcolor", "255,255,255").toString());
     qreal backopacity = settings->value("backgroundopacity", 1).toDouble();
     qreal foreopacity = settings->value("foregroundopacity", 1).toDouble();
-    QList<qreal> opacitylist;
-    opacitylist << foreopacity;
-
-    gwidget->setupgraphs(1, colorlist, opacitylist, backcolor, backopacity);
-
+    gwidget->setupgraphs(1, {forecolor}, {foreopacity}, backcolor, backopacity);
+    gwidget->setFixedWidth(settings->value("width", 40).toInt());
     clickedcommand = settings->value("command", "lxtask").toString();
 
     delete refreshtimer;
     refreshtimer = new QTimer;
-    connect(refreshtimer, SIGNAL(timeout()), this, SLOT(updatecpu()));
+    connect(refreshtimer, &QTimer::timeout, this, &cpumon::updatecpu);
     refreshtimer->start(settings->value("refreshrate", 500).toInt());
-
-    gwidget->setFixedWidth(settings->value("width", 40).toInt());
 }
 
 void cpumon::showsettingswidget(){
@@ -105,27 +84,13 @@ void cpumon::showsettingswidget(){
     connect(swidget, &settingswidget::settingschanged, this, &cpumon::reloadsettings);
     connect(swidget, &settingswidget::backOpChanged, this, &cpumon::setbackop);
     connect(swidget, &settingswidget::foreOpChanged, this, &cpumon::setforeop);
+    swidget->setAttribute(Qt::WA_DeleteOnClose);
     swidget->show();
 }
 
 void cpumon::reloadcolors(){
-    QColor backcolor;
-    QStringList sbackcolor = settings->value("backgroundcolor", "0,0,0").toString().split(",");
-    backcolor.setRed(sbackcolor.at(0).toInt());
-    backcolor.setGreen(sbackcolor.at(1).toInt());
-    backcolor.setBlue(sbackcolor.at(2).toInt());
-
-    QColor forecolor;
-    QStringList sforecolor = settings->value("foregroundcolor", "0,255,0").toString().split(",");
-    forecolor.setRed(sforecolor.at(0).toInt());
-    forecolor.setGreen(sforecolor.at(1).toInt());
-    forecolor.setBlue(sforecolor.at(2).toInt());
-
-    QList<QColor> colorlist;
-    colorlist << forecolor;
-
-    gwidget->backcolor = backcolor;
-    gwidget->colors = colorlist;
+    gwidget->backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
+    gwidget->colors = {string_to_color(settings->value("foregroundcolor", "255,255,255").toString())};
     gwidget->update();
 }
 
