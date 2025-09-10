@@ -71,7 +71,7 @@ private slots:
     void runcommand();
 
 private:
-    QSettings *settings = new QSettings("Forest", "CPU Monitor");
+    QSettings *settings = nullptr;
     graphwidget *gwidget;
     popupmenu *pmenu;
     QTimer *refreshtimer = new QTimer;

@@ -28,12 +28,9 @@
 #include <QColorDialog>
 #include <QtDBus>
 
-namespace Ui {
-class settingswidget;
-}
+namespace Ui {class settingswidget;}
 
-class settingswidget : public QWidget
-{
+class settingswidget : public QWidget{
     Q_OBJECT
 
 public:
@@ -49,46 +46,22 @@ signals:
 
 private slots:
     void on_backgroundcolorbt_clicked();
-
     void on_ramcolorbt_clicked();
-
     void on_swapcolorbt_clicked();
-
     void on_backgroundopslider_valueChanged(int value);
-
     void on_ramopslider_valueChanged(int value);
-
     void on_swapopslider_valueChanged(int value);
-
     void on_swapdisabledRbt_toggled(bool checked);
-
     void on_swapcombineRbt_toggled(bool checked);
-
     void on_swapShowseperateRbt_toggled(bool checked);
-
     void on_updateintervalSbox_editingFinished();
-
     void on_commandTbox_editingFinished();
-
     void on_widthSbox_editingFinished();
-
-    void on_heightSbox_editingFinished();
-
-    void on_marginSbox_editingFinished();
-
-    //void on_autoheightRbt_toggled(bool checked);
-
-    //void on_customRbt_toggled(bool checked);
-
     void on_okbt_clicked();
-
-
-    void on_resizetofitCbox_stateChanged(int arg1);
 
 private:
     Ui::settingswidget *ui;
-    QSettings *settings = new QSettings("Forest", "Memory Monitor");
-
+    QSettings *settings = nullptr;
     QColor backcolor;
     QColor RAMcolor;
     QColor Swapcolor;
