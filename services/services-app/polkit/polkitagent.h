@@ -1,26 +1,3 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL3+
- *
- * Copyright: 2021 Nicholas Yoder
- * based on razorqt-policykit
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #ifndef POLKITAGENT_H
 #define POLKITAGENT_H
 
@@ -36,8 +13,7 @@
 
 #include "polkitdialog.h"
 
-class polkitagent : public PolkitQt1::Agent::Listener
-{
+class polkitagent : public PolkitQt1::Agent::Listener{
     Q_OBJECT
 
 public:
@@ -57,17 +33,15 @@ public slots:
     void showInfo(const QString &text);
 
 private slots:
-    void doAuth();
+    void initiate_session(PolkitQt1::Identity session_identity);
 
 private:
-    bool m_inProgress;
-    bool canceled = false;
+    bool auth_in_progress = false;
+    bool auth_canceled = false;
+    QString auth_cookie;
+    PolkitQt1::Agent::AsyncResult *auth_result = nullptr;
+    QHash<PolkitQt1::Agent::Session*, PolkitQt1::Identity> session_identities;
     polkitdialog * pkwidget = nullptr;
-    QHash<PolkitQt1::Agent::Session*,PolkitQt1::Identity> m_SessionIdentity;
-
-    QString m_cookie;
-    PolkitQt1::Identity::List m_identities;
-    PolkitQt1::Agent::AsyncResult *m_result;
 };
 
 #endif // POLKITAGENT_H

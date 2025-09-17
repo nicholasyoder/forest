@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Allow retrying after failed polkit authentication attempts
   - Properly get window previews on some hidden windows
   - Save volume levels
 
