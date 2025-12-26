@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Add timeout indicator to notification popups and restrict popup size
   - Allow retrying after failed polkit authentication attempts
   - Properly get window previews on some hidden windows
   - Save volume levels

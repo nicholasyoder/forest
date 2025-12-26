@@ -71,12 +71,38 @@
     border: 1px solid lightgrey;
     border-radius: 20px;
     margin: 5px;
-    padding: 7px;
+    padding: 0px;
+}
+
+#notifyPopup #contentsBox {
+    padding: 15px 15px 10px 15px;
+}
+
+#notifyPopup #iconLabel{
+    margin-right: 10px;
+    margin-bottom: 10px;
+}
+
+#notifyPopup #NonSegmentedProgressBar {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
+    min-height: 15px;
+    max-height: 15px;
+}
+
+#notifyPopup #NonSegmentedProgressBar #ProgressIndicator {
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+    border-bottom-left-radius: 15px;
+    border-bottom-right-radius: 15px;
 }
 
 #notifyPopup #closeButton {
     border: 1px solid transparent;
     border-radius: 15px;
+    margin-bottom: 10px;
 }
 
 QSlider:vertical {

@@ -36,6 +36,9 @@ QList<settings_item*> ServicesSettings::get_settings_items(){
     hotkey_settings = new HotkeySettings;
     services_cat->add_child(hotkey_settings->get_settings_item());
 
+    notfications_settings = new NotificationsSettings;
+    services_cat->add_child(notfications_settings->get_settings_item());
+
     return items;
 }
 
