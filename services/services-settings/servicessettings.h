@@ -24,7 +24,8 @@
 #define SERVICESSETTINGS_H
 
 #include "../../library/pluginutills/settings_plugin_interface.h"
-#include "hotkeysettings.h"
+#include "hotkeys/hotkeysettings.h"
+#include "notifications/notificationssettings.h"
 
 class ServicesSettings : public QObject, settings_plugin_infterace
 {
@@ -44,6 +45,7 @@ public:
 
 private:
     HotkeySettings* hotkey_settings = nullptr;
+    NotificationsSettings *notfications_settings = nullptr;
 };
 
 #endif // SERVICESSETTINGS_H

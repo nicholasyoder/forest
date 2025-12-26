@@ -104,6 +104,14 @@
     border-left: 1px solid rgba(160,160,160, 30%);
 }
 
+#notifyPopup #NonSegmentedProgressBar {
+    background: rgba(190,190,190, 50%);
+}
+
+#notifyPopup #NonSegmentedProgressBar #ProgressIndicator {
+    background: rgba(175,175,175, 50%);
+}
+
 QSlider::handle {
     background: rgba(180,180,180, 100%);
 }

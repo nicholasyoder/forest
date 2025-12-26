@@ -104,29 +104,29 @@
 
 #notifyPopup {
     background: grey;
-    margin: 3px;
-    padding: 5px;
+    margin: 4px;
+    padding: 4px;
+}
+
+#notifyPopup #contentsBox {
+    padding: 8px;
 }
 
 #notifyPopup #iconLabel{
-    margin-right: 4px;
-    margin-left: 8px;
 }
 
 #notifyPopup #summaryLabel{
     font-weight: bold;
-    margin-right: 4px;
+    font-size: 10pt;
 }
 
 #notifyPopup #bodyLabel{
-    margin-right: 4px;
+    font-size: 10pt;
 }
 
 #notifyPopup #appnameLabel{
     font-style: italic;
     font-size: 8pt;
-    margin-bottom: 3px;
-    margin-right: 4px;
 }
 
 #notifyPopup #closeButton {
@@ -136,6 +136,16 @@
     max-width: 24px;
     min-height: 24px;
     max-height: 24px;
+}
+
+#notifyPopup #NonSegmentedProgressBar {
+    background: grey;
+    min-height: 5px;
+    max-height: 5px;
+}
+
+#notifyPopup #NonSegmentedProgressBar #ProgressIndicator {
+    background: lightgrey;
 }
 
 QScrollArea {

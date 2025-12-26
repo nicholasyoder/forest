@@ -22,8 +22,7 @@
 
 #include "notifypopup.h"
 
-notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id)
-{
+notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id){
     Qt::WindowFlags flags;
     flags |= Qt::WindowStaysOnTopHint;
     flags |= Qt::FramelessWindowHint;
@@ -32,72 +31,106 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     setAttribute(Qt::WA_X11NetWmWindowTypeDesktop);
     setAutoFillBackground(true);
 
-    QHBoxLayout *basehlayout = new QHBoxLayout;
-    basehlayout->setMargin(0);
+    QVBoxLayout *contentsvlayout = new QVBoxLayout;
+    contentsvlayout->setSpacing(0);
+    contentsvlayout->setMargin(0);
 
-    QVBoxLayout *leftvlayout = new QVBoxLayout;
+    QHBoxLayout *tophlayout = new QHBoxLayout;
+    tophlayout->setSpacing(0);
+    tophlayout->setMargin(0);
+
     QLabel *iconlabel = new QLabel;
     iconlabel->setObjectName("iconLabel");
-    iconlabel->setPixmap(geticon(app_icon).pixmap(48,48, QIcon::Normal, QIcon::On));
-    leftvlayout->addWidget(iconlabel);
-    basehlayout->addLayout(leftvlayout);
+    iconlabel->setPixmap(geticon(app_icon, app_name).pixmap(32,32, QIcon::Normal, QIcon::On));
+    tophlayout->addWidget(iconlabel);
 
-    QVBoxLayout *rightvlayout = new QVBoxLayout;
-    QHBoxLayout *tophlayout = new QHBoxLayout;
+    QVBoxLayout *topvlayout = new QVBoxLayout;
+    topvlayout->setMargin(0);
+    topvlayout->setSpacing(0);
+
     QLabel *summarylabel = new QLabel(summary);
     summarylabel->setObjectName("summaryLabel");
-    tophlayout->addWidget(summarylabel);
+    topvlayout->addWidget(summarylabel);
+
+    QLabel *appnamelabel = new QLabel(app_name);
+    appnamelabel->setObjectName("appnameLabel");
+    topvlayout->addWidget(appnamelabel);
+    topvlayout->addStretch(1);
+
+    tophlayout->addLayout(topvlayout);
+    tophlayout->addStretch(1);
+
     QPushButton *closebt = new QPushButton;
     closebt->setIcon(QIcon::fromTheme("dialog-close"));
     closebt->setObjectName("closeButton");
     connect(closebt, SIGNAL(clicked()), this, SLOT(close()));
     tophlayout->addWidget(closebt);
-    rightvlayout->addLayout(tophlayout);
-    QLabel *bodylabel = new QLabel(body);
+    contentsvlayout->addLayout(tophlayout);
+    FadingLabel *bodylabel = new FadingLabel(body);
     bodylabel->setObjectName("bodyLabel");
-    rightvlayout->addWidget(bodylabel);
-    QLabel *appnamelabel = new QLabel("- " + app_name);
-    appnamelabel->setObjectName("appnameLabel");
-    appnamelabel->setAlignment(Qt::AlignRight);
-    rightvlayout->addWidget(appnamelabel);
-    basehlayout->addLayout(rightvlayout);
+    bodylabel->setWordWrap(true);
+    bodylabel->setAlignment(Qt::AlignTop);
+    contentsvlayout->addWidget(bodylabel);
+
+    QVBoxLayout *basevlayout = new QVBoxLayout;
+    basevlayout->setSpacing(0);
+    basevlayout->setMargin(0);
+
+    QFrame *contents_box = new QFrame;
+    contents_box->setObjectName("contentsBox");
+    contents_box->setLayout(contentsvlayout);
+    basevlayout->addWidget(contents_box);
+
+    timeout_bar = new NonSegmentedProgressBar;
+    basevlayout->addWidget(timeout_bar);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
     vlayout->setMargin(0);
-    QFrame *panelQFrame = new QFrame;
-    panelQFrame->setObjectName("notifyPopup");
-    panelQFrame->setLayout(basehlayout);
-    vlayout->addWidget(panelQFrame);
+    QFrame *popupQFrame = new QFrame;
+    popupQFrame->setObjectName("notifyPopup");
+    popupQFrame->setLayout(basevlayout);
+    vlayout->addWidget(popupQFrame);
+
+    QSettings settings("Forest", "Forest");
+    settings.beginGroup("notifications");
+    int min_timeout = settings.value("min_timeout", 3).toInt() * 1000;
+    int max_timeout = settings.value("max_timeout", 30).toInt() * 1000;
+    int default_timeout = settings.value("default_timeout", 8).toInt() * 1000;
+    qreal height_percent = settings.value("height", 0.7).toReal();
+    qreal width_percent = settings.value("width", 0.5).toReal();
 
     QRect screengeo = qApp->primaryScreen()->availableGeometry();
+    popupQFrame->setMaximumSize(screengeo.width() * width_percent, screengeo.height() * height_percent);
     move(screengeo.width() - sizeHint().width(), screengeo.height() - sizeHint().height());
 
     popupid = id;
 
-    if (timeout > 0 && timeout < 3000) timeout = 3000;
-    else if(timeout <= 0 || timeout > 8000) timeout = 8000;
+    if (timeout <= 0) full_timeout = default_timeout;
+    else if (timeout < min_timeout) full_timeout = min_timeout;
+    else if(timeout > max_timeout) full_timeout = max_timeout;
+    else full_timeout = timeout;
 
-    QTimer::singleShot(timeout, this, SLOT(closepopup()));
+    timeout_timer = new QTimer(this);
+    timeout_timer->setSingleShot(true);
+    connect(timeout_timer, &QTimer::timeout, this, &notifypopup::closepopup);
+    timeout_timer->start(full_timeout);
+
+    timeout_updater = new QTimer(this);
+    connect(timeout_updater, &QTimer::timeout, this, &notifypopup::update_timeout_bar);
+    timeout_updater->start(10);
 }
 
-QIcon notifypopup::geticon(QString icon){
-    QIcon ico;
-    if (QIcon::hasThemeIcon(icon)){ico = QIcon::fromTheme(icon);}
-    else{
-        if (icon.startsWith("/")){ico = QIcon(icon);}
-        else{
-            QFile icofile("/usr/share/pixmaps/" + icon + ".png");
-            if (icofile.exists()){ico = QIcon("/usr/share/pixmaps/" + icon + ".png");}
-            else{
-                QFile icofile2("/usr/share/pixmaps/" + icon);
-                if (icofile2.exists()){ico = QIcon("/usr/share/pixmaps/" + icon);}
-                else{
-                    QFile icofile3("/usr/share/pixmaps/" + icon + ".svg");
-                    if (icofile3.exists()){ico = QIcon("/usr/share/pixmaps/" + icon + ".svg");}
-                    else{ico = XdgIcon::fromTheme(icon, QIcon::fromTheme("unknown"));}
-                }
-            }
-        }
-    }
-    return ico;
+/* Load a QIcon from the icon string or app name provided in the notification message */
+QIcon notifypopup::geticon(QString icon_name, QString app_name){
+    if(icon_name == "")
+        icon_name = app_name;  // if the icon is blank then see if we can get an icon named the same as the app. This works for discord for instance.
+    else if(icon_name.startsWith("file://")) // XdgIcon can handle file paths but doesn't seem to know what to do with a file uri
+        icon_name.remove("file://");
+
+    return XdgIcon::fromTheme(icon_name, QIcon::fromTheme("unknown"));
+}
+
+/* Update the timeout bar to display an indicator of how soon the notification will close */
+void notifypopup::update_timeout_bar(){
+    timeout_bar->setValue(qreal(timeout_timer->remainingTime()) / qreal(full_timeout));
 }

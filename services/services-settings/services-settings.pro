@@ -14,18 +14,20 @@ include(../../library/miscutills/miscutills.pri)
 DEFINES += QT_DEPRECATED_WARNINGS
 
 SOURCES += \
-    edithotkeywidget.cpp \
-    hotkeysettings.cpp \
+    hotkeys/edithotkeywidget.cpp \
+    hotkeys/hotkeysettings.cpp \
+    notifications/notificationssettings.cpp \
     servicessettings.cpp
 
 HEADERS += \
     ../../library/pluginutills/settings_plugin_interface.h \
-    edithotkeywidget.h \
-    hotkeysettings.h \
+    hotkeys/edithotkeywidget.h \
+    hotkeys/hotkeysettings.h \
+    notifications/notificationssettings.h \
     servicessettings.h
 
 FORMS += \
-    edithotkeywidget.ui
+    hotkeys/edithotkeywidget.ui
 
 target.path = /usr/lib/forest
 INSTALLS += target
