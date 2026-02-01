@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Panel will now properly resize and change screens after resolution and primary screen change.
   - Add timeout indicator to notification popups and restrict popup size
   - Allow retrying after failed polkit authentication attempts
   - Properly get window previews on some hidden windows

@@ -26,9 +26,14 @@
 #include <QScreen>
 
 #include "xcbutills.h"
+#include "miscutills.h"
 
 GeometryManager::GeometryManager(QWidget *panel) : panel_widget(panel) {
-    connect(qApp->primaryScreen(), &QScreen::geometryChanged, this, &GeometryManager::update_geometry);
+    RunOnce* runner = new RunOnce(2000);
+    connect(qApp, &QGuiApplication::screenAdded, runner, &RunOnce::try_activate);
+    connect(qApp, &QGuiApplication::screenRemoved, runner, &RunOnce::try_activate);
+    connect(qApp->primaryScreen(), &QScreen::geometryChanged, runner, &RunOnce::try_activate);
+    connect(runner, &RunOnce::activated, this, &GeometryManager::update_geometry);
 }
 
 GeometryManager::~GeometryManager(){

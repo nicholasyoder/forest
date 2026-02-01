@@ -16,6 +16,7 @@ DEPENDPATH += /usr/include/KF5/KWindowSystem
 
 include(../../shared-variables.pri)
 include(../../library/xcbutills/xcbutills.pri)
+include(../../library/miscutills/miscutills.pri)
 
 DEFINES += QT_DEPRECATED_WARNINGS
 
