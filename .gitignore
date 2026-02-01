@@ -1,3 +1,5 @@
 *.pro.user*
 *.pro.autosave*
 .idea/
+.claude/
+build/
