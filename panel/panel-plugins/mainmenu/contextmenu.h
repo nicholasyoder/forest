@@ -2,7 +2,7 @@
 #define CONTEXTMENU_H
 
 #include <QObject>
-#include <qt5xdg/XdgDesktopFile>
+#include <qt6xdg/XdgDesktopFile>
 
 class contextmenu : public QObject
 {

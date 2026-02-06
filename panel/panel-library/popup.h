@@ -28,7 +28,6 @@
 #include <QDebug>
 #include <QCloseEvent>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QFrame>
 #include <QVBoxLayout>
 
@@ -47,7 +46,7 @@ public:
         setAttribute(Qt::WA_TranslucentBackground);
 
         QHBoxLayout *hlayout = new QHBoxLayout(this);
-        hlayout->setMargin(0);
+        hlayout->setContentsMargins(QMargins(0,0,0,0));
         popupQFrame = new QFrame;
         popupQFrame->setObjectName("popup");
         popupQFrame->setLayout(contentlayout);
@@ -97,7 +96,7 @@ public slots:
         else if (panelpos == "left")
             popupRect.moveTo(QPoint(panelRect.width(), launcherRect.x() + edgeoffset));*/
 
-        QRect screen_geo(qApp->desktop()->screenGeometry(launcherwidget));
+        QRect screen_geo(QGuiApplication::primaryScreen()->geometry());
         QPoint newpos(popupRect.topLeft());
 
         if (popupRect.x() + popupRect.width() > screen_geo.right())

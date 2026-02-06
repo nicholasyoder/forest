@@ -1,4 +1,4 @@
-QT       += core gui dbus widgets x11extras
+QT       += core gui dbus widgets
 
 TARGET = deskswitch
 TEMPLATE = lib

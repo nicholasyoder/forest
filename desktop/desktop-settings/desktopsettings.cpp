@@ -42,7 +42,7 @@ QList<settings_item*> DesktopSettings::get_settings_items(){
     QFrame *preview_base = new QFrame;
     preview_base->setObjectName("WallpaperPreviewBase");
     QHBoxLayout *preview_h_layout = new QHBoxLayout(preview_base);
-    preview_h_layout->setMargin(0);
+    preview_h_layout->setContentsMargins(QMargins(0,0,0,0));
     preview_h_layout->setSpacing(0);
     preview_h_layout->addStretch(1);
     wallpaper_preview = new QLabel();

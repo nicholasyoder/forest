@@ -1,9 +1,9 @@
-QT       += core gui widgets x11extras
+QT       += core gui widgets
 
 TEMPLATE = lib
 CONFIG += staticlib
 
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
+INCLUDEPATH += /usr/include/KF6/KWindowSystem
 
 SOURCES += \
         numlock.cpp \

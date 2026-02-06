@@ -35,11 +35,11 @@ void panel::setupPlug(){
     geometry_manager = new GeometryManager(this);
 
     wlayout = new QHBoxLayout;
-    wlayout->setMargin(0);
+    wlayout->setContentsMargins(QMargins(0,0,0,0));
     wlayout->setSpacing(0);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->setMargin(0);
+    vlayout->setContentsMargins(QMargins(0,0,0,0));
     pframe = new panelQFrame();
     pframe->setObjectName("panel");
     pframe->setLayout(wlayout);

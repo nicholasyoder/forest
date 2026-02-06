@@ -13,7 +13,7 @@ CONFIG += plugin
 INCLUDEPATH += ../../panel-library
 INCLUDEPATH += ../../../library
 
-LIBS += -lQt5Xdg
+LIBS += -lQt6Xdg
 
 include(../../../shared-variables.pri)
 include(../../../library/miscutills/miscutills.pri)

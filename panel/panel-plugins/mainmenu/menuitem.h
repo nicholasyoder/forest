@@ -29,8 +29,8 @@
 #include <QUuid>
 #include <QStyleOptionButton>
 
-#include <qt5xdg/XdgDesktopFile>
-#include <qt5xdg/XdgIcon>
+#include <qt6xdg/XdgDesktopFile>
+#include <qt6xdg/XdgIcon>
 
 #include "globals.h"
 

@@ -45,20 +45,19 @@ void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist){
     Q_UNUSED(itemlist);
 
     mainLayout = new QHBoxLayout(this);
-    mainLayout->setMargin(0);
+    mainLayout->setContentsMargins(QMargins(0,0,0,0));
     mainLayout->setSpacing(0);
     layout->addWidget(this);
 
-    //Use KSelectionOwner to get ownership of the systray atom for the current screen
-    QString trayAtomName = QString("_NET_SYSTEM_TRAY_S%1").arg(QX11Info::appScreen());
-    tSelectionOwner = new KSelectionOwner(Xcbutills::atom(trayAtomName), -1, this);
+    //Use KSelectionOwner to get ownership of the systray atom for the default screen (0)
+    tSelectionOwner = new KSelectionOwner(Xcbutills::atom("_NET_SYSTEM_TRAY_S0"), -1, this);
 
     QTimer::singleShot(500, this, &systray::init);
 }
 
 void systray::init(){
     //load damage extension
-    xcb_connection_t *c = QX11Info::connection();
+    xcb_connection_t *c = Xcbutills::conn;
     xcb_prefetch_extension_data(c, &xcb_damage_id);
     const auto *reply = xcb_get_extension_data(c, &xcb_damage_id);
     if (reply && reply->present) {
@@ -102,7 +101,7 @@ void systray::XcbEventFilter(xcb_generic_event_t *ev){
         const auto tIcon = tIcons.value(damagedWId);
         if (tIcon) {
             tIcon->update();
-            xcb_damage_subtract(QX11Info::connection(), tDamageWatches[damagedWId], XCB_NONE, XCB_NONE);
+            xcb_damage_subtract(Xcbutills::conn, tDamageWatches[damagedWId], XCB_NONE, XCB_NONE);
         }
     } else if (responseType == XCB_CONFIGURE_REQUEST) {
         const auto event = reinterpret_cast<xcb_configure_request_event_t *>(ev);
@@ -160,7 +159,7 @@ void systray::undock(xcb_window_t winId){
 bool systray::addDamageWatch(xcb_window_t client){
     qDebug() << "Systray: Adding damage watch for " << client;
 
-    xcb_connection_t *c = QX11Info::connection();
+    xcb_connection_t *c = Xcbutills::conn;
     const auto attribsCookie = xcb_get_window_attributes_unchecked(c, client);
 
     const auto damageId = xcb_generate_id(c);
@@ -212,7 +211,7 @@ void systray::onLostOwnership()
 
 void systray::setSystemTrayVisual()
 {
-    xcb_connection_t *c = QX11Info::connection();
+    xcb_connection_t *c = Xcbutills::conn;
     auto screen = xcb_setup_roots_iterator(xcb_get_setup(c)).data;
     auto trayVisual = screen->root_visual;
     xcb_depth_iterator_t depth_iterator = xcb_screen_allowed_depths_iterator(screen);

@@ -1,4 +1,4 @@
-QT       += core gui dbus widgets x11extras
+QT       += core gui dbus widgets
 
 TARGET = systray
 TEMPLATE = lib
@@ -13,9 +13,9 @@ LIBS += $(SUBLIBS) -lXrender -lxcb-composite -lXdamage -lXfixes -lxcb-image
 INCLUDEPATH = ../../panel-library
 INCLUDEPATH += ../../../library
 
-LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
-DEPENDPATH += /usr/include/KF5/KWindowSystem
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF6WindowSystem
+INCLUDEPATH += /usr/include/KF6/KWindowSystem
+DEPENDPATH += /usr/include/KF6/KWindowSystem
 
 include(../../../shared-variables.pri)
 include(../../../library/miscutills/miscutills.pri)

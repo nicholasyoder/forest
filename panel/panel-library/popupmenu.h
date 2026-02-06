@@ -63,7 +63,7 @@ public:
     popupmenu(QWidget *launcherw, PositionpPolicy policy)
     {
         vlayout = new QVBoxLayout;
-        vlayout->setMargin(0);
+        vlayout->setContentsMargins(QMargins(0,0,0,0));
         vlayout->setSpacing(0);
         popupw = new popup(vlayout, launcherw, policy);
         connect(popupw, &popup::keypressed, this, &popupmenu::handlekeypress);

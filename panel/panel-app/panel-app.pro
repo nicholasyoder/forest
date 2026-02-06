@@ -1,6 +1,4 @@
-QT       += core gui x11extras dbus
-
-greaterThan(QT_MAJOR_VERSION, 4): QT += widgets
+QT       += core gui dbus widgets
 
 TARGET = panel-app
 TEMPLATE = lib
@@ -10,9 +8,9 @@ DESTDIR = ../../usr/lib/forest
 
 CONFIG += plugin
 
-LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
-DEPENDPATH += /usr/include/KF5/KWindowSystem
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF6WindowSystem
+INCLUDEPATH += /usr/include/KF6/KWindowSystem
+DEPENDPATH += /usr/include/KF6/KWindowSystem
 
 include(../../shared-variables.pri)
 include(../../library/xcbutills/xcbutills.pri)

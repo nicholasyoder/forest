@@ -3,12 +3,10 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QX11Info>
 
 #include "panelbutton.h"
 #include "panelpluginterface.h"
 #include "deskbutton.h"
-#include "xcbutills/xcbutills.h"
 
 class deskswitch : public panelbutton, panelpluginterface {
     Q_OBJECT

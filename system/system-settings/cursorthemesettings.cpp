@@ -4,7 +4,7 @@
 #include <QSettings>
 #include <QProcess>
 
-#include <QtX11Extras/QX11Info>
+#include "../../library/xcbutills/xcbutills.h"
 
 #include <X11/Xlib.h>
 #include <X11/Xcursor/Xcursor.h>
@@ -75,7 +75,7 @@ void CursorThemeSettings::load_cursor_themes(){
     theme_list.sort();
     cursor_theme_list->clear();
 
-    Display* dpy = QX11Info::display();
+    Display* dpy = Xcbutills::display();
     QString current_theme = QString::fromUtf8(XcursorGetTheme(dpy));
     foreach (QString theme, theme_list) {
         QListWidgetItem *item = new QListWidgetItem(theme);
@@ -153,7 +153,7 @@ void CursorThemeSettings::set_cursor_theme(QListWidgetItem *item){
     int size = size_input->value();
     QString theme = item->text();
 
-    Display* dpy = QX11Info::display();
+    Display* dpy = Xcbutills::display();
     XcursorSetTheme(dpy, qPrintable(theme));
     XcursorSetDefaultSize(dpy, size);
 

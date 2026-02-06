@@ -34,8 +34,9 @@
 #include <QIcon>
 #include <QPushButton>
 #include <QStyleOptionButton>
+#include <QFile>
 
-#include <qt5xdg/XdgIcon>
+#include <qt6xdg/XdgIcon>
 #include "../../library/miscutills/miscutills.h"
 #include "QApplication"
 

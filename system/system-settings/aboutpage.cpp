@@ -12,15 +12,15 @@ AboutPage::AboutPage(){
 
     QFrame *logo_base = new QFrame;
     QHBoxLayout *logo_h_layout = new QHBoxLayout(logo_base);
-    logo_h_layout->setMargin(10);
+    logo_h_layout->setContentsMargins(QMargins(10,10,10,10));
     logo_h_layout->setSpacing(0);
     logo_h_layout->addStretch(1);
     QVBoxLayout *logo_v_layout = new QVBoxLayout;
-    logo_v_layout->setMargin(0);
+    logo_v_layout->setContentsMargins(QMargins(0,0,0,0));
     logo_v_layout->setSpacing(5);
     logo_image = new QLabel;
     QHBoxLayout *logo_center_layout = new QHBoxLayout;
-    logo_center_layout->setMargin(0);
+    logo_center_layout->setContentsMargins(QMargins(0,0,0,0));
     logo_center_layout->setSpacing(0);
     logo_center_layout->addStretch(1);
     logo_center_layout->addWidget(logo_image);

@@ -25,7 +25,7 @@
 #include <QStyleOptionButton>
 
 catlistwidget::catlistwidget(){
-    basevlayout->setMargin(0);
+    basevlayout->setContentsMargins(QMargins(0,0,0,0));
     basevlayout->setSpacing(0);
     basevlayout->addStretch(5);
 }

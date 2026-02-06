@@ -1,4 +1,5 @@
 #include "deskswitch.h"
+#include "xcbutills.h"
 
 deskswitch::deskswitch() {}
 
@@ -7,7 +8,7 @@ deskswitch::~deskswitch() {}
 void deskswitch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 {
     basehlayout = new QHBoxLayout(this);
-    basehlayout->setMargin(0);
+    basehlayout->setContentsMargins(QMargins(0,0,0,0));
     basehlayout->setSpacing(0);
 
     layout->addWidget(this);

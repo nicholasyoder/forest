@@ -30,7 +30,7 @@
 #include "numlock.h"
 #include <string.h>
 #include <stdlib.h>
-#include <QtX11Extras/QX11Info>
+#include <QApplication>
 #include <X11/Xlib.h>
 #include <X11/XKBlib.h>
 #include <X11/keysym.h>
@@ -72,7 +72,5 @@ static int xkb_set_on(Display* dpy){
 }
 
 void numlock::enableNumlock(){
-    // this currently only works for X11
-    if(QX11Info::isPlatformX11())
-        xkb_set_on(QX11Info::display());
+    xkb_set_on(qApp->nativeInterface<QNativeInterface::QX11Application>()->display());
 }

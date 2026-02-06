@@ -33,7 +33,6 @@
 #include "trayicon.h"
 #include "xcbutills/xcbutills.h"
 
-#include <QtX11Extras/QX11Info>
 #include <X11/Xatom.h>
 #include <X11/Xutil.h>
 #include <X11/extensions/Xcomposite.h>
@@ -46,8 +45,6 @@
 #define XEMBED_EMBEDDED_NOTIFY 0
 static bool xError;
 
-xcb_connection_t * xcon = QX11Info::connection();
-
 int windowErrorHandler(Display *d, XErrorEvent *e)
 {
     xError = true;
@@ -59,7 +56,7 @@ int windowErrorHandler(Display *d, XErrorEvent *e)
     return 0;
 }
 
-TrayIcon::TrayIcon(Window iconId, QSize const & iconSize) : mIconId(iconId), mWindowId(0), mIconSize(iconSize), mDamage(0), mDisplay(QX11Info::display())
+TrayIcon::TrayIcon(Window iconId, QSize const & iconSize) : mIconId(iconId), mWindowId(0), mIconSize(iconSize), mDamage(0), mDisplay(Xcbutills::display())
 {
     // NOTE:
     // it's a good idea to save the return value of QX11Info::display().
@@ -173,18 +170,18 @@ void TrayIcon::init()
         event.data.data32[3] = long(mWindowId);
         event.data.data32[4] = 0;
         uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-        xcb_send_event(QX11Info::connection(), false, mIconId, sendevent_mask, (const char *) &event);
+        xcb_send_event(Xcbutills::conn, false, mIconId, sendevent_mask, (const char *) &event);
     }
 
     XSelectInput(dsp, mIconId, StructureNotifyMask);
     mDamage = XDamageCreate(dsp, mIconId, XDamageReportRawRectangles);
     //XCompositeRedirectWindow(dsp, mWindowId, CompositeRedirectManual);
-    xcb_composite_redirect_window(QX11Info::connection(), xcb_window_t(mWindowId), CompositeRedirectManual);
+    xcb_composite_redirect_window(Xcbutills::conn, xcb_window_t(mWindowId), CompositeRedirectManual);
 
     //XMapWindow(dsp, mIconId);
-    xcb_map_window(QX11Info::connection(), xcb_window_t(mIconId));
+    xcb_map_window(Xcbutills::conn, xcb_window_t(mIconId));
     //XMapRaised(dsp, mWindowId);
-    xcb_map_window_checked(QX11Info::connection(), xcb_window_t(mWindowId));
+    xcb_map_window_checked(Xcbutills::conn, xcb_window_t(mWindowId));
 
     const QSize req_size{mIconSize * metric(PdmDevicePixelRatio)};
     //XResizeWindow(dsp, mIconId, uint(req_size.width()), uint(req_size.height()));
@@ -205,7 +202,7 @@ TrayIcon::~TrayIcon(){
     XErrorHandler old = XSetErrorHandler(windowErrorHandler);
 
     XUnmapWindow(dsp, mIconId);
-    XReparentWindow(dsp, mIconId, QX11Info::appRootWindow(), 0, 0);
+    XReparentWindow(dsp, mIconId, Xcbutills::root_window(), 0, 0);
 
     if (mWindowId)
         XDestroyWindow(dsp, mWindowId);
@@ -263,8 +260,8 @@ void TrayIcon::windowDestroyed(Window w)
 }
 
 QSize TrayIcon::calculateClientWindowSize(){
-    auto cookie = xcb_get_geometry(xcon, mIconId);
-    xcb_get_geometry_reply_t* clientGeom(xcb_get_geometry_reply(xcon, cookie, nullptr));
+    auto cookie = xcb_get_geometry(Xcbutills::conn, mIconId);
+    xcb_get_geometry_reply_t* clientGeom(xcb_get_geometry_reply(Xcbutills::conn, cookie, nullptr));
 
     QSize clientWindowSize;
     if (clientGeom) {
@@ -273,8 +270,8 @@ QSize TrayIcon::calculateClientWindowSize(){
     // if the window is a clearly stupid size resize to mIconSize
     if (clientWindowSize.isEmpty() || clientWindowSize.width() > mIconSize.width() || clientWindowSize.height() > mIconSize.height()) {
         const uint32_t windowSizeConfigVals[2] = {uint32_t(mIconSize.width()), uint32_t(mIconSize.height())};
-        xcb_configure_window(xcon, mIconId, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, windowSizeConfigVals);
-        xcb_flush(xcon);
+        xcb_configure_window(Xcbutills::conn, mIconId, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, windowSizeConfigVals);
+        xcb_flush(Xcbutills::conn);
         clientWindowSize = mIconSize;
     }
 
@@ -287,7 +284,7 @@ void sni_cleanup_xcb_image(void *data){
 
 QImage TrayIcon::getImageNonComposite(){
     QSize clientWindowSize = calculateClientWindowSize();
-    xcb_image_t *image = xcb_image_get(xcon, mIconId, 0, 0, clientWindowSize.width(), clientWindowSize.height(), 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
+    xcb_image_t *image = xcb_image_get(Xcbutills::conn, mIconId, 0, 0, clientWindowSize.width(), clientWindowSize.height(), 0xFFFFFFFF, XCB_IMAGE_FORMAT_Z_PIXMAP);
 
     QImage naiveConversion;
     if (image) {

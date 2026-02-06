@@ -1,4 +1,4 @@
-QT += widgets dbus x11extras
+QT += widgets dbus
 
 TARGET = services-app
 TEMPLATE = lib
@@ -9,11 +9,11 @@ DESTDIR = ../../usr/lib/forest
 CONFIG += c++11 \
             plugin
 
-LIBS += -lpolkit-qt5-agent-1 -lQt5Xdg
+LIBS += -lpolkit-qt6-agent-1 -lQt6Xdg
 
-LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
-DEPENDPATH += /usr/include/KF5/KWindowSystem
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF6WindowSystem
+INCLUDEPATH += /usr/include/KF6/KWindowSystem
+DEPENDPATH += /usr/include/KF6/KWindowSystem
 
 include(../../shared-variables.pri)
 include(../../library/xcbutills/xcbutills.pri)

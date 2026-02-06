@@ -27,7 +27,7 @@
 #include <QMouseEvent>
 #include <QDir>
 #include <QSettings>
-#include <qt5xdg/XdgDesktopFile>
+#include <qt6xdg/XdgDesktopFile>
 
 #include "popupmenu.h"
 #include "panelbutton.h"

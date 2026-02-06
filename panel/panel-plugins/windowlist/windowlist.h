@@ -25,20 +25,19 @@
 
 #include <QMainWindow>
 #include <QApplication>
-#include <QtX11Extras/QX11Info>
 #include <QSettings>
 #include <QTimer>
 #include <QtDBus>
 #include <QGenericPlugin>
 
 #include <KWindowSystem>
+#include <kx11extras.h>
 
 #include "windowbutton.h"
 
 #include "imagepopup.h"
 #include "settingswidget.h"
 #include "panelpluginterface.h"
-#include "xcbutills/xcbutills.h"
 
 class windowlist : public QWidget, panelpluginterface{
     Q_OBJECT

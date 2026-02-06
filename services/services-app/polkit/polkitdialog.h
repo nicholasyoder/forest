@@ -3,10 +3,10 @@
 
 #include <QDialog>
 
-#include <polkit-qt5-1/polkitqt1-identity.h>
-#include <polkit-qt5-1/polkitqt1-details.h>
+#include <polkit-qt6-1/polkitqt1-identity.h>
+#include <polkit-qt6-1/polkitqt1-details.h>
 
-#include <qt5xdg/XdgIcon>
+#include <qt6xdg/XdgIcon>
 
 namespace Ui {class polkitdialog;}
 

@@ -11,7 +11,7 @@
 #include <QSettings>
 
 
-#include <qt5xdg/XdgDesktopFile>
+#include <qt6xdg/XdgDesktopFile>
 
 class apploader : public QObject
 {

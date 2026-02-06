@@ -32,7 +32,7 @@ menupage::menupage(QList<menuitem*> items)
         connect(item, &menuitem::focused, this, &menupage::itemFocused);
     }
 
-    itemVLayout->setMargin(0);
+    itemVLayout->setContentsMargins(QMargins(0,0,0,0));
     itemVLayout->setSpacing(0);
     itemVLayout->setSizeConstraint(QLayout::SetMinAndMaxSize);
     scrollWidget->setLayout(itemVLayout);
@@ -41,7 +41,7 @@ menupage::menupage(QList<menuitem*> items)
 
     setLayout(baseVLayout);
     baseVLayout->addWidget(scrollArea);
-    baseVLayout->setMargin(0);
+    baseVLayout->setContentsMargins(QMargins(0,0,0,0));
     scrollArea->setWidget(scrollWidget);
     scrollArea->setWidgetResizable(true);
     scrollArea->setFocusPolicy(Qt::NoFocus);

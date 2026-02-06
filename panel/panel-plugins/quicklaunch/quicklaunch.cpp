@@ -31,7 +31,7 @@ quicklaunch::~quicklaunch(){
 }
 
 void quicklaunch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
-    basehlayout->setMargin(0);
+    basehlayout->setContentsMargins(QMargins(0,0,0,0));
     basehlayout->setSpacing(0);
     this->setLayout(basehlayout);
     this->setAcceptDrops(true);

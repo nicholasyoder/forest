@@ -8,7 +8,7 @@ desktopicon::desktopicon(QString text, QIcon ico, QString ID, QMenu *contextmenu
     //setup widget
     this->setFixedSize(96, 96);
     QVBoxLayout *vlayout = new QVBoxLayout;
-    vlayout->setMargin(0);
+    vlayout->setContentsMargins(QMargins(0,0,0,0));
     vlayout->addSpacing(46);
 
     setToolTip(text);

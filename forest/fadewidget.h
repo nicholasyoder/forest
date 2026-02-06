@@ -5,7 +5,6 @@
 #include <QTimer>
 #include <QPainter>
 #include <QApplication>
-#include <QDesktopWidget>
 #include <QSettings>
 
 #include "miscutills.h"

@@ -40,7 +40,7 @@
 #include <QPaintEvent>
 #include <QRegularExpression>
 
-#include <qt5xdg/XdgIcon>
+#include <qt6xdg/XdgIcon>
 
 
 class ProgressIndicator : public QWidget {
@@ -50,7 +50,7 @@ public:
         _value = value;
 
         QVBoxLayout * baselayout = new QVBoxLayout(this);
-        baselayout->setMargin(0);
+        baselayout->setContentsMargins(QMargins(0,0,0,0));
         baselayout->setSpacing(0);
         style_sheet_target = new QFrame(this);
         style_sheet_target->setObjectName("ProgressIndicator");
@@ -166,7 +166,7 @@ public:
         setObjectName("NonSegmentedProgressBar");
 
         base_layout = new QHBoxLayout(this);
-        base_layout->setMargin(0);
+        base_layout->setContentsMargins(QMargins(0,0,0,0));
         base_layout->setSpacing(0);
         progress_indicator = new ProgressIndicator(value);
         progress_indicator->setObjectName("ProgressIndicator");

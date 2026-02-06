@@ -78,7 +78,7 @@ public slots:
     void clear();
     void additem(QUuid id, QString text, QIcon icon, bool has_subitems = false);
     void addseperator(QString text);
-    void setcurrentitem(QString itemtext){handleitemclicked(itemtext);}
+    void setcurrentitem(QString itemtext){handleitemclicked(QUuid::fromString(itemtext));}
     QList<catlistitem*> items(){ return item_list; }
 
 private slots:

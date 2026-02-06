@@ -32,12 +32,12 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     setAutoFillBackground(true);
 
     QVBoxLayout *contentsvlayout = new QVBoxLayout;
+    contentsvlayout->setContentsMargins(QMargins(0,0,0,0));
     contentsvlayout->setSpacing(0);
-    contentsvlayout->setMargin(0);
 
     QHBoxLayout *tophlayout = new QHBoxLayout;
+    tophlayout->setContentsMargins(QMargins(0,0,0,0));
     tophlayout->setSpacing(0);
-    tophlayout->setMargin(0);
 
     QLabel *iconlabel = new QLabel;
     iconlabel->setObjectName("iconLabel");
@@ -45,7 +45,7 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     tophlayout->addWidget(iconlabel);
 
     QVBoxLayout *topvlayout = new QVBoxLayout;
-    topvlayout->setMargin(0);
+    topvlayout->setContentsMargins(QMargins(0,0,0,0));
     topvlayout->setSpacing(0);
 
     QLabel *summarylabel = new QLabel(summary);
@@ -73,8 +73,8 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     contentsvlayout->addWidget(bodylabel);
 
     QVBoxLayout *basevlayout = new QVBoxLayout;
+    basevlayout->setContentsMargins(QMargins(0,0,0,0));
     basevlayout->setSpacing(0);
-    basevlayout->setMargin(0);
 
     QFrame *contents_box = new QFrame;
     contents_box->setObjectName("contentsBox");
@@ -85,7 +85,7 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     basevlayout->addWidget(timeout_bar);
 
     QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->setMargin(0);
+    vlayout->setContentsMargins(QMargins(0,0,0,0));
     QFrame *popupQFrame = new QFrame;
     popupQFrame->setObjectName("notifyPopup");
     popupQFrame->setLayout(basevlayout);

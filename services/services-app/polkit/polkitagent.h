@@ -5,11 +5,11 @@
 #include <QMessageBox>
 #include <QDebug>
 
-#include <polkit-qt5-1/polkitqt1-agent-session.h>
-#include <polkit-qt5-1/polkitqt1-identity.h>
-#include <polkit-qt5-1/polkitqt1-details.h>
-#include <polkit-qt5-1/polkitqt1-agent-listener.h>
-#include <polkit-qt5-1/polkitqt1-subject.h>
+#include <polkit-qt6-1/polkitqt1-agent-session.h>
+#include <polkit-qt6-1/polkitqt1-identity.h>
+#include <polkit-qt6-1/polkitqt1-details.h>
+#include <polkit-qt6-1/polkitqt1-agent-listener.h>
+#include <polkit-qt6-1/polkitqt1-subject.h>
 
 #include "polkitdialog.h"
 

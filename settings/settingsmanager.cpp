@@ -25,16 +25,16 @@ SettingsManager::SettingsManager(){
     setObjectName("SettingsWindow");
 
     stacked_layout = new QStackedLayout;
-    stacked_layout->setMargin(0);
+    stacked_layout->setContentsMargins(QMargins(0,0,0,0));
 
     QHBoxLayout *hlayout = new QHBoxLayout(this);
-    hlayout->setMargin(0);
+    hlayout->setContentsMargins(QMargins(0,0,0,0));
     hlayout->setSpacing(0);
 
     QFrame *left_pane = new QFrame;
     left_pane->setObjectName("CategoriesPane");
     QVBoxLayout *left_v_layout = new QVBoxLayout(left_pane);
-    left_v_layout->setMargin(0);
+    left_v_layout->setContentsMargins(QMargins(0,0,0,0));
     left_v_layout->setSpacing(0);
     bcw = new breadcrumbwidget;
     connect(bcw, &breadcrumbwidget::level1_activated, this, &SettingsManager::open_home);
@@ -158,8 +158,8 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
                 QFrame *widget_group_frame = new QFrame;
                 widget_group_frame->setObjectName("WidgetGroup");
                 QVBoxLayout *group_v_layout = new QVBoxLayout(widget_group_frame);
+                group_v_layout->setContentsMargins(QMargins(0,0,0,0));
                 group_v_layout->setSpacing(0);
-                group_v_layout->setMargin(0);
                 foreach (settings_item* sub_item, widget_group->child_items()) {
                     settings_widget *sub_widget_item = dynamic_cast<settings_widget*>(sub_item);
                     if(sub_widget_item != nullptr){
@@ -200,14 +200,14 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
 QWidget* SettingsManager::create_control(settings_widget* item, QString groupposition){
     QFrame *base_widget = new QFrame;
     QHBoxLayout *base_layout = new QHBoxLayout(base_widget);
-    base_layout->setMargin(0);
+    base_layout->setContentsMargins(QMargins(0,0,0,0));
     base_layout->setSpacing(0);
     base_layout->addStretch(0);
     QFrame *control_widget = new QFrame;
     control_widget->setObjectName("ControlWidget");
     control_widget->setProperty("groupposition", groupposition);
     QHBoxLayout *h_layout = new QHBoxLayout(control_widget);
-    h_layout->setMargin(0);
+    h_layout->setContentsMargins(QMargins(0,0,0,0));
     h_layout->setSpacing(0);
     if(item->name() != ""){
         QLabel *name_label = new QLabel(item->name());
