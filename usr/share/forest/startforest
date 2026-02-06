@@ -21,7 +21,14 @@ fi
 QT5CT_CONF_DIR="$XDG_CONFIG_HOME/qt5ct"
 if [ ! -f "$QT5CT_CONF_DIR/qt5ct.conf" ]; then
 	mkdir -p "$QT5CT_CONF_DIR"
-	cp /usr/share/forest/qt5ct.conf "$QT5CT_CONF_DIR/qt5ct.conf"
+	cp /usr/share/forest/qtct.conf "$QT5CT_CONF_DIR/qt5ct.conf"
+fi
+
+# Set qt6ct settings
+QT6CT_CONF_DIR="$XDG_CONFIG_HOME/qt6ct"
+if [ ! -f "$QT6CT_CONF_DIR/qt6ct.conf" ]; then
+        mkdir -p "$QT6CT_CONF_DIR"
+	cp /usr/share/forest/qtct.conf "$QT6CT_CONF_DIR/qt6ct.conf"
 fi
 
 # Setup gtk-2.0 themes
@@ -39,12 +46,37 @@ gtk-cursor-theme-size=0
 EOF
 fi
 
+# Setup gtk-3.0 themes
+GTK3_CONF_DIR="$XDG_CONFIG_HOME/gtk-3.0"
+GTK2_CONF_FILE="$GTK3_CONF_DIR/settings.ini"
+if [ ! -f "$GTK2_CONF_FILE" ]; then
+        mkdir -p "$GTK3_CONF_DIR"
+	cat << EOF > "$GTK2_CONF_FILE"
+[Settings]
+gtk-theme-name=Adwaita
+gtk-icon-theme-name=Papirus
+gtk-font-name=Sans 10
+gtk-cursor-theme-name=Adwaita
+gtk-cursor-theme-size=0
+gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
+gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
+gtk-button-images=0
+gtk-menu-images=0
+gtk-enable-event-sounds=1
+gtk-enable-input-feedback-sounds=1
+gtk-xft-antialias=1
+gtk-xft-hinting=1
+gtk-xft-hintstyle=hintmedium
+
+EOF
+fi
+
 # Clean up after GDM (GDM sets the number of desktops to one)
 xprop -root -remove _NET_NUMBER_OF_DESKTOPS -remove _NET_DESKTOP_NAMES -remove _NET_CURRENT_DESKTOP 2> /dev/null
 
 #export XDG_MENU_PREFIX="forest-"
 export XDG_CURRENT_DESKTOP="Forest"
-export QT_QPA_PLATFORMTHEME="qt5ct"
+export QT_QPA_PLATFORMTHEME="qt6ct"
 
 # Start the Forest session
 exec forest-session

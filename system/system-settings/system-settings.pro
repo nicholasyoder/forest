@@ -1,4 +1,4 @@
-QT += widgets dbus x11extras
+QT += widgets dbus
 
 TARGET = system-settings
 TEMPLATE = lib
@@ -12,6 +12,7 @@ LIBS += -lX11 -lXcursor
 
 include(../../shared-variables.pri)
 include(../../library/miscutills/miscutills.pri)
+include(../../library/xcbutills/xcbutills.pri)
 
 DEFINES += QT_DEPRECATED_WARNINGS
 

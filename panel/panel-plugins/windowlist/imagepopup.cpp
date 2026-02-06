@@ -5,7 +5,7 @@ imagepopup::imagepopup(QWidget *parentw){
     parentwidget = parentw;
 
     popupglayout = new QGridLayout;
-    popupglayout->setMargin(0);
+    popupglayout->setContentsMargins(QMargins(0,0,0,0));
     popupglayout->setSpacing(3);
 
     closebutton *cbt = new closebutton;

@@ -85,7 +85,7 @@ void mainmenu::togglemenu(){
 void mainmenu::showmenu(){
     allowClose = false;
     searchBox->setText("");
-    itemHandler->setItemFocus(0);
+    itemHandler->setItemFocus(itemHandler->default_item_id);
     itemHandler->setSelectByMouse(false);
     setCategory(catIndexList.count()-1);
     pBox->showpopup();
@@ -107,13 +107,13 @@ void mainmenu::loadSettings(){
 
 void mainmenu::loadUI(){
     QHBoxLayout *mainHLayout = new QHBoxLayout;
-    mainHLayout->setMargin(0);
+    mainHLayout->setContentsMargins(QMargins(0,0,0,0));
     mainHLayout->setSpacing(0);
     mainHLayout->addLayout(categoriesVLayout, 2);
     categoriesVLayout->setSpacing(0);
 
     QVBoxLayout *rightVLayout = new QVBoxLayout;
-    rightVLayout->setMargin(0);
+    rightVLayout->setContentsMargins(QMargins(0,0,0,0));
     rightVLayout->setSpacing(0);
     mainHLayout->addLayout(rightVLayout, 5);
     rightVLayout->addLayout(pagesLayout);

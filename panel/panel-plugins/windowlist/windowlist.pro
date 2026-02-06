@@ -1,4 +1,4 @@
-QT += widgets dbus x11extras
+QT += widgets dbus
 
 TEMPLATE = lib
 DEFINES += PLUG_LIBRARY
@@ -7,9 +7,9 @@ DESTDIR = ../../../usr/lib/forest/panel
 INCLUDEPATH += ../../panel-library
 INCLUDEPATH += ../../../library
 
-LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF5WindowSystem
-INCLUDEPATH += /usr/include/KF5/KWindowSystem
-DEPENDPATH += /usr/include/KF5/KWindowSystem
+LIBS += -L/usr/lib/x86_64-linux-gnu/ -lKF6WindowSystem
+INCLUDEPATH += /usr/include/KF6/KWindowSystem
+DEPENDPATH += /usr/include/KF6/KWindowSystem
 
 CONFIG += c++11 \
             plugin

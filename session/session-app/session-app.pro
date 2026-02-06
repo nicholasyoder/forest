@@ -7,7 +7,7 @@ DESTDIR = ../../usr/bin
 
 CONFIG += c++17
 
-LIBS += -lQt5Xdg
+LIBS += -lQt6Xdg
 
 # You can make your code fail to compile if it uses deprecated APIs.
 # In order to do so, uncomment the following line.

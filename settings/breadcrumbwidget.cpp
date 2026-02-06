@@ -4,7 +4,7 @@ breadcrumbwidget::breadcrumbwidget(){
     setObjectName("BreadCrumbWidget");
 
     QHBoxLayout *base_layout = new QHBoxLayout(this);
-    base_layout->setMargin(0);
+    base_layout->setContentsMargins(QMargins(0,0,0,0));
     base_layout->setSpacing(0);
 
     level1_button = new QPushButton("Settings");

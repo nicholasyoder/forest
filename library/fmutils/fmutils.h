@@ -31,8 +31,8 @@
 #include <QApplication>
 #include <QMimeData>
 #include <QMimeDatabase>
-#include <qt5xdg/XdgMimeType>
-#include <qt5xdg/XdgDesktopFile>
+#include <qt6xdg/XdgMimeType>
+#include <qt6xdg/XdgDesktopFile>
 #include <QUrl>
 #include <QProcess>
 #include <QDir>
@@ -273,7 +273,7 @@ public:
             QFile infofile(infopath);
             infofile.open(QIODevice::WriteOnly);
             QTextStream out(&infofile);
-            out.setCodec("UTF-8");
+            out.setEncoding(QStringConverter::Utf8);
             out <<info;
 
             infofile.close();

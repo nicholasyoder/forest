@@ -95,7 +95,7 @@ void iconswidget::mouseReleaseEvent(QMouseEvent *event)
     {
         event->ignore();//allow parent widget to get event and show menu
     }
-    else if (event->button() == Qt::MidButton)
+    else if (event->button() == Qt::MiddleButton)
     {
         //qApp->quit();
     }

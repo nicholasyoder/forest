@@ -34,13 +34,13 @@ batterymonitor::~batterymonitor()
 void batterymonitor::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
 {
     this->setLayout(basehlayout);
-    basehlayout->setMargin(4);
+    basehlayout->setContentsMargins(QMargins(0,0,0,0));
     basehlayout->setSpacing(0);
 
     panelbutton *pb = new panelbutton;
     //pb->setbuttondata(this);
     QHBoxLayout *hlayout = new QHBoxLayout;
-    hlayout->setMargin(0);
+    hlayout->setContentsMargins(QMargins(0,0,0,0));
     hlayout->addWidget(this);
     pb->setLayout(hlayout);
     layout->addWidget(pb);

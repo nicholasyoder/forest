@@ -28,16 +28,15 @@
 #include <QtDBus>
 #include <QScreen>
 #include <QGenericPlugin>
-#include <QDesktopWidget>
 #include <QClipboard>
 #include <QApplication>
 #include <QSettings>
 #include <QListWidget>
 #include <QVBoxLayout>
 #include <QMenu>
-#include <qt5xdg/XdgDesktopFile>
-#include <qt5xdg/XdgMimeType>
-#include <qt5xdg/XdgDirs>
+#include <qt6xdg/XdgDesktopFile>
+#include <qt6xdg/XdgMimeType>
+#include <qt6xdg/XdgDirs>
 
 #include "wallpaperwidget.h"
 #include "iconswidget.h"

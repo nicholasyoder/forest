@@ -45,7 +45,7 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     layoutdirection = layout->direction();
     pbutton = new panelbutton;
     QHBoxLayout *hlayout = new QHBoxLayout;
-    hlayout->setMargin(0);
+    hlayout->setContentsMargins(QMargins(0,0,0,0));
     hlayout->addWidget(this);
     pbutton->setLayout(hlayout);
     layout->addWidget(pbutton);

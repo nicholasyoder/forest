@@ -17,6 +17,7 @@ class itemhandler : public QObject
 
 public:
     itemhandler();
+    QUuid default_item_id = QUuid::createUuid();
 
 public slots:
     menuitem* newItem(QString data, ITEM_TYPE type = CATEGORY, int appPageIndex = 0);
@@ -52,7 +53,8 @@ private slots:
 private:
     QIcon categoryIcon(QString category);
 
-    QUuid currentItem = 0;
+
+    QUuid currentItem;
     int currentStackIndex = 0;
 
     QHash<QUuid, menuitem*> itemHash;

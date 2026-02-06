@@ -6,6 +6,7 @@
 
 itemhandler::itemhandler()
 {
+    currentItem = default_item_id;
     settings->beginGroup("hitCounts");
     QStringList apps = settings->childKeys();
     foreach(QString app, apps){
@@ -74,7 +75,7 @@ void itemhandler::itemEvent(QUuid uuid, ITEM_EVENT eventtype, QEvent *event){
     }
     else if(eventtype == LEAVE){
         if (allowSelectByMouse)
-            currentItem = 0;
+            currentItem = default_item_id;
     }
     else if(eventtype == PRESS){
 
@@ -159,7 +160,7 @@ void itemhandler::activateCurrentItem(){
 }
 
 void itemhandler::moveFocus(MOVE_DIRECTION direction){
-    if (currentItem == 0){
+    if (currentItem == default_item_id){
         doInitialFocus(direction);
     }
     else if(direction == MOVE_RIGHT){
@@ -276,7 +277,7 @@ QList<menuitem*> itemhandler::search(QString text){
         if(itemList.count())
             setItemFocus(itemList.first()->uuid());
         else
-            setItemFocus(0);
+            setItemFocus(default_item_id);
     }
     else {
         setCategorySelected(catItems.last());
@@ -288,7 +289,7 @@ QList<menuitem*> itemhandler::search(QString text){
 }
 
 void itemhandler::clear(){
-    currentItem = 0;
+    currentItem = default_item_id;
     currentStackIndex = 0;
     itemHash.clear();
     appHash.clear();

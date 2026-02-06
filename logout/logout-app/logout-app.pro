@@ -1,4 +1,4 @@
-QT += core gui widgets dbus x11extras
+QT += core gui widgets dbus
 
 TARGET = forest-logout
 TEMPLATE = app

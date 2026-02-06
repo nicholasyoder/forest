@@ -29,9 +29,6 @@
 //#include "panelbutton.h"
 #include "panelpluginterface.h"
 #include "trayicon.h"
-#include "xcbutills/xcbutills.h"
-
-#include <QtX11Extras/QX11Info>
 
 #include <X11/X.h>
 #include <X11/Xlib.h>

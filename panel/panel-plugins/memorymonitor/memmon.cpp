@@ -34,7 +34,7 @@ void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     settings = new QSettings("Forest", "Memory Monitor");
 
     QVBoxLayout *vlayout = new QVBoxLayout;
-    vlayout->setMargin(0);
+    vlayout->setContentsMargins(QMargins(0,0,0,0));
     vlayout->addWidget(gwidget);
     setLayout(vlayout);
     layout->addWidget(this);

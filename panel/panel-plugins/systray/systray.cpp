@@ -22,6 +22,7 @@
 
 #include "systray.h"
 
+#include "../../library/xcbutills/xcbutills.h"
 #include <xcb/damage.h>
 #include <xcb/render.h>
 
@@ -44,11 +45,11 @@ void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
 {
     Q_UNUSED(itemlist);
 
-    mDisplay = QX11Info::display();
+    mDisplay = Xcbutills::display();
     _NET_SYSTEM_TRAY_OPCODE = Xcbutills::atom("_NET_SYSTEM_TRAY_OPCODE");
 
     traylayout = new QHBoxLayout(this);
-    traylayout->setMargin(0);
+    traylayout->setContentsMargins(QMargins(0,0,0,0));
     traylayout->setSpacing(0);
     layout->addWidget(this);
 
@@ -108,7 +109,7 @@ QHash<QString, QString> systray::getpluginfo()
 void systray::starttray()
 {
     Display* dsp = mDisplay;
-    Window root = QX11Info::appRootWindow();
+    Window root = Xcbutills::root_window();
     QString s = QString("_NET_SYSTEM_TRAY_S%1").arg(DefaultScreen(dsp));
     Atom _NET_SYSTEM_TRAY_S = Xcbutills::atom(s.toLatin1());
 
@@ -200,7 +201,7 @@ VisualID systray::getVisual()
     Display* dsp = mDisplay;
 
     XVisualInfo templ;
-    templ.screen=QX11Info::appScreen();
+    templ.screen=0;  // default screen is usually 0?
     templ.depth=32;
     templ.c_class=TrueColor;
 
@@ -235,8 +236,7 @@ void systray::setIconSize(QSize icosize)
 
 TrayIcon* systray::findIcon(Window id)
 {
-    for(TrayIcon* icon : qAsConst(mIcons))
-    {
+    foreach(TrayIcon* icon, mIcons){
         if (icon->iconId() == id || icon->windowId() == id)
             return icon;
     }

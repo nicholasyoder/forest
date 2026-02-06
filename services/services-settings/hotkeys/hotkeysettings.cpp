@@ -49,7 +49,7 @@ void HotkeySettings::load_hotkeys(){
 
         QWidget *item_widget = new QWidget;
         QHBoxLayout *h_layout = new QHBoxLayout(item_widget);
-        h_layout->setMargin(0);
+        h_layout->setContentsMargins(QMargins(0,0,0,0));
         h_layout->addSpacing(5);
         QLabel* keys_label = new QLabel(settings.value("keysequence", "").toString());
         keys_label->setStyleSheet("color: grey;");

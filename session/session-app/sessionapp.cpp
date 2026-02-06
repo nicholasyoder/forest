@@ -3,7 +3,7 @@
 #include <QProcess>
 #include <QDebug>
 
-#include <qt5xdg/XdgAutoStart>
+#include <qt6xdg/XdgAutoStart>
 
 SessionApp::SessionApp(){
     settings = new QSettings("Forest", "Session");
@@ -22,7 +22,7 @@ void SessionApp::startSession(){
     // Setup Mouse
 
     launch_WM();
-    startProcess("forest");
+    startProcess("forest &> /tmp/forest.log");
     launch_autostart_commands();
     launch_autostart_xdg();
 }

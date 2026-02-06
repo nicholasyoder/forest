@@ -21,8 +21,8 @@
  * END_COMMON_COPYRIGHT_HEADER */
 
 #include "hotkey.h"
+#include "xcbutills.h"
 
-#include <QX11Info>
 #include <X11/Xlib.h>
 #include "qxt/keymapper_x11.h"
 
@@ -148,18 +148,18 @@ quint32 globalhotkey::nativeKeycode(Qt::Key key){
         keysym = XStringToKeysym(QKeySequence(key).toString().toLatin1().data());
     }
 
-    Display* display = QX11Info::display();
+    Display* display = Xcbutills::display();
     return XKeysymToKeycode(display, keysym);
 }
 
 void globalhotkey::registerShortcut(quint32 nativeKey, quint32 nativeMods){
-    xcb_window_t window = QX11Info::appRootWindow();
-    xcb_grab_key(QX11Info::connection(), True, window, nativeMods, nativeKey, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
-    xcb_grab_key(QX11Info::connection(), True, window, nativeMods | Mod2Mask, nativeKey, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+    xcb_window_t window = Xcbutills::root_window();
+    xcb_grab_key(Xcbutills::conn, True, window, nativeMods, nativeKey, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
+    xcb_grab_key(Xcbutills::conn, True, window, nativeMods | Mod2Mask, nativeKey, XCB_GRAB_MODE_ASYNC, XCB_GRAB_MODE_ASYNC);
 }
 
 void globalhotkey::unregisterShortcut(quint32 nativeKey, quint32 nativeMods){
-    xcb_window_t window = QX11Info::appRootWindow();
-    xcb_ungrab_key(QX11Info::connection(), nativeKey, window, nativeMods);
-    xcb_ungrab_key(QX11Info::connection(), nativeKey, window, nativeMods | Mod2Mask);
+    xcb_window_t window = Xcbutills::root_window();
+    xcb_ungrab_key(Xcbutills::conn, nativeKey, window, nativeMods);
+    xcb_ungrab_key(Xcbutills::conn, nativeKey, window, nativeMods | Mod2Mask);
 }

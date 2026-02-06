@@ -72,7 +72,7 @@ void desktop::loadwallpaperwidgets(){
         if (screen == qApp->primaryScreen()){
             iwidget = new iconswidget(screen->size(), getusabledesktopspace());
             QVBoxLayout *vlayout = new QVBoxLayout;
-            vlayout->setMargin(0);
+            vlayout->setContentsMargins(QMargins(0,0,0,0));
             vlayout->addWidget(iwidget);
             connect(iwidget, &iconswidget::iconposchange, this, &desktop::saveiconlocations);
             connect(iwidget, &iconswidget::icontextchanged, this, &desktop::handleicontextchanged);

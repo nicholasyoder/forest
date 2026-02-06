@@ -5,7 +5,6 @@
 #include <QScreen>
 #include <QMessageBox>
 #include <QVector>
-#include <QtX11Extras/QX11Info>
 
 enum class DBusService {SYSTEMD, CONSOLEKIT, UPOWER, PWMANAGEMENT};
 
@@ -103,13 +102,12 @@ logoutmanager::logoutmanager(){
     settings = new QSettings("Forest", "Logout");
     setup();
 
-    if (QX11Info::isCompositingManagerRunning())
-        foreach(QScreen* screen, qApp->screens()){
-            imagewidget *background_fader = new imagewidget;
-            background_fader->setGeometry(screen->geometry());
-            background_fader->show();
-            background_faders.append(background_fader);
-        }
+    foreach(QScreen* screen, qApp->screens()){
+        imagewidget *background_fader = new imagewidget;
+        background_fader->setGeometry(screen->geometry());
+        background_fader->show();
+        background_faders.append(background_fader);
+    }
 
     QRect screen_geo = qApp->primaryScreen()->geometry();
     move(
@@ -123,9 +121,9 @@ logoutmanager::~logoutmanager(){}
 void logoutmanager::setup(){
     QVBoxLayout *basevlayout = new QVBoxLayout;
     basevlayout->setSpacing(0);
-    basevlayout->setMargin(0);
+    basevlayout->setContentsMargins(QMargins(0,0,0,0));
     QHBoxLayout *closehlayout = new QHBoxLayout;
-    closehlayout->setMargin(0);
+    closehlayout->setContentsMargins(QMargins(0,0,0,0));
     closehlayout->setSpacing(0);
     QLabel *titlelabel = new QLabel("Choose Action:");
     titlelabel->setObjectName("logout_TitleLabel");
@@ -153,7 +151,7 @@ void logoutmanager::setup(){
     mainframe->setObjectName("logout_MainWindow");
     mainframe->setLayout(basevlayout);
     QVBoxLayout *vlayout = new QVBoxLayout(this);
-    vlayout->setMargin(0);
+    vlayout->setContentsMargins(QMargins(0,0,0,0));
     vlayout->addWidget(mainframe);
 
     QString lastaction = settings->value("lastaction", "shutdown").toString();
@@ -175,16 +173,10 @@ void logoutmanager::setup(){
 }
 
 void logoutmanager::startbackfade(){
-    if (QX11Info::isCompositingManagerRunning()){
-        foreach(imagewidget* background_fader, background_faders)
-            background_fader->start();
+    foreach(imagewidget* background_fader, background_faders)
+        background_fader->start();
 
-        do_fade(FadeDirection::FADEIN);
-    }
-    else{
-        setWindowOpacity(1.0);
-        set_initial_focus();
-    }
+    do_fade(FadeDirection::FADEIN);
 }
 
 void logoutmanager::set_initial_focus(){
@@ -233,16 +225,11 @@ void logoutmanager::keyPressEvent(QKeyEvent *event){
 }
 
 void logoutmanager::start_action(ActionType action){
-    if (QX11Info::isCompositingManagerRunning()){
-        do_fade(FadeDirection::FADEOUT);
-        foreach(imagewidget* background_fader, background_faders)
-            background_fader->blackout();
+    do_fade(FadeDirection::FADEOUT);
+    foreach(imagewidget* background_fader, background_faders)
+        background_fader->blackout();
 
-        QTimer::singleShot(1000, this, [this, action](){do_action(action);});
-    }
-    else{
-        do_action(action);
-    }
+    QTimer::singleShot(1000, this, [this, action](){do_action(action);});
 }
 
 void logoutmanager::do_action(ActionType action){

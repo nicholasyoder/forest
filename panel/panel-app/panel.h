@@ -27,8 +27,6 @@
 #include <QFrame>
 #include <QSettings>
 #include <QtDBus>
-#include <QtX11Extras>
-#include <QtX11Extras/QX11Info>
 
 #include "../../library/pluginutills/app_plugin_interface.h"
 #include "../panel-library/panelpluginterface.h"

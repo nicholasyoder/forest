@@ -3,7 +3,7 @@
 
 #include <QMenu>
 #include <QtDBus>
-#include <qt5xdg/XdgIcon>
+#include <qt6xdg/XdgIcon>
 
 contextmenu::contextmenu()
 {

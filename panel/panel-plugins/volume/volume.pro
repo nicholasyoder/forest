@@ -10,7 +10,7 @@ CONFIG += plugin
 
 INCLUDEPATH = ../../panel-library
 
-LIBS += -lasound -lQt5Xdg
+LIBS += -lasound -lQt6Xdg
 
 include(../../../shared-variables.pri)
 include(../../../library/miscutills/miscutills.pri)

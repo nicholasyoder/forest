@@ -80,8 +80,6 @@ private:
     QHash<QUuid, int> catIndexList;
 
     bool allowClose = false;//nasty hack to keep Ctrl+Esc from making the menu go away as soon as it's shown
-    QUuid currentitem = 0;
-    QUuid poweritem = 0;
 
     itemhandler *itemHandler = nullptr;
 };

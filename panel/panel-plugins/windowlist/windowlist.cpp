@@ -25,6 +25,7 @@
 
 #include <KWindowInfo>
 #include <kx11extras.h>
+#include "xcbutills.h"
 
 windowlist::windowlist(){}
 
@@ -35,9 +36,9 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
     QHBoxLayout *baseLayout = new QHBoxLayout;
     baseLayout->addLayout(mainlayout);
-    baseLayout->setMargin(0);
+    baseLayout->setContentsMargins(QMargins(0,0,0,0));
     baseLayout->setSpacing(0);
-    mainlayout->setMargin(0);
+    mainlayout->setContentsMargins(QMargins(0,0,0,0));
     mainlayout->setSpacing(0);
     QWidget *swidget = new QWidget;
     baseLayout->addWidget(swidget);
@@ -124,7 +125,7 @@ bool windowlist::acceptWindow(WId window) const
 
     // WM_TRANSIENT_FOR hint not set - normal window
     WId transFor = info.transientFor();
-    if (transFor == 0 || transFor == window || transFor == (WId) QX11Info::appRootWindow())
+    if (transFor == 0 || transFor == window || transFor == (WId) Xcbutills::root_window())
         return true;
 
     info = KWindowInfo(transFor, NET::WMWindowType);

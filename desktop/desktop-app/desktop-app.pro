@@ -9,7 +9,7 @@ DESTDIR = ../../usr/lib/forest
 CONFIG += c++11 \
             plugin
 
-LIBS += -lQt5Xdg
+LIBS += -lQt6Xdg
 
 include(../../shared-variables.pri)
 include(../../library/miscutills/miscutills.pri)

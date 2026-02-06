@@ -26,7 +26,7 @@ void fadewidget::paintEvent(QPaintEvent *){
 
 void fadewidget::getimage(){
     //grab screenshot - maybe this can get deleted after i write a session manager
-    *backimage = wscreen->grabWindow(QApplication::desktop()->winId(), wscreen->geometry().x(), wscreen->geometry().y(), width(), height()).toImage();
+    *backimage = wscreen->grabWindow(0, wscreen->geometry().x(), wscreen->geometry().y(), width(), height()).toImage();
 
     QSettings settings("Forest","Forest");
     imagemode = WALLPAPER_MODE(settings.value("desktop/imagemode", Fill).toInt());

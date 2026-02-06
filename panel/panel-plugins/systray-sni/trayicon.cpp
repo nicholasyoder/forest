@@ -27,7 +27,6 @@
 
 #include "xcbutills.h"
 
-#include <QX11Info>
 #include <QTimer>
 #include <QBitmap>
 
@@ -49,7 +48,7 @@ void xembed_message_send(xcb_window_t towin, long message, long d1, long d2, lon
     ev.data.data32[3] = d2;
     ev.data.data32[4] = d3;
     ev.type = Xcbutills::atom("_XEMBED");
-    xcb_send_event(QX11Info::connection(), false, towin, XCB_EVENT_MASK_NO_EVENT, (char *) &ev);
+    xcb_send_event(Xcbutills::conn, false, towin, XCB_EVENT_MASK_NO_EVENT, (char *) &ev);
 }
 
 trayicon::trayicon(xcb_window_t wid): iWindowId(wid), sendingClickEvent(false), iInjectMode(Direct){
@@ -59,12 +58,12 @@ trayicon::trayicon(xcb_window_t wid): iWindowId(wid), sendingClickEvent(false), 
 }
 
 trayicon::~trayicon(){
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
     xcb_destroy_window(c, iContainerWid);
 }
 
 void trayicon::init(){
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     //create a container window
     auto screen = xcb_setup_roots_iterator (xcb_get_setup (c)).data;
@@ -185,7 +184,7 @@ void trayicon::updateIcon(){
 
 void trayicon::resizeWindow(const uint16_t width, const uint16_t height) const
 {
-    auto connection = QX11Info::connection();
+    auto connection = Xcbutills::conn;
 
     uint16_t widthNormalized = std::min(width, s_embedSize);
     uint16_t heighNormalized = std::min(height, s_embedSize);
@@ -208,7 +207,7 @@ void trayicon::hideContainerWindow(xcb_window_t windowId) const
 
 QSize trayicon::calculateClientWindowSize() const
 {
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     auto cookie = xcb_get_geometry(c, iWindowId);
     QScopedPointer<xcb_get_geometry_reply_t, QScopedPointerPodDeleter>
@@ -263,7 +262,7 @@ bool trayicon::isTransparentImage(const QImage& image) const
 
 QImage trayicon::getImageNonComposite() const
 {
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     QSize clientWindowSize = calculateClientWindowSize();
 
@@ -364,7 +363,7 @@ QPoint trayicon::calculateClickPoint() const
 {
     QPoint clickPoint = QPoint(0, 0);
 
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     // request extent to check if shape has been set
     xcb_shape_query_extents_cookie_t extentsCookie = xcb_shape_query_extents(c, iWindowId);
@@ -402,7 +401,7 @@ QPoint trayicon::calculateClickPoint() const
 }
 
 void trayicon::stackContainerWindow(const uint32_t stackMode) const{
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
     const uint32_t stackData[] = {stackMode};
     xcb_configure_window(c, iContainerWid, XCB_CONFIG_WINDOW_STACK_MODE, stackData);
 }
@@ -428,8 +427,8 @@ void trayicon::wheelEvent(QWheelEvent *event){
     Scroll(event->angleDelta().x(), "vertical");
 }
 
-void trayicon::enterEvent(QEvent *){
-    auto c = QX11Info::connection();
+void trayicon::enterEvent(QEnterEvent *){
+    auto c = Xcbutills::conn;
 
     int x = QCursor::pos().x();
     int y = QCursor::pos().y();
@@ -442,7 +441,7 @@ void trayicon::enterEvent(QEvent *){
     event->response_type = XCB_ENTER_NOTIFY;
     event->event = iWindowId;
     event->time = XCB_CURRENT_TIME;
-    event->root = QX11Info::appRootWindow();
+    event->root = Xcbutills::root_window();
     event->root_x = x;
     event->root_y = y;
     event->event_x = static_cast<int16_t>(local_pos.x());
@@ -458,7 +457,7 @@ void trayicon::enterEvent(QEvent *){
 }
 
 void trayicon::leaveEvent(QEvent *){
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     int x = QCursor::pos().x();
     int y = QCursor::pos().y();
@@ -471,7 +470,7 @@ void trayicon::leaveEvent(QEvent *){
     event->response_type = XCB_LEAVE_NOTIFY;
     event->event = iWindowId;
     event->time = XCB_CURRENT_TIME;
-    event->root = QX11Info::appRootWindow();
+    event->root = Xcbutills::root_window();
     event->root_x = x;
     event->root_y = y;
     event->event_x = static_cast<int16_t>(local_pos.x());
@@ -492,7 +491,7 @@ void trayicon::mouseMoveEvent(QMouseEvent *event){
     int x = QCursor::pos().x();
     int y = QCursor::pos().y();
 
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     stackContainerWindow(XCB_STACK_MODE_ABOVE);
 
@@ -538,7 +537,7 @@ void trayicon::sendClick(uint8_t mouseButton, int x, int y)
     qDebug() << "Received click" << mouseButton << "with passed x*y" << x << y;
     sendingClickEvent = true;
 
-    auto c = QX11Info::connection();
+    auto c = Xcbutills::conn;
 
     auto cookieSize = xcb_get_geometry(c, iWindowId);
     QScopedPointer<xcb_get_geometry_reply_t, QScopedPointerPodDeleter>
@@ -584,9 +583,9 @@ void trayicon::sendClick(uint8_t mouseButton, int x, int y)
         memset(event, 0x00, sizeof(xcb_button_press_event_t));
         event->response_type = XCB_BUTTON_PRESS;
         event->event = iWindowId;
-        event->time = QX11Info::getTimestamp();
+        event->time = XCB_CURRENT_TIME;
         event->same_screen = 1;
-        event->root = QX11Info::appRootWindow();
+        event->root = Xcbutills::root_window();
         event->root_x = x;
         event->root_y = y;
         event->event_x = static_cast<int16_t>(clickPoint.x());
@@ -608,9 +607,9 @@ void trayicon::sendClick(uint8_t mouseButton, int x, int y)
         memset(event, 0x00, sizeof(xcb_button_release_event_t));
         event->response_type = XCB_BUTTON_RELEASE;
         event->event = iWindowId;
-        event->time = QX11Info::getTimestamp();
+        event->time = XCB_CURRENT_TIME;
         event->same_screen = 1;
-        event->root = QX11Info::appRootWindow();
+        event->root = Xcbutills::root_window();
         event->root_x = x;
         event->root_y = y;
         event->event_x = static_cast<int16_t>(clickPoint.x());

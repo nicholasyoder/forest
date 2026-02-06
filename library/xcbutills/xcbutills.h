@@ -3,8 +3,8 @@
 
 #include <QString>
 #include <QIcon>
-#include <QtX11Extras/QX11Info>
 #include <xcb/xcb.h>
+#include <qguiapplication_platform.h>
 
 /** XEMBED messages */
 #define XEMBED_EMBEDDED_NOTIFY          0
@@ -19,6 +19,12 @@
 class Xcbutills {
 public:
     Xcbutills(){}
+
+    //get the display
+    static Display* display();
+
+    //get the root window
+    static xcb_window_t root_window();
 
     //get atom by name
     static xcb_atom_t atom(QString name);
@@ -78,7 +84,7 @@ public:
                                 int top_start, int top_end, int bottom_start, int bottom_end);
 
     // Enable keyboard numlock
-    static void enableNumlock();
+    //static void enableNumlock();
 
     // from kwindowsystem - mostly unmodified ---------------------------------------------------------------------------------------------------
     template <typename T>
