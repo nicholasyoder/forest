@@ -79,7 +79,7 @@ private:
     QRect displayrect;
     bool verticalpanel = false;
     int margin = 0;
-    unsigned long long oldvalue;
-    unsigned long long oldtotal;
+    unsigned long long oldvalue = 0;
+    unsigned long long oldtotal = 0;
 };
 #endif // CPUMON_H
