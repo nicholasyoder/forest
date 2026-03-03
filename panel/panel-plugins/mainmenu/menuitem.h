@@ -52,7 +52,7 @@ public slots:
 
 protected:
     void paintEvent(QPaintEvent *);
-    void enterEvent(QEvent *event);
+    void enterEvent(QEnterEvent *event);
     void leaveEvent(QEvent *event);
     void mousePressEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);

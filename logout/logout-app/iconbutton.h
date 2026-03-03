@@ -27,7 +27,7 @@ private:
 
 private slots:
     void paintEvent(QPaintEvent *);
-    void enterEvent(QEvent *){this->setFocus();}
+    void enterEvent(QEnterEvent *){this->setFocus();}
     void focusInEvent(QFocusEvent *);
     void leaveEvent(QEvent *){this->clearFocus();}
     void focusOutEvent(QFocusEvent *);

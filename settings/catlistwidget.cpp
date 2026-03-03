@@ -91,7 +91,7 @@ void catlistitem::updatepressed(QUuid id){
     }
 }
 
-void catlistitem::enterEvent(QEvent *){
+void catlistitem::enterEvent(QEnterEvent *){
     highlight = true;
     update();
 }

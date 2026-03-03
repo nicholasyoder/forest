@@ -143,7 +143,7 @@ signals:
     void leaveevent();
 
 protected:
-    void enterEvent(QEvent *){setMouseOver(true); emit enterevent();}
+    void enterEvent(QEnterEvent *){setMouseOver(true); emit enterevent();}
     void leaveEvent(QEvent *){setMouseOver(false); emit leaveevent();}
     void mousePressEvent(QMouseEvent *){setDown(true);}
     void mouseReleaseEvent(QMouseEvent *event){
