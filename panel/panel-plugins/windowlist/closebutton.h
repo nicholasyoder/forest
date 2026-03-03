@@ -40,7 +40,7 @@ protected:
         painter.drawLine(this->width()-5,4, 4, this->height()-5);
     }
 
-    void enterEvent(QEvent *)
+    void enterEvent(QEnterEvent *)
     {
         mouseover = true;
         update();

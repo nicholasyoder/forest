@@ -66,7 +66,7 @@ void menuitem::paintEvent(QPaintEvent *){
     style()->drawControl(QStyle::CE_PushButton, &option, &painter, this);
 }
 
-void menuitem::enterEvent(QEvent *event){
+void menuitem::enterEvent(QEnterEvent *event){
     currentState = FOCUS;
     emit activated(itemID, ENTER, event);
 }

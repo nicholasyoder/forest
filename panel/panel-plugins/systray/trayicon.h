@@ -56,15 +56,15 @@ public:
 
 protected:
     void paintEvent(QPaintEvent*);
-    void enterEvent(QEvent *){
+    //void enterEvent(QEnterEvent *){
         //setMouseOver(true);
         //emit enterevent();
         //t->start(100);
-    }
+    //}
 
-    void leaveEvent(QEvent *){
+    //void leaveEvent(QEvent *){
         //tryleave();
-    }
+    //}
 
 
 //private slots:

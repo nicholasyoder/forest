@@ -213,7 +213,7 @@ private slots:
     void update_timeout_bar();
 
 protected:
-    void enterEvent(QEvent *){ resume_timeout = timeout_timer->remainingTime(); timeout_updater->stop(); timeout_timer->stop(); }
+    void enterEvent(QEnterEvent *){ resume_timeout = timeout_timer->remainingTime(); timeout_updater->stop(); timeout_timer->stop(); }
     void leaveEvent(QEvent *){ timeout_timer->start(resume_timeout); timeout_updater->start(); }
     //void mouseReleaseEvent(QMouseEvent *){ qDebug() << "clicked"; }  // TODO: open a view where the full message can be scrolled through or something.
 
