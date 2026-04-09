@@ -1,0 +1,34 @@
+# ForestDeps.cmake - Helper functions replacing the qmake .pri include pattern
+
+# forest_link_miscutills(target)
+# Adds include paths and links the miscutills static library
+function(forest_link_miscutills target)
+    target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/miscutills)
+    target_link_libraries(${target} PRIVATE miscutills)
+endfunction()
+
+# forest_link_pluginutills(target)
+# Adds include paths and links the pluginutills static library
+function(forest_link_pluginutills target)
+    target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/pluginutills)
+    target_link_libraries(${target} PRIVATE pluginutills)
+endfunction()
+
+# forest_link_settings_widgets(target)
+# Adds include paths and links the settings-widgets static library
+function(forest_link_settings_widgets target)
+    target_link_libraries(${target} PRIVATE settings-widgets)
+endfunction()
+
+# forest_link_panel_library(target)
+# Adds include paths and links the panel-library static library
+function(forest_link_panel_library target)
+    target_link_libraries(${target} PRIVATE panel-library)
+endfunction()
+
+# forest_link_xcbutills(target)
+# Adds include paths and links the xcbutills static library
+function(forest_link_xcbutills target)
+    target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/xcbutills)
+    target_link_libraries(${target} PRIVATE xcbutills)
+endfunction()

@@ -24,7 +24,7 @@
  **
  ****************************************************************************/
 #include "qxtglobalshortcut_p.h"
-#include <QX11Info>
+#include "xcbutills.h"
 #include <X11/Xlib.h>
 #include "keymapper_x11.h"
 
@@ -103,14 +103,14 @@ quint32 QxtGlobalShortcutPrivate::nativeKeycode(Qt::Key key)
                     keysym = XStringToKeysym(QKeySequence(key).toString().toLatin1().data());
           }
 
-          Display* display = QX11Info::display();
+          Display* display = Xcbutills::display();
           return XKeysymToKeycode(display, keysym);
 }
 
 bool QxtGlobalShortcutPrivate::registerShortcut(quint32 nativeKey, quint32 nativeMods)
 {
-          Display* display = QX11Info::display();
-          Window window = QX11Info::appRootWindow();
+          Display* display = Xcbutills::display();
+          Window window = Xcbutills::root_window();
           Bool owner = True;
           int pointer = GrabModeAsync;
           int keyboard = GrabModeAsync;
@@ -125,8 +125,8 @@ bool QxtGlobalShortcutPrivate::registerShortcut(quint32 nativeKey, quint32 nativ
 
 bool QxtGlobalShortcutPrivate::unregisterShortcut(quint32 nativeKey, quint32 nativeMods)
 {
-          Display* display = QX11Info::display();
-          Window window = QX11Info::appRootWindow();
+          Display* display = Xcbutills::display();
+          Window window = Xcbutills::root_window();
           error = false;
           original_x_errhandler = XSetErrorHandler(qxt_x_errhandler);
           XUngrabKey(display, nativeKey, nativeMods, window);
