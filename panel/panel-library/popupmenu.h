@@ -33,8 +33,6 @@
 //menuitem class~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class pmenuitem : public QPushButton
 {
-    Q_OBJECT
-
 public:
     pmenuitem(QString text, QIcon icon = QIcon()){
         setText(text);
@@ -48,8 +46,6 @@ public:
 //menuseperator class~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 class menuseperator : public QFrame
 {
-    Q_OBJECT
-
 public:
     menuseperator(){ setObjectName("popupMenuSeperator"); }
 };

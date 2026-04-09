@@ -1,0 +1,5 @@
+add_subdirectory(fstyleloader)
+add_subdirectory(miscutills)
+add_subdirectory(pluginutills)
+add_subdirectory(xcbutills)
+add_subdirectory(fmutils)
