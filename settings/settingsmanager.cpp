@@ -46,18 +46,13 @@ SettingsManager::SettingsManager(){
     hlayout->addLayout(stacked_layout, 1);
 
     listw->setMinimumWidth(175);
-    //connect(listw, SIGNAL(currentRowChanged(int)), slayout, SLOT(setCurrentIndex(int)));
     connect(listw, &catlistwidget::currentRowChanged, this, &SettingsManager::open_item);
 
     this->resize(850,600);
-
-    //loadui();
     QTimer::singleShot(0, this, &SettingsManager::load_settings_ui);
 }
 
-SettingsManager::~SettingsManager()
-{
-}
+SettingsManager::~SettingsManager(){}
 
 void SettingsManager::load_settings_ui(){
     QStringList plugin_paths = pluginutills::get_plugin_paths(SETTINGS_PLUGIN);
@@ -77,6 +72,17 @@ void SettingsManager::load_settings_ui(){
         }
     }
     open_home();
+
+    // Navigate to initial page if specified via CLI argument
+    if (!initial_page.isEmpty()) {
+        foreach (settings_item *item, top_level_items) {
+            settings_category *cat = dynamic_cast<settings_category*>(item);
+            if (cat && cat->name() == initial_page) {
+                open_item(cat->id());
+                break;
+            }
+        }
+    }
 }
 
 void SettingsManager::load_items(QList<settings_item*> items){
@@ -105,26 +111,30 @@ void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> 
     if(show_back_button)
         listw->additem(home_id, "Back", QIcon::fromTheme("go-previous"));
 
-    QMap<QString, settings_category*> cat_map;
-    foreach(settings_item* item, items){
-        settings_category *cat_item = dynamic_cast<settings_category*>(item);
-        if(cat_item != nullptr){
-            cat_map[cat_item->name()] = cat_item;
+    if(parent_id == home_id){  // Order top level items alphabetically (will break things if a plugin is added that comes before About)
+        QMap<QString, settings_category*> cat_map;
+        foreach(settings_item* item, items){
+            settings_category *cat_item = dynamic_cast<settings_category*>(item);
+            if(cat_item != nullptr)
+                cat_map[cat_item->name()] = cat_item;
+        }
+        foreach(QString name, cat_map.keys()){
+            settings_category *cat_item = cat_map[name];
+            listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()), has_child_cats(cat_item));
+        }
+    } else {  // Order sub items in the order they are defined in the plugin
+        foreach(settings_item* item, items){
+            settings_category *cat_item = dynamic_cast<settings_category*>(item);
+            if(cat_item != nullptr)
+                listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()), has_child_cats(cat_item));
         }
     }
 
-    foreach (QString name, cat_map.keys()) {
-        settings_category *cat_item = cat_map[name];
-        listw->additem(cat_item->id(), cat_item->name(), QIcon::fromTheme(cat_item->icon()), has_child_cats(cat_item));
-    }
-
-    // Automaticly open first item - but do second if first item is back button
-    //listitem *first_item = (listw->items().first()->text() != "Back") ? listw->items().first() : listw->items().at(1);
-    //first_item->activate();
-
-    // Activate first item if were on toplevel
-    if (parent_id == home_id)
-        listw->items().first()->activate();
+    // Activate first item, skipping the back button if present
+    auto list_items = listw->items();
+    catlistitem *to_activate = (list_items.size() > 1 && list_items.first()->text() == "Back")
+        ? list_items.at(1) : list_items.first();
+    to_activate->activate();
 }
 
 void SettingsManager::update_widgets(QUuid parent_id, QList<settings_item*> items){
@@ -217,6 +227,10 @@ QWidget* SettingsManager::create_control(settings_widget* item, QString grouppos
     base_layout->addWidget(control_widget, 1);
     base_layout->addStretch(0);
     return base_widget;
+}
+
+void SettingsManager::set_initial_page(QString page_name){
+    initial_page = page_name;
 }
 
 void SettingsManager::open_item(QUuid id){
