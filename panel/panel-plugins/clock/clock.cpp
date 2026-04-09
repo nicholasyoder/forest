@@ -1,38 +1,11 @@
-/* BEGIN_COMMON_COPYRIGHT_HEADER
- * (c)LGPL3+
- *
- * Copyright: 2021 Nicholas Yoder
- *
- * This program or library is free software; you can redistribute it
- * and/or modify it under the terms of the GNU Lesser General Public
- * License as published by the Free Software Foundation; either
- * version 3 of the License, or (at your option) any later version.
- *
- * This library is distributed in the hope that it will be useful,
- * but WITHOUT ANY WARRANTY; without even the implied warranty of
- * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the GNU
- * Lesser General Public License for more details.
-
- * You should have received a copy of the GNU Lesser General
- * Public License along with this library; if not, write to the
- * Free Software Foundation, Inc., 51 Franklin Street, Fifth Floor,
- * Boston, MA 02110-1301 USA
- *
- * END_COMMON_COPYRIGHT_HEADER */
-
 #include "clock.h"
+#include "clocksettingswidget.h"
 
-clockplug::clockplug()
-{
+clockplug::clockplug(){}
 
-}
+clockplug::~clockplug(){}
 
-clockplug::~clockplug()
-{
-}
-
-void clockplug::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
-{
+void clockplug::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     setupTextButton("12:00");
 
     QTimer *uptimer = new QTimer;
@@ -60,53 +33,38 @@ void clockplug::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
     connect(this, &clockplug::rightclicked, pmenu, &popupmenu::show);
 }
 
-QHash<QString, QString> clockplug::getpluginfo()
-{
+QHash<QString, QString> clockplug::getpluginfo(){
     QHash<QString, QString> info;
     info["name"] = "Clock";
     return info;
 }
 
-void clockplug::loadsettings()
-{
+void clockplug::loadsettings(){
     QSettings settings("Forest", "Clock");
     settings.sync();
     twelvehour = settings.value("12hour", true).toBool();
     showseconds = settings.value("showseconds", false).toBool();
+    time_format = "h:mm";
+    if(showseconds)
+        time_format += ":ss";
+    if (twelvehour)
+        time_format += " AP";
     updatetime();
 }
 
-void clockplug::updatetime()
-{
-    if (twelvehour)
-    {
-        if (showseconds)
-            setText(QDateTime::currentDateTime().time().toString("h:mm:ss AP"));
-        else
-            setText(QDateTime::currentDateTime().time().toString("h:mm AP"));
-    }
-    else
-    {
-        if (showseconds)
-            setText(QDateTime::currentDateTime().time().toString("h:mm:ss"));
-        else
-            setText(QDateTime::currentDateTime().time().toString("h:mm"));
-    }
+void clockplug::updatetime(){
+    QDateTime now = QDateTime::currentDateTime();
+    setText(now.time().toString(time_format));
 
-    /*if (baselayout->direction() == QBoxLayout::RightToLeft)
-        this->setFixedHeight(timelabel->minimumSizeHint().height() + baselayout->margin()*2);
-    else
-        this->setFixedWidth(timelabel->minimumSizeHint().width() + baselayout->margin()*2);
-*/
-    /*if (this->size() != widgetsize)
-    {
-        widgetsize = this->size();
-        parentlayout->update();
-    }*/
+    // Also update calendar widget when the day changes
+    QDate date = now.date();
+    if (date != currentDate) {
+        currentDate = date;
+        cwidget->setSelectedDate(date);
+    }
 }
 
-void clockplug::showsettingswidget()
-{
+void clockplug::showsettingswidget(){
     clocksettingswidget *settingsw = new clocksettingswidget;
     settingsw->setWindowFlags(Qt::Dialog);
     connect(settingsw, SIGNAL(settingschanged()), this, SLOT(loadsettings()));
