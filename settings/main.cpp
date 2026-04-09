@@ -11,6 +11,8 @@ int main(int argc, char *argv[])
     a.setStyleSheet(fstyleloader::loadstyle("settings"));
 
     SettingsManager w;
+    if (a.arguments().length() > 1)
+        w.set_initial_page(a.arguments()[1]);
     w.show();
 
     return a.exec();

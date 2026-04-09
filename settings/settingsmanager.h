@@ -28,6 +28,7 @@ public:
     void display_widgets(QUuid parent_id, QList<settings_item*> items);
     void update_widgets(QUuid parent_id, QList<settings_item*> items);
     QWidget* create_control(settings_widget* item, QString groupposition = "middle");
+    void set_initial_page(QString page_name);
 
 public slots:
     void load_settings_ui();
@@ -45,5 +46,6 @@ private:
     QList<settings_item*> top_level_items;
     QUuid home_id = QUuid::createUuid();
     QHash<QUuid, int> stack_hash;
+    QString initial_page;
 };
 #endif // SETTINGSMANAGER_H
