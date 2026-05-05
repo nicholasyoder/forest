@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Quicklaunch launchers will use the proper command after the underlying desktop file changes on disk.
   - Panel will now properly resize and change screens after resolution and primary screen change.
   - Add timeout indicator to notification popups and restrict popup size
   - Allow retrying after failed polkit authentication attempts
