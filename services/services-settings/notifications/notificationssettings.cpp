@@ -2,6 +2,8 @@
 
 #include "notificationssettings.h"
 #include <QSettings>
+#include <QDBusConnection>
+#include <QDBusInterface>
 
 #include "../../library/miscutills/miscutills.h"
 
@@ -45,6 +47,14 @@ NotificationsSettings::NotificationsSettings(){
     settings_widget *width_item = new settings_widget("Max Width", "", width_spinbox);
     size_settings_group->add_child(width_item);
 
+    settings_widget_group *test_group = new settings_widget_group;
+    settings_item->add_child(test_group);
+
+    QPushButton *test_button = new QPushButton("Test Notification");
+    settings_widget *test_item = new settings_widget("Preview", "", test_button);
+    test_group->add_child(test_item);
+    connect(test_button, &QPushButton::clicked, this, &NotificationsSettings::send_test_notification);
+
     RunOnce *runner = new RunOnce(1000);
     connect(runner, &RunOnce::activated, this, &NotificationsSettings::save_settings);
     connect(min_timeout_spinbox, QOverload<int>::of(&QSpinBox::valueChanged), runner, &RunOnce::try_activate);
@@ -63,6 +73,17 @@ void NotificationsSettings::load_settings(){
     default_timeout_spinbox->setValue(settings.value("default_timeout", 8).toInt());
     height_spinbox->setValue(settings.value("height", 0.7).toReal() * 100);
     width_spinbox->setValue(settings.value("width", 0.5).toReal() * 100);
+}
+
+void NotificationsSettings::send_test_notification(){
+    if (QDBusConnection::sessionBus().isConnected()){
+        QDBusInterface iface("org.freedesktop.Notifications", "/org/freedesktop/Notifications");
+        if (iface.isValid())
+            iface.call("Notify", "Forest Settings", uint(0),
+                       "preferences-desktop-notifications",
+                       "Test Notification", "This is a sample notification.",
+                       QStringList(), QVariantMap(), -1);
+    }
 }
 
 void NotificationsSettings::save_settings(){

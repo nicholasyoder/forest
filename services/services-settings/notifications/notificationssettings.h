@@ -5,6 +5,7 @@
 
 #include <QObject>
 #include <QSpinBox>
+#include <QPushButton>
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
 class NotificationsSettings : public QObject {
@@ -18,6 +19,7 @@ public slots:
 private slots:
     void load_settings();
     void save_settings();
+    void send_test_notification();
 
 private:
     settings_category *settings_item = nullptr;
