@@ -81,7 +81,10 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
 
     QRect screengeo = qApp->primaryScreen()->availableGeometry();
     popupQFrame->setMaximumSize(screengeo.width() * width_percent, screengeo.height() * height_percent);
-    move(screengeo.width() - sizeHint().width(), screengeo.height() - sizeHint().height());
+    QTimer::singleShot(0, this, [this]() {  // Run with 0 timer so layout happens and move works with actual widget dimensions
+        QRect geo = qApp->primaryScreen()->availableGeometry();
+        move(geo.x() + geo.width() - width(), geo.y() + geo.height() - height());
+    });
 
     popupid = id;
 
