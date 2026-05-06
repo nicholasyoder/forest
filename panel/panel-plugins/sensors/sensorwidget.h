@@ -1,6 +1,5 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-﻿
 #ifndef SENSORWIDGET_H
 #define SENSORWIDGET_H
 
