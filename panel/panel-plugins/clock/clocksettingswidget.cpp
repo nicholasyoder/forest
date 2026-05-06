@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "clocksettingswidget.h"
 #include "ui_clocksettingswidget.h"
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "settingswidget.h"
 #include "ui_settingswidget.h"
 

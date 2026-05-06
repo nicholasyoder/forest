@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "polkitdialog.h"
 #include "ui_polkitdialog.h"
 

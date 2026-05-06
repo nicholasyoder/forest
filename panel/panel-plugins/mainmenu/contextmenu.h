@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef CONTEXTMENU_H
 #define CONTEXTMENU_H
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef SETTINGSWIDGET_H
 #define SETTINGSWIDGET_H
 

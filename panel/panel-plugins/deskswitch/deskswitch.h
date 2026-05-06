@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef DESKSWITCH_H
 #define DESKSWITCH_H
 

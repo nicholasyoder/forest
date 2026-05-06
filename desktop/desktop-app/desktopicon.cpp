@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "desktopicon.h"
 
 desktopicon::desktopicon(QString text, QIcon ico, QString ID, QMenu *contextmenu){

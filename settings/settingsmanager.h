@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef SETTINGSMANAGER_H
 #define SETTINGSMANAGER_H
 

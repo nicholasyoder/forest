@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef POLKITDIALOG_H
 #define POLKITDIALOG_H
 

@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef POWERMAN_H
 #define POWERMAN_H
 

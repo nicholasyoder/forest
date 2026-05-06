@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef IMAGEPOPUP_H
 #define IMAGEPOPUP_H
 

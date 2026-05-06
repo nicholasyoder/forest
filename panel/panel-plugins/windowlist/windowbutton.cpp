@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "windowbutton.h"
 
 #include "xcbutills/xcbutills.h"

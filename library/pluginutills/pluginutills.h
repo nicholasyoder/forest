@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #ifndef PLUGINUTILLS_H
 #define PLUGINUTILLS_H
 

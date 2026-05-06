@@ -1,3 +1,5 @@
+// SPDX-License-Identifier: LGPL-3.0-or-later
+
 #include "launcher.h"
 #include <qt6xdg/XdgDesktopFile>
 
