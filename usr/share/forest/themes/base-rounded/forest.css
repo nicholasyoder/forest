@@ -1,3 +1,10 @@
+
+QWidget[FSS-widget-type="pane"] {
+    border: 1px solid lightgrey;
+    border-top-left-radius: 4px;
+    border-top-right-radius: 4px;
+}
+
 #panelSeparator {
     margin: 2px 4px 2px 4px;
 }
