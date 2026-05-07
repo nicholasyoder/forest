@@ -2,6 +2,10 @@
 
 #include "notifypopup.h"
 
+#include <QDialog>
+#include <QScrollArea>
+#include <QMouseEvent>
+
 notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id){
     Qt::WindowFlags flags;
     flags |= Qt::WindowStaysOnTopHint;
@@ -46,7 +50,9 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     connect(closebt, SIGNAL(clicked()), this, SLOT(close()));
     tophlayout->addWidget(closebt);
     contentsvlayout->addLayout(tophlayout);
-    FadingLabel *bodylabel = new FadingLabel(body);
+    body_text = body;
+    summary_text = summary;
+    bodylabel = new FadingLabel(body);
     bodylabel->setObjectName("bodyLabel");
     bodylabel->setWordWrap(true);
     bodylabel->setAlignment(Qt::AlignTop);
@@ -116,4 +122,58 @@ QIcon notifypopup::geticon(QString icon_name, QString app_name){
 /* Update the timeout bar to display an indicator of how soon the notification will close */
 void notifypopup::update_timeout_bar(){
     timeout_bar->setValue(qreal(timeout_timer->remainingTime()) / qreal(full_timeout));
+}
+
+void notifypopup::enterEvent(QEnterEvent *){
+    resume_timeout = timeout_timer->remainingTime();
+    timeout_updater->stop();
+    timeout_timer->stop();
+    if (bodylabel->is_clipped())
+        setCursor(Qt::PointingHandCursor);
+}
+
+void notifypopup::leaveEvent(QEvent *){
+    timeout_timer->start(resume_timeout);
+    timeout_updater->start();
+    unsetCursor();
+}
+
+/* Open a scrollable detail window if the body text was clipped in the popup */
+void notifypopup::mouseReleaseEvent(QMouseEvent *event){
+    if (event->button() != Qt::LeftButton || !bodylabel->is_clipped()) return;
+
+    QDialog *detail = new QDialog;
+    detail->setAttribute(Qt::WA_DeleteOnClose);
+    detail->setWindowTitle(summary_text);
+    detail->setProperty("FSS-color", "surface");
+
+    QLabel *header = new QLabel("<b>" + summary_text.toHtmlEscaped() + "</b>");
+    header->setWordWrap(true);
+
+    QLabel *body_label = new QLabel(body_text);
+    body_label->setWordWrap(true);
+    body_label->setTextInteractionFlags(Qt::TextSelectableByMouse);
+    body_label->setAlignment(Qt::AlignTop);
+
+    QWidget *scroll_contents = new QWidget;
+    scroll_contents->setProperty("FSS-color", "pane");
+
+    QVBoxLayout *scroll_layout = new QVBoxLayout(scroll_contents);
+    scroll_layout->addWidget(body_label);
+    scroll_layout->addStretch(1);
+
+    QScrollArea *scroll = new QScrollArea;
+    scroll->setProperty("FSS-widget-type", "pane");
+    scroll->setWidget(scroll_contents);
+    scroll->setWidgetResizable(true);
+
+    QVBoxLayout *layout = new QVBoxLayout(detail);
+    layout->addWidget(header);
+    layout->addSpacing(4);
+    layout->addWidget(scroll);
+    QSize screensize = detail->screen()->availableSize();
+    detail->resize(qreal(screensize.width()) * 0.5, qreal(screensize.height()) * 0.75);
+    detail->show();
+    detail->raise();
+    detail->activateWindow();
 }

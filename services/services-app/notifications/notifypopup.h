@@ -177,6 +177,55 @@ private:
 };
 
 
+class FadingLabel : public QLabel
+{
+    Q_OBJECT
+
+public:
+    explicit FadingLabel(QString text) : QLabel(text) {}
+    bool is_clipped(){
+        QFontMetrics fm(font());
+        int textHeight = fm.boundingRect(rect(), alignment() | Qt::TextWordWrap, text()).height();
+        return textHeight > height();
+    }
+
+protected:
+    /* Paint text with a fade out at the bottom if it runs off the widget */
+    void paintEvent(QPaintEvent *event) override {
+        if (!is_clipped()) { // No clipping, just draw normally
+            QLabel::paintEvent(event);
+            return;
+        }
+        // Create a pixmap (for some reason the transparency with the mask makes it fade to black
+        // instead of the background if this is painted directly on the widget. :/
+        QPixmap pixmap(size());
+        pixmap.fill(Qt::transparent);
+        QPainter pixmap_painter(&pixmap);
+        // First paint the text using the font and forground role of the actual QLabel
+        pixmap_painter.setRenderHint(QPainter::Antialiasing);
+        pixmap_painter.setFont(font());
+        pixmap_painter.setPen(palette().color(foregroundRole()));
+        pixmap_painter.drawText(contentsRect(), alignment() | Qt::TextWordWrap, text());
+        // Create a gradient mask
+        QFontMetrics fm(font());
+        int height = pixmap.height();
+        QLinearGradient gradient(0, 0, 0, height);
+        gradient.setColorAt(0, Qt::black);
+        gradient.setColorAt(1 - qreal(fm.height()) / qreal(height), Qt::black);
+        gradient.setColorAt(1, Qt::transparent);
+        // Paint as a mask using DestinationIn
+        pixmap_painter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
+        pixmap_painter.fillRect(pixmap.rect(), gradient);
+        pixmap_painter.end();
+        // Paint pixmap to widget
+        QPainter painter(this);
+        painter.drawPixmap(rect(), pixmap);
+        painter.end();
+    }
+
+};
+
+
 class notifypopup : public QWidget
 {
     Q_OBJECT
@@ -193,62 +242,20 @@ private slots:
     void update_timeout_bar();
 
 protected:
-    void enterEvent(QEnterEvent *){ resume_timeout = timeout_timer->remainingTime(); timeout_updater->stop(); timeout_timer->stop(); }
-    void leaveEvent(QEvent *){ timeout_timer->start(resume_timeout); timeout_updater->start(); }
-    //void mouseReleaseEvent(QMouseEvent *){ qDebug() << "clicked"; }  // TODO: open a view where the full message can be scrolled through or something.
+    void enterEvent(QEnterEvent *) override;
+    void leaveEvent(QEvent *) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
     uint popupid;
+    QString body_text;
+    QString summary_text;
+    FadingLabel *bodylabel = nullptr;
     NonSegmentedProgressBar *timeout_bar = nullptr;
     QTimer *timeout_updater = nullptr;
     QTimer *timeout_timer = nullptr;
     int resume_timeout = 0;
     int full_timeout = 0;
-};
-
-
-class FadingLabel : public QLabel
-{
-    Q_OBJECT
-
-public:
-    explicit FadingLabel(QString text) : QLabel(text) {}
-
-protected:
-    /* Paint text with a fade out at the bottom if it runs off the widget */
-    void paintEvent(QPaintEvent *event) override {
-        QFontMetrics fm(font());
-        int textHeight = fm.boundingRect(rect(), alignment() | Qt::TextWordWrap, text()).height();
-        if (textHeight <= height()) { // No clipping, just draw normally
-            QLabel::paintEvent(event);
-            return;
-        }
-        // Create a pixmap (for some reason the transparency with the mask makes it fade to black
-        // instead of the background if this is painted directly on the widget. :/
-        QPixmap pixmap(size());
-        pixmap.fill(Qt::transparent);
-        QPainter pixmap_painter(&pixmap);
-        // First paint the text using the font and forground role of the actual QLabel
-        pixmap_painter.setRenderHint(QPainter::Antialiasing);
-        pixmap_painter.setFont(font());
-        pixmap_painter.setPen(palette().color(foregroundRole()));
-        pixmap_painter.drawText(contentsRect(), alignment() | Qt::TextWordWrap, text());
-        // Create a gradient mask
-        int height = pixmap.height();
-        QLinearGradient gradient(0, 0, 0, height);
-        gradient.setColorAt(0, Qt::black);
-        gradient.setColorAt(1 - qreal(fm.height()) / qreal(height), Qt::black);
-        gradient.setColorAt(1, Qt::transparent);
-        // Paint as a mask using DestinationIn
-        pixmap_painter.setCompositionMode(QPainter::CompositionMode_DestinationIn);
-        pixmap_painter.fillRect(pixmap.rect(), gradient);
-        pixmap_painter.end();
-        // Paint pixmap to widget
-        QPainter painter(this);
-        painter.drawPixmap(rect(), pixmap);
-        painter.end();
-    }
-
 };
 
 

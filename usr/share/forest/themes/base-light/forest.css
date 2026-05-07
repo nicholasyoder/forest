@@ -1,3 +1,13 @@
+/* Colors */
+QWidget[FSS-color="surface"] { background: rgb(235,235,235); }
+QWidget[FSS-color="pane"] { background: rgb(220,220,220); }
+
+/* Widget Types */
+QWidget[FSS-widget-type="pane"] {
+    background: rgb(220,220,220);
+    border-color: rgb(200,200,200);
+}
+
 #panel {
     background: rgba(235,235,235, 98%);
 }
@@ -31,7 +41,7 @@
     border-color: rgba(255,255,255, 90%);
 }
 
-#popup QLabel {
+QLabel {
     color: black;
 }
 
