@@ -1,10 +1,12 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "forestxcbeventfilter.h"
+#include "flogger.h"
 #include <QApplication>
 
 int main(int argc, char *argv[]){
     QApplication a(argc, argv);
+    FLogger::install("forest");
     forest w;
 
     forestXcbEventFilter *eventfilter = new forestXcbEventFilter;

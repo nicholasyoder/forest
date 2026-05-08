@@ -32,3 +32,10 @@ function(forest_link_xcbutills target)
     target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/xcbutills)
     target_link_libraries(${target} PRIVATE xcbutills)
 endfunction()
+
+# forest_link_flogger(target)
+# Adds include paths and links the flogger static library
+function(forest_link_flogger target)
+    target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/flogger)
+    target_link_libraries(${target} PRIVATE flogger)
+endfunction()
