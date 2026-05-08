@@ -14,8 +14,10 @@ void notify::setup()
 {
     new notifyadapter(this);
     QDBusConnection connection = QDBusConnection::sessionBus();
-    connection.registerObject("/org/freedesktop/Notifications", this);
-    connection.registerService("org.freedesktop.Notifications");
+    if (!connection.registerObject("/org/freedesktop/Notifications", this))
+        qCritical() << "Failed to register /org/freedesktop/Notifications on DBus:" << connection.lastError().message();
+    if (!connection.registerService("org.freedesktop.Notifications"))
+        qCritical() << "Failed to register org.freedesktop.Notifications on DBus:" << connection.lastError().message();
 }
 
 void notify::notifyslot(

@@ -29,7 +29,8 @@ void panel::setupPlug(){
     loadsettings();
     loadplugins();
 
-    QDBusConnection::sessionBus().registerObject("/org/forest/panel", this, QDBusConnection::ExportAllSlots);
+    if (!QDBusConnection::sessionBus().registerObject("/org/forest/panel", this, QDBusConnection::ExportAllSlots))
+        qCritical() << "Failed to register /org/forest/panel on DBus:" << QDBusConnection::sessionBus().lastError().message();
 
     show();
 }

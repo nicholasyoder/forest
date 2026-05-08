@@ -10,7 +10,8 @@ foresthotkeys::~foresthotkeys(){
 }
 
 void foresthotkeys::setup(){
-    QDBusConnection::sessionBus().registerObject("/org/forest/hotkeys", this, QDBusConnection::ExportAllSlots);
+    if (!QDBusConnection::sessionBus().registerObject("/org/forest/hotkeys", this, QDBusConnection::ExportAllSlots))
+        qCritical() << "Failed to register /org/forest/hotkeys on DBus:" << QDBusConnection::sessionBus().lastError().message();
     loadhotkeys();
 }
 
@@ -55,6 +56,8 @@ void foresthotkeys::loadhotkeys(){
         }
         settings.endGroup();
     }
+
+    qInfo() << "Loaded" << hotkeylist.count() << "hotkeys";
 }
 
 void foresthotkeys::showdesktop(){
