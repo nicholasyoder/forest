@@ -12,5 +12,6 @@ target_compile_definitions(forest-logout PRIVATE QT_DEPRECATED_WARNINGS)
 set_target_properties(forest-logout PROPERTIES CXX_STANDARD 11)
 
 target_link_libraries(forest-logout PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus)
+forest_link_flogger(forest-logout)
 
 install(TARGETS forest-logout RUNTIME DESTINATION usr/bin)

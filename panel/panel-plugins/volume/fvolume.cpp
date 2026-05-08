@@ -96,7 +96,8 @@ void fvolume::loadsettings(){
     // Load audio devices
     AudioDevice *fallback_master = nullptr;
     foreach(AudioDevice *dev, audioengine->sinks()){
-        // TODO: log all found audio devices here
+        qDebug() << "Detected audio device: " << dev->name() << dev->description();
+
         if(!fallback_master) fallback_master = dev; // set first device found to be the fallback master device
         if(dev->description() == master) master_device = dev;
 

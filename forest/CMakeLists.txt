@@ -17,5 +17,6 @@ target_link_libraries(forest PRIVATE
 )
 forest_link_pluginutills(forest)
 forest_link_miscutills(forest)
+forest_link_flogger(forest)
 
 install(TARGETS forest RUNTIME DESTINATION usr/bin)

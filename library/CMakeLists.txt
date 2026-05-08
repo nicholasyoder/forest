@@ -1,3 +1,4 @@
+add_subdirectory(flogger)
 add_subdirectory(fstyleloader)
 add_subdirectory(miscutills)
 add_subdirectory(pluginutills)
