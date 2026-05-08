@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Add controls to the settings app for configuring session autostart commands
   - Allow clicking on long notifications to view full text in a scrollable window
   - Quicklaunch launchers will use the proper command after the underlying desktop file changes on disk
   - Panel will now properly resize and change screens after resolution and primary screen change

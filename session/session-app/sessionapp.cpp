@@ -48,6 +48,8 @@ void SessionApp::launch_autostart_commands(){
 }
 
 void SessionApp::launch_autostart_xdg(){
+    if (!settings->value("launch_xdg_autostart", true).toBool())
+        return;
     XdgDesktopFileList fileList = XdgAutoStart::desktopFileList();
     foreach (XdgDesktopFile xdgfile, fileList)
         xdgfile.startDetached();
