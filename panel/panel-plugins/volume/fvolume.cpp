@@ -55,6 +55,8 @@ QHash<QString, QString> fvolume::getpluginfo(){
 }
 
 void fvolume::wheelEvent(QWheelEvent *event){
+    if (!master_device) return;
+
     if (event->angleDelta().y() > 1)
         master_device->setVolume(master_device->volume() + 2);
     else
@@ -92,7 +94,10 @@ void fvolume::loadsettings(){
     }
 
     // Load audio devices
+    AudioDevice *fallback_master = nullptr;
     foreach(AudioDevice *dev, audioengine->sinks()){
+        // TODO: log all found audio devices here
+        if(!fallback_master) fallback_master = dev; // set first device found to be the fallback master device
         if(dev->description() == master) master_device = dev;
 
         if (settings.value(dev->description() + "/show", true).toBool() == true){
@@ -119,7 +124,8 @@ void fvolume::loadsettings(){
         }
     }
 
-    if(master_device){
+    if(!master_device) master_device = fallback_master; // set master to fallback if no device matched the master saved in the settings
+    if(master_device){ // fallback could also be null if no audio devices were found
         connect(master_device, &AudioDevice::volumeChanged, this, &fvolume::volumechanged);
         connect(master_device, &AudioDevice::muteChanged, this, &fvolume::mutechanged);
         master_volume = master_device->volume();
@@ -149,11 +155,13 @@ void fvolume::save_volumes(){
 }
 
 void fvolume::setvolume(int value){
-    master_device->setVolume(value);
+    if (master_device)
+        master_device->setVolume(value);
 }
 
 void fvolume::togglemuted(){
-    master_device->setMute(!master_muted);
+    if (master_device)
+        master_device->setMute(!master_muted);
 }
 
 void fvolume::volumechanged(int value){
