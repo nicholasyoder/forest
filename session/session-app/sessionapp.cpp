@@ -24,13 +24,14 @@ void SessionApp::startSession(){
     // Setup Mouse
 
     launch_WM();
-    startProcess("forest &> /tmp/forest.log");
+    startProcess("forest");
     launch_autostart_commands();
     launch_autostart_xdg();
 }
 
 void SessionApp::launch_WM(){
     QString wm_cmd = settings->value("window_manager", "xfwm4").toString();
+    qInfo() << "Launching window manager:" << wm_cmd;
     startProcess(wm_cmd);
 }
 
@@ -53,8 +54,11 @@ void SessionApp::launch_autostart_xdg(){
 }
 
 void SessionApp::startProcess(QString cmd){
+    bool ok;
     if(cmd.contains(" "))
-        QProcess::startDetached("/bin/bash", QStringList() << "-c" << cmd);
+        ok = QProcess::startDetached("/bin/bash", QStringList() << "-c" << cmd);
     else
-        QProcess::startDetached(cmd, QStringList());
+        ok = QProcess::startDetached(cmd, QStringList());
+    if (!ok)
+        qWarning() << "Failed to start process:" << cmd;
 }

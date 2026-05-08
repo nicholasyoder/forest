@@ -24,8 +24,10 @@ void forest::setup(){
     loadstylesheet();
     loadplugins();
 
-    QDBusConnection::sessionBus().registerService("org.forest");
-    QDBusConnection::sessionBus().registerObject("/org/forest", this, QDBusConnection::ExportAllSlots);
+    if (!QDBusConnection::sessionBus().registerService("org.forest"))
+        qCritical() << "Failed to register org.forest on DBus:" << QDBusConnection::sessionBus().lastError().message();
+    if (!QDBusConnection::sessionBus().registerObject("/org/forest", this, QDBusConnection::ExportAllSlots))
+        qCritical() << "Failed to register /org/forest object on DBus:" << QDBusConnection::sessionBus().lastError().message();
 
     foreach (fadewidget* fwidget, fwidgetlist)
         QTimer::singleShot(1000, fwidget, SLOT(start()));
