@@ -246,9 +246,10 @@ QSize TrayIcon::calculateClientWindowSize(){
     QSize clientWindowSize;
     if (clientGeom) {
         clientWindowSize = QSize(clientGeom->width, clientGeom->height);
+        free(clientGeom);
     }
-    // if the window is a clearly stupid size resize to mIconSize
-    if (clientWindowSize.isEmpty() || clientWindowSize.width() > mIconSize.width() || clientWindowSize.height() > mIconSize.height()) {
+    // Enforce mIconSize — apps may default to 16×16 or resize themselves back down
+    if (clientWindowSize != mIconSize) {
         const uint32_t windowSizeConfigVals[2] = {uint32_t(mIconSize.width()), uint32_t(mIconSize.height())};
         xcb_configure_window(Xcbutills::conn, mIconId, XCB_CONFIG_WINDOW_WIDTH | XCB_CONFIG_WINDOW_HEIGHT, windowSizeConfigVals);
         xcb_flush(Xcbutills::conn);
