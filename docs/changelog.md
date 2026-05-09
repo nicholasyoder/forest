@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Fix low resolution system tray icons
   - Add controls to the settings app for configuring session autostart commands
   - Allow clicking on long notifications to view full text in a scrollable window
   - Quicklaunch launchers will use the proper command after the underlying desktop file changes on disk
