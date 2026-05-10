@@ -32,34 +32,14 @@ public:
     void setIconSize(QSize iconSize);
     void updateicon();
 
-    QSize sizeHint() const;
+    QSize sizeHint() const override;
 
 protected:
-    void paintEvent(QPaintEvent*);
-    //void enterEvent(QEnterEvent *){
-        //setMouseOver(true);
-        //emit enterevent();
-        //t->start(100);
-    //}
-
-    //void leaveEvent(QEvent *){
-        //tryleave();
-    //}
-
-
-//private slots:
-    /*void tryleave(){
-        if (!geometry().contains(mapFromGlobal(cursor().pos()))){
-            setMouseOver(false);
-            emit leaveevent();
-            t->stop();
-        }
-    }*/
+    void paintEvent(QPaintEvent*) override;
+    void leaveEvent(QEvent *event) override;
 
 private:
     void init();
-
-    //QTimer *t = new QTimer;
 
     QRect iconGeometry();
     Window mIconId;
@@ -69,6 +49,7 @@ private:
     Display* mDisplay;
     QImage getImageNonComposite();
     QSize calculateClientWindowSize();
+    QTimer *highlight_hack_timer = nullptr;
 };
 
 #endif // TRAYICON_H

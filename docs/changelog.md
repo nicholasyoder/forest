@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Fix button highlights on system tray icons
   - Fix low resolution system tray icons
   - Add controls to the settings app for configuring session autostart commands
   - Allow clicking on long notifications to view full text in a scrollable window
