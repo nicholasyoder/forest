@@ -3,6 +3,7 @@
 // Warning: order of include is important.
 #include <QDebug>
 #include <QApplication>
+#include <QCursor>
 #include <QResizeEvent>
 #include <QPainter>
 #include <QBitmap>
@@ -36,31 +37,24 @@ int windowErrorHandler(Display *d, XErrorEvent *e)
     return 0;
 }
 
-TrayIcon::TrayIcon(Window iconId, QSize const & iconSize) : mIconId(iconId), mWindowId(0), mIconSize(iconSize), mDamage(0), mDisplay(Xcbutills::display())
-{
-    // NOTE:
-    // it's a good idea to save the return value of QX11Info::display().
-    // In Qt 5, this API is slower and has some limitations which can trigger crashes.
-    // The XDisplay value is actally stored in QScreen object of the primary screen rather than
-    // in a global variable. So when the parimary QScreen is being deleted and becomes invalid,
-    // QX11Info::display() will fail and cause crash. Storing this value improves the efficiency and
-    // also prevent potential crashes caused by this bug.
+TrayIcon::TrayIcon(Window iconId, QSize const & iconSize) : mIconId(iconId), mWindowId(0), mIconSize(iconSize), mDamage(0), mDisplay(Xcbutills::display()){
+    // Hacky fix to make the button highlight go away after the window has lost focus due to clicking
+    // on the actual tray icon window.
+    highlight_hack_timer = new QTimer;
+    connect(highlight_hack_timer, &QTimer::timeout, this, [this]{
+        if (!rect().contains(mapFromGlobal(QCursor::pos()))){
+            setAttribute(Qt::WA_UnderMouse, false);
+            update();
+            highlight_hack_timer->stop();
+        }
+    });
 
-    ///setObjectName("TrayIcon");
-    ///setSizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
-    // NOTE:
-    // see https://github.com/lxqt/lxqt/issues/945
+    // NOTE: see https://github.com/lxqt/lxqt/issues/945
     // workaround: delayed init because of weird behaviour of some icons/windows (claws-mail)
-    // (upon starting the app the window for receiving clicks wasn't correctly sized
-    //  no matter what we've done)
-
-    //connect(t, &QTimer::timeout, this, &TrayIcon::tryleave);
-
     QTimer::singleShot(200, this, &TrayIcon::init);
 }
 
-void TrayIcon::init()
-{
+void TrayIcon::init(){
     Display* dsp = mDisplay;
 
     XWindowAttributes attr;
@@ -97,74 +91,49 @@ void TrayIcon::init()
         return;
     }
 
-
+    Atom acttype;
+    int actfmt;
+    unsigned long nbitem, bytes;
+    unsigned char *data = nullptr;
+    int ret;
+    ret = XGetWindowProperty(dsp, mIconId, Xcbutills::atom("_XEMBED_INFO"),
+                             0, 2, false, Xcbutills::atom("_XEMBED_INFO"),
+                             &acttype, &actfmt, &nbitem, &bytes, &data);
+    if (ret == Success)
     {
-        Atom acttype;
-        int actfmt;
-        unsigned long nbitem, bytes;
-        unsigned char *data = nullptr;
-        int ret;
-
-        ret = XGetWindowProperty(dsp, mIconId, Xcbutills::atom("_XEMBED_INFO"),
-                                 0, 2, false, Xcbutills::atom("_XEMBED_INFO"),
-                                 &acttype, &actfmt, &nbitem, &bytes, &data);
-        if (ret == Success)
-        {
-            if (data)
-                XFree(data);
-        }
-        else
-        {
-            qWarning() << "SystemTray: xembed error";
-            XDestroyWindow(dsp, mWindowId);
-            deleteLater();
-            return;
-        }
+        if (data)
+            XFree(data);
+    }
+    else
+    {
+        qWarning() << "SystemTray: xembed error";
+        XDestroyWindow(dsp, mWindowId);
+        deleteLater();
+        return;
     }
 
-    {
-        /*XEvent e;
-        e.xclient.type = ClientMessage;
-        e.xclient.serial = 0;
-        e.xclient.send_event = True;
-        e.xclient.message_type = Xcbutills::atom("_XEMBED");
-        e.xclient.window = mIconId;
-        e.xclient.format = 32;
-        e.xclient.data.l[0] = CurrentTime;
-        e.xclient.data.l[1] = XEMBED_EMBEDDED_NOTIFY;
-        e.xclient.data.l[2] = 0;
-        e.xclient.data.l[3] = long(mWindowId);
-        e.xclient.data.l[4] = 0;
-        XSendEvent(dsp, mIconId, false, 0xFFFFFF, &e);
-        */
-
-        xcb_client_message_event_t event;
-        event.response_type = XCB_CLIENT_MESSAGE;
-        event.format = 32;
-        event.sequence = 0;
-        event.window = mIconId;
-        event.type = Xcbutills::atom("_XEMBED");
-        event.data.data32[0] = CurrentTime;
-        event.data.data32[1] = XEMBED_EMBEDDED_NOTIFY;
-        event.data.data32[2] = 0;
-        event.data.data32[3] = long(mWindowId);
-        event.data.data32[4] = 0;
-        uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-        xcb_send_event(Xcbutills::conn, false, mIconId, sendevent_mask, (const char *) &event);
-    }
+    xcb_client_message_event_t event;
+    event.response_type = XCB_CLIENT_MESSAGE;
+    event.format = 32;
+    event.sequence = 0;
+    event.window = mIconId;
+    event.type = Xcbutills::atom("_XEMBED");
+    event.data.data32[0] = CurrentTime;
+    event.data.data32[1] = XEMBED_EMBEDDED_NOTIFY;
+    event.data.data32[2] = 0;
+    event.data.data32[3] = long(mWindowId);
+    event.data.data32[4] = 0;
+    uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
+    xcb_send_event(Xcbutills::conn, false, mIconId, sendevent_mask, (const char *) &event);
 
     XSelectInput(dsp, mIconId, StructureNotifyMask);
     mDamage = XDamageCreate(dsp, mIconId, XDamageReportRawRectangles);
-    //XCompositeRedirectWindow(dsp, mWindowId, CompositeRedirectManual);
     xcb_composite_redirect_window(Xcbutills::conn, xcb_window_t(mWindowId), CompositeRedirectManual);
 
-    //XMapWindow(dsp, mIconId);
     xcb_map_window(Xcbutills::conn, xcb_window_t(mIconId));
-    //XMapRaised(dsp, mWindowId);
-    xcb_map_window_checked(Xcbutills::conn, xcb_window_t(mWindowId));
+    xcb_map_window_checked(Xcbutills::conn, xcb_window_t(mWindowId));  // raised
 
     const QSize req_size{mIconSize * metric(PdmDevicePixelRatio)};
-    //XResizeWindow(dsp, mIconId, uint(req_size.width()), uint(req_size.height()));
     XResizeWindow(dsp, mIconId, uint(req_size.width()), uint(req_size.height()));
 
     this->updateicon();
@@ -232,8 +201,22 @@ void TrayIcon::paintEvent(QPaintEvent*){
     painter.drawImage(iconRect, iconimage);
 }
 
-void TrayIcon::windowDestroyed(Window w)
-{
+void TrayIcon::leaveEvent(QEvent *event){
+    if (rect().contains(mapFromGlobal(QCursor::pos()))) {
+        // Mouse moved into the embedded child X11 window (mWindowId/mIconId), not a real leave.
+        // Qt already cleared WA_UnderMouse as part of QEvent::Leave dispatch — restore it
+        // before the repaint fires so the CSS :hover highlight stays visible.
+        setAttribute(Qt::WA_UnderMouse, true);
+        update();
+        // Start a timer to clear the WA_UnderMouse after the mouse leaves the button rect. Hacky but works.
+        if (!highlight_hack_timer->isActive())
+            highlight_hack_timer->start(100);
+        return;
+    }
+    panelbutton::leaveEvent(event);
+}
+
+void TrayIcon::windowDestroyed(Window w){
     //damage is destroyed if it's parent window was destroyed
     if (mIconId == w)
         mDamage = 0;

@@ -136,8 +136,7 @@ protected:
         emit mouseReleased(event);
     }
 
-    void paintEvent(QPaintEvent *)
-    {
+    void paintEvent(QPaintEvent *){
         QStyleOptionButton option;
         option.initFrom(this);
         if (isDown())
