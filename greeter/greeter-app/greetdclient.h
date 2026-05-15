@@ -23,6 +23,7 @@ signals:
     void authMessage(const QString &type, const QString &message);
     void authSucceeded();
     void authFailed(const QString &description);
+    void sessionStarted();
 
 private slots:
     void onReadyRead();
@@ -32,8 +33,11 @@ private:
     void sendMessage(const QJsonObject &msg);
     void processMessage(const QJsonObject &msg);
 
+    enum class State { Idle, CreatingSession, Authenticating, StartingSession };
+
     QLocalSocket *m_socket;
     QByteArray m_buffer;
+    State m_state = State::Idle;
 };
 
 #endif // GREETDCLIENT_H

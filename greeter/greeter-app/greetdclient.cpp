@@ -24,6 +24,7 @@ GreetdClient::GreetdClient(QObject *parent)
 }
 
 void GreetdClient::createSession(const QString &username) {
+    m_state = State::CreatingSession;
     QJsonObject msg;
     msg["type"] = "create_session";
     msg["username"] = username;
@@ -31,6 +32,7 @@ void GreetdClient::createSession(const QString &username) {
 }
 
 void GreetdClient::postAuthResponse(const QString &response) {
+    m_state = State::Authenticating;
     QJsonObject msg;
     msg["type"] = "post_auth_message_response";
     if (response.isNull())
@@ -41,6 +43,7 @@ void GreetdClient::postAuthResponse(const QString &response) {
 }
 
 void GreetdClient::startSession(const QString &sessionExec) {
+    m_state = State::StartingSession;
     QJsonArray cmd;
     for (const QString &part : sessionExec.split(' ', Qt::SkipEmptyParts))
         cmd.append(part);
@@ -52,6 +55,7 @@ void GreetdClient::startSession(const QString &sessionExec) {
 }
 
 void GreetdClient::cancelSession() {
+    m_state = State::Idle;
     QJsonObject msg;
     msg["type"] = "cancel_session";
     sendMessage(msg);
@@ -105,10 +109,16 @@ void GreetdClient::processMessage(const QJsonObject &msg) {
     QString type = msg["type"].toString();
 
     if (type == "success") {
-        emit authSucceeded();
+        if (m_state == State::StartingSession)
+            emit sessionStarted();
+        else if (m_state == State::Authenticating || m_state == State::CreatingSession)
+            emit authSucceeded();
+        // success for cancel_session (Idle state) is intentionally ignored
     } else if (type == "error") {
-        emit authFailed(msg["description"].toString());
+        if (m_state != State::Idle)
+            emit authFailed(msg["description"].toString());
     } else if (type == "auth_message") {
+        m_state = State::Authenticating;
         emit authMessage(msg["auth_message_type"].toString(), msg["auth_message"].toString());
     } else {
         qWarning() << "Unknown greetd message type:" << type;

@@ -25,6 +25,7 @@ GreeterWindow::GreeterWindow(QWidget *parent)
     connect(m_client, &GreetdClient::authMessage, this, &GreeterWindow::onAuthMessage);
     connect(m_client, &GreetdClient::authSucceeded, this, &GreeterWindow::onAuthSucceeded);
     connect(m_client, &GreetdClient::authFailed, this, &GreeterWindow::onAuthFailed);
+    connect(m_client, &GreetdClient::sessionStarted, qApp, &QApplication::quit);
 
     connect(m_clockTimer, &QTimer::timeout, this, &GreeterWindow::onClockTick);
     m_clockTimer->start(1000);
@@ -45,9 +46,9 @@ void GreeterWindow::setupUi() {
     mainLayout->setContentsMargins(0, 0, 0, 0);
 
     // Center the card vertically and horizontally
-    mainLayout->addStretch();
+    mainLayout->addStretch(1);
     QHBoxLayout *centerRow = new QHBoxLayout;
-    centerRow->addStretch();
+    centerRow->addStretch(1);
 
     QFrame *card = new QFrame;
     card->setObjectName("greeter_Card");
@@ -120,9 +121,9 @@ void GreeterWindow::setupUi() {
     cardLayout->addLayout(powerRow);
 
     centerRow->addWidget(card);
-    centerRow->addStretch();
+    centerRow->addStretch(1);
     mainLayout->addLayout(centerRow);
-    mainLayout->addStretch();
+    mainLayout->addStretch(1);
 
     connect(m_userCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
             this, &GreeterWindow::onUserChanged);

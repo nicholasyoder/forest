@@ -71,12 +71,13 @@ gtk-xft-hintstyle=hintmedium
 EOF
 fi
 
-# Clean up after GDM (GDM sets the number of desktops to one)
-xprop -root -remove _NET_NUMBER_OF_DESKTOPS -remove _NET_DESKTOP_NAMES -remove _NET_CURRENT_DESKTOP 2> /dev/null
-
 #export XDG_MENU_PREFIX="forest-"
 export XDG_CURRENT_DESKTOP="Forest"
 export QT_QPA_PLATFORMTHEME="qt6ct"
 
-# Start the Forest session
-exec forest-session
+if ! xset q > /dev/null 2>&1; then
+  # Start X and the Forest session inside it
+  exec xinit /usr/bin/forest-session -- :0 vt${XDG_VTNR:-1} -nolisten tcp
+else
+  exec /usr/bin/forest-session
+fi
