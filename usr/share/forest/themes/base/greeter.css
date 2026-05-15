@@ -1,0 +1,51 @@
+#greeter_Card {
+    background: grey;
+    padding: 24px;
+    min-width: 300px;
+    max-width: 380px;
+}
+
+#greeter_Clock {
+    font-size: 36pt;
+    font-weight: bold;
+    padding-bottom: 8px;
+    qproperty-alignment: AlignCenter;
+}
+
+#greeter_Label {
+    margin-top: 4px;
+}
+
+#greeter_PromptLabel {
+    margin-top: 8px;
+}
+
+#greeter_UserCombo,
+#greeter_SessionCombo {
+    min-height: 24px;
+    padding: 2px 4px;
+}
+
+#greeter_PasswordEdit {
+    min-height: 24px;
+    padding: 2px 4px;
+}
+
+#greeter_LoginButton {
+    min-width: 80px;
+    min-height: 28px;
+    padding: 4px 12px;
+    margin-top: 8px;
+}
+
+#greeter_StatusLabel {
+    padding: 4px;
+    margin-top: 4px;
+    color: red;
+}
+
+#greeter_PowerButton {
+    margin-top: 8px;
+    min-height: 24px;
+    padding: 2px 10px;
+}

@@ -1,0 +1,17 @@
+#greeter_Card {
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}
+
+#greeter_Card QLineEdit {
+    border-radius: 3px;
+}
+
+#greeter_Card QComboBox {
+    border-radius: 3px;
+}
+
+#greeter_Card QPushButton {
+    border: 1px solid transparent;
+    border-radius: 3px;
+}

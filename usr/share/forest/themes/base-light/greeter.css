@@ -1,0 +1,47 @@
+#greeter_Card {
+    background: rgba(235,235,235, 98%);
+    border-color: rgba(255,255,255, 90%);
+}
+
+#greeter_Card QLabel {
+    color: black;
+}
+
+#greeter_Clock {
+    color: black;
+}
+
+#greeter_Card QLineEdit {
+    background: white;
+    color: black;
+    border: 1px solid rgba(160,160,160, 50%);
+}
+
+#greeter_Card QComboBox {
+    background: white;
+    color: black;
+    border: 1px solid rgba(160,160,160, 50%);
+}
+
+#greeter_Card QPushButton {
+    background: rgba(220,220,220, 100%);
+    color: black;
+    border: 1px solid rgba(160,160,160, 40%);
+}
+
+#greeter_Card QPushButton:hover {
+    background: rgba(255,255,255, 100%);
+    border: 1px solid rgba(160,160,160, 60%);
+}
+
+#greeter_Card QPushButton:pressed {
+    background: rgba(245,245,245, 100%);
+}
+
+#greeter_StatusLabel[error="true"] {
+    color: #cc0000;
+}
+
+#greeter_StatusLabel[error="false"] {
+    color: #444444;
+}

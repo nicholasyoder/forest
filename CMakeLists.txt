@@ -12,7 +12,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(ForestDeps)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network)
 
 # Find external dependencies
 find_package(PkgConfig REQUIRED)
@@ -49,6 +49,7 @@ add_subdirectory(session)
 add_subdirectory(settings)
 add_subdirectory(logout)
 add_subdirectory(system)
+add_subdirectory(greeter)
 
 # Install config and data files
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest)
@@ -58,3 +59,4 @@ install(DIRECTORY usr/share/applications/ DESTINATION /usr/share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest)
 install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION /usr/share/wallpapers/forest)
 install(DIRECTORY usr/share/themes/ DESTINATION /usr/share/themes)
+install(DIRECTORY etc/greetd/ DESTINATION /etc/greetd COMPONENT greeter)
