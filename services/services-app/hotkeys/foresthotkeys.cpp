@@ -16,8 +16,21 @@ void foresthotkeys::setup(){
 }
 
 void foresthotkeys::XcbEventFilter(xcb_generic_event_t *event){
+    if (paused) return;
     foreach (globalhotkey *item, hotkeylist)
         item->XcbEventFilter(event);
+}
+
+void foresthotkeys::pauseHotkeys(){
+    paused = true;
+    for (globalhotkey *item : hotkeylist)
+        item->pause();
+}
+
+void foresthotkeys::resumeHotkeys(){
+    for (globalhotkey *item : hotkeylist)
+        item->resume();
+    paused = false;
 }
 
 void foresthotkeys::loadhotkeys(){

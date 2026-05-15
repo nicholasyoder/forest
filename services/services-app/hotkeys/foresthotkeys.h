@@ -26,12 +26,15 @@ public slots:
 
     //called by dbus
     void showdesktop();
+    void pauseHotkeys();
+    void resumeHotkeys();
 
 private slots:
     void loadhotkeys();
 
 private:
     QList<globalhotkey*> hotkeylist;
+    bool paused = false;
 };
 
 #endif // FORESTHOTKEYS_H

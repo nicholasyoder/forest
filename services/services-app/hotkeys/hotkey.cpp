@@ -85,6 +85,18 @@ void globalhotkey::setShortcut(const QKeySequence& shortcut){
     registerShortcut(keycode, modmask);
 }
 
+void globalhotkey::pause(){
+    if (keycode == 133)
+        unregisterShortcut(134, modmask);
+    unregisterShortcut(keycode, modmask);
+}
+
+void globalhotkey::resume(){
+    if (keycode == 133)
+        registerShortcut(134, modmask);
+    registerShortcut(keycode, modmask);
+}
+
 void globalhotkey::unsetShortcut(){
     if(keycode == 133)
         unregisterShortcut(134, modmask);

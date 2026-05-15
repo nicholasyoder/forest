@@ -3,6 +3,7 @@ Changelog
 ============
 
 * UNRELEASED
+  - Improve new hotkey recording so existing hotkeys don't prevent recording some combinations
   - Fix button highlights on system tray icons
   - Fix low resolution system tray icons
   - Add controls to the settings app for configuring session autostart commands

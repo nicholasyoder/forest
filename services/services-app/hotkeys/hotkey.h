@@ -26,6 +26,9 @@ public:
     void setShortcut(const QKeySequence& shortcut);
     void unsetShortcut();
 
+    void pause();
+    void resume();
+
 public slots:
     void setDbusInfo(QString service, QString path, QString interface, QString method, QString bus);
     void setExecCommand(const QString &command){shcommand=command;}

@@ -5,8 +5,10 @@
 
 #include <QWidget>
 #include <QKeyEvent>
+#include <QCloseEvent>
 #include <QDebug>
 #include <QSharedPointer>
+#include "miscutills.h"
 
 class HotkeyAction : public QObject{
     Q_OBJECT
@@ -54,6 +56,7 @@ signals:
     void data_updated(const HotkeyData& data);
 protected:
     void keyPressEvent(QKeyEvent *event);
+    void closeEvent(QCloseEvent *event);
 private slots:
     void on_okbt_clicked();
     void on_cancelbt_clicked();
@@ -64,7 +67,9 @@ private slots:
 private:
     Ui::edithotkeywidget *ui;
     bool waitingforkeys = false;
+    bool hotkeys_paused = false;
     QString keys;
+    void set_hotkeys_paused(bool pause);
 };
 
 #endif // EDITHOTKEYWIDGET_H
