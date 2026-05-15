@@ -41,7 +41,7 @@ QWidget[FSS-widget-type="pane"] {
     border-color: rgba(255,255,255, 90%);
 }
 
-QLabel {
+#popup QLabel {
     color: black;
 }
 
