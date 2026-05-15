@@ -11,6 +11,7 @@
 #include <QDateTime>
 #include <QProcess>
 #include <QSettings>
+#include <QPushButton>
 #include <QDebug>
 
 #include "miscutills.h"
@@ -25,96 +26,54 @@ GreeterWindow::GreeterWindow(QWidget *parent)
     connect(m_client, &GreetdClient::authMessage, this, &GreeterWindow::onAuthMessage);
     connect(m_client, &GreetdClient::authSucceeded, this, &GreeterWindow::onAuthSucceeded);
     connect(m_client, &GreetdClient::authFailed, this, &GreeterWindow::onAuthFailed);
-    connect(m_client, &GreetdClient::sessionStarted, qApp, &QApplication::quit);
+    connect(m_client, &GreetdClient::sessionStarted, this, [this]() {
+        QSettings settings("Forest", "Forest");
+        settings.setValue("greeter/last_user", m_currentUsername);
+        settings.sync();
+        QApplication::quit();
+    });
 
     connect(m_clockTimer, &QTimer::timeout, this, &GreeterWindow::onClockTick);
     m_clockTimer->start(1000);
 
     setupUi();
     loadWallpaper();
-
-    if (!m_users.users().isEmpty())
-        beginAuth();
+    initStartupView();
 }
 
-GreeterWindow::~GreeterWindow() {
+GreeterWindow::~GreeterWindow()
+{
     delete m_wallpaper;
 }
 
-void GreeterWindow::setupUi() {
-    QVBoxLayout *mainLayout = new QVBoxLayout(this);
+void GreeterWindow::setupUi()
+{
+    auto *mainLayout = new QVBoxLayout(this);
     mainLayout->setContentsMargins(0, 0, 0, 0);
-
-    // Center the card vertically and horizontally
     mainLayout->addStretch(1);
-    QHBoxLayout *centerRow = new QHBoxLayout;
+
+    auto *centerRow = new QHBoxLayout;
     centerRow->addStretch(1);
 
-    QFrame *card = new QFrame;
+    auto *card = new QFrame;
     card->setObjectName("greeter_Card");
-
-    QVBoxLayout *cardLayout = new QVBoxLayout(card);
+    auto *cardLayout = new QVBoxLayout(card);
     cardLayout->setSpacing(8);
 
-    // Clock
-    m_clockLabel = new QLabel;
-    m_clockLabel->setObjectName("greeter_Clock");
-    m_clockLabel->setAlignment(Qt::AlignCenter);
-    onClockTick();
-    cardLayout->addWidget(m_clockLabel);
+    // View stack
+    m_stack = new QStackedWidget;
+    m_userSelectView = new UserSelectView(m_users.users());
+    m_passwordView = new PasswordView(m_sessions.sessions());
+    m_stack->addWidget(m_userSelectView); // index 0
+    m_stack->addWidget(m_passwordView);   // index 1
+    cardLayout->addWidget(m_stack);
 
-    // User selector
-    QLabel *userLabel = new QLabel("User:");
-    userLabel->setObjectName("greeter_Label");
-    cardLayout->addWidget(userLabel);
-    m_userCombo = new QComboBox;
-    m_userCombo->setObjectName("greeter_UserCombo");
-    for (const UserInfo &user : m_users.users())
-        m_userCombo->addItem(user.displayName, user.username);
-    cardLayout->addWidget(m_userCombo);
-
-    // Prompt label (shows PAM prompt text, e.g. "Password:")
-    m_promptLabel = new QLabel("Password:");
-    m_promptLabel->setObjectName("greeter_PromptLabel");
-    cardLayout->addWidget(m_promptLabel);
-
-    // Password / input field
-    m_passwordEdit = new QLineEdit;
-    m_passwordEdit->setObjectName("greeter_PasswordEdit");
-    m_passwordEdit->setEchoMode(QLineEdit::Password);
-    m_passwordEdit->setPlaceholderText("Enter password...");
-    cardLayout->addWidget(m_passwordEdit);
-
-    // Session selector
-    QLabel *sessionLabel = new QLabel("Session:");
-    sessionLabel->setObjectName("greeter_Label");
-    cardLayout->addWidget(sessionLabel);
-    m_sessionCombo = new QComboBox;
-    m_sessionCombo->setObjectName("greeter_SessionCombo");
-    for (const SessionInfo &session : m_sessions.sessions())
-        m_sessionCombo->addItem(session.name);
-    cardLayout->addWidget(m_sessionCombo);
-
-    // Login button
-    m_loginButton = new QPushButton("Login");
-    m_loginButton->setObjectName("greeter_LoginButton");
-    m_loginButton->setDefault(true);
-    cardLayout->addWidget(m_loginButton);
-
-    // Status label (hidden initially)
-    m_statusLabel = new QLabel;
-    m_statusLabel->setObjectName("greeter_StatusLabel");
-    m_statusLabel->setAlignment(Qt::AlignCenter);
-    m_statusLabel->setWordWrap(true);
-    m_statusLabel->hide();
-    cardLayout->addWidget(m_statusLabel);
-
-    // Power buttons row
-    QHBoxLayout *powerRow = new QHBoxLayout;
+    // Power buttons — always visible below the stack
+    auto *powerRow = new QHBoxLayout;
     powerRow->addStretch();
-    QPushButton *shutdownBtn = new QPushButton("Shutdown");
+    auto *shutdownBtn = new QPushButton("Shutdown");
     shutdownBtn->setObjectName("greeter_PowerButton");
-    QPushButton *rebootBtn = new QPushButton("Reboot");
+    auto *rebootBtn = new QPushButton("Reboot");
     rebootBtn->setObjectName("greeter_PowerButton");
     powerRow->addWidget(shutdownBtn);
     powerRow->addWidget(rebootBtn);
@@ -122,111 +81,235 @@ void GreeterWindow::setupUi() {
 
     centerRow->addWidget(card);
     centerRow->addStretch(1);
+
+    auto *clock_layout = new QVBoxLayout;
+    m_clockLabel = new QLabel;
+    m_clockLabel->setObjectName("greeter_Clock");
+    m_clockLabel->setAlignment(Qt::AlignCenter);
+    onClockTick();
+    clock_layout->addStretch(1);
+    clock_layout->addWidget(m_clockLabel);
+    clock_layout->addStretch(1);
+
+    centerRow->addLayout(clock_layout);
+    centerRow->addStretch(1);
+
+
     mainLayout->addLayout(centerRow);
     mainLayout->addStretch(1);
 
-    connect(m_userCombo, QOverload<int>::of(&QComboBox::currentIndexChanged),
-            this, &GreeterWindow::onUserChanged);
-    connect(m_loginButton, &QPushButton::clicked, this, &GreeterWindow::onLoginClicked);
-    connect(m_passwordEdit, &QLineEdit::returnPressed, this, &GreeterWindow::onLoginClicked);
-    connect(shutdownBtn, &QPushButton::clicked, this, [](){
+    connect(m_userSelectView, &UserSelectView::userSelected,
+            this, &GreeterWindow::onUserSelected);
+    connect(m_userSelectView, &UserSelectView::otherUserRequested,
+            this, &GreeterWindow::onOtherUserRequested);
+    connect(m_passwordView, &PasswordView::loginAttempted,
+            this, &GreeterWindow::onLoginAttempted);
+    connect(m_passwordView, &PasswordView::backClicked,
+            this, &GreeterWindow::onBackClicked);
+
+    connect(shutdownBtn, &QPushButton::clicked, this, []() {
         QProcess::startDetached("systemctl", {"poweroff"});
     });
-    connect(rebootBtn, &QPushButton::clicked, this, [](){
+    connect(rebootBtn, &QPushButton::clicked, this, []() {
         QProcess::startDetached("systemctl", {"reboot"});
     });
 }
 
-void GreeterWindow::loadWallpaper() {
+void GreeterWindow::loadWallpaper()
+{
     QSettings settings("Forest", "Forest");
-    QString wallpaperFile = settings.value("wallpaper/file").toString();
+    QString wallpaperFile = settings.value("wallpaper/file", "/usr/share/wallpapers/forest/forest.jpg").toString();
     if (wallpaperFile.isEmpty())
         return;
-
     QSize screenSize = QGuiApplication::primaryScreen()->geometry().size();
     m_wallpaper = miscutills::get_wallpaper_scaled(wallpaperFile, Fill, screenSize);
 }
 
-void GreeterWindow::paintEvent(QPaintEvent *) {
-    QPainter painter(this);
-    if (m_wallpaper && !m_wallpaper->isNull()) {
-        painter.drawImage(rect(), *m_wallpaper, m_wallpaper->rect());
+void GreeterWindow::initStartupView()
+{
+    QString lastUser = QSettings("Forest", "Forest").value("greeter/last_user").toString();
+
+    if (!lastUser.isEmpty()) {
+        for (const UserInfo &user : m_users.users()) {
+            if (user.username == lastUser) {
+                m_userSelectView->highlightUser(lastUser);
+                m_passwordView->setUser(user);
+                showPasswordView();
+                beginAuth(lastUser);
+                return;
+            }
+        }
+        // Last user not in the list (e.g. root) — open manual entry pre-filled
+        m_isManualEntry = true;
+        m_passwordView->setManualEntry(lastUser);
+        showPasswordView();
+        m_passwordView->focusInput();
+        return;
+    }
+
+    if (!m_users.users().isEmpty()) {
+        showUserSelectView();
     } else {
-        painter.fillRect(rect(), QColor(30, 30, 30));
+        // No enumerable users at all — open manual entry
+        m_isManualEntry = true;
+        m_passwordView->setManualEntry();
+        showPasswordView();
+        m_passwordView->focusInput();
     }
 }
 
-void GreeterWindow::onClockTick() {
+void GreeterWindow::paintEvent(QPaintEvent *)
+{
+    QPainter painter(this);
+    if (m_wallpaper && !m_wallpaper->isNull())
+        painter.drawImage(rect(), *m_wallpaper, m_wallpaper->rect());
+    else
+        painter.fillRect(rect(), QColor(30, 30, 30));
+}
+
+void GreeterWindow::onClockTick()
+{
     m_clockLabel->setText(QDateTime::currentDateTime().toString("hh:mm"));
 }
 
-void GreeterWindow::onUserChanged(int /*index*/) {
-    m_client->cancelSession();
-    m_passwordEdit->clear();
-    setStatus(QString());
-    beginAuth();
+void GreeterWindow::showUserSelectView()
+{
+    m_stack->setCurrentIndex(0);
 }
 
-void GreeterWindow::onLoginClicked() {
-    QString password = m_passwordEdit->text();
-    m_loginButton->setEnabled(false);
-    m_client->postAuthResponse(password);
+void GreeterWindow::showPasswordView()
+{
+    m_stack->setCurrentIndex(1);
 }
 
-void GreeterWindow::onAuthMessage(const QString &type, const QString &message) {
-    if (type == "secret") {
-        m_promptLabel->setText(message.isEmpty() ? "Password:" : message);
-        m_passwordEdit->setEchoMode(QLineEdit::Password);
-        m_passwordEdit->setFocus();
-        m_loginButton->setEnabled(true);
-    } else if (type == "visible") {
-        m_promptLabel->setText(message.isEmpty() ? "Input:" : message);
-        m_passwordEdit->setEchoMode(QLineEdit::Normal);
-        m_passwordEdit->setFocus();
-        m_loginButton->setEnabled(true);
-    } else if (type == "info") {
-        setStatus(message, false);
-        m_client->postAuthResponse(QString()); // null response to continue
-    } else if (type == "error") {
-        setStatus(message, true);
-        m_client->postAuthResponse(QString()); // null response to continue
+void GreeterWindow::beginAuth(const QString &username)
+{
+    m_currentUsername = username;
+    m_sessionActive = true;
+    m_client->createSession(username);
+}
+
+void GreeterWindow::onUserSelected(const UserInfo &user)
+{
+    if (m_sessionActive)
+        m_client->cancelSession();
+
+    m_sessionActive = false;
+    m_isManualEntry = false;
+    m_autoSubmitPending = false;
+    m_pendingPassword.clear();
+
+    m_passwordView->setUser(user);
+    m_passwordView->clearPassword();
+    m_passwordView->setStatus({});
+    showPasswordView();
+    beginAuth(user.username);
+}
+
+void GreeterWindow::onOtherUserRequested()
+{
+    if (m_sessionActive)
+        m_client->cancelSession();
+
+    m_sessionActive = false;
+    m_isManualEntry = true;
+    m_autoSubmitPending = false;
+    m_pendingPassword.clear();
+
+    m_passwordView->setManualEntry();
+    m_passwordView->clearPassword();
+    m_passwordView->setStatus({});
+    showPasswordView();
+    m_passwordView->focusInput();
+}
+
+void GreeterWindow::onLoginAttempted(const QString &username, const QString &password)
+{
+    if (m_isManualEntry && !m_sessionActive) {
+        // First login click in manual mode: start the session then auto-submit the password
+        // when greetd sends the first secret auth_message.
+        m_pendingPassword = password;
+        m_autoSubmitPending = true;
+        m_passwordView->setLoginEnabled(false);
+        beginAuth(username);
+    } else {
+        // Known-user mode (session already started by onUserSelected) or a subsequent
+        // PAM round after the initial auto-submit.
+        m_passwordView->setLoginEnabled(false);
+        m_client->postAuthResponse(password);
     }
 }
 
-void GreeterWindow::onAuthSucceeded() {
-    int sessionIndex = m_sessionCombo->currentIndex();
-    if (sessionIndex < 0 || sessionIndex >= m_sessions.sessions().size()) {
+void GreeterWindow::onBackClicked()
+{
+    if (m_sessionActive)
+        m_client->cancelSession();
+
+    m_sessionActive = false;
+    m_isManualEntry = false;
+    m_autoSubmitPending = false;
+    m_pendingPassword.clear();
+
+    m_passwordView->setStatus({});
+    showUserSelectView();
+}
+
+void GreeterWindow::onAuthMessage(const QString &type, const QString &message)
+{
+    if (m_autoSubmitPending && type == "secret") {
+        // Silently submit the pre-filled password — user never sees this exchange.
+        QString pwd = m_pendingPassword;
+        m_pendingPassword.clear();
+        m_autoSubmitPending = false;
+        m_client->postAuthResponse(pwd);
+        return;
+    }
+
+    // If PAM asked for something unexpected before the secret prompt, abandon auto-submit.
+    m_autoSubmitPending = false;
+    m_pendingPassword.clear();
+
+    if (type == "secret") {
+        m_passwordView->setPrompt(message, true);
+        m_passwordView->setLoginEnabled(true);
+    } else if (type == "visible") {
+        m_passwordView->setPrompt(message, false);
+        m_passwordView->setLoginEnabled(true);
+    } else if (type == "info") {
+        m_passwordView->setStatus(message, false);
+        m_client->postAuthResponse({});
+    } else if (type == "error") {
+        m_passwordView->setStatus(message, true);
+        m_client->postAuthResponse({});
+    }
+}
+
+void GreeterWindow::onAuthSucceeded()
+{
+    int idx = m_passwordView->sessionIndex();
+    if (idx < 0 || idx >= m_sessions.sessions().size()) {
         qWarning() << "No session selected";
         return;
     }
-    const QString &exec = m_sessions.sessions().at(sessionIndex).exec;
-    m_client->startSession(exec);
+    m_client->startSession(m_sessions.sessions().at(idx).exec);
 }
 
-void GreeterWindow::onAuthFailed(const QString &description) {
-    setStatus(description.isEmpty() ? "Authentication failed" : description, true);
-    m_passwordEdit->clear();
-    m_passwordEdit->setFocus();
-    m_loginButton->setEnabled(true);
-    // Restart auth for the current user
-    beginAuth();
-}
+void GreeterWindow::onAuthFailed(const QString &description)
+{
+    m_sessionActive = false;
+    m_autoSubmitPending = false;
+    m_pendingPassword.clear();
 
-void GreeterWindow::setStatus(const QString &text, bool isError) {
-    if (text.isEmpty()) {
-        m_statusLabel->hide();
-        return;
+    m_passwordView->setStatus(
+        description.isEmpty() ? "Authentication failed" : description, true);
+    m_passwordView->clearPassword();
+    m_passwordView->setLoginEnabled(true);
+
+    if (!m_isManualEntry) {
+        // Auto-restart the session so the user can try again immediately.
+        beginAuth(m_currentUsername);
+    } else {
+        // Manual entry: wait for the next Login click before creating a new session.
+        m_passwordView->focusInput();
     }
-    m_statusLabel->setText(text);
-    m_statusLabel->setProperty("error", isError);
-    m_statusLabel->style()->unpolish(m_statusLabel);
-    m_statusLabel->style()->polish(m_statusLabel);
-    m_statusLabel->show();
-}
-
-void GreeterWindow::beginAuth() {
-    QString username = m_userCombo->currentData().toString();
-    if (username.isEmpty())
-        return;
-    m_client->createSession(username);
 }

@@ -3,6 +3,10 @@
     border-radius: 6px;
 }
 
+#greeter_UserTile {
+    border-radius: 4px;
+}
+
 #greeter_Card QLineEdit {
     border-radius: 3px;
 }

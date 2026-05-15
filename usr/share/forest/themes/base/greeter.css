@@ -6,33 +6,53 @@
 }
 
 #greeter_Clock {
-    font-size: 36pt;
-    font-weight: bold;
+    font-size: 75pt;
     padding-bottom: 8px;
     qproperty-alignment: AlignCenter;
+}
+
+#greeter_UserTile {
+    border-radius: 4px;
+    padding: 0;
+    margin: 0;
+}
+
+#greeter_UserTileName {
+    font-size: 12pt;
+}
+
+#greeter_PasswordAvatar {
+    margin-bottom: 4px;
+}
+
+#greeter_UserDisplayName {
+    font-size: 14pt;
+    font-weight: bold;
+    qproperty-alignment: AlignCenter;
+    margin-bottom: 4px;
+}
+
+#greeter_PromptLabel {
+    margin-top: 4px;
+}
+
+#greeter_UsernameEdit,
+#greeter_PasswordEdit {
+    min-height: 24px;
+    padding: 2px 4px;
 }
 
 #greeter_Label {
     margin-top: 4px;
 }
 
-#greeter_PromptLabel {
-    margin-top: 8px;
-}
-
-#greeter_UserCombo,
 #greeter_SessionCombo {
     min-height: 24px;
     padding: 2px 4px;
 }
 
-#greeter_PasswordEdit {
-    min-height: 24px;
-    padding: 2px 4px;
-}
-
+#greeter_BackButton,
 #greeter_LoginButton {
-    min-width: 80px;
     min-height: 28px;
     padding: 4px 12px;
     margin-top: 8px;
@@ -48,4 +68,13 @@
     margin-top: 8px;
     min-height: 24px;
     padding: 2px 10px;
+}
+
+/* Keep scroll area background transparent inside the card */
+#greeter_Card QScrollArea {
+    background: transparent;
+}
+
+#greeter_Card QScrollArea > QWidget > QWidget {
+    background: transparent;
 }

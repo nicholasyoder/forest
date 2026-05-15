@@ -11,6 +11,15 @@
     color: white;
 }
 
+#greeter_UserTile:hover {
+    background: rgba(60,60,60, 100%);
+}
+
+#greeter_UserTile[selected="true"] {
+    background: rgba(55,55,55, 100%);
+    border: 1px solid rgba(120,120,120, 50%);
+}
+
 #greeter_Card QLineEdit {
     background: rgba(50,50,50, 100%);
     color: white;

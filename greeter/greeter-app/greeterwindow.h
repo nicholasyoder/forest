@@ -6,14 +6,14 @@
 #include <QWidget>
 #include <QTimer>
 #include <QLabel>
-#include <QComboBox>
-#include <QLineEdit>
-#include <QPushButton>
+#include <QStackedWidget>
 #include <QImage>
 
 #include "greetdclient.h"
 #include "userlistmodel.h"
 #include "sessionlistmodel.h"
+#include "userselectview.h"
+#include "passwordview.h"
 
 class GreeterWindow : public QWidget {
     Q_OBJECT
@@ -28,30 +28,36 @@ private slots:
     void onAuthMessage(const QString &type, const QString &message);
     void onAuthSucceeded();
     void onAuthFailed(const QString &description);
-    void onUserChanged(int index);
-    void onLoginClicked();
+    void onUserSelected(const UserInfo &user);
+    void onOtherUserRequested();
+    void onLoginAttempted(const QString &username, const QString &password);
+    void onBackClicked();
     void onClockTick();
 
 private:
     void setupUi();
     void loadWallpaper();
-    void setStatus(const QString &text, bool isError = false);
-    void beginAuth();
+    void initStartupView();
+    void showUserSelectView();
+    void showPasswordView();
+    void beginAuth(const QString &username);
 
     GreetdClient *m_client;
     UserListModel m_users;
     SessionListModel m_sessions;
 
-    QComboBox *m_userCombo;
-    QLineEdit *m_passwordEdit;
-    QComboBox *m_sessionCombo;
-    QPushButton *m_loginButton;
-    QLabel *m_statusLabel;
+    QStackedWidget *m_stack;
+    UserSelectView *m_userSelectView;
+    PasswordView *m_passwordView;
     QLabel *m_clockLabel;
-    QLabel *m_promptLabel;
-
     QTimer *m_clockTimer;
     QImage *m_wallpaper = nullptr;
+
+    bool m_sessionActive = false;
+    bool m_isManualEntry = false;
+    bool m_autoSubmitPending = false;
+    QString m_pendingPassword;
+    QString m_currentUsername;
 };
 
 #endif // GREETERWINDOW_H
