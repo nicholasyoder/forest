@@ -30,10 +30,15 @@ void edithotkeywidget::set_data(const HotkeyData& data){
     }
 }
 
+void edithotkeywidget::set_hotkeys_paused(bool pause){
+    if (pause == hotkeys_paused) return;
+    hotkeys_paused = pause;
+    miscutills::call_dbus(pause ? "forest/hotkeys/pauseHotkeys"
+                                : "forest/hotkeys/resumeHotkeys");
+}
+
 void edithotkeywidget::keyPressEvent(QKeyEvent *event){
     if (waitingforkeys == true){
-        // Need to ungrab the global hotkeys while listening for this
-        // Also need to check if the new sequence conflicts with existing hotkey
         if (event->key()==Qt::Key_AltGr||event->key()==Qt::Key_Print||event->key()==Qt::Key_CapsLock||event->key()==Qt::Key_NumLock||
                 event->key()==Qt::Key_Return||event->key()==Qt::Key_Enter) { return; }
         else if (event->key()==Qt::Key_Control){ keys = keys + "Ctrl+"; return; }
@@ -45,9 +50,15 @@ void edithotkeywidget::keyPressEvent(QKeyEvent *event){
         keys = keys + key.toString();
 
         waitingforkeys = false;
+        set_hotkeys_paused(false);
         ui->shortcutbt->setText(keys);
         keys = "";
     }
+}
+
+void edithotkeywidget::closeEvent(QCloseEvent *event){
+    set_hotkeys_paused(false);
+    QWidget::closeEvent(event);
 }
 
 void edithotkeywidget::on_okbt_clicked(){
@@ -95,4 +106,5 @@ void edithotkeywidget::on_shortcutbt_clicked(){
     ui->shortcutbt->setText("Press Keys");
     keys.clear();
     waitingforkeys = true;
+    set_hotkeys_paused(true);
 }
