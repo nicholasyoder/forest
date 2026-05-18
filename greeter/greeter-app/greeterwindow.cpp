@@ -48,8 +48,18 @@ GreeterWindow::~GreeterWindow()
 
 void GreeterWindow::setupUi()
 {
+    // Confine layout content to the primary screen's area within the (possibly
+    // multi-monitor) fullscreen surface that cage spans across all outputs.
+    QRect primary = QGuiApplication::primaryScreen()->geometry();
+    QRect virt    = QGuiApplication::primaryScreen()->virtualGeometry();
+
     auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(0, 0, 0, 0);
+    mainLayout->setContentsMargins(
+        primary.left()   - virt.left(),
+        primary.top()    - virt.top(),
+        virt.right()     - primary.right(),
+        virt.bottom()    - primary.bottom()
+    );
     mainLayout->addStretch(1);
 
     auto *centerRow = new QHBoxLayout;
@@ -169,10 +179,14 @@ void GreeterWindow::initStartupView()
 void GreeterWindow::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
-    if (m_wallpaper && !m_wallpaper->isNull())
-        painter.drawImage(rect(), *m_wallpaper, m_wallpaper->rect());
-    else
-        painter.fillRect(rect(), QColor(30, 30, 30));
+    QPoint origin = QGuiApplication::primaryScreen()->virtualGeometry().topLeft();
+    for (QScreen *screen : QGuiApplication::screens()) {
+        QRect r = screen->geometry().translated(-origin);
+        if (m_wallpaper && !m_wallpaper->isNull())
+            painter.drawImage(r, *m_wallpaper, m_wallpaper->rect());
+        else
+            painter.fillRect(r, QColor(30, 30, 30));
+    }
 }
 
 void GreeterWindow::onClockTick()
