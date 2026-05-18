@@ -6,11 +6,11 @@
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QLineEdit>
-#include <QComboBox>
 #include <QPushButton>
 #include <QStackedWidget>
 #include <QPainter>
 #include <QPainterPath>
+#include <QStyle>
 
 static QPixmap makeCircularPixmap(const QString &path, int size, const QString &fallback)
 {
@@ -100,12 +100,10 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     auto *sessionRow = new QHBoxLayout;
     auto *sessionLabel = new QLabel("Session:");
     sessionLabel->setObjectName("greeter_Label");
-    m_sessionCombo = new QComboBox;
-    m_sessionCombo->setObjectName("greeter_SessionCombo");
-    for (const SessionInfo &s : sessions)
-        m_sessionCombo->addItem(s.name);
+    m_sessionBtn = new QPushButton(sessions.isEmpty() ? QString() : sessions.first().name);
+    m_sessionBtn->setObjectName("greeter_SessionButton");
     sessionRow->addWidget(sessionLabel);
-    sessionRow->addWidget(m_sessionCombo, 1);
+    sessionRow->addWidget(m_sessionBtn, 1);
     layout->addLayout(sessionRow);
 
     // --- Button row ---
@@ -134,6 +132,7 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
         m_passwordEdit->setFocus();
     });
     connect(m_backButton, &QPushButton::clicked, this, &PasswordView::backClicked);
+    connect(m_sessionBtn, &QPushButton::clicked, this, &PasswordView::sessionButtonClicked);
 }
 
 void PasswordView::setUser(const UserInfo &user)
@@ -198,7 +197,13 @@ QString PasswordView::getUsername() const
 
 int PasswordView::sessionIndex() const
 {
-    return m_sessionCombo->currentIndex();
+    return m_sessionIndex;
+}
+
+void PasswordView::setSelectedSession(int index, const QString &name)
+{
+    m_sessionIndex = index;
+    m_sessionBtn->setText(name);
 }
 
 void PasswordView::onLoginClicked()

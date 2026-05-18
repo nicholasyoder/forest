@@ -14,6 +14,7 @@
 #include "sessionlistmodel.h"
 #include "userselectview.h"
 #include "passwordview.h"
+#include "sessionselectview.h"
 
 class GreeterWindow : public QWidget {
     Q_OBJECT
@@ -33,6 +34,8 @@ private slots:
     void onLoginAttempted(const QString &username, const QString &password);
     void onBackClicked();
     void onClockTick();
+    void onSessionButtonClicked();
+    void onSessionSelected(int index);
 
 private:
     void setupUi();
@@ -40,6 +43,7 @@ private:
     void initStartupView();
     void showUserSelectView();
     void showPasswordView();
+    void showSessionSelectView();
     void beginAuth(const QString &username);
 
     GreetdClient *m_client;
@@ -49,6 +53,7 @@ private:
     QStackedWidget *m_stack;
     UserSelectView *m_userSelectView;
     PasswordView *m_passwordView;
+    SessionSelectView *m_sessionSelectView;
     QLabel *m_clockLabel;
     QTimer *m_clockTimer;
     QImage *m_wallpaper = nullptr;

@@ -6,12 +6,14 @@ add_executable(forest-greeter
     sessionlistmodel.cpp
     userselectview.cpp
     passwordview.cpp
+    sessionselectview.cpp
     greetdclient.h
     greeterwindow.h
     userlistmodel.h
     sessionlistmodel.h
     userselectview.h
     passwordview.h
+    sessionselectview.h
 )
 
 set_target_properties(forest-greeter PROPERTIES CXX_STANDARD 17)

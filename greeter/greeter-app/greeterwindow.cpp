@@ -64,8 +64,10 @@ void GreeterWindow::setupUi()
     m_stack = new QStackedWidget;
     m_userSelectView = new UserSelectView(m_users.users());
     m_passwordView = new PasswordView(m_sessions.sessions());
-    m_stack->addWidget(m_userSelectView); // index 0
-    m_stack->addWidget(m_passwordView);   // index 1
+    m_sessionSelectView = new SessionSelectView(m_sessions.sessions());
+    m_stack->addWidget(m_userSelectView);    // index 0
+    m_stack->addWidget(m_passwordView);      // index 1
+    m_stack->addWidget(m_sessionSelectView); // index 2
     cardLayout->addWidget(m_stack);
 
     // Power buttons — always visible below the stack
@@ -106,6 +108,12 @@ void GreeterWindow::setupUi()
             this, &GreeterWindow::onLoginAttempted);
     connect(m_passwordView, &PasswordView::backClicked,
             this, &GreeterWindow::onBackClicked);
+    connect(m_passwordView, &PasswordView::sessionButtonClicked,
+            this, &GreeterWindow::onSessionButtonClicked);
+    connect(m_sessionSelectView, &SessionSelectView::sessionSelected,
+            this, &GreeterWindow::onSessionSelected);
+    connect(m_sessionSelectView, &SessionSelectView::cancelled,
+            this, &GreeterWindow::showPasswordView);
 
     connect(shutdownBtn, &QPushButton::clicked, this, []() {
         QProcess::startDetached("systemctl", {"poweroff"});
@@ -180,6 +188,25 @@ void GreeterWindow::showUserSelectView()
 void GreeterWindow::showPasswordView()
 {
     m_stack->setCurrentIndex(1);
+}
+
+void GreeterWindow::showSessionSelectView()
+{
+    m_stack->setCurrentIndex(2);
+}
+
+void GreeterWindow::onSessionButtonClicked()
+{
+    m_sessionSelectView->highlightSession(m_passwordView->sessionIndex());
+    showSessionSelectView();
+}
+
+void GreeterWindow::onSessionSelected(int index)
+{
+    const auto &sessions = m_sessions.sessions();
+    if (index >= 0 && index < sessions.size())
+        m_passwordView->setSelectedSession(index, sessions[index].name);
+    showPasswordView();
 }
 
 void GreeterWindow::beginAuth(const QString &username)

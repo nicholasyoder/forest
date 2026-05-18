@@ -26,9 +26,12 @@
     border: 1px solid rgba(160,160,160, 50%);
 }
 
-#greeter_Card QComboBox {
-    background: white;
-    color: black;
+#greeter_SessionTile:hover {
+    background: rgba(210,210,210, 100%);
+}
+
+#greeter_SessionTile[selected="true"] {
+    background: rgba(215,215,215, 100%);
     border: 1px solid rgba(160,160,160, 50%);
 }
 

@@ -11,8 +11,8 @@
     border-radius: 3px;
 }
 
-#greeter_Card QComboBox {
-    border-radius: 3px;
+#greeter_SessionTile {
+    border-radius: 4px;
 }
 
 #greeter_Card QPushButton {

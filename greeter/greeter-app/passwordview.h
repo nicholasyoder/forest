@@ -10,7 +10,6 @@
 
 class QLabel;
 class QLineEdit;
-class QComboBox;
 class QPushButton;
 class QStackedWidget;
 
@@ -30,10 +29,12 @@ public:
 
     QString getUsername() const;
     int sessionIndex() const;
+    void setSelectedSession(int index, const QString &name);
 
 signals:
     void backClicked();
     void loginAttempted(const QString &username, const QString &password);
+    void sessionButtonClicked();
 
 private slots:
     void onLoginClicked();
@@ -48,7 +49,8 @@ private:
     QLineEdit *m_usernameEdit;
 
     QLineEdit *m_passwordEdit;
-    QComboBox *m_sessionCombo;
+    QPushButton *m_sessionBtn;
+    int m_sessionIndex = 0;
     QPushButton *m_loginButton;
     QPushButton *m_backButton;
     QLabel *m_statusLabel;
