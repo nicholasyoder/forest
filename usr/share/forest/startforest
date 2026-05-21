@@ -77,7 +77,11 @@ export QT_QPA_PLATFORMTHEME="qt6ct"
 
 if ! xset q > /dev/null 2>&1; then
   # Start X and the Forest session inside it
-  exec xinit /usr/bin/forest-session -- :0 vt${XDG_VTNR:-1} -nolisten tcp
+  exec xinit /bin/sh -c '
+    systemctl --user import-environment DISPLAY XAUTHORITY
+    dbus-update-activation-environment --systemd --all
+    exec /usr/bin/forest-session
+  ' -- :0 vt${XDG_VTNR:-1} -nolisten tcp
 else
   exec /usr/bin/forest-session
 fi
