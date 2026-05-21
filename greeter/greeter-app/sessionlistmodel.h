@@ -19,6 +19,7 @@ public:
 private:
     QList<SessionInfo> m_sessions;
     void load();
+    void loadDir(const QString &path);
 };
 
 #endif // SESSIONLISTMODEL_H

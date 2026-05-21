@@ -11,8 +11,10 @@ SessionListModel::SessionListModel() {
     load();
 }
 
-void SessionListModel::load() {
-    QDir dir("/usr/share/xsessions");
+void SessionListModel::loadDir(const QString &path) {
+    QDir dir(path);
+    if (!dir.exists())
+        return;
     const QStringList files = dir.entryList({"*.desktop"}, QDir::Files);
 
     for (const QString &filename : files) {
@@ -44,7 +46,12 @@ void SessionListModel::load() {
         if (!name.isEmpty() && !exec.isEmpty())
             m_sessions.append({name, exec});
     }
+}
+
+void SessionListModel::load() {
+    loadDir("/usr/share/xsessions");
+    loadDir("/usr/share/wayland-sessions");
 
     if (m_sessions.isEmpty())
-        qWarning() << "No sessions found in /usr/share/xsessions/";
+        qWarning() << "No sessions found in /usr/share/xsessions/ or /usr/share/wayland-sessions/";
 }
