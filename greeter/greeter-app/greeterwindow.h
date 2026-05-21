@@ -41,6 +41,7 @@ private:
     void setupUi();
     void loadWallpaper();
     void initStartupView();
+    void restoreLastSession();
     void showUserSelectView();
     void showPasswordView();
     void showSessionSelectView();

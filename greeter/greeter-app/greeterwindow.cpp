@@ -29,6 +29,10 @@ GreeterWindow::GreeterWindow(QWidget *parent)
     connect(m_client, &GreetdClient::sessionStarted, this, [this]() {
         QSettings settings("Forest", "Forest");
         settings.setValue("greeter/last_user", m_currentUsername);
+        int idx = m_passwordView->sessionIndex();
+        const auto &sessions = m_sessions.sessions();
+        if (idx >= 0 && idx < sessions.size())
+            settings.setValue("greeter/last_session", sessions.at(idx).exec);
         settings.sync();
         QApplication::quit();
     });
@@ -143,15 +147,31 @@ void GreeterWindow::loadWallpaper()
     m_wallpaper = miscutills::get_wallpaper_scaled(wallpaperFile, Fill, screenSize);
 }
 
+void GreeterWindow::restoreLastSession()
+{
+    QString lastExec = QSettings("Forest", "Forest").value("greeter/last_session").toString();
+    if (lastExec.isEmpty())
+        return;
+    const auto &sessions = m_sessions.sessions();
+    for (int i = 0; i < sessions.size(); ++i) {
+        if (sessions[i].exec == lastExec) {
+            m_passwordView->setSelectedSession(i, sessions[i].name);
+            return;
+        }
+    }
+}
+
 void GreeterWindow::initStartupView()
 {
-    QString lastUser = QSettings("Forest", "Forest").value("greeter/last_user").toString();
+    QSettings settings("Forest", "Forest");
+    QString lastUser = settings.value("greeter/last_user").toString();
 
     if (!lastUser.isEmpty()) {
         for (const UserInfo &user : m_users.users()) {
             if (user.username == lastUser) {
                 m_userSelectView->highlightUser(lastUser);
                 m_passwordView->setUser(user);
+                restoreLastSession();
                 showPasswordView();
                 beginAuth(lastUser);
                 return;
@@ -160,6 +180,7 @@ void GreeterWindow::initStartupView()
         // Last user not in the list (e.g. root) — open manual entry pre-filled
         m_isManualEntry = true;
         m_passwordView->setManualEntry(lastUser);
+        restoreLastSession();
         showPasswordView();
         m_passwordView->focusInput();
         return;
