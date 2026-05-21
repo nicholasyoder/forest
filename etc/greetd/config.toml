@@ -1,6 +1,6 @@
 [terminal]
-vt = 1
+vt = 7
 
 [default_session]
 command = "cage -s -- /usr/bin/forest-greeter"
-user = "greeter"
+user = "_greetd"
