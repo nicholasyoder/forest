@@ -1,0 +1,58 @@
+#greeter_Card {
+    background: rgba(30,30,30, 100%);
+    border-color: rgba(100,100,100, 40%);
+}
+
+#greeter_Card QLabel {
+    color: white;
+}
+
+#greeter_Clock {
+    color: white;
+}
+
+#greeter_UserTile:hover {
+    background: rgba(60,60,60, 100%);
+}
+
+#greeter_UserTile[selected="true"] {
+    background: rgba(55,55,55, 100%);
+    border: 1px solid rgba(120,120,120, 50%);
+}
+
+#greeter_Card QLineEdit {
+    background: rgba(50,50,50, 100%);
+    color: white;
+    border: 1px solid rgba(100,100,100, 60%);
+}
+
+#greeter_SessionTile:hover {
+    background: rgba(60,60,60, 100%);
+}
+
+#greeter_SessionTile[selected="true"] {
+    background: rgba(55,55,55, 100%);
+    border: 1px solid rgba(120,120,120, 50%);
+}
+
+#greeter_Card QPushButton {
+    background: rgba(50,50,50, 100%);
+    color: white;
+    border: 1px solid rgba(100,100,100, 60%);
+}
+
+#greeter_Card QPushButton:hover {
+    background: rgba(70,70,70, 100%);
+}
+
+#greeter_Card QPushButton:pressed {
+    background: rgba(40,40,40, 100%);
+}
+
+#greeter_StatusLabel[error="true"] {
+    color: #ff6b6b;
+}
+
+#greeter_StatusLabel[error="false"] {
+    color: #aaaaaa;
+}

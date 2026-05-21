@@ -2,7 +2,7 @@ Source: forest
 Section: unknown
 Priority: optional
 Maintainer: Nicholas Yoder <nicholasyoder@proton.me>
-Build-Depends: debhelper-compat (= 13), cmake, pkg-config, qtbase6-dev, libqt6dbus6, libkf6windowsystem-dev, libx11-dev, libxcb-composite0-dev, libxcb-image0-dev, libxcb-shape0-dev, libxrender-dev, libxfixes-dev, libxdamage-dev, libxcursor-dev, libasound2-dev, libsensors-dev, libpolkit-qt6-1-dev, libqt6xdg-dev
+Build-Depends: debhelper-compat (= 13), cmake, pkg-config, qtbase6-dev, libqt6dbus6, libqt6network6-dev, libkf6windowsystem-dev, libx11-dev, libxcb-composite0-dev, libxcb-image0-dev, libxcb-shape0-dev, libxrender-dev, libxfixes-dev, libxdamage-dev, libxcursor-dev, libasound2-dev, libsensors-dev, libpolkit-qt6-1-dev, libqt6xdg-dev
 Standards-Version: 4.5.1
 Homepage: https://github.com/nicholasyoder/forest
 Rules-Requires-Root: no
@@ -14,3 +14,11 @@ Description: Forest desktop environment
  Forest is a desktop environment built using Qt.
  It is still very much a work in progress so expect
  to encounter partially implemented features.
+
+Package: forest-greeter
+Architecture: amd64
+Depends: ${shlibs:Depends}, ${misc:Depends}, forest, greetd, cage
+Description: Forest greeter for greetd
+ A Qt-based login greeter for the greetd display manager,
+ styled with the Forest theme system. Runs inside the cage
+ Wayland compositor on VT1.

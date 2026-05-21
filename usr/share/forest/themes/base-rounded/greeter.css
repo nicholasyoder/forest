@@ -1,0 +1,21 @@
+#greeter_Card {
+    border: 1px solid lightgrey;
+    border-radius: 6px;
+}
+
+#greeter_UserTile {
+    border-radius: 4px;
+}
+
+#greeter_Card QLineEdit {
+    border-radius: 3px;
+}
+
+#greeter_SessionTile {
+    border-radius: 4px;
+}
+
+#greeter_Card QPushButton {
+    border: 1px solid transparent;
+    border-radius: 3px;
+}
