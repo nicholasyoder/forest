@@ -28,6 +28,14 @@ AlsaEngine::AlsaEngine(QObject *parent) :
     m_instance = this;
 }
 
+AlsaEngine::~AlsaEngine()
+{
+    if (m_instance == this)
+        m_instance = nullptr;
+    for (snd_mixer_t *mixer : m_mixerMap)
+        snd_mixer_close(mixer);
+}
+
 AlsaEngine *AlsaEngine::instance()
 {
     return m_instance;

@@ -67,13 +67,14 @@ void fvolume::loadsettings(){
     if(audioengine)
         delete audioengine;
     audioengine = new AlsaEngine(this);
+    master_device = nullptr;
 
     QSettings settings("Forest", "Volume Manager");
     settings.sync();
     autosave = settings.value("autosave", true).toBool();
 
-    AudioDevice * first_dev = audioengine->sinks().first();
-    QString master = settings.value("master", (first_dev) ? first_dev->description() : "").toString();
+    AudioDevice *first_dev = audioengine->sinks().isEmpty() ? nullptr : audioengine->sinks().first();
+    QString master = settings.value("master", first_dev ? first_dev->description() : "").toString();
 
     // Clear the existing layout
     QLayoutItem *item;
