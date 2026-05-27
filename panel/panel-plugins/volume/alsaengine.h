@@ -25,6 +25,7 @@ class AlsaEngine : public AudioEngine
 
 public:
     AlsaEngine(QObject *parent = 0);
+    ~AlsaEngine();
     static AlsaEngine *instance();
 
     virtual const QString backendName() const { return QLatin1String("Alsa"); }
