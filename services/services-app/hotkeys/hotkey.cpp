@@ -25,7 +25,11 @@ void globalhotkey::setDbusInfo(QString service, QString path,QString interface, 
 
 void globalhotkey::exec(){
     if(hotkey_type == Type_Exec){
-        QProcess::startDetached(shcommand);
+        QStringList args = QProcess::splitCommand(shcommand);
+        if (!args.isEmpty()) {
+            QString program = args.takeFirst();
+            QProcess::startDetached(program, args);
+        }
     }
     else{
         if (dbusbus == "Session" || dbusbus == ""){
