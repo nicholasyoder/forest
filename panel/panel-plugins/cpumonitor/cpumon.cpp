@@ -89,8 +89,13 @@ void cpumon::reloadsettings(){
 }
 
 void cpumon::runcommand(){
-    if (clickedcommand != "")
-        QProcess::startDetached(clickedcommand);
+    if (clickedcommand != "") {
+        QStringList args = QProcess::splitCommand(clickedcommand);
+        if (!args.isEmpty()) {
+            QString program = args.takeFirst();
+            QProcess::startDetached(program, args);
+        }
+    }
 }
 
 void cpumon::updatecpu(){
