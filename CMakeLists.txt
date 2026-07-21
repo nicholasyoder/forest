@@ -54,7 +54,6 @@ add_subdirectory(greeter)
 # Install config and data files
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
-install(DIRECTORY etc/xdg/lxsession/forest/ DESTINATION /etc/xdg/lxsession/forest)
 install(DIRECTORY usr/share/xsessions/ DESTINATION /usr/share/xsessions)
 install(DIRECTORY usr/share/applications/ DESTINATION /usr/share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest)

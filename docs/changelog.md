@@ -2,7 +2,9 @@
 Changelog
 ============
 
-* UNRELEASED
+* Release 0.8 - 2026-07-21
+  - Migrate from Qt5 to Qt6 and qmake to cmake
+  - Add prototype greeter app for greetd
   - Improve new hotkey recording so existing hotkeys don't prevent recording some combinations
   - Fix button highlights on system tray icons
   - Fix low resolution system tray icons
