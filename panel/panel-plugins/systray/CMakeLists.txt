@@ -22,4 +22,4 @@ forest_link_panel_library(systray)
 forest_link_miscutills(systray)
 forest_link_xcbutills(systray)
 
-install(TARGETS systray LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS systray LIBRARY DESTINATION lib/forest/panel)

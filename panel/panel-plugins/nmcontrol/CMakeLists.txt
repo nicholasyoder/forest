@@ -10,4 +10,4 @@ target_link_libraries(nmcontrol PRIVATE Qt6::Core Qt6::Gui Qt6::DBus Qt6::Widget
 forest_link_panel_library(nmcontrol)
 forest_link_miscutills(nmcontrol)
 
-install(TARGETS nmcontrol LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS nmcontrol LIBRARY DESTINATION lib/forest/panel)

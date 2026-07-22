@@ -39,4 +39,4 @@ target_link_libraries(services-app PRIVATE
 )
 forest_link_xcbutills(services-app)
 
-install(TARGETS services-app LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS services-app LIBRARY DESTINATION lib/forest)

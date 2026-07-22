@@ -13,4 +13,4 @@ target_link_libraries(desktop-settings PRIVATE
 forest_link_pluginutills(desktop-settings)
 forest_link_miscutills(desktop-settings)
 
-install(TARGETS desktop-settings LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS desktop-settings LIBRARY DESTINATION lib/forest)

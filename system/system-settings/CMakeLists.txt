@@ -22,4 +22,4 @@ forest_link_settings_widgets(system-settings)
 forest_link_miscutills(system-settings)
 forest_link_xcbutills(system-settings)
 
-install(TARGETS system-settings LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS system-settings LIBRARY DESTINATION lib/forest)

@@ -25,4 +25,4 @@ forest_link_panel_library(windowlist)
 forest_link_miscutills(windowlist)
 forest_link_xcbutills(windowlist)
 
-install(TARGETS windowlist LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS windowlist LIBRARY DESTINATION lib/forest/panel)

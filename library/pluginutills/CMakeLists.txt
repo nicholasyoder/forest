@@ -9,4 +9,4 @@ set_target_properties(pluginutills PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(pluginutills PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(pluginutills PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets)
 
-install(TARGETS pluginutills ARCHIVE DESTINATION usr/lib)
+install(TARGETS pluginutills ARCHIVE DESTINATION lib)

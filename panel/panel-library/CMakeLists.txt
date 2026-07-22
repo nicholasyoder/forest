@@ -13,4 +13,4 @@ target_include_directories(panel-library PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(panel-library PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6Xdg)
 forest_link_miscutills(panel-library)
 
-install(TARGETS panel-library ARCHIVE DESTINATION usr/lib)
+install(TARGETS panel-library ARCHIVE DESTINATION lib)

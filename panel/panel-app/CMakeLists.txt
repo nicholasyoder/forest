@@ -20,4 +20,4 @@ forest_link_panel_library(panel-app)
 forest_link_xcbutills(panel-app)
 forest_link_miscutills(panel-app)
 
-install(TARGETS panel-app LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS panel-app LIBRARY DESTINATION lib/forest)

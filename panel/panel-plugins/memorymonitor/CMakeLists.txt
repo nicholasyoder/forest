@@ -12,4 +12,4 @@ target_link_libraries(memorymonitor PRIVATE Qt6::Widgets Qt6::DBus)
 forest_link_panel_library(memorymonitor)
 forest_link_miscutills(memorymonitor)
 
-install(TARGETS memorymonitor LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS memorymonitor LIBRARY DESTINATION lib/forest/panel)

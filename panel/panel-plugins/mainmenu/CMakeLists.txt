@@ -26,4 +26,4 @@ target_link_libraries(mainmenu PRIVATE Qt6::Core Qt6::Gui Qt6::DBus Qt6::Widgets
 forest_link_panel_library(mainmenu)
 forest_link_miscutills(mainmenu)
 
-install(TARGETS mainmenu LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS mainmenu LIBRARY DESTINATION lib/forest/panel)

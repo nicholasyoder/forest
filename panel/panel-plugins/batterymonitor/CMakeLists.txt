@@ -12,4 +12,4 @@ target_link_libraries(batterymonitor PRIVATE Qt6::Widgets Qt6::DBus)
 forest_link_panel_library(batterymonitor)
 forest_link_miscutills(batterymonitor)
 
-install(TARGETS batterymonitor LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS batterymonitor LIBRARY DESTINATION lib/forest/panel)

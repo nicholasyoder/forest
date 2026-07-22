@@ -19,3 +19,6 @@
 
 override_dh_auto_configure:
 	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release
+
+override_dh_install:
+	dh_install --sourcedir=debian/tmp

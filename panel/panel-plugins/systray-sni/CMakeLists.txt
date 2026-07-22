@@ -18,4 +18,4 @@ forest_link_panel_library(systray-sni)
 forest_link_miscutills(systray-sni)
 forest_link_xcbutills(systray-sni)
 
-install(TARGETS systray-sni LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS systray-sni LIBRARY DESTINATION lib/forest/panel)

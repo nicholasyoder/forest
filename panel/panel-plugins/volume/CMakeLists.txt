@@ -20,4 +20,4 @@ target_link_libraries(volume PRIVATE Qt6::Widgets Qt6::DBus PkgConfig::ALSA Qt6X
 forest_link_panel_library(volume)
 forest_link_miscutills(volume)
 
-install(TARGETS volume LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS volume LIBRARY DESTINATION lib/forest/panel)

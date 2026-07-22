@@ -5,4 +5,4 @@ add_library(fstyleloader STATIC
 
 target_link_libraries(fstyleloader PRIVATE Qt6::Core)
 
-install(TARGETS fstyleloader ARCHIVE DESTINATION usr/lib)
+install(TARGETS fstyleloader ARCHIVE DESTINATION lib)

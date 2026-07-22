@@ -12,4 +12,4 @@ forest_link_settings_widgets(panel-settings)
 forest_link_pluginutills(panel-settings)
 forest_link_miscutills(panel-settings)
 
-install(TARGETS panel-settings LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS panel-settings LIBRARY DESTINATION lib/forest)

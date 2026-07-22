@@ -20,4 +20,4 @@ target_link_libraries(desktop-app PRIVATE
 )
 forest_link_miscutills(desktop-app)
 
-install(TARGETS desktop-app LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS desktop-app LIBRARY DESTINATION lib/forest)

@@ -22,4 +22,4 @@ target_link_libraries(sensors PRIVATE ${SENSORS_LIBRARY})
 
 forest_link_miscutills(sensors)
 
-install(TARGETS sensors LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS sensors LIBRARY DESTINATION lib/forest/panel)

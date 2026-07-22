@@ -11,4 +11,4 @@ target_link_libraries(quicklaunch PRIVATE Qt6::Widgets Qt6::DBus Qt6Xdg)
 forest_link_panel_library(quicklaunch)
 forest_link_miscutills(quicklaunch)
 
-install(TARGETS quicklaunch LIBRARY DESTINATION usr/lib/forest/panel)
+install(TARGETS quicklaunch LIBRARY DESTINATION lib/forest/panel)

@@ -22,4 +22,4 @@ target_link_libraries(forest-greeter PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6
 forest_link_flogger(forest-greeter)
 forest_link_miscutills(forest-greeter)
 
-install(TARGETS forest-greeter RUNTIME DESTINATION usr/bin COMPONENT greeter)
+install(TARGETS forest-greeter RUNTIME DESTINATION bin COMPONENT greeter)

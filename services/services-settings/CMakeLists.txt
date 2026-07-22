@@ -17,4 +17,4 @@ target_link_libraries(services-settings PRIVATE Qt6::Widgets Qt6::DBus)
 forest_link_pluginutills(services-settings)
 forest_link_miscutills(services-settings)
 
-install(TARGETS services-settings LIBRARY DESTINATION usr/lib/forest)
+install(TARGETS services-settings LIBRARY DESTINATION lib/forest)
