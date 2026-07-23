@@ -165,7 +165,7 @@ public:
             QStringList args;
             args.append("-n");
             args.append(file);
-            QProcess::startDetached("pcmanfm", args, QDir::homePath());
+            QProcess::startDetached("pcmanfm-qt", args, QDir::homePath());
         }
         else if (mime.inherits("application/x-desktop") && dfile.load(file))
         {
