@@ -67,7 +67,7 @@ void memmon::loadsettings(){
         gwidget->setupgraphs(2, colorlist, opacitylist, backcolor, backopacity);
     }
 
-    clickedcommand = settings->value("command", "lxtask").toString();
+    clickedcommand = settings->value("command", "").toString();
 
     delete refreshtimer;
     refreshtimer = new QTimer;

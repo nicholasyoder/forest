@@ -50,7 +50,7 @@ void cpumon::loadsettings(){
     qreal foreopacity = settings->value("foregroundopacity", 1).toDouble();
     gwidget->setupgraphs(1, {forecolor}, {foreopacity}, backcolor, backopacity);
     gwidget->setFixedWidth(settings->value("width", 40).toInt());
-    clickedcommand = settings->value("command", "lxtask").toString();
+    clickedcommand = settings->value("command", "").toString();
 
     delete refreshtimer;
     refreshtimer = new QTimer;
