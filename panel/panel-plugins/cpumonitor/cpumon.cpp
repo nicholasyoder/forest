@@ -45,7 +45,7 @@ void cpumon::loadsettings(){
     settings->sync();
 
     QColor backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
-    QColor forecolor = string_to_color(settings->value("foregroundcolor", "255,255,255").toString());
+    QColor forecolor = string_to_color(settings->value("foregroundcolor", "0,255,0").toString());
     qreal backopacity = settings->value("backgroundopacity", 1).toDouble();
     qreal foreopacity = settings->value("foregroundopacity", 1).toDouble();
     gwidget->setupgraphs(1, {forecolor}, {foreopacity}, backcolor, backopacity);
@@ -70,7 +70,7 @@ void cpumon::showsettingswidget(){
 
 void cpumon::reloadcolors(){
     gwidget->backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
-    gwidget->colors = {string_to_color(settings->value("foregroundcolor", "255,255,255").toString())};
+    gwidget->colors = {string_to_color(settings->value("foregroundcolor", "0,255,0").toString())};
     gwidget->update();
 }
 

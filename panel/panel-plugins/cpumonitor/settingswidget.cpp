@@ -20,7 +20,7 @@ settingswidget::~settingswidget(){
 void settingswidget::loadsettings(){
     backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
     ui->backgroundcolorbt->setIcon(make_color_icon(backcolor));
-    forecolor = string_to_color(settings->value("foregroundcolor", "255,255,255").toString());
+    forecolor = string_to_color(settings->value("foregroundcolor", "0,255,0").toString());
     ui->forecolorbt->setIcon(make_color_icon(forecolor));
     ui->backgroundopslider->setValue(int(settings->value("backgroundopacity", 1).toDouble() * 100));
     ui->foreopslider->setValue(int(settings->value("foregroundopacity", 1).toDouble() * 100));
