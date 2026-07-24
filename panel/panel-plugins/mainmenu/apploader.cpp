@@ -34,9 +34,7 @@ void apploader::load(){
 
 void apploader::scanDir(QString directory){
     QDir dir(directory);
-    QStringList entrylist = dir.entryList();
-    entrylist.removeAt(0);//remove "."
-    entrylist.removeAt(0);//remove ".."
+    QStringList entrylist = dir.entryList(QDir::AllEntries | QDir::NoDotAndDotDot);
 
     foreach (QString entry, entrylist){
         QFileInfo finfo(directory + entry);

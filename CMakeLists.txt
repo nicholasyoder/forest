@@ -56,7 +56,7 @@ install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCL
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
 install(DIRECTORY usr/share/xsessions/ DESTINATION /usr/share/xsessions)
 install(DIRECTORY usr/share/applications/ DESTINATION /usr/share/applications)
-install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest)
+install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest USE_SOURCE_PERMISSIONS)
 install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION /usr/share/wallpapers/forest)
 install(DIRECTORY usr/share/themes/ DESTINATION /usr/share/themes)
 install(DIRECTORY usr/lib/systemd/system/ DESTINATION /usr/lib/systemd/system COMPONENT greeter)

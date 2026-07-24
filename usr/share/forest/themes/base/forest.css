@@ -14,6 +14,7 @@
 
 #panelButton {
     height: auto;
+    font-size: 10pt;
 }
 
 #panelButton[buttontype="Custom"] {

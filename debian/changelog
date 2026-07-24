@@ -1,3 +1,22 @@
+forest (0.8.0) unstable; urgency=medium
+
+  * Migrate from Qt5 to Qt6 and qmake to cmake
+  * Add prototype greeter app for greetd
+  * Improve new hotkey recording so existing hotkeys don't prevent recording some combinations
+  * Fix button highlights on system tray icons
+  * Fix low resolution system tray icons
+  * Add controls to the settings app for configuring session autostart commands
+  * Allow clicking on long notifications to view full text in a scrollable window
+  * Quicklaunch launchers will use the proper command after the underlying desktop file changes on disk
+  * Panel will now properly resize and change screens after resolution and primary screen change
+  * Add timeout indicator to notification popups and restrict popup size
+  * Allow retrying after failed polkit authentication attempts
+  * Properly get window previews on some hidden windows
+  * Save volume levels
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Tue, 21 Jul 2026 00:00:00 -0400
+
+
 forest (0.7.9) unstable; urgency=medium
 
   * Fix wallpaper fade in on launch
@@ -56,46 +75,58 @@ forest (0.7.5) unstable; urgency=medium
 
 forest (0.7.1) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Sat, 11 Jun 2022 00:00:00 -0400
 
 
 forest (0.7.0) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Thu, 26 May 2022 00:00:00 -0400
 
 
 forest (0.6) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Thu, 21 Oct 2021 00:00:00 -0400
 
 
 forest (0.5) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Wed, 14 Jul 2021 00:00:00 -0400
 
 
 forest (0.4) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Mon, 13 Jul 2020 00:00:00 -0400
 
 
 forest (0.3) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Tue, 05 May 2020 00:00:00 -0400
 
 
 forest (0.2) unstable; urgency=medium
 
+  * No changelog entries recorded.
 
  -- Nicholas Yoder <nicholasyoder@proton.me>  Fri, 13 Mar 2020 00:00:00 -0400
 
 
 forest (0.1) unstable; urgency=medium
+
+  * No changelog entries recorded.
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Wed, 05 Feb 2020 00:00:00 -0500
+
 
 

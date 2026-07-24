@@ -6,6 +6,10 @@
 
 1. `sudo apt install dh-make devscripts`
 
+### Generate the debian changelog
+
+1. `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`
+
 ### Create package
 Note: replace `0.7.8` with the correct version number of the release.
 
@@ -13,7 +17,7 @@ Note: replace `0.7.8` with the correct version number of the release.
 2. Copy / rename `forest` to a build directory named `forest-0.7.8`
 3. `cd forest-0.7.8`
 4. `dh_make -e <email address> -c lgpl3 --createorig`
-5. `debuild`
+5. `debuild -us -uc`
 
 ## Include deb in repo
 

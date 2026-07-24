@@ -3,7 +3,6 @@ usr/bin/forest-session
 usr/bin/forest-logout
 usr/bin/forest-settings
 usr/lib/forest
-usr/lib/*.so
 usr/lib/*.a
 etc/forest/Forest.conf
 etc/forest/Panel.conf
