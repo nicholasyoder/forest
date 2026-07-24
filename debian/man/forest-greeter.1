@@ -1,0 +1,33 @@
+.TH FOREST-GREETER 1 "July 2026" "forest-greeter" "Forest desktop environment"
+.SH NAME
+forest-greeter \- Qt-based login greeter for greetd
+.SH SYNOPSIS
+.B forest-greeter
+.SH DESCRIPTION
+.B forest-greeter
+is a fullscreen, Qt-based login greeter for the
+.BR greetd (1)
+display manager, styled with the Forest theme system's
+.I greeter.css .
+It is configured as the
+.I default_session
+command in
+.I /etc/greetd/config.toml
+(installed as
+.IR /etc/forest/greetd.toml )
+and is run inside the
+.B cage
+Wayland compositor on VT1.
+.PP
+.B forest-greeter
+is not intended to be run directly outside of a greetd/cage session.
+.SH FILES
+.I /etc/forest/greetd.toml
+.RS
+greetd configuration pointing it at
+.B forest-greeter
+running inside cage.
+.RE
+.SH SEE ALSO
+.BR forest (1),
+.BR cage (1)

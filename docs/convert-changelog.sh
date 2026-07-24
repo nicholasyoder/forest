@@ -17,6 +17,22 @@ do_by_line(){
   echo # newline
 }
 
+flush_entry(){
+    if [[ -n $version ]]; then
+      if [[ "$has_entry" -eq 0 ]]; then
+        echo "  * No changelog entries recorded."
+      fi
+      do_by_line "$release_date"
+      version=""
+    elif [[ "${release_type}" == "unreleased" ]]; then
+      if [[ "$has_entry" -eq 0 ]]; then
+        echo "  * No changelog entries recorded."
+      fi
+      do_by_line "$(date -R)"
+      release_type=""
+    fi
+}
+
 if [[ -z "$input_file" || -z "$output_file" ]]; then
   echo "Usage: convert_changelog.sh ./changelog.md ../debian/changelog"
   exit 0
@@ -31,20 +47,20 @@ fi
             release_date=$(convert_date "${BASH_REMATCH[2]}")
             echo "$package_name ($version) unstable; urgency=medium"
             echo # newline
+            has_entry=0
         elif [[ $line =~ ^"  - "(.+)$ ]]; then
             echo "  * ${BASH_REMATCH[1]}"
+            has_entry=1
         elif [[ $line == "* Unreleased" ]]; then
             echo "$package_name ($(date +%Y.%m.%d)) UNRELEASED; urgency=medium"
             echo # newline
             release_type="unreleased"
+            has_entry=0
         elif [[ -z $line ]]; then
-            if [[ -n $version ]]; then
-              do_by_line "$release_date"
-            elif [[ "${release_type}" == "unreleased" ]]; then
-              do_by_line "$(date -R)"
-            fi
+            flush_entry
         fi
     done < "$input_file"
+    flush_entry
     echo # newline
 } > "$output_file"
 

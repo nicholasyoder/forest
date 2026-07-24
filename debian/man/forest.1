@@ -1,0 +1,25 @@
+.TH FOREST 1 "July 2026" "forest" "Forest desktop environment"
+.SH NAME
+forest \- Forest desktop environment main process
+.SH SYNOPSIS
+.B forest
+.SH DESCRIPTION
+.B forest
+is the main process of the Forest desktop environment. It loads the
+configured app plugins (desktop, panel, and services), registers
+.B org.forest
+on the D-Bus session bus, and applies the active Forest theme's global
+stylesheet.
+.PP
+It is not intended to be run directly; it is started as part of a Forest
+session by
+.BR forest-session (1).
+.SH FILES
+.I ~/.config/Forest/Forest.conf
+.RS
+Per-user settings, including which app plugins are enabled and the active
+theme.
+.RE
+.SH SEE ALSO
+.BR forest-session (1),
+.BR forest-settings (1)

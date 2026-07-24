@@ -1,11 +1,6 @@
-add_library(fmutils SHARED
-    fmutils.cpp
-    fmutils.h
-    fmutils_global.h
-)
+# fmutils is header-only (all methods are inline in fmutils.h), so it is
+# declared as an INTERFACE library rather than a compiled SHARED/STATIC one.
+add_library(fmutils INTERFACE)
 
-target_compile_definitions(fmutils PRIVATE QT_DEPRECATED_WARNINGS)
-
-target_link_libraries(fmutils PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
-
-install(TARGETS fmutils LIBRARY DESTINATION lib)
+target_include_directories(fmutils INTERFACE ${CMAKE_CURRENT_SOURCE_DIR})
+target_link_libraries(fmutils INTERFACE Qt6::Core Qt6::Gui Qt6::Widgets)
