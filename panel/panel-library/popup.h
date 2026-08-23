@@ -10,6 +10,7 @@
 #include <QApplication>
 #include <QFrame>
 #include <QVBoxLayout>
+#include <QWindow>
 
 enum PositionpPolicy { CenteredOnWidget, EdgeAlignedOnWidget, CenteredOnMouse, EdgeAlignedOnMouse };
 
@@ -57,38 +58,46 @@ public slots:
 
     void changelauncher(QWidget *launcher){launcherwidget = launcher;}
 
+    // Popups are placed via Wayland's protocol-level positioner (an anchor
+    // rect + edge + gravity, all relative to the parent surface) rather than
+    // an absolute desktop position - layer-shell's configure event only ever
+    // reports size, never position, so there's no reliable global coordinate
+    // a client could place a popup with. This expresses the popup's
+    // placement in coordinates local to the panel (real, reliably-known
+    // values - no cross-window global tracking involved), matching what the
+    // xdg_positioner protocol actually expects. Set through the same
+    // private QtWayland properties LayerShellQt/KDE Plasma itself relies on
+    // for this.
     void positionOnLauncher(){
-        QRect launcherRect(launcherwidget->mapToGlobal(QPoint(0,0)), launcherwidget->size());
-        QRect popupRect;
-        if (this->maximumSize() != QSize(16777215, 16777215)) popupRect.setSize(this->size());
-        else popupRect.setSize(this->sizeHint());
+        QWidget *panel = getpanelwidget();
+        if (!panel) return;
 
-        int edgeoffset = getEdgeOffset(popupRect, launcherRect, QCursor::pos().x());
+        winId(); // force native window creation so windowHandle() is valid
+        QWindow *handle = windowHandle();
+        if (!handle) return;
 
-        QRect panelRect = getpanelRect();
         QString panelpos = psettings->value("position").toString().toLower();
-        if (panelpos == "top")
-            popupRect.moveTo(QPoint(launcherRect.x() + edgeoffset, panelRect.height()));
-        else //if (panelpos == "bottom")
-            popupRect.moveTo(QPoint(launcherRect.x() + edgeoffset, panelRect.y() - popupRect.height()));
-        /*else if (panelpos == "right")
-            popupRect.moveTo(QPoint(panelRect.width() - popupRect.height(), launcherRect.x() + edgeoffset));
-        else if (panelpos == "left")
-            popupRect.moveTo(QPoint(panelRect.width(), launcherRect.x() + edgeoffset));*/
+        bool top = (panelpos == "top");
 
-        QRect screen_geo(QGuiApplication::primaryScreen()->geometry());
-        QPoint newpos(popupRect.topLeft());
+        // Span the anchor rect over the panel's full height (not the
+        // launcher's own) so TopEdge/BottomEdge below refer to the panel's
+        // true edge - a launcher widget shorter than the panel row is
+        // vertically centered within it by the layout, so anchoring to the
+        // launcher's own top/bottom would land a few pixels short of the
+        // panel's actual edge and let the popup overlap it.
+        int launcherLocalX = launcherwidget->mapTo(panel, QPoint(0,0)).x();
+        QRect anchorRect(launcherLocalX, 0, launcherwidget->width(), panel->height());
 
-        if (popupRect.x() + popupRect.width() > screen_geo.right())
-            newpos.setX(screen_geo.right() - popupRect.width());
-        if (popupRect.y() + popupRect.height() > screen_geo.height())
-            newpos.setY(screen_geo.height() - popupRect.height());
-        if (popupRect.x() < screen_geo.left())
-            newpos.setX(screen_geo.left());
-        if (popupRect.y() < 0)
-            newpos.setY(0);
+        Qt::Edges edge = top ? Qt::Edges(Qt::BottomEdge) : Qt::Edges(Qt::TopEdge);
+        Qt::Edges gravity = edge;
+        if (pospolicy == EdgeAlignedOnWidget || pospolicy == EdgeAlignedOnMouse) {
+            edge |= Qt::LeftEdge;
+            gravity |= Qt::RightEdge;
+        }
 
-        move(newpos);
+        handle->setProperty("_q_waylandPopupAnchorRect", anchorRect);
+        handle->setProperty("_q_waylandPopupAnchor", QVariant::fromValue(edge));
+        handle->setProperty("_q_waylandPopupGravity", QVariant::fromValue(gravity));
     }
 
 protected:
@@ -96,23 +105,6 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event){emit mousereleased(event);}//and mouse clicks
 
 private slots:
-    QRect getpanelRect(){
-        QWidget *panel = getpanelwidget();
-        if (panel) return QRect(panel->mapToGlobal(panel->geometry().topLeft()), panel->size());
-        else return QRect(100,100,100,100);
-    }
-
-    int getEdgeOffset(QRect popupRect, QRect launcherRect, int mousepos){
-        if (pospolicy == CenteredOnWidget)
-            return -(popupRect.width() / 2 - launcherRect.width() / 2);
-        else if (pospolicy == EdgeAlignedOnWidget)
-            return 0;
-        else if (pospolicy == CenteredOnMouse)
-            return mousepos - launcherRect.x() - popupRect.width() / 2;
-        else// if (pospolicy == EdgeAlignedOnMouse)
-            return mousepos - launcherRect.x();
-    }
-
     QWidget* getpanelwidget() {
         QWidget *parent = launcherwidget->parentWidget();
         while (1) {
