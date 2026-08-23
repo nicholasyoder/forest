@@ -29,6 +29,7 @@ pkg_check_modules(POLKIT_QT6 REQUIRED IMPORTED_TARGET polkit-qt6-agent-1)
 pkg_check_modules(QT6XDG REQUIRED IMPORTED_TARGET Qt6Xdg)
 
 find_package(KF6WindowSystem REQUIRED)
+find_package(LayerShellQt REQUIRED)
 
 find_path(SENSORS_INCLUDE_DIR sensors/sensors.h)
 find_library(SENSORS_LIBRARY NAMES sensors)

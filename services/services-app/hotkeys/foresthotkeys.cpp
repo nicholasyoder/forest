@@ -34,7 +34,7 @@ void foresthotkeys::resumeHotkeys(){
 }
 
 void foresthotkeys::loadhotkeys(){
-    QSettings settings("Forest","Forest");
+    QSettings settings("Forest-wayland","Forest");
     settings.beginGroup("hotkeys");
 
     foreach (QString hotkey, settings.childGroups()){

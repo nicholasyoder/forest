@@ -4,11 +4,17 @@
 
 #include <QApplication>
 #include <QScreen>
+#include <LayerShellQt/Window>
 
-#include "xcbutills.h"
 #include "miscutills.h"
 
 GeometryManager::GeometryManager(QWidget *panel) : panel_widget(panel) {
+    panel_widget->winId(); // force native window creation so windowHandle() is valid
+    layer_window = LayerShellQt::Window::get(panel_widget->windowHandle());
+    layer_window->setLayer(LayerShellQt::Window::LayerTop);
+    layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
+    layer_window->setScope("forest-panel");
+
     RunOnce* runner = new RunOnce(2000);
     connect(qApp, &QGuiApplication::screenAdded, runner, &RunOnce::try_activate);
     connect(qApp, &QGuiApplication::screenRemoved, runner, &RunOnce::try_activate);
@@ -43,28 +49,22 @@ void GeometryManager::update_geometry(){
     if(fixed_panel_size == 0)
         fixed_panel_size = panel_widget->sizeHint().height();
 
-    QRect sc_geo = qApp->primaryScreen()->geometry();
-    if (panel_position == "top"){
-        panel_widget->move(sc_geo.left(), 0);
-        panel_widget->setFixedSize(sc_geo.width(), fixed_panel_size);
-        if(reserve_screen_space)
-            Xcbutills::setPartialStrut(panel_widget->winId(),0,0,panel_widget->height(),0,0,0,0,0,panel_widget->geometry().left(),panel_widget->geometry().right(),0,0);
-        else
-            Xcbutills::setPartialStrut(panel_widget->winId(),0,0,0,0,0,0,0,0,0,0,0,0);
-    /*} else if (panel_position == "left"){
-        panel_widget->move(0,0);
-        panel_widget->setFixedSize(fixed_panel_size, scsize.height());
-        //Xcbutills::setPartialStrut(winId(),height(),0,0,0,geometry().top(),geometry().bottom(),0,0,0,0,0,0);
-    } else if (panel_position == "right"){
-        panel_widget->move(scsize.width() - fixed_panel_size,0);
-        panel_widget->setFixedSize(fixed_panel_size, scsize.height());
-        //Xcbutills::setPartialStrut(winId(),0,height(),0,0,0,0,geometry().top(),geometry().bottom(),0,0,0,0);*/
-    } else{//bottom
-        panel_widget->move(sc_geo.left(), sc_geo.height() - fixed_panel_size);
-        panel_widget->setFixedSize(sc_geo.width(), fixed_panel_size);
-        if(reserve_screen_space)
-            Xcbutills::setPartialStrut(panel_widget->winId(),0,0,0,panel_widget->height(),0,0,0,0,0,0,panel_widget->geometry().left(),panel_widget->geometry().right());
-        else
-            Xcbutills::setPartialStrut(panel_widget->winId(),0,0,0,0,0,0,0,0,0,0,0,0);
-    }
+    // Width is never requested here: the panel is anchored to both left and
+    // right, so the compositor always assigns the real width via a configure
+    // event regardless of what's requested (arrange_layers() in Biome
+    // overrides it unconditionally for a double-anchored dimension).
+    // update_geometry() runs reactively off pframe's own resized signal
+    // (panel::update_panel_size()) as well as output-change signals, so
+    // re-requesting a guessed width here on every call fights the
+    // compositor's own configure in a resize feedback loop whenever that
+    // guess (qApp->primaryScreen()) differs from whichever output the
+    // panel's layer surface actually landed on - only reachable on a real
+    // multi-monitor setup, not the single-output nested dev loop.
+    panel_widget->setFixedHeight(fixed_panel_size);
+    if (panel_position == "top")
+        layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
+    else //bottom
+        layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
+
+    layer_window->setExclusiveZone(reserve_screen_space ? fixed_panel_size : 0);
 }

@@ -39,3 +39,9 @@ function(forest_link_flogger target)
     target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/flogger)
     target_link_libraries(${target} PRIVATE flogger)
 endfunction()
+
+# forest_link_layershellqt(target)
+# Links the LayerShellQt (wlr-layer-shell-unstable-v1) interface library
+function(forest_link_layershellqt target)
+    target_link_libraries(${target} PRIVATE LayerShellQt::Interface)
+endfunction()

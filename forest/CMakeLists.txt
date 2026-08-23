@@ -18,5 +18,6 @@ target_link_libraries(forest PRIVATE
 forest_link_pluginutills(forest)
 forest_link_miscutills(forest)
 forest_link_flogger(forest)
+forest_link_layershellqt(forest)
 
 install(TARGETS forest RUNTIME DESTINATION bin)
