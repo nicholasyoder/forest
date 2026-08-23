@@ -60,7 +60,7 @@ private:
     QString pnum(int number) {if(number<10) return "0"+QString::number(number); else return QString::number(number);}
 
     int numofstretchplugs = 0;
-    QSettings *settings = new QSettings("Forest","Panel");
+    QSettings *settings = new QSettings("Forest-wayland","Panel");
     QBoxLayout *wlayout;
     panelpluginterface *pluginterface;
     QList<panelpluginterface*> xcbpluglist;

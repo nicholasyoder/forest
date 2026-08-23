@@ -52,5 +52,7 @@ static int xkb_set_on(Display* dpy){
 }
 
 void numlock::enableNumlock(){
-    xkb_set_on(qApp->nativeInterface<QNativeInterface::QX11Application>()->display());
+    auto *x11App = qApp->nativeInterface<QNativeInterface::QX11Application>();
+    if (!x11App) return;
+    xkb_set_on(x11App->display());
 }

@@ -5,6 +5,10 @@
 
 #include <QWidget>
 
+namespace LayerShellQt {
+class Window;
+}
+
 class GeometryManager : public QObject
 {
     Q_OBJECT
@@ -22,6 +26,7 @@ signals:
 
 private:
     QWidget* panel_widget = nullptr;
+    LayerShellQt::Window* layer_window = nullptr;
     int fixed_panel_size = 0;
     QString panel_position;
     bool reserve_screen_space = false;

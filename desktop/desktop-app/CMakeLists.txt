@@ -19,5 +19,6 @@ target_link_libraries(desktop-app PRIVATE
     Qt6Xdg
 )
 forest_link_miscutills(desktop-app)
+forest_link_layershellqt(desktop-app)
 
 install(TARGETS desktop-app LIBRARY DESTINATION lib/forest)

@@ -2,6 +2,8 @@
 
 #include "desktop.h"
 
+#include <QWindow>
+
 desktop::desktop(){
 
 }
@@ -46,7 +48,7 @@ void desktop::loadwallpaperwidgets(){
         screen_geos.append(screen->geometry());
         wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE);
         wallwidgetlist << wallwidget;
-        wallwidget->setGeometry(screen->geometry());
+        wallwidget->windowHandle()->setScreen(screen); // pins this layer-shell surface to its output
         wallwidget->setFixedSize(screen->size());
 
         if (screen == qApp->primaryScreen()){

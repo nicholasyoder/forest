@@ -3,9 +3,11 @@
 #include "forestxcbeventfilter.h"
 #include "flogger.h"
 #include <QApplication>
+#include <LayerShellQt/Shell>
 
 int main(int argc, char *argv[]){
     QApplication a(argc, argv);
+    LayerShellQt::Shell::useLayerShell();
     FLogger::install("forest");
     forest w;
 

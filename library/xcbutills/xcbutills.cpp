@@ -11,10 +11,16 @@
 #include <netwm.h>
 #include "xcb/xcb_image.h"
 
-xcb_connection_t* Xcbutills::conn = qApp->nativeInterface<QNativeInterface::QX11Application>()->connection();
+static xcb_connection_t* init_x11_connection(){
+    auto *x11App = qApp->nativeInterface<QNativeInterface::QX11Application>();
+    return x11App ? x11App->connection() : nullptr;
+}
+
+xcb_connection_t* Xcbutills::conn = init_x11_connection();
 
 Display* Xcbutills::display(){
-    return qApp->nativeInterface<QNativeInterface::QX11Application>()->display();
+    auto *x11App = qApp->nativeInterface<QNativeInterface::QX11Application>();
+    return x11App ? x11App->display() : nullptr;
 }
 
 xcb_atom_t Xcbutills::atom(QString name){
@@ -280,27 +286,6 @@ void Xcbutills::setCurrentDesktop(int desknum){
     uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
     xcb_window_t root_w = root_window();
     send_client_message(conn, sendevent_mask, root_w, root_w, atom("_NET_CURRENT_DESKTOP"), data);
-}
-
-void Xcbutills::setPartialStrut(xcb_window_t window,
-        int left_width, int right_width, int top_width, int bottom_width,
-        int left_start, int left_end, int right_start, int right_end,
-        int top_start, int top_end, int bottom_start, int bottom_end){
-    uint32_t data[12];
-    data[0] = left_width;
-    data[1] = right_width;
-    data[2] = top_width;
-    data[3] = bottom_width;
-    data[4] = left_start;
-    data[5] = left_end;
-    data[6] = right_start;
-    data[7] = right_end;
-    data[8] = top_start;
-    data[9] = top_end;
-    data[10] = bottom_start;
-    data[11] = bottom_end;
-
-    xcb_change_property(conn, XCB_PROP_MODE_REPLACE, window, atom("_NET_WM_STRUT_PARTIAL"), XCB_ATOM_CARDINAL, 32, 12, (const void *) data);
 }
 
 //void Xcbutills::enableNumlock(){
