@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(forest VERSION 1.0.0 LANGUAGES CXX)
+project(forest VERSION 1.0.0 LANGUAGES CXX C)
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +12,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(ForestDeps)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network WaylandClient)
 
 # Find external dependencies
 find_package(PkgConfig REQUIRED)

@@ -5,16 +5,15 @@
 
 #include "panelbutton.h"
 #include "popupmenu.h"
+#include "foreigntoplevelhandle.h"
 
 class windowbutton : public panelbutton{
     Q_OBJECT
 
 public:
-    explicit windowbutton(ulong window, int desktop, QIcon icon, QString text);
+    explicit windowbutton(ForeignToplevelHandle *handle, QIcon icon, QString text);
 
-    ulong windowId(){return window_id;}
-    void setWindowDesktop(int desktop){window_desktop = desktop;}
-    int windowDesktop(){return window_desktop;}
+    ForeignToplevelHandle *toplevelHandle(){return handle;}
 
 signals:
     void moved(windowbutton *wbt, bool left);
@@ -39,14 +38,17 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event);
 
 private:
-    ulong window_id;
-    int window_desktop;
+    ForeignToplevelHandle *handle;
 
     bool dragActive = false;
     bool allowReleaseAction = true;
     QPoint dragPos;
 
     popupmenu *pmenu = nullptr;
+    // "Move to desktop" has no wlr-foreign-toplevel-management backing -
+    // no protocol here exposes a workspace concept at all. Kept, disabled,
+    // as a reminder to re-wire this once Workstream D (deskswitch) lands a
+    // workspace protocol. See biome/docs/phase4-plan.md Workstream B/D.
     popupmenu *desk_menu = nullptr;
 };
 

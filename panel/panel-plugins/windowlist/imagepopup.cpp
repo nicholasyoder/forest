@@ -135,5 +135,8 @@ void imagepopup::deleteopenptimer(){
 }
 
 QPixmap imagepopup::get_window_image(){
-    return Xcbutills::getWindowImage(currentbt->windowId(), 120);
+    // Icon-only for now - see the comment on this method's declaration in
+    // imagepopup.h for why (no protocol equivalent to the old X11 pixel
+    // capture exists).
+    return currentbt->icon().pixmap(120, 120);
 }

@@ -2,23 +2,22 @@
 
 #include "windowbutton.h"
 
-#include "xcbutills/xcbutills.h"
-
 struct MenuItem {
     QString text;
     QString icon;
     void (windowbutton::*slot)();
 };
 
-windowbutton::windowbutton(ulong windowid, int desktop, QIcon icon, QString text) : window_id(windowid), window_desktop(desktop){
+windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, QIcon icon, QString text) : handle(toplevelHandle){
     setupIconAndTextButton(text, icon);
 
     pmenu = new popupmenu(this, CenteredOnWidget);
-    desk_menu = new popupmenu(this, CenteredOnWidget);
 
-    pmenuitem *desk_item = new pmenuitem("Move to desktop", QIcon::fromTheme("window-next"));
-    connect(desk_item, &pmenuitem::clicked, desk_menu, &popupmenu::show);
-    pmenu->additem(desk_item);
+    // "Move to desktop" is disabled until Workstream D exposes a workspace
+    // protocol - see the comment on desk_menu in windowbutton.h. Left
+    // unpopulated (no per-desktop items to build without
+    // Xcbutills::getNumDesktops()/moveWindowToDesktop()) and never shown.
+    desk_menu = new popupmenu(this, CenteredOnWidget);
 
     MenuItem pmenu_items[] = {
         {"Raise", "arrow-up", &windowbutton::raise_w},
@@ -33,12 +32,6 @@ windowbutton::windowbutton(ulong windowid, int desktop, QIcon icon, QString text
         pmenu->additem(menu_item);
     }
 
-    for(int i = 1; i <= Xcbutills::getNumDesktops(); i++){
-        pmenuitem *item = new pmenuitem("Desktop " + QString::number(i));
-        connect(item, &pmenuitem::clicked, this, [this, i](){Xcbutills::moveWindowToDesktop(window_id, i);});
-        desk_menu->additem(item);
-    }
-
     connect(this, &windowbutton::enterevent, this, &windowbutton::handleEnterEvent);
     connect(this, &windowbutton::leaveevent, this, &windowbutton::handleLeaveEvent);
 }
@@ -51,13 +44,11 @@ void windowbutton::mousePressEvent(QMouseEvent *event){
 }
 
 void windowbutton::mouseMoveEvent(QMouseEvent *event){
+    // Drag-up-to-fit-on-screen (the old Xcbutills::fitWindowOnScreen path)
+    // is dropped: wlr-foreign-toplevel-management has no move/resize/
+    // geometry requests at all, so there's nothing to port it to.
     if (dragActive){
-        if(event->pos().y() < 0){
-            Xcbutills::fitWindowOnScreen(window_id);
-            dragActive = false;
-            allowReleaseAction = false;
-        }
-        else if(event->pos().x() < -5){
+        if(event->pos().x() < -5){
             emit moved(this, true);
             allowReleaseAction = false;
         }
@@ -94,21 +85,21 @@ void windowbutton::mouseReleaseEvent(QMouseEvent *event){
 }
 
 void windowbutton::raise_w(){
-    Xcbutills::raiseWindow(window_id);
+    handle->activate();
 }
 
 void windowbutton::maximize_w(){
-    Xcbutills::maximizeWindow(window_id);
+    handle->setMaximized();
 }
 
 void windowbutton::minimize_w(){
-    Xcbutills::minimizeWindow(window_id);
+    handle->setMinimized();
 }
 
 void windowbutton::close_w(){
-    Xcbutills::closeWindow(window_id);
+    handle->requestClose();
 }
 
 void windowbutton::demaximize_w(){
-    Xcbutills::demaximizeWindow(window_id);
+    handle->unsetMaximized();
 }

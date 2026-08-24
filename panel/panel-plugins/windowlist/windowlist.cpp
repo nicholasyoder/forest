@@ -2,10 +2,7 @@
 
 #include "windowlist.h"
 
-
-#include <KWindowInfo>
-#include <kx11extras.h>
-#include "xcbutills.h"
+#include "iconresolver.h"
 
 windowlist::windowlist(){}
 
@@ -37,17 +34,11 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
     loadsettings();
 
-    currentdesk = Xcbutills::getCurrentDesktop();
-
-    connect(KX11Extras::self(), &KX11Extras::windowAdded, this, &windowlist::onWindowAdded);
-    connect(KX11Extras::self(), &KX11Extras::windowRemoved, this, &windowlist::onWindowRemoved);
-    connect(KX11Extras::self(), &KX11Extras::windowChanged, this, &windowlist::onWindowChanged);
-    connect(KX11Extras::self(), &KX11Extras::currentDesktopChanged, this, &windowlist::onDesktopChanged);
-
-    // Load current windows (if any)
-    foreach(WId window, KX11Extras::windows()){
-        onWindowAdded(window);
-    }
+    // No manual seeding step needed here: binding the manager makes the
+    // compositor replay a `toplevel` event for every already-open window,
+    // same as it does for windows opened afterward.
+    toplevel_manager = new ForeignToplevelManager();
+    connect(toplevel_manager, &ForeignToplevelManager::toplevelCreated, this, &windowlist::onWindowAdded);
 }
 
 QHash<QString, QString> windowlist::getpluginfo(){
@@ -82,112 +73,49 @@ void windowlist::showsettingswidget(){
 }
 
 
-bool windowlist::acceptWindow(WId window) const
-{
-    QFlags<NET::WindowTypeMask> ignoreList;
-    ignoreList |= NET::DesktopMask;
-    ignoreList |= NET::DockMask;
-    ignoreList |= NET::SplashMask;
-    ignoreList |= NET::ToolbarMask;
-    ignoreList |= NET::MenuMask;
-    ignoreList |= NET::PopupMenuMask;
-    ignoreList |= NET::NotificationMask;
-
-    KWindowInfo info(window, NET::WMWindowType | NET::WMState, NET::WM2TransientFor);
-    if (!info.valid())
-        return false;
-
-    if (NET::typeMatchesMask(info.windowType(NET::AllTypesMask), ignoreList))
-        return false;
-
-    if (info.state() & NET::SkipTaskbar)
-        return false;
-
-    // WM_TRANSIENT_FOR hint not set - normal window
-    WId transFor = info.transientFor();
-    if (transFor == 0 || transFor == window || transFor == (WId) Xcbutills::root_window())
-        return true;
-
-    info = KWindowInfo(transFor, NET::WMWindowType);
-
-    QFlags<NET::WindowTypeMask> normalFlag;
-    normalFlag |= NET::NormalMask;
-    normalFlag |= NET::DialogMask;
-    normalFlag |= NET::UtilityMask;
-
-    return !NET::typeMatchesMask(info.windowType(NET::AllTypesMask), normalFlag);
-}
-
-void windowlist::onWindowAdded(WId window){
-    if (!acceptWindow(window)) return;
-
-    KWindowInfo info(window, NET::WMDesktop);
-    int desktop = info.desktop();
-
-    if(!button_list.contains(window)){
-        windowbutton *wbt = new windowbutton(window, desktop, Xcbutills::getWindowIcon(window), Xcbutills::getWindowTitle(window));
-        connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
-        connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
-        connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
-        connect(wbt, &windowbutton::request_ipopup_close, ipopup, &imagepopup::closepopup);
-        wbt->setMaximumWidth(maxbtsize);
-        mainlayout->addWidget(wbt, 1);
-        button_list[window] = wbt;
-
-        if(desktop != currentdesk){
-            wbt->setHidden(true);
-        }
-    }
-}
-
-void windowlist::onWindowRemoved(WId window){
-    if(!button_list.contains(window))
+void windowlist::onWindowAdded(ForeignToplevelHandle *handle){
+    // No filtering: wlr-foreign-toplevel-management has no window-type/
+    // skip-taskbar concept, so unlike the old KWindowInfo-based
+    // acceptWindow(), every toplevel the compositor reports gets a button.
+    if (button_list.contains(handle))
         return;
 
-    windowbutton *wbt = button_list[window];
-    button_list.remove(window);
+    connect(handle, &ForeignToplevelHandle::changed, this, &windowlist::onWindowChanged);
+    connect(handle, &ForeignToplevelHandle::closed, this, &windowlist::onWindowRemoved);
+
+    windowbutton *wbt = new windowbutton(handle, iconresolver::iconForAppId(handle->appId()), handle->title());
+    connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
+    connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
+    connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
+    connect(wbt, &windowbutton::request_ipopup_close, ipopup, &imagepopup::closepopup);
+    wbt->setMaximumWidth(maxbtsize);
+    mainlayout->addWidget(wbt, 1);
+    button_list[handle] = wbt;
+}
+
+void windowlist::onWindowRemoved(ForeignToplevelHandle *handle){
+    if(!button_list.contains(handle))
+        return;
+
+    windowbutton *wbt = button_list[handle];
+    button_list.remove(handle);
     mainlayout->removeWidget(wbt);
     wbt->close();
     wbt->deleteLater();
+    handle->deleteLater();
 }
 
-void windowlist::onWindowChanged(WId window, NET::Properties prop, NET::Properties2 prop2){
-    if(button_list.contains(window)){
-        windowbutton *wbt = button_list[window];
-        if (prop.testFlag(NET::WMVisibleName) || prop.testFlag(NET::WMName))
-            wbt->setText(Xcbutills::getWindowTitle(window));
+void windowlist::onWindowChanged(ForeignToplevelHandle *handle){
+    if(!button_list.contains(handle))
+        return;
 
-        if (prop.testFlag(NET::WMIcon) || prop2.testFlag(NET::WM2WindowClass))
-            wbt->setIcon(Xcbutills::getWindowIcon(window));
-
-        if (prop.testFlag(NET::WMDesktop) || prop.testFlag(NET::WMGeometry)) {
-            wbt->setWindowDesktop(Xcbutills::getWindowDesktop(window));
-            wbt->setHidden(wbt->windowDesktop() != currentdesk);
-        }
-
-        if (prop.testFlag(NET::WMState)) {
-            WId new_active_w = Xcbutills::getActiveWindow();
-            if(new_active_w != active_window){
-                if(button_list.contains(active_window))
-                    button_list[active_window]->setDown(false);
-                if(button_list.contains(new_active_w))
-                    button_list[new_active_w]->setDown(true);
-                active_window = new_active_w;
-            }
-
-            KWindowInfo info(window, NET::WMState);
-            if (info.hasState(NET::SkipTaskbar)) {
-                onWindowRemoved(window);
-            }
-        }
-    }
-}
-
-void windowlist::onDesktopChanged(int desktop){
-    currentdesk = desktop;
-    foreach(windowbutton *wbt, button_list){
-        wbt->setHidden(wbt->windowDesktop() != currentdesk);
-    }
+    windowbutton *wbt = button_list[handle];
+    wbt->setText(handle->title());
+    wbt->setIcon(iconresolver::iconForAppId(handle->appId()));
+    // Each handle already knows whether it itself is active, so no
+    // separate "current active window" query/tracking is needed here the
+    // way Xcbutills::getActiveWindow() required.
+    wbt->setDown(handle->isActivated());
 }
 
 void windowlist::onButtonMoved(windowbutton *wbt, bool left){
