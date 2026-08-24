@@ -10,10 +10,9 @@
 #include <QtDBus>
 #include <QGenericPlugin>
 
-#include <KWindowSystem>
-#include <kx11extras.h>
-
 #include "windowbutton.h"
+#include "foreigntoplevelmanager.h"
+#include "foreigntoplevelhandle.h"
 
 #include "imagepopup.h"
 #include "settingswidget.h"
@@ -49,12 +48,9 @@ private slots:
     void loadsettings();
     void showsettingswidget();
 
-    bool acceptWindow(WId window) const;
-
-    void onWindowAdded(WId window);
-    void onWindowRemoved(WId window);
-    void onWindowChanged(WId window, NET::Properties prop, NET::Properties2 prop2);
-    void onDesktopChanged(int desktop);
+    void onWindowAdded(ForeignToplevelHandle *handle);
+    void onWindowRemoved(ForeignToplevelHandle *handle);
+    void onWindowChanged(ForeignToplevelHandle *handle);
 
     void onButtonMoved(windowbutton *wbt, bool left);
     void onButtonEnter(windowbutton *wbt);
@@ -63,12 +59,9 @@ private slots:
 private:
     QWidget *stretchwidget = new QWidget;
     QHBoxLayout *mainlayout = new QHBoxLayout();
-    QList<xcb_window_t> oldwindows;
-    QMap<unsigned long, windowbutton*> button_list;
+    QMap<ForeignToplevelHandle*, windowbutton*> button_list;
 
-    WId active_window = 0;
-    int currentdesk = 0;
-    int olddesk = 0;
+    ForeignToplevelManager *toplevel_manager = nullptr;
 
     int maxbtsize;
 

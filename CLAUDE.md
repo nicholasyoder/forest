@@ -4,15 +4,23 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
+Qt Creator is configured to build this project into `build/Desktop-Debug`
+(not a bare `build/`) — always build there, and never `rm -rf` it, since
+Qt Creator owns it as a live, incrementally-updated build directory.
+
 ```sh
-cmake -B build
-cmake --build build
-sudo cmake --install build
+cmake -B build/Desktop-Debug
+cmake --build build/Desktop-Debug
 ```
+
+`build/install_to_staging.sh` (gitignored, not part of the CMake build
+itself) installs a `build/Desktop-Debug` build into `/opt/forest-build/usr/`,
+which `/usr/bin/forest`, `/usr/lib/forest`, `/usr/share/forest`, and
+`/usr/share/wallpapers/forest` all symlink into — so it needs no `sudo`.
 
 There are no tests. Build a single target with:
 ```sh
-cmake --build build --target forest-logout   # or any other target name
+cmake --build build/Desktop-Debug --target forest-logout   # or any other target name
 ```
 
 ## Architecture

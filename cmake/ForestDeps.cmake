@@ -45,3 +45,12 @@ endfunction()
 function(forest_link_layershellqt target)
     target_link_libraries(${target} PRIVATE LayerShellQt::Interface)
 endfunction()
+
+# forest_generate_wayland_protocol_client(target xml_path)
+# Generates and adds Qt Wayland client bindings for a vendored protocol XML
+# (via qt6_generate_wayland_protocol_client_sources) and links Qt6::WaylandClient.
+# `target` must already exist (add_library/add_executable called first).
+function(forest_generate_wayland_protocol_client target xml_path)
+    qt6_generate_wayland_protocol_client_sources(${target} FILES ${xml_path})
+    target_link_libraries(${target} PRIVATE Qt6::WaylandClient)
+endfunction()

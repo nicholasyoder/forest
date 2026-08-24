@@ -11,8 +11,6 @@
 #include "windowbutton.h"
 #include "closebutton.h"
 
-#include "xcbutills/xcbutills.h"
-
 class imagepopup : public QObject
 {
     Q_OBJECT
@@ -34,11 +32,18 @@ private slots:
     void tryclosepopup();
 
     void deleteopenptimer();
-    void closewindow(){if(currentbt){ Xcbutills::closeWindow(currentbt->windowId()); closepopup();}}
-    void raisewindow(){if(currentbt){ Xcbutills::raiseWindow(currentbt->windowId()); closepopup();}}
+    void closewindow(){if(currentbt){ currentbt->toplevelHandle()->requestClose(); closepopup();}}
+    void raisewindow(){if(currentbt){ currentbt->toplevelHandle()->activate(); closepopup();}}
     //void resizepbox(){pbox->resize(pbox->sizeHint()); pbox->positionOnLauncher();}
 
 private:
+    // No wlr-foreign-toplevel-management equivalent exists for capturing an
+    // arbitrary (possibly minimized/off-screen) client window's pixels -
+    // only compositor-side output capture does. Icon-only for now; a live
+    // wlr-screencopy capture of currently-mapped windows is a possible
+    // later upgrade - see biome/docs/phase4-plan.md's open-questions log.
+    // The popup/timer/positioning/shadow machinery below is kept as-is so
+    // that upgrade has somewhere to plug back in.
     QPixmap get_window_image();
 
     bool popup_enabled = true;
