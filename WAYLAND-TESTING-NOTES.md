@@ -67,12 +67,16 @@ switch, per the decision not to add runtime platform branching in the code.
 
 - **`~/.config/Forest-wayland/Forest.conf`** — `[hotkeys]` section emptied
   (was a full copy of the real hotkey list from `~/.config/Forest/`).
-- **`~/.config/Forest-wayland/Panel.conf`** — `windowlist` (plug-0004),
-  `systray` (plug-0008), and `deskswitch` (plug-0009) set `enabled=false`.
+- **`~/.config/Forest-wayland/Panel.conf`** — `systray` (plug-0008) and
+  `deskswitch` (plug-0009) still set `enabled=false`. `windowlist`
+  (plug-0004) was re-enabled 2026-08-23 once Workstream B (see
+  `biome/docs/phase4-plan.md`) landed and was manually confirmed on both
+  sides — it now runs against `wlr-foreign-toplevel-management-unstable-v1`
+  instead of `KX11Extras`/`Xcbutills::*`.
 
-  Both of these exist only because `windowlist`/`deskswitch`/`systray` and
-  the hotkey `XGrabKey` path are unported X11-only code (Workstream B/C/D,
-  not started). Once those workstreams land Wayland-native replacements,
-  re-enable these in `Forest-wayland/Panel.conf` and restore the hotkeys in
+  `deskswitch` and the hotkey `XGrabKey` path are still unported X11-only
+  code (Workstream C/D, not started). Once those workstreams land
+  Wayland-native replacements, re-enable `deskswitch` in
+  `Forest-wayland/Panel.conf` and restore the hotkeys in
   `Forest-wayland/Forest.conf` to actually test them — don't just delete
   `Forest-wayland/` and go back to sharing one config.
