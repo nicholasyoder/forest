@@ -3,11 +3,8 @@
 #ifndef HOTKEY_H
 #define HOTKEY_H
 
-//#include "qxt/qxtglobalshortcut.h"
 #include <QtDBus>
 #include <QKeySequence>
-
-#include <xcb/xcb.h>
 
 enum HK_Type
 {
@@ -15,30 +12,41 @@ enum HK_Type
     Type_Dbus
 };
 
+// A single configured hotkey entry - just the DBus/exec action payload plus
+// enough to build a shortcuts-spec trigger string for the portal. No longer
+// grabs anything itself (see docs/phase4-plan.md's Workstream C): binding
+// and dispatch both live one level up, in foresthotkeys/GlobalShortcutsPortal.
 class globalhotkey : public QObject
 {
     Q_OBJECT
 
 public:
-    globalhotkey(const QKeySequence &sequence, HK_Type type);
-    ~globalhotkey();
+    globalhotkey(const QString &id, const QString &description, const QKeySequence &sequence, HK_Type type);
 
-    void setShortcut(const QKeySequence& shortcut);
-    void unsetShortcut();
+    // The portal shortcut id - reuses the QSettings group name
+    // (foresthotkeys::loadhotkeys()'s "item-0001" etc.), already unique.
+    QString id() const { return hotkey_id; }
 
-    void pause();
-    void resume();
+    // Forest.conf's "description" value for this entry, passed through as
+    // the portal shortcut's description vardict key.
+    QString description() const { return hotkey_description; }
+
+    // Builds the shortcuts-spec grammar trigger string
+    // (biome/core/keybindings.cpp's parse_trigger()) from the stored
+    // QKeySequence - e.g. "CTRL+ALT+Return", or "LOGO" alone for the
+    // bare-Meta-tap binding.
+    QString triggerString() const;
 
 public slots:
     void setDbusInfo(QString service, QString path, QString interface, QString method, QString bus);
     void setExecCommand(const QString &command){shcommand=command;}
 
-    void XcbEventFilter(xcb_generic_event_t *event);
-
-private slots:
-    void  exec();
+    void exec();
 
 private:
+    QString hotkey_id;
+    QString hotkey_description;
+    QKeySequence keyseq;
     HK_Type hotkey_type;
     QString shcommand;
     QString dbusservice;
@@ -46,17 +54,6 @@ private:
     QString dbusinterface;
     QString dbusmethod;
     QString dbusbus;
-
-    xcb_keycode_t keycode;
-    quint32 modmask;
-
-    xcb_keycode_t lastkeypressed = 0;
-
-    quint32 nativeKeycode(Qt::Key keycode);
-    quint32 nativeModifiers(Qt::KeyboardModifiers modifiers);
-    void registerShortcut(quint32 nativeKey, quint32 nativeMods);
-    void unregisterShortcut(quint32 nativeKey, quint32 nativeMods);
-
 };
 
 #endif // HOTKEY_H

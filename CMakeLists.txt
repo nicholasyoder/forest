@@ -27,6 +27,7 @@ pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 #pkg_check_modules(SENSORS REQUIRED IMPORTED_TARGET libsensors)
 pkg_check_modules(POLKIT_QT6 REQUIRED IMPORTED_TARGET polkit-qt6-agent-1)
 pkg_check_modules(QT6XDG REQUIRED IMPORTED_TARGET Qt6Xdg)
+pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 
 find_package(KF6WindowSystem REQUIRED)
 find_package(LayerShellQt REQUIRED)

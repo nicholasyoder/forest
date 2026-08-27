@@ -51,7 +51,7 @@ switch, per the decision not to add runtime platform branching in the code.
   - `panel/panel-app/panel.h:63` — `QSettings("Forest-wayland","Panel")`.
     Controls panel's own sub-plugin list (`windowlist`/`deskswitch`/
     `systray`/etc.) and general panel settings.
-  - `services/services-app/hotkeys/foresthotkeys.cpp:37` —
+  - `services/services-app/hotkeys/foresthotkeys.cpp:49` —
     `QSettings("Forest-wayland","Forest")` in `loadhotkeys()`. Controls the
     configured global-hotkey list.
 
@@ -65,18 +65,16 @@ switch, per the decision not to add runtime platform branching in the code.
 
 ## Local machine state (not in git — won't show up in `git diff`)
 
-- **`~/.config/Forest-wayland/Forest.conf`** — `[hotkeys]` section emptied
-  (was a full copy of the real hotkey list from `~/.config/Forest/`).
-- **`~/.config/Forest-wayland/Panel.conf`** — `systray` (plug-0008) and
-  `deskswitch` (plug-0009) still set `enabled=false`. `windowlist`
-  (plug-0004) was re-enabled 2026-08-23 once Workstream B (see
-  `biome/docs/phase4-plan.md`) landed and was manually confirmed on both
-  sides — it now runs against `wlr-foreign-toplevel-management-unstable-v1`
-  instead of `KX11Extras`/`Xcbutills::*`.
-
-  `deskswitch` and the hotkey `XGrabKey` path are still unported X11-only
-  code (Workstream C/D, not started). Once those workstreams land
-  Wayland-native replacements, re-enable `deskswitch` in
-  `Forest-wayland/Panel.conf` and restore the hotkeys in
-  `Forest-wayland/Forest.conf` to actually test them — don't just delete
-  `Forest-wayland/` and go back to sharing one config.
+- **`~/.config/Forest-wayland/Forest.conf`** — `[hotkeys]` section restored
+  2026-08-26 (full copy of the real hotkey list from `~/.config/Forest/`)
+  now that Workstream C (`biome/docs/phase4-plan.md`) has landed — the
+  `hotkeys/` code now binds through `org.freedesktop.portal.GlobalShortcuts`
+  instead of `XGrabKey`. Not yet manually confirmed by the user.
+- **`~/.config/Forest-wayland/Panel.conf`** — `systray` (plug-0008) still
+  set `enabled=false`. `windowlist` (plug-0004) was re-enabled 2026-08-23
+  once Workstream B (see `biome/docs/phase4-plan.md`) landed and was
+  manually confirmed on both sides — it now runs against
+  `wlr-foreign-toplevel-management-unstable-v1` instead of
+  `KX11Extras`/`Xcbutills::*`. `deskswitch` (plug-0009) stays
+  `enabled=false` — still unported X11-only code, gated on Workstream D
+  (workspaces, not started).
