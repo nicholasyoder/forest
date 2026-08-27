@@ -9,6 +9,7 @@
 #include <QLayout>
 
 #include "hotkey.h"
+#include "globalshortcutsportal.h"
 
 class foresthotkeys : public QObject
 {
@@ -19,7 +20,6 @@ public:
     ~foresthotkeys();
 
     void setup();
-    void XcbEventFilter(xcb_generic_event_t *event);
 
 public slots:
     void reloadhotkeys();
@@ -31,8 +31,10 @@ public slots:
 
 private slots:
     void loadhotkeys();
+    void dispatch(QString id);
 
 private:
+    GlobalShortcutsPortal *portal = nullptr;
     QList<globalhotkey*> hotkeylist;
     bool paused = false;
 };

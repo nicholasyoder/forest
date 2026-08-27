@@ -23,8 +23,8 @@ public:
 
     //begin pluginterface
     void setupPlug();
-    void XcbEventFilter(xcb_generic_event_t *event);
-    bool needs_xcb_events(){ return true; }
+    void XcbEventFilter(xcb_generic_event_t*){}
+    bool needs_xcb_events(){ return false; }
     //end pluginterface
 
 private:

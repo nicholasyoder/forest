@@ -2,7 +2,7 @@ Source: forest
 Section: x11
 Priority: optional
 Maintainer: Nicholas Yoder <nicholasyoder@proton.me>
-Build-Depends: debhelper-compat (= 13), cmake, pkgconf, qt6-base-dev, libqt6dbus6, libkf6windowsystem-dev, libx11-dev, libxcb-composite0-dev, libxcb-image0-dev, libxcb-shape0-dev, libxrender-dev, libxfixes-dev, libxdamage-dev, libxcursor-dev, libasound2-dev, libsensors-dev, libpolkit-qt6-1-dev, libqt6xdg-dev, liblayershellqtinterface-dev
+Build-Depends: debhelper-compat (= 13), cmake, pkgconf, qt6-base-dev, libqt6dbus6, libkf6windowsystem-dev, libx11-dev, libxcb-composite0-dev, libxcb-image0-dev, libxcb-shape0-dev, libxrender-dev, libxfixes-dev, libxdamage-dev, libxcursor-dev, libasound2-dev, libsensors-dev, libpolkit-qt6-1-dev, libqt6xdg-dev, liblayershellqtinterface-dev, libxkbcommon-dev
 Standards-Version: 4.5.1
 Homepage: https://github.com/nicholasyoder/forest
 Rules-Requires-Root: no

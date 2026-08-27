@@ -15,7 +15,3 @@ void services::setupPlug(){
 
     fpolkit = new polkitagent;
 }
-
-void services::XcbEventFilter(xcb_generic_event_t *event){
-    fhotkeys->XcbEventFilter(event);
-}
