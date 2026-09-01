@@ -165,6 +165,7 @@ void GlobalShortcutsPortal::bindShortcuts(const QList<globalhotkey *> &hotkeys, 
     QList<PortalShortcutSpec> shortcuts;
     for (globalhotkey *item : hotkeys) {
         const QString trigger = item->triggerString();
+        qInfo() << "GlobalShortcutsPortal: binding" << item->id() << "->" << trigger;
         if (trigger.isEmpty()) {
             continue; // triggerString() already logged why
         }
