@@ -38,11 +38,33 @@ void foresthotkeys::dispatch(QString id){
 }
 
 void foresthotkeys::pauseHotkeys(){
+    // A flag toggle alone isn't enough: it only gates dispatch() below, but
+    // the portal's bindings are still registered in Biome's compositor-side
+    // key-match table, which means Biome still swallows every bound key at
+    // the compositor level regardless of what forest does with the
+    // Activated signal afterward. edithotkeywidget's whole reason for
+    // calling this is to let a raw keypress (e.g. Meta) reach its own
+    // capture widget instead - which needs Biome to actually stop
+    // intercepting it, i.e. the session's bindings gone, not just muted
+    // client-side.
     paused = true;
+    portal->closeSession([]() {});
 }
 
 void foresthotkeys::resumeHotkeys(){
-    paused = false;
+    portal->createSession([this](bool ok) {
+        if (!ok) {
+            qCritical() << "foresthotkeys: failed to re-create the GlobalShortcuts portal session on resume";
+            paused = false;
+            return;
+        }
+        portal->bindShortcuts(hotkeylist, [this](bool bound) {
+            if (!bound) {
+                qCritical() << "foresthotkeys: BindShortcuts request failed on resume";
+            }
+            paused = false;
+        });
+    });
 }
 
 void foresthotkeys::loadhotkeys(){
