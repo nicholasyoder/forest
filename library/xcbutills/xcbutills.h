@@ -34,29 +34,14 @@ public:
     //return the name of an atom
     static char* getAtomName(xcb_atom_t atom);
 
-    //returns a list of open windows
-    static QList<xcb_window_t> getClientList();
-
-    //check if window should be shown in the taskbar
-    static bool isWindow4Taskbar(xcb_window_t window);
-
     //gets the WM_NAME window property
     static QString getWindowTitle(xcb_window_t window);
 
     //return the window icon
     static QIcon getWindowIcon(xcb_window_t window);
 
-    //get which desktop a window is on
-    static int getWindowDesktop(xcb_window_t window);
-
     //get screenshot of window
     static QPixmap getWindowImage(xcb_window_t window, int target_height);
-
-    //get the number of virtual desktops
-    static int getNumDesktops();
-
-    //get the active desktop
-    static int getCurrentDesktop();
 
     //show/unshow desktop
     static void showDesktop();
@@ -72,13 +57,9 @@ public:
     static void closeWindow(xcb_window_t window);
     static void resizeWindow(xcb_window_t window, int w, int h);
     static void moveWindow(xcb_window_t window, int x, int y);
-    static void moveWindowToDesktop(xcb_window_t window, int desktop);
 
     // Move window so top of window (title bar) is on screen
     static void fitWindowOnScreen(xcb_window_t window);
-
-    // Switch virtual desktop
-    static void setCurrentDesktop(int desknum);
 
     // Enable keyboard numlock
     //static void enableNumlock();

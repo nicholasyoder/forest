@@ -41,29 +41,6 @@ xcb_window_t Xcbutills::root_window(){
     return xcb_setup_roots_iterator(xcb_get_setup(conn)).data->root;
 }
 
-QList<xcb_window_t> Xcbutills::getClientList(){
-    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(root_window()), atom("_NET_CLIENT_LIST"), XCB_ATOM_WINDOW, 0, 100000);
-    QVector<xcb_window_t> clients = get_array_reply<xcb_window_t>(conn, cookie, XCB_ATOM_WINDOW);
-    QList<xcb_window_t> clientlist = clients.toList();
-    foreach(xcb_window_t window, clientlist){
-        if (!isWindow4Taskbar(window))
-            clientlist.removeOne(window);
-    }
-    return clientlist;
-}
-
-bool Xcbutills::isWindow4Taskbar(xcb_window_t window){
-    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, atom("_NET_WM_WINDOW_TYPE"), XCB_ATOM_ATOM, 0, 2048);
-    const QVector<xcb_atom_t> types = get_array_reply<xcb_atom_t>(conn, cookie, XCB_ATOM_ATOM);
-
-    if (types.contains(atom("_NET_WM_WINDOW_TYPE_DESKTOP")) || types.contains(atom("_NET_WM_WINDOW_TYPE_DOCK")) ||
-            types.contains(atom("_NET_WM_WINDOW_TYPE_SPLASH")) || types.contains(atom("_NET_WM_WINDOW_TYPE_TOOLBAR")) ||
-            types.contains(atom("_NET_WM_WINDOW_TYPE_MENU")) || types.contains(atom("_NET_WM_WINDOW_TYPE_POPUP_MENU")))
-        return false;
-    else
-        return true;
-}
-
 QString Xcbutills::getWindowTitle(xcb_window_t window){
     //TODO: try _NET_WM_VISIBLE_NAME, _NET_WM_NAME, WM_NAME before returning empty
     /*xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, XCB_ATOM_WM_NAME, XCB_ATOM_STRING, 0, 100000);
@@ -103,21 +80,6 @@ QIcon Xcbutills::getWindowIcon(xcb_window_t window){
     return ico;
 }
 
-int Xcbutills::getWindowDesktop(xcb_window_t window){
-    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, window, atom("_NET_WM_DESKTOP"), XCB_ATOM_CARDINAL, 0, 100000);
-    bool success;
-    uint32_t desktop = get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0, &success);
-    if (success){
-        if (desktop != 0xffffffff)
-            return int(desktop) + 1;
-        else
-            return -1;//On all desktops
-    }
-    else {
-        return 0;//error
-    }
-}
-
 // Check if all pixels in an image are transparent
 bool is_all_transparent(QImage image){
     for(int x = 0; x < image.width(); x++){
@@ -154,17 +116,6 @@ QPixmap Xcbutills::getWindowImage(xcb_window_t window, int target_height){
     // Fall back to window icon
     QIcon ico = getWindowIcon(window);
     return ico.pixmap(target_height, target_height);
-}
-
-int Xcbutills::getNumDesktops(){
-    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(root_window()), atom("_NET_NUMBER_OF_DESKTOPS"), XCB_ATOM_CARDINAL, 0, 1);
-    return int(get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0));
-}
-
-//get the active desktop
-int Xcbutills::getCurrentDesktop(){
-    xcb_get_property_cookie_t cookie = xcb_get_property(conn, false, xcb_window_t(root_window()), atom("_NET_CURRENT_DESKTOP"), XCB_ATOM_CARDINAL, 0, 1);
-    return int(get_value_reply<uint32_t>(conn, cookie, XCB_ATOM_CARDINAL, 0) + 1);
 }
 
 //show/unshow desktop
@@ -265,12 +216,6 @@ void Xcbutills::moveWindow(xcb_window_t window, int x, int y){
     xcb_configure_window(conn, window, XCB_CONFIG_WINDOW_X | XCB_CONFIG_WINDOW_Y, configVals);
 }
 
-void Xcbutills::moveWindowToDesktop(xcb_window_t window, int desktop){
-    uint32_t desktop_value = static_cast<uint32_t>(desktop - 1);
-    uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    send_client_message(conn, sendevent_mask, xcb_window_t(root_window()), window, atom("_NET_WM_DESKTOP"), &desktop_value);
-}
-
 void Xcbutills::fitWindowOnScreen(xcb_window_t window){
     demaximizeWindow(window);
     KWindowInfo info(window, NET::WMGeometry);
@@ -279,13 +224,6 @@ void Xcbutills::fitWindowOnScreen(xcb_window_t window){
     int x = (windowgeo.width() > screengeo.width()) ? 50 : screengeo.width()/2 - windowgeo.width()/2;
     int y = (windowgeo.height() > screengeo.height()) ? 50 : screengeo.height()/2 - windowgeo.height()/2;
     moveWindow(window, x, y);
-}
-
-void Xcbutills::setCurrentDesktop(int desknum){
-    const uint32_t data[5] = {uint32_t(desknum - 1), 0, 0, 0, 0};
-    uint sendevent_mask = XCB_EVENT_MASK_SUBSTRUCTURE_REDIRECT | XCB_EVENT_MASK_SUBSTRUCTURE_NOTIFY;
-    xcb_window_t root_w = root_window();
-    send_client_message(conn, sendevent_mask, root_w, root_w, atom("_NET_CURRENT_DESKTOP"), data);
 }
 
 //void Xcbutills::enableNumlock(){
