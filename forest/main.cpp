@@ -22,6 +22,11 @@ int main(int argc, char *argv[]){
     // reconfigured - not a free fix. Revisit only alongside a deliberate move
     // to a layer-shell-surface-per-popup design.
     LayerShellQt::Shell::useLayerShell();
+    // The env var set above is a no-op for this process (see comment) but
+    // otherwise leaks into every child forest spawns (hotkeys, main menu),
+    // making their windows layer surfaces too - confirmed with pcmanfm-qt
+    // opening full-output-sized and undecorated. Clear it to stop the leak.
+    qunsetenv("QT_WAYLAND_SHELL_INTEGRATION");
     FLogger::install("forest");
     forest w;
 
