@@ -107,6 +107,13 @@ void mainmenu::loadUI(){
     pBox->setObjectName("panelMainMenuPopup");
     //pBox->setFixedSize(500,500);
     connect(pBox, &popup::keypressed, this, &mainmenu::handleKeyPressed);
+    // popup's own default (outsideclicked -> closepopup directly) would
+    // bypass the allowClose guard closemenu() relies on to stop the same
+    // hotkey press that opened the menu from immediately closing it again
+    // - route outside clicks through closemenu() instead so that guard
+    // still applies.
+    disconnect(pBox, &popup::outsideclicked, pBox, &popup::closepopup);
+    connect(pBox, &popup::outsideclicked, this, &mainmenu::closemenu);
 }
 
 void mainmenu::reloadMenu(QMap<QString, QStringList> menuHash){

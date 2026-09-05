@@ -23,8 +23,6 @@ imagepopup::imagepopup(QWidget *parentw){
     scrshotlabel->setGraphicsEffect(ds_effect);
     popupglayout->addWidget(scrshotlabel, 1,0, 1, 2);
     pbox = new popup(popupglayout, parentwidget, CenteredOnWidget);
-    pbox->setWindowFlag(Qt::Popup, false);
-    pbox->setWindowFlag(Qt::X11BypassWindowManagerHint, true);
     connect(cbt, &closebutton::clicked, pbox, &popup::closepopup);
     connect(cbt, &closebutton::clicked, this, &imagepopup::closewindow);
 
