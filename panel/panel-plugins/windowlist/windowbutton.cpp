@@ -2,22 +2,38 @@
 
 #include "windowbutton.h"
 
+#include "extworkspacehandle.h"
+
+#include <QDBusConnection>
+#include <QDBusInterface>
+
+namespace {
+constexpr char kBiomeService[] = "org.biome";
+constexpr char kWorkspacesPath[] = "/org/biome/Workspaces";
+constexpr char kWorkspacesInterface[] = "org.biome.Workspaces";
+}
+
 struct MenuItem {
     QString text;
     QString icon;
     void (windowbutton::*slot)();
 };
 
-windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, QIcon icon, QString text) : handle(toplevelHandle){
+windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, QIcon icon, QString text,
+        ExtWorkspaceManager *workspaceManager)
+    : handle(toplevelHandle), workspace_manager(workspaceManager){
     setupIconAndTextButton(text, icon);
 
     pmenu = new popupmenu(this, CenteredOnWidget);
-
-    // "Move to desktop" is disabled until Workstream D exposes a workspace
-    // protocol - see the comment on desk_menu in windowbutton.h. Left
-    // unpopulated (no per-desktop items to build without
-    // Xcbutills::getNumDesktops()/moveWindowToDesktop()) and never shown.
     desk_menu = new popupmenu(this, CenteredOnWidget);
+
+    // Clicking this closes pmenu (via popupmenu::additem's own auto-connect,
+    // below) and opens desk_menu - the closest thing to a submenu Forest's
+    // flat popupmenu supports. Matches the old X11 menu's ordering (this
+    // item came first, before Raise/Maximize/etc.) and wording.
+    pmenuitem *desk_item = new pmenuitem("Move to desktop", QIcon::fromTheme("window-next"));
+    connect(desk_item, &pmenuitem::clicked, desk_menu, &popupmenu::show);
+    pmenu->additem(desk_item);
 
     MenuItem pmenu_items[] = {
         {"Raise", "arrow-up", &windowbutton::raise_w},
@@ -31,6 +47,11 @@ windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, QIcon icon, QS
         connect(menu_item, &pmenuitem::clicked, this, item.slot);
         pmenu->additem(menu_item);
     }
+
+    if (workspace_manager->workspaces().isEmpty())
+        connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowbutton::populateDeskMenu);
+    else
+        populateDeskMenu();
 
     connect(this, &windowbutton::enterevent, this, &windowbutton::handleEnterEvent);
     connect(this, &windowbutton::leaveevent, this, &windowbutton::handleLeaveEvent);
@@ -102,4 +123,31 @@ void windowbutton::close_w(){
 
 void windowbutton::demaximize_w(){
     handle->unsetMaximized();
+}
+
+void windowbutton::populateDeskMenu(){
+    disconnect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowbutton::populateDeskMenu);
+
+    const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
+    for (int index = 0; index < workspaces.length(); index++){
+        // "Desktop " + 1-based number, matching the old X11 menu's wording
+        // exactly rather than using Biome's own workspace name (which
+        // happens to also just be the 1-based number today, but isn't
+        // guaranteed to be).
+        pmenuitem *item = new pmenuitem("Desktop " + QString::number(index + 1));
+        connect(item, &pmenuitem::clicked, this, [this, index](){ moveToDesktop(index); });
+        desk_menu->additem(item);
+    }
+}
+
+void windowbutton::moveToDesktop(int workspace){
+    // Pairing (see windowlist.cpp's tryPairPendingHandles()) normally
+    // completes well before a user can right-click and choose this, but
+    // there's no protocol guarantee of it - silently no-op rather than
+    // send a bogus empty identifier to Biome.
+    if (m_identifier.isEmpty())
+        return;
+
+    QDBusInterface iface(kBiomeService, kWorkspacesPath, kWorkspacesInterface, QDBusConnection::sessionBus());
+    iface.call("MoveToplevelToWorkspace", m_identifier, workspace);
 }

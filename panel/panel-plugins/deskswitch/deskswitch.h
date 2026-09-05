@@ -5,10 +5,12 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
+#include <QVariantMap>
 
 #include "panelbutton.h"
 #include "panelpluginterface.h"
 #include "deskbutton.h"
+#include "extworkspacemanager.h"
 
 class deskswitch : public panelbutton, panelpluginterface {
     Q_OBJECT
@@ -22,7 +24,7 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    void XcbEventFilter(xcb_generic_event_t* event);
+    void XcbEventFilter(xcb_generic_event_t*){}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
 
@@ -31,16 +33,29 @@ signals:
 
 private slots:
     void setupbts();
-    void switchtodesk(int num);
+    void switchtodesk(int index);
+
+    // Active-desktop highlighting: driven by ext-workspace-v1's own state,
+    // fired after every workspacesChanged() (initial burst, and again after
+    // every subsequent activate()/commit() round trip).
+    void onWorkspacesChanged();
+
+    // Per-desktop window-count dots: driven independently, from
+    // org.biome.Workspaces over DBus - ext-workspace-v1 has no concept of
+    // which windows belong to which workspace at all (see
+    // biome/docs/phase4-plan.md Workstream D). GetWindowWorkspaces/
+    // WindowWorkspacesChanged hand back identifier -> workspace index for
+    // every open window; tallied into per-desktop counts here.
+    void refreshWindowWorkspaces();
+    void onWindowWorkspacesChanged(QVariantMap windowWorkspaces);
 
 private:
+    void applyWindowWorkspaces(const QVariantMap &windowWorkspaces);
+
     QHBoxLayout *basehlayout;
     QList<deskbutton*> dbuttons;
     popupmenu *pmenu;
-    int deskcount = 0;
-    xcb_atom_t _net_client_list;
-    xcb_atom_t _net_wm_desktop;
-    xcb_atom_t _net_current_desktop;
+    ExtWorkspaceManager *workspace_manager = nullptr;
 };
 
 #endif // DESKSWITCH_H

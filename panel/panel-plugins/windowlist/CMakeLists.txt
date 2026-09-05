@@ -5,6 +5,8 @@ add_library(windowlist MODULE
     windowlist.cpp
     foreigntoplevelmanager.cpp
     foreigntoplevelhandle.cpp
+    extforeigntoplevellist.cpp
+    extforeigntoplevelhandle.cpp
     iconresolver.cpp
     closebutton.h
     imagepopup.h
@@ -13,6 +15,8 @@ add_library(windowlist MODULE
     windowlist.h
     foreigntoplevelmanager.h
     foreigntoplevelhandle.h
+    extforeigntoplevellist.h
+    extforeigntoplevelhandle.h
     iconresolver.h
     settingswidget.ui
 )
@@ -30,5 +34,13 @@ target_link_libraries(windowlist PRIVATE
 forest_link_panel_library(windowlist)
 forest_link_miscutills(windowlist)
 forest_generate_wayland_protocol_client(windowlist ${CMAKE_SOURCE_DIR}/protocol/wlr-foreign-toplevel-management-unstable-v1.xml)
+
+# ext-foreign-toplevel-list-v1 is part of the wayland-protocols package's
+# staging/ directory (unlike wlr-foreign-toplevel-management-unstable-v1.xml
+# above, vendored since it isn't installed by any system package) - see
+# panel-library/CMakeLists.txt's identical note for ext-workspace-v1.
+pkg_get_variable(WAYLAND_PROTOCOLS_DATADIR wayland-protocols pkgdatadir)
+forest_generate_wayland_protocol_client(windowlist
+    "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml")
 
 install(TARGETS windowlist LIBRARY DESTINATION lib/forest/panel)
