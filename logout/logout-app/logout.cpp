@@ -5,8 +5,11 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QScreen>
+#include <QWindow>
 #include <QMessageBox>
 #include <QVector>
+
+#include <LayerShellQt/Window>
 
 enum class DBusService {SYSTEMD, CONSOLEKIT, UPOWER, PWMANAGEMENT};
 
@@ -97,25 +100,33 @@ void call_dbus_methods(QList<DBusMethod> methods){
 }
 
 logoutmanager::logoutmanager(){
-    setWindowFlags(Qt::X11BypassWindowManagerHint);
+    setWindowFlags(Qt::FramelessWindowHint);
     setFocusPolicy(Qt::StrongFocus);
     setAttribute(Qt::WA_TranslucentBackground);
-    setWindowOpacity(0.0);
     settings = new QSettings("Forest", "Logout");
     setup();
 
+    winId(); // force native window creation so windowHandle() is valid
+    LayerShellQt::Window *layer_window = LayerShellQt::Window::get(windowHandle());
+    layer_window->setLayer(LayerShellQt::Window::LayerOverlay);
+    layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
+    layer_window->setScope("forest-logout");
+
+    QRect screen_geo = qApp->primaryScreen()->geometry();
+    layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop | LayerShellQt::Window::AnchorLeft));
+    layer_window->setMargins(QMargins(
+        screen_geo.x() + (screen_geo.width() / 2 - sizeHint().width() / 2),
+        screen_geo.y() + (screen_geo.height() / 2 - sizeHint().height() / 2),
+        0, 0
+    ));
+
     foreach(QScreen* screen, qApp->screens()){
         imagewidget *background_fader = new imagewidget;
-        background_fader->setGeometry(screen->geometry());
+        background_fader->windowHandle()->setScreen(screen);
+        background_fader->setFixedSize(screen->size());
         background_fader->show();
         background_faders.append(background_fader);
     }
-
-    QRect screen_geo = qApp->primaryScreen()->geometry();
-    move(
-        screen_geo.x() + (screen_geo.width() / 2 - sizeHint().width() / 2),
-        screen_geo.y() + (screen_geo.height() / 2 - sizeHint().height() / 2)
-    );
 }
 
 logoutmanager::~logoutmanager(){}
@@ -175,46 +186,23 @@ void logoutmanager::setup(){
 }
 
 void logoutmanager::startbackfade(){
-    foreach(imagewidget* background_fader, background_faders)
-        background_fader->start();
-
-    do_fade(FadeDirection::FADEIN);
+    // The dialog and its dim overlays already fade in on their own the
+    // moment each is mapped - Biome fades any layer-shell surface whose
+    // namespace is configured for it (see biome/desktop/layer_shell.cpp and
+    // biome/core/fade_config.h). Two independent mechanisms/config keys:
+    // the dialog's own "forest-logout" namespace uses the simple per-pixel
+    // opacity fade ([LayerShell]/fadingNamespaces); the dim overlay's
+    // "forest-logout-dim" namespace (imagewidget.cpp) uses the opaque
+    // scanout-snapshot fade ([LayerShell]/scanoutFadingNamespaces), which
+    // avoids the composited-render-path cost a fullscreen translucent
+    // overlay would otherwise force on every tick. Nothing left to do here
+    // but grab focus.
+    set_initial_focus();
 }
 
 void logoutmanager::set_initial_focus(){
     activateWindow();
     focusbt->setFocus();
-}
-
-void logoutmanager::do_fade(FadeDirection direction, int interval, float limit){
-    fade_timer = new QTimer(this);
-    connect(fade_timer, &QTimer::timeout, this, [this, direction, limit](){perform_fade_step(direction, limit);});
-    fade_timer->start(interval);
-}
-
-void logoutmanager::perform_fade_step(FadeDirection direction, float limit){
-    if(direction == FadeDirection::FADEIN){
-        if (fade_opacity < 1.0 - limit){
-            fade_opacity += 0.2;
-            setWindowOpacity(fade_opacity);
-            update();
-        }
-        else{
-            fade_timer->stop();
-            set_initial_focus();
-        }
-    }
-    else{
-        if (fade_opacity > 0.0 + limit){
-            fade_opacity -= 0.2;
-            setWindowOpacity(fade_opacity);
-            update();
-        }
-        else{
-            fade_timer->stop();
-            close();
-        }
-    }
 }
 
 void logoutmanager::keyPressEvent(QKeyEvent *event){
@@ -227,11 +215,26 @@ void logoutmanager::keyPressEvent(QKeyEvent *event){
 }
 
 void logoutmanager::start_action(ActionType action){
-    do_fade(FadeDirection::FADEOUT);
-    foreach(imagewidget* background_fader, background_faders)
-        background_fader->blackout();
+    close(); // fades out via Biome (see startbackfade())
 
-    QTimer::singleShot(1000, this, [this, action](){do_action(action);});
+    // Rather than retargeting the existing dim overlays' opacity (Wayland
+    // has no protocol for a client to retarget an already-mapped surface's
+    // opacity), open new fully-opaque ones - they fade in from whatever's
+    // behind them (the old half-dim overlays, deliberately left open to
+    // avoid any flicker gap) up to full black. The old overlays are never
+    // explicitly closed; the process exits shortly after regardless.
+    foreach(QScreen* screen, qApp->screens()){
+        imagewidget *blackout_widget = new imagewidget(imagewidget::DimLevel::Full);
+        blackout_widget->windowHandle()->setScreen(screen);
+        blackout_widget->setFixedSize(screen->size());
+        blackout_widget->show();
+    }
+
+    // Comfortably above Biome's own kFadeDurationMs (desktop/layer_shell.cpp,
+    // 220ms) - the process staying alive/connected for this long is what
+    // lets the dialog's own opacity fade-out actually finish before its
+    // content goes away underneath it.
+    QTimer::singleShot(250, this, [this, action](){do_action(action);});
 }
 
 void logoutmanager::do_action(ActionType action){
@@ -242,8 +245,9 @@ void logoutmanager::do_action(ActionType action){
 }
 
 void logoutmanager::cancel(){
-    do_fade(FadeDirection::FADEOUT);
+    close(); // fades out via Biome
     foreach(imagewidget* background_fader, background_faders)
-        background_fader->stop();
-    QTimer::singleShot(1000, qApp, SLOT(quit()));
+        background_fader->close(); // fades out via Biome
+    // See start_action()'s matching comment above.
+    QTimer::singleShot(250, qApp, SLOT(quit()));
 }

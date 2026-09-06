@@ -4,33 +4,18 @@
 #define IMAGEWIDGET_H
 
 #include <QWidget>
-#include <QTimer>
-#include <QPainter>
-#include <QDir>
-#include <QDateTime>
 
 class imagewidget : public QWidget{
     Q_OBJECT
 public:
-    imagewidget();
+    enum class DimLevel { Partial, Full };
 
-public slots:
-    void start();
-    void blackout();
-    void stop();
-
-private slots:
-    void paintEvent(QPaintEvent *);
-    void fade();
-    void fadeblack();
-    void fadeout();
+    explicit imagewidget(DimLevel level = DimLevel::Partial);
 
 private:
-    qint64 animstarttime = 0;
-    qint64 animtime = 0;
-    QTimer *animtimer = new QTimer;
-    qreal opacity = 0.0;
-    QTimer *t = new QTimer;
+    void paintEvent(QPaintEvent *);
+
+    DimLevel level;
 };
 
 #endif // IMAGEWIDGET_H
