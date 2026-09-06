@@ -26,6 +26,20 @@ user while reviewing the plan and again after manual testing:
    to dodge (see below) — worth solving once, alongside item 1, not as a
    tray-only patch.
 
+   **Resolved 2026-09-06 — fixed in Biome, not Forest.** See Task 2 below:
+   root-caused via a `WAYLAND_DEBUG` trace to a Biome gap (a client's
+   `xdg_popup.reposition()` request — which Qt sends right after creating
+   the tray's popup, once its real content size is known — was never
+   re-run through Biome's screen-constrain logic, only the popup's initial
+   creation was). Fixed compositor-side in `desktop/xdg_shell.cpp`
+   (`constrain_popup_to_output()` + a new `reposition` listener). Two
+   Forest-side attempts at a client-side positioning workaround
+   (`trayicon.cpp`) were tried first, had no effect (confirming the bug
+   wasn't client-side), and were reverted once the real cause was found.
+   Since this fix is compositor-level, it benefits every `QMenu`/`xdg_popup`
+   under Biome, not just the tray's — Task 2 is effectively done, and Task 1
+   is no longer blocked on it.
+
 This file tracks both for whoever picks this up next.
 
 ## Current native popup-menu system
@@ -74,39 +88,89 @@ This file tracks both for whoever picks this up next.
 - `windowbutton.cpp`'s desk-menu submenu chaining: re-evaluate using
   `QMenu::addMenu()` for a real submenu instead of the two-popup chain.
 
-## Task 2: fix `QMenu` popup positioning under Wayland
+## Task 2: fix `QMenu` popup positioning under Wayland — RESOLVED 2026-09-06
 
 **Symptom:** right-click the tray → `QMenu` opens downward from the cursor
 and runs off the bottom of the screen, because Forest's panel is
 bottom-docked and nothing flips the menu upward to compensate.
 
-**Why this isn't a quick fix:** `QMenu::popup()` uses Qt's Wayland QPA
-`xdg_popup` path — a real compositor-negotiated popup grab with an
-`xdg_positioner` that's supposed to support constraint/flip adjustment so
-the compositor repositions the popup to fit on screen. `popup.h`'s own
-header comment (see above) already documents that this class of Wayland
-popup/grab behavior has real, currently-unresolved gaps in the
-wlroots/KWin ecosystem generally — `popup.h` sidesteps the *grab-serial*
-half of that gap by not using a real popup at all. `QMenu` has no such
-escape hatch, so this needs actual investigation, likely in two places:
+**Investigation:** two client-side (Forest) fixes were tried first and
+both had zero observable effect:
+1. Computing an already-on-screen `QPoint` (anchored above the tray icon,
+   clamped to `screen()->availableGeometry()`) instead of passing
+   `QCursor::pos()` to `menu()->popup()`.
+2. Waiting for `DBusMenuImporter::menuUpdated()` before popping up, in case
+   `sizeHint()` was being measured against a not-yet-populated menu.
 
-- **Biome side:** check `desktop/xdg_shell.cpp` (or wherever Biome handles
-  `xdg_popup`/`xdg_positioner`) for whether it implements the positioner's
-  `constraint_adjustment` bits (specifically the flip-on-Y-axis case) at
-  all. If not, this is a real compositor-side gap worth closing on its own
-  merits (standard-protocol compliance, matches the project's decoupling
-  goal — see `biome/docs/plan.md`'s "Decoupling goal" section — rather than
-  a Forest-specific workaround).
-- **Forest/Qt side:** even with a correct positioner, confirm Qt's own
-  Wayland QPA is asking for the right anchor rect/gravity in the first
-  place — worth checking what `QMenu::popup(pos)` actually requests
-  relative to the launching widget's screen position and Forest's own
-  panel-reserved exclusive zone (layer-shell), since a wrong *request* can't
-  be fixed by a correct positioner on the compositor side.
+Neither changed the symptom at all, which was itself the clue: Wayland
+gives clients no real global desktop-coordinate space to compute a
+"corrected" point in, so a client-side position fix can't be the answer.
+Root-caused instead via a live `WAYLAND_DEBUG=1` trace of the actual
+`xdg_positioner`/`xdg_popup` protocol traffic during the tray right-click:
 
-**Why it blocks/overlaps Task 1, not just the tray:** none of today's
-`popupmenu` consumers hit this bug only because they deliberately avoid a
-real popup grab (`Qt::ToolTip`, per `popup.h`). The moment they're converted
-to real `QMenu`s (Task 1), every one of them becomes newly exposed to this
-same positioning bug — so this needs solving *before or alongside* Task 1
-lands, not treated as a tray-only nicety afterward.
+- Qt's positioner for `QMenu` always requests `anchor=top_left`,
+  `gravity=bottom_right`, `constraint_adjustment=slide_x|slide_y` (no flip
+  bits, ever) — a hardcoded Qt/QtWaylandClient default, not something a
+  Forest-side `QPoint` can influence.
+- Biome (`desktop/xdg_shell.cpp`) *does* correctly call wlroots'
+  `wlr_xdg_popup_unconstrain_from_box()` to slide/flip a popup back on
+  screen — but only in response to `wlr_xdg_popup`'s creation (`new_popup`).
+  The trace showed Qt creating the popup with a placeholder size, then
+  immediately calling `xdg_popup.reposition()` with the real, final size
+  once the menu's actual content was known (real wlroots 0.18 signal:
+  `wlr_xdg_popup::events.reposition` — this didn't exist in wlroots 0.15,
+  which is what `misc/wlroots`'s vendored reference checkout has, so don't
+  trust that copy for this). Biome had no listener on that signal at all,
+  so the corrected (and larger, more likely to be genuinely off-screen)
+  geometry that actually got shown to the user sailed through completely
+  unconstrained.
+
+**Fix (Biome, not Forest):** `desktop/xdg_shell.cpp` — extracted the
+existing constrain logic into `constrain_popup_to_output()` (generalized to
+read the popup's own scene-node parent rather than assuming a specific
+caller's parent-lookup shape, so it works for both real-`xdg_surface`-parent
+popups and layer-shell-owned ones like the panel's tray menu) and added a
+`BiomePopup::reposition` listener on `wlr_xdg_popup::events.reposition` that
+re-runs it on every reposition, not just at creation. Both Forest-side
+attempts above were reverted (`trayicon.cpp` is back to plain
+`menu()->popup(QCursor::pos())`) since the real fix is compositor-level and
+benefits every `QMenu`/`xdg_popup` under Biome, not just the tray's — Task 1
+is no longer blocked on this.
+
+**Follow-up fix, same day:** manual testing found a second, related bug —
+nm-applet's Wi-Fi-list submenu (a popup-on-popup, opened from the tray's
+already-open context menu) landed in the wrong place on both axes,
+independent of the reposition fix above. Root cause: `wlr_xdg_popup_unconstrain_from_box()`'s
+own doc comment requires its box to be relative to the popup's *root
+toplevel parent surface*, not just its immediate parent — for a one-level
+popup those are the same surface (so the original fix's use of
+`scene_tree->node.parent` happened to work), but for a submenu the
+immediate parent is another popup, not the root, and using its position
+silently shifted every flip/slide computation by the gap between them.
+Fixed by walking the real `xdg_popup->parent` chain (not the scene tree,
+which looks identical at every level) to find the actual root popup before
+resolving its scene-parent's absolute position — see the updated comment on
+`constrain_popup_to_output()` for why `xdg_popup->parent` is the right link
+to walk (it correctly stops at a layer-shell-owned root too, since that
+attachment is invisible to it).
+
+**Known remaining issue, not fixed — likely Qt-side, needs revisiting during
+Task 1:** nm-applet's "VPN Connections" submenu (single item, opens off the
+main tray menu) is still positioned wrong vertically — noticeably higher
+than the actual on-screen row that triggers it. A `WAYLAND_DEBUG` trace of
+this specific submenu showed Biome passing the popup's `xdg_positioner`
+through **completely unmodified** (requested and final `configure` values
+identical - `set_anchor_rect(-196, 260, 1, 1)` → `configure(-196, 260, 196,
+22)`), so this isn't the same class of bug as above; there's nothing to
+slide/flip because Biome never judged it out-of-bounds. The anchor rect
+itself looks suspect: x=-196 is outside the parent menu's own window
+geometry (parent width is only 262px), which the xdg-shell spec's own
+`set_anchor_rect` doc says must not happen ("the anchor rectangle may not
+extend outside the window geometry of the ... parent surface") - pointing at
+`dbusmenu-lxqt`'s `QMenu` (specifically `QMenuPrivate`'s Wayland submenu
+positioning) sending a bad/stale anchor rect, not a Biome bug. Not
+independently confirmed against a known upstream Qt bug report yet - worth
+a proper search once Task 1 work resumes, since a real fix would live
+upstream (Qt or dbusmenu-lxqt), not in Forest or Biome, matching this file's
+opening note that `DBusMenuImporter`'s `QMenu` can't be redirected to
+Forest's own widgets at all.
