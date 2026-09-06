@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "hotkey.h"
-#include "qxt/keymapper_x11.h"
+#include "keysym_table.h"
 
 #include <xkbcommon/xkbcommon.h>
 

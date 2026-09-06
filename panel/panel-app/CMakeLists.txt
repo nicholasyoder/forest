@@ -17,7 +17,6 @@ target_link_libraries(panel-app PRIVATE
     KF6WindowSystem
 )
 forest_link_panel_library(panel-app)
-forest_link_xcbutills(panel-app)
 forest_link_miscutills(panel-app)
 forest_link_layershellqt(panel-app)
 
