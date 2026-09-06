@@ -32,7 +32,7 @@ Forest is a Qt6/C++ desktop environment for Linux (targets Debian Trixie). All U
 The desktop session runs as several independent processes:
 
 - **`forest`** — the main process. Loads app plugins at startup, registers `org.forest` on DBus, and applies the global stylesheet.
-- **`forest-session`** — session manager. Launches the WM (xfwm4) and autostart entries. Exec'd by `startforest` which is the xsession entry point.
+- **`forest-session`** — session manager. Launches autostart entries and the `forest` main process. Forked by the Biome compositor (its `-s` flag) once Biome's Wayland socket is ready — Biome is the top-level process, exec'd by `startforest-wayland`, the wayland-sessions entry point.
 - **`forest-logout`** — standalone fullscreen dialog for power actions.
 - **`forest-settings`** — standalone settings app. Loads settings plugins for its sidebar panels.
 
@@ -92,7 +92,6 @@ All in `library/`:
 - **`flogger`** — logging setup; call `FLogger::install("appname")` at startup
 - **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`
 - **`pluginutills`** — plugin path resolution for both plugin types
-- **`xcbutills`** — XCB helpers (numlock state)
 - **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `PanelButton`, `GraphWidget`)
 
 Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(target)`) link these static libs.

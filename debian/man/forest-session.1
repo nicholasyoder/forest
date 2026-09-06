@@ -5,14 +5,17 @@ forest-session \- Forest session manager
 .B forest-session
 .SH DESCRIPTION
 .B forest-session
-starts a Forest desktop session: it launches the window manager (xfwm4)
-and any configured autostart entries, then starts the
+starts the rest of a Forest desktop session: any configured autostart
+entries, then the
 .BR forest (1)
 main process.
 .PP
-It is exec'd by
-.IR /usr/share/forest/startforest ,
-which is the xsession entry point registered for X11 display managers.
+It is forked by the Biome compositor once its Wayland socket is ready
+(Biome's
+.B \-s
+flag), after Biome itself has been exec'd by
+.IR /usr/share/forest/startforest-wayland ,
+which is the Wayland session entry point registered for display managers.
 Users normally do not run
 .B forest-session
 directly; it is started automatically when a Forest session is selected

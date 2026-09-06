@@ -52,7 +52,7 @@ add_subdirectory(greeter)
 # Install config and data files
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
-install(DIRECTORY usr/share/xsessions/ DESTINATION /usr/share/xsessions)
+install(DIRECTORY usr/share/wayland-sessions/ DESTINATION /usr/share/wayland-sessions)
 install(DIRECTORY usr/share/applications/ DESTINATION /usr/share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest USE_SOURCE_PERMISSIONS)
 install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION /usr/share/wallpapers/forest)

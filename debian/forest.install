@@ -7,13 +7,12 @@ usr/lib/*.a
 etc/forest/Forest.conf
 etc/forest/Panel.conf
 etc/forest/Quicklaunch.conf
-usr/share/xsessions
+usr/share/wayland-sessions
 usr/share/applications
 usr/share/forest/pics
 usr/share/forest/power-manager.desktop
 usr/share/forest/qtct.conf
-usr/share/forest/startforest
-usr/share/forest/xfwm4.xml
+usr/share/forest/startforest-wayland
 usr/share/forest/themes/*/forest.css
 usr/share/forest/themes/*/logout.css
 usr/share/forest/themes/*/settings.css

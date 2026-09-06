@@ -1,5 +1,6 @@
 [Desktop Entry]
 Name=Forest
 Comment=Forest - Lightweight Qt desktop environment
-Exec=/usr/share/forest/startforest
+Exec=/usr/share/forest/startforest-wayland
 Type=Application
+DesktopNames=Forest

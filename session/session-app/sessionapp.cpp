@@ -23,16 +23,9 @@ void SessionApp::startSession(){
 
     // Setup Mouse
 
-    launch_WM();
     startProcess("forest");
     launch_autostart_commands();
     launch_autostart_xdg();
-}
-
-void SessionApp::launch_WM(){
-    QString wm_cmd = settings->value("window_manager", "xfwm4").toString();
-    qInfo() << "Launching window manager:" << wm_cmd;
-    startProcess(wm_cmd);
 }
 
 void SessionApp::launch_autostart_commands(){
