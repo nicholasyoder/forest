@@ -121,7 +121,7 @@ logoutmanager::logoutmanager(){
     ));
 
     foreach(QScreen* screen, qApp->screens()){
-        imagewidget *background_fader = new imagewidget;
+        layeroverlay *background_fader = new layeroverlay(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim");
         background_fader->windowHandle()->setScreen(screen);
         background_fader->setFixedSize(screen->size());
         background_fader->show();
@@ -192,7 +192,7 @@ void logoutmanager::startbackfade(){
     // biome/core/fade_config.h). Two independent mechanisms/config keys:
     // the dialog's own "forest-logout" namespace uses the simple per-pixel
     // opacity fade ([LayerShell]/fadingNamespaces); the dim overlay's
-    // "forest-logout-dim" namespace (imagewidget.cpp) uses the opaque
+    // "forest-logout-dim" namespace (layeroverlay.cpp) uses the opaque
     // scanout-snapshot fade ([LayerShell]/scanoutFadingNamespaces), which
     // avoids the composited-render-path cost a fullscreen translucent
     // overlay would otherwise force on every tick. Nothing left to do here
@@ -224,7 +224,7 @@ void logoutmanager::start_action(ActionType action){
     // avoid any flicker gap) up to full black. The old overlays are never
     // explicitly closed; the process exits shortly after regardless.
     foreach(QScreen* screen, qApp->screens()){
-        imagewidget *blackout_widget = new imagewidget(imagewidget::DimLevel::Full);
+        layeroverlay *blackout_widget = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerTop, "forest-logout-dim");
         blackout_widget->windowHandle()->setScreen(screen);
         blackout_widget->setFixedSize(screen->size());
         blackout_widget->show();
@@ -246,7 +246,7 @@ void logoutmanager::do_action(ActionType action){
 
 void logoutmanager::cancel(){
     close(); // fades out via Biome
-    foreach(imagewidget* background_fader, background_faders)
+    foreach(layeroverlay* background_fader, background_faders)
         background_fader->close(); // fades out via Biome
     // See start_action()'s matching comment above.
     QTimer::singleShot(250, qApp, SLOT(quit()));

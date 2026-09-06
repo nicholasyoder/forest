@@ -1,10 +1,15 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "forest.h"
-#include "fadewidget.h"
+#include "layeroverlay.h"
 #include "pluginutills.h"
 #include "../library/fstyleloader/fstyleloader.h"
 #include "settings_upgrade_manager.h"
+
+#include <LayerShellQt/Window>
+#include <QApplication>
+#include <QScreen>
+#include <QTimer>
 
 forest::forest(){}
 
@@ -14,11 +19,13 @@ void forest::setup(){
     SettingsUpgradeManager upgrade_manager(this);
     upgrade_manager.perform_upgrades();
 
-    QList<fadewidget*> fwidgetlist;
+    QList<layeroverlay*> startup_overlays;
     foreach (QScreen *screen, qApp->screens()){
-        fadewidget *fwidget = new fadewidget(screen);
-        fwidgetlist << fwidget;
-        fwidget->show();
+        layeroverlay *overlay = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerOverlay, "forest-startup");
+        overlay->windowHandle()->setScreen(screen);
+        overlay->setFixedSize(screen->size());
+        overlay->show();
+        startup_overlays << overlay;
     }
 
     loadstylesheet();
@@ -29,8 +36,12 @@ void forest::setup(){
     if (!QDBusConnection::sessionBus().registerObject("/org/forest", this, QDBusConnection::ExportAllSlots))
         qCritical() << "Failed to register /org/forest object on DBus:" << QDBusConnection::sessionBus().lastError().message();
 
-    foreach (fadewidget* fwidget, fwidgetlist)
-        QTimer::singleShot(1000, fwidget, SLOT(start()));
+    // Biome fades this out compositor-side on close() (namespace
+    // "forest-startup", see biome/desktop/layer_shell.cpp / fade_config.h) -
+    // revealing the wallpaper/panel/icons, which are already fully rendered
+    // underneath by now, all at once.
+    foreach (layeroverlay* overlay, startup_overlays)
+        QTimer::singleShot(1000, overlay, &QWidget::close);
 }
 
 void forest::XcbEventFilter(xcb_generic_event_t *event){

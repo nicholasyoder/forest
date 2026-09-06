@@ -46,6 +46,13 @@ function(forest_link_layershellqt target)
     target_link_libraries(${target} PRIVATE LayerShellQt::Interface)
 endfunction()
 
+# forest_link_layeroverlay(target)
+# Adds include paths and links the layeroverlay static library
+function(forest_link_layeroverlay target)
+    target_include_directories(${target} PRIVATE ${CMAKE_SOURCE_DIR}/library/layeroverlay)
+    target_link_libraries(${target} PRIVATE layeroverlay)
+endfunction()
+
 # forest_generate_wayland_protocol_client(target xml_path)
 # Generates and adds Qt Wayland client bindings for a vendored protocol XML
 # (via qt6_generate_wayland_protocol_client_sources) and links Qt6::WaylandClient.

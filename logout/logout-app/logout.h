@@ -10,7 +10,7 @@
 #include <QKeyEvent>
 
 #include "iconbutton.h"
-#include "imagewidget.h"
+#include "layeroverlay.h"
 
 enum class ActionType {SHUTDOWN, REBOOT, LOGOUT, SUSPEND, HIBERNATE};
 
@@ -33,7 +33,7 @@ private slots:
 
 private:
     void setup();
-    QList<imagewidget*> background_faders;
+    QList<layeroverlay*> background_faders;
     iconbutton *focusbt = nullptr;
     QSettings *settings = nullptr;
 };

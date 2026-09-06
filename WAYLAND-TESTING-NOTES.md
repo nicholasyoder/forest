@@ -23,6 +23,27 @@ switch, per the decision not to add runtime platform branching in the code.
   file mtimes) — fixed to `/opt/forest-build/usr/`, matching the `usr/share/*`
   copies already in the same script. Not Wayland-specific, keep on every
   branch.
+- **`biome/core/fade_config.cpp`** (separate repo, own history — not part of
+  this branch or this list's revert tracking) — `fadingNamespaces`/
+  `scanoutFadingNamespaces` were read via `QVariant::toString()`, which
+  silently returns `""` once a key holds more than one comma-separated
+  namespace (QSettings' IniFormat auto-detects the unescaped comma on
+  read-back and hands the value back as a `QStringList`, which `toString()`
+  doesn't rejoin). A single namespace round-tripped fine as a plain string,
+  which is why this went unnoticed until `scanoutFadingNamespaces` needed a
+  second entry (`forest-startup`, alongside `forest-logout-dim`) here — fixed
+  to read via `toStringList()` instead, which normalizes both shapes.
+- **`biome/desktop/layer_shell.cpp`** (same repo/history note as above) —
+  `scanoutFadingNamespaces`' background snapshot used to be captured once at
+  map time, which is wrong for a surface that maps *before* the real desktop
+  has rendered anything (forest-startup's cover has to, to hide plugin
+  startup) — it now re-captures fresh right as fade-out begins
+  (`capture_background_snapshot()`, called from both `scanout_fade_create()`
+  and `scanout_fade_start_fade_out()`), which in turn needed the
+  currently-visible overlay's own `scene_buffer` hidden while capturing (same
+  as the client's real content already was), or it captured itself as "the
+  background". No behavior change for `forest-logout-dim`, whose background
+  is already static throughout its lifetime either way.
 
 ## Revert or replace before this branch is done (Wayland-testing scaffolding)
 
@@ -78,3 +99,18 @@ switch, per the decision not to add runtime platform branching in the code.
   `KX11Extras`/`Xcbutills::*`. `deskswitch` (plug-0009) stays
   `enabled=false` — still unported X11-only code, gated on Workstream D
   (workspaces, not started).
+- **`~/.config/Forest/Biome.conf`** — `[LayerShell]/scanoutFadingNamespaces`
+  must include `forest-startup` (alongside the existing `forest-logout-dim`)
+  for the main `forest` process's fullscreen startup black-overlay
+  (`forest/forest.cpp`, `layeroverlay` scope `"forest-startup"`) to fade out
+  smoothly under Biome. It belongs in `scanoutFadingNamespaces`, not
+  `fadingNamespaces` — it's fullscreen, same as `forest-logout-dim`, not a
+  small partial-screen surface like the `forest-logout` dialog. This key has
+  no shipped default/template anywhere in the tree — absent config means an
+  empty set means no fade at all (`biome/core/fade_config.h`) — so this is
+  purely local/manual state, same as the hotkeys config above. Not yet
+  reflected in any packaging — needs a real default before this branch
+  ships, not just a personal dev workaround. Requires a Biome build with the
+  multi-value `scanoutFadingNamespaces` fix below — an older Biome silently
+  drops fading for both namespaces sharing that key once it holds more than
+  one value.
