@@ -4,7 +4,6 @@
 #define GENERALSETTINGS_H
 
 #include <QObject>
-#include <QLineEdit>
 #include <QCheckBox>
 
 #include "settings_plugin_interface.h"
@@ -19,7 +18,6 @@ private slots:
     void save_settings();
 private:
     settings_category *settings_item = nullptr;
-    QLineEdit *wm_edit = nullptr;
     QCheckBox *xdg_checkbox = nullptr;
 };
 

@@ -39,7 +39,7 @@ greeter/
     ├── greetdclient.h / .cpp             # greetd IPC
     ├── greeterwindow.h / .cpp            # fullscreen login UI
     ├── userlistmodel.h / .cpp            # parses /etc/passwd
-    └── sessionlistmodel.h / .cpp         # parses /usr/share/xsessions/*.desktop
+    └── sessionlistmodel.h / .cpp         # parses xsessions/ and wayland-sessions/ *.desktop
 
 usr/share/forest/themes/base/greeter.css  # new CSS layer (inherited by all themes)
 
@@ -74,7 +74,7 @@ The socket path is in `$GREETD_SOCK`. Messages are **4-byte little-endian length
 { "type": "post_auth_message_response", "response": "hunter2" }
 
 // 3. Launch the session after success
-{ "type": "start_session", "cmd": ["/usr/share/forest/startforest"], "env": [] }
+{ "type": "start_session", "cmd": ["/usr/share/forest/startforest-wayland"], "env": [] }
 
 // Cancel and reset (e.g. user switches username mid-auth)
 { "type": "cancel_session" }
@@ -103,7 +103,7 @@ create_session(username)
   → auth_message{secret, "Password: "}
     post_auth_message_response("hunter2")
       → success
-        start_session(["/usr/share/forest/startforest"])
+        start_session(["/usr/share/forest/startforest-wayland"])
         [greeter exits]
 ```
 
@@ -140,7 +140,9 @@ Per user, stores:
 
 ### `SessionListModel` (plain struct list)
 
-Reads all `*.desktop` files in `/usr/share/xsessions/`. For each, parses:
+Reads all `*.desktop` files in `/usr/share/xsessions/` and
+`/usr/share/wayland-sessions/` (added for the Phase 5 Biome cutover — see
+`biome/docs/plan.md`). For each, parses:
 - `Name=` → display name
 - `Exec=` → command passed to `start_session`
 
@@ -307,6 +309,6 @@ Boot
                  └─ user authenticates
                      └─ forest-greeter sends start_session → exits
                          └─ cage exits (due to -s flag)
-                             └─ greetd launches: /usr/share/forest/startforest
-                                 └─ startforest sets up env, execs forest-session
+                             └─ greetd launches: /usr/share/forest/startforest-wayland
+                                 └─ startforest-wayland sets up env, execs biome -s forest-session
 ```

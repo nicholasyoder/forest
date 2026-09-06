@@ -2,7 +2,7 @@
 
 Forest is a lightweight desktop environment for Linux built with C++ and Qt. It has a modular design and is fully themeable via QSS (Qt style sheets).
 
-It can be used with various window managers and compositors, but xfwm4 is recommended.
+It requires the [Biome](https://github.com/nicholasyoder/biome) Wayland compositor (or another compositor speaking the same protocols) — Forest's shell (panel, windowlist, hotkeys, workspaces) is Wayland-native and does not run correctly under a plain X11 window manager like xfwm4.
 
 ![Forest desktop screenshot](docs/images/forest_0.7.9_desktop.jpg)
 

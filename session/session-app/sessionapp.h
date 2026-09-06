@@ -17,7 +17,6 @@ public:
     void startSession();
 
 private slots:
-    void launch_WM();
     void launch_autostart_commands();
     void launch_autostart_xdg();
 
