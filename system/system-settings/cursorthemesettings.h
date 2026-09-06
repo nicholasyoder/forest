@@ -30,7 +30,6 @@ private slots:
     QPixmap get_cursor_preview(QString theme, QString cursor, int size = 32);
     QPixmap combine_pixmaps(QList<QPixmap> pixmaps);
     void set_cursor_size();
-    void set_x_cursor_in_file(QString file, QString theme, int size);
 
 private:
     settings_category *settings_item = nullptr;

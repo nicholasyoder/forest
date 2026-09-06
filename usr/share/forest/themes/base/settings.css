@@ -236,3 +236,8 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 #SystemInfoLabel {
     color: #777;
 }
+
+#SettingsNoteLabel {
+    color: #777;
+    font-style: italic;
+}

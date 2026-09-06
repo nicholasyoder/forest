@@ -2,15 +2,20 @@
 
 #include "cursorthemesettings.h"
 
+#include <QDBusConnection>
+#include <QDBusInterface>
 #include <QDir>
+#include <QLabel>
 #include <QSettings>
-#include <QProcess>
 
-#include "../../library/xcbutills/xcbutills.h"
-
-#include <X11/Xlib.h>
 #include <X11/Xcursor/Xcursor.h>
-#include <X11/extensions/Xfixes.h>
+
+namespace {
+constexpr char kBiomeService[] = "org.biome";
+constexpr char kCursorPath[] = "/org/biome/Cursor";
+constexpr char kCursorInterface[] = "org.biome.Cursor";
+constexpr int kDefaultCursorSize = 24;
+}
 
 QString cursor_preview_names[] = {
     "left_ptr",
@@ -26,6 +31,12 @@ QString cursor_preview_names[] = {
 CursorThemeSettings::CursorThemeSettings(){
     settings_item = new settings_category("Mouse Cursor", "", "preferences-desktop-mouse");
     connect(settings_item, &settings_category::opened, this, &CursorThemeSettings::load_cursor_themes);
+
+    QLabel *note_label = new QLabel(tr(
+        "Changes may not fully take effect until you log out and back in."));
+    note_label->setObjectName("SettingsNoteLabel");
+    note_label->setWordWrap(true);
+    settings_item->add_child(new settings_widget("", "", note_label));
 
     size_input = new QSpinBox;
     size_input->setMaximum(128);
@@ -77,8 +88,19 @@ void CursorThemeSettings::load_cursor_themes(){
     theme_list.sort();
     cursor_theme_list->clear();
 
-    Display* dpy = Xcbutills::display();
-    QString current_theme = QString::fromUtf8(XcursorGetTheme(dpy));
+    // ~/.icons/default/index.theme is the freedesktop fallback every Xcursor
+    // loader (X11's libXcursor and Wayland's libwayland-cursor alike) uses
+    // when no theme name is given outright - cursorthemesettings itself
+    // maintains this file (see set_cursor_theme() below), so it doubles as
+    // this settings page's own persisted "currently selected" state, with
+    // nothing X11-specific about reading it back.
+    QSettings index_theme(
+        QDir::home().filePath(QStringLiteral(".icons/default/index.theme")), QSettings::IniFormat);
+    index_theme.beginGroup(QStringLiteral("Icon Theme"));
+    QString current_theme = index_theme.value(QStringLiteral("Inherits")).toString();
+    int current_size = index_theme.value(QStringLiteral("Size"), kDefaultCursorSize).toInt();
+    index_theme.endGroup();
+
     foreach (QString theme, theme_list) {
         QListWidgetItem *item = new QListWidgetItem(theme);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
@@ -90,7 +112,7 @@ void CursorThemeSettings::load_cursor_themes(){
         item->setIcon(QIcon(combine_pixmaps(pixmaps)));
         cursor_theme_list->addItem(item);
     }
-    size_input->setValue(XcursorGetDefaultSize(dpy));
+    size_input->setValue(current_size);
 }
 
 QPixmap CursorThemeSettings::get_cursor_preview(QString theme, QString cursor, int size){
@@ -155,42 +177,6 @@ void CursorThemeSettings::set_cursor_theme(QListWidgetItem *item){
     int size = size_input->value();
     QString theme = item->text();
 
-    Display* dpy = Xcbutills::display();
-    XcursorSetTheme(dpy, qPrintable(theme));
-    XcursorSetDefaultSize(dpy, size);
-
-    // Reload the standard cursors
-    QStringList names;
-    names << "left_ptr"            << "up_arrow"             << "cross"           << "wait"
-          << "left_ptr_watch"      << "ibeam"                << "size_ver"        << "size_hor"
-          << "size_bdiag"          << "size_fdiag"           << "size_all"        << "split_v"
-          << "split_h"             << "pointing_hand"        << "openhand"        << "text"
-          << "closedhand"          << "forbidden"            << "whats_this"      << "pirate"
-          << "X_cursor"            << "right_ptr"            << "hand1"           << "question_arrow"
-          << "hand2"               << "watch"                << "xterm"           << "left_side"
-          << "crosshair"           << "left_ptr_watch"       << "center_ptr"      << "right_side"
-          << "sb_h_double_arrow"   << "sb_v_double_arrow"    << "fleur"           << "top_side"
-          << "top_left_corner"     << "top_right_corner"     << "bottom_side"
-          << "bottom_left_corner"  << "bottom_right_corner";
-    foreach(QString name, names){
-        QByteArray cursorName = QFile::encodeName(name);
-        QByteArray themeName  = QFile::encodeName(theme);
-        XcursorImages *images = XcursorLibraryLoadImages(cursorName.constData(), themeName.constData(), size);
-        if (images){
-            unsigned long cursor_handle = 0;
-            cursor_handle = (unsigned long)XcursorImagesLoadCursor(dpy, images);
-            XcursorImagesDestroy(images);
-            XFixesChangeCursorByName(dpy, cursor_handle, QFile::encodeName(name).constData());
-        }
-    }
-
-    set_x_cursor_in_file(QDir::home().path() + QStringLiteral("/.Xresources"), theme, size);
-    set_x_cursor_in_file(QDir::home().path() + QStringLiteral("/.Xdefaults"), theme, size);
-
-    QProcess xrdb;
-    xrdb.start(QStringLiteral("xrdb"), QStringList() << QStringLiteral("-merge") << QDir::home().path() + QStringLiteral("/.Xresources"));
-    xrdb.waitForFinished();
-
     QString dirPath = QDir::home().path() + QStringLiteral("/.icons/default");
     QDir().mkpath(dirPath); // ensure the existence of the ~/.icons/default dir
     QFile indexTheme(dirPath + QStringLiteral("/index.theme"));
@@ -203,46 +189,11 @@ void CursorThemeSettings::set_cursor_theme(QListWidgetItem *item){
         "Size=" << size << "\n";
         indexTheme.close();
     }
-}
 
-// The contents of this function are copied from LxQt
-void CursorThemeSettings::set_x_cursor_in_file(QString file, QString theme, int size){
-    QStringList lst;
-    {
-        QFile fl(file);
-        if (fl.open(QIODevice::ReadOnly))
-        {
-            QTextStream stream(&fl);
-            while (!stream.atEnd())
-            {
-                QString line = stream.readLine();
-                if (!line.startsWith(QLatin1String("Xcursor.theme:"))
-                    && !line.startsWith(QLatin1String("Xcursor.size:")))
-                {
-                    lst << line;
-                }
-            }
-            fl.close();
-        }
-    }
-    while (lst.size() > 0)
-    {
-        QString s(lst[lst.size()-1]);
-        if (!s.trimmed().isEmpty()) break;
-        lst.removeAt(lst.size()-1);
-    }
-    {
-        QFile fl(file);
-        if (fl.open(QIODevice::WriteOnly))
-        {
-            QTextStream stream(&fl);
-            for (const QString &s : std::as_const(lst))
-            {
-                stream << s << "\n";
-            }
-            stream << "\nXcursor.theme: " << theme << "\n";
-            stream << "Xcursor.size: " << size << "\n";
-            fl.close();
-        }
-    }
+    // Live-updates Biome's own compositor-drawn cursor (decorations, resize
+    // cursors, XWayland's default, and any cursor-shape-v1 client) - see
+    // biome/ipc/cursor_bridge.h. Everything else picks up the index.theme
+    // change above on its own next start, per this settings page's note.
+    QDBusInterface iface(kBiomeService, kCursorPath, kCursorInterface, QDBusConnection::sessionBus());
+    iface.call(QStringLiteral("SetTheme"), theme, size);
 }
