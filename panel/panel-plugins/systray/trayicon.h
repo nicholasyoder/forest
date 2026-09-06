@@ -7,6 +7,7 @@
 
 class QDBusInterface;
 class DBusMenuImporter;
+class QMenu;
 
 // Wraps one org.kde.StatusNotifierItem object at `service`+`path` on the
 // session bus (the identifier systray.cpp gets from the
@@ -27,6 +28,9 @@ protected:
 private slots:
     void onLeftClicked();
     void onRightClicked();
+    // Fired by menuImporter's menuUpdated() once its D-Bus-fetched menu
+    // layout has actually been applied - see the comment in onRightClicked().
+    void showTrayMenu();
     // panelbutton only splits left/right into their own signals - middle
     // click (SecondaryActivate) is read off this general one instead.
     void onMouseReleased(QMouseEvent *event);

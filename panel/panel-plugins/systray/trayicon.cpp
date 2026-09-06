@@ -295,15 +295,39 @@ void trayicon::onRightClicked()
 {
     const QString menuPath = item->property("Menu").value<QDBusObjectPath>().path();
     if (!menuPath.isEmpty() && menuPath != QLatin1String("/")) {
-        if (!menuImporter)
+        if (!menuImporter) {
             menuImporter = new DBusMenuImporter(m_service, menuPath, this);
+            // updateMenu() below fetches the menu layout over D-Bus
+            // (DBusMenuImporter::menu() starts out empty and is populated
+            // asynchronously) - menuUpdated() is its own documented signal
+            // for "menu is now actually populated, sizeHint() is trustworthy",
+            // so popup() has to wait for it rather than following
+            // updateMenu() immediately. Connected once per importer (it
+            // persists across right-clicks) rather than per-click.
+            connect(menuImporter, &DBusMenuImporter::menuUpdated, this, &trayicon::showTrayMenu);
+        }
         menuImporter->updateMenu();
-        menuImporter->menu()->popup(QCursor::pos());
         return;
     }
 
     const QPoint pos = activationPos();
     item->asyncCall("ContextMenu", pos.x(), pos.y());
+}
+
+void trayicon::showTrayMenu()
+{
+    // The off-screen-downward bug this used to work around (see
+    // docs/qmenu-migration-plan.md Task 2's history) turned out to be a
+    // Biome-side gap, not something fixable via the QPoint passed here -
+    // Wayland gives clients no real global coordinate space to compute a
+    // "corrected" point in (confirmed via WAYLAND_DEBUG: Qt's own positioner
+    // always requests anchor=top-left/gravity=bottom-right and only
+    // constraint_adjustment=slide, and reused the exact same request on its
+    // own follow-up xdg_popup.reposition() once the menu's real size was
+    // known - which Biome wasn't re-constraining, only its initial one).
+    // Fixed in Biome (desktop/xdg_shell.cpp, xdg_popup_reposition()), so
+    // plain QCursor::pos() is correct again here.
+    menuImporter->menu()->popup(QCursor::pos());
 }
 
 void trayicon::onMouseReleased(QMouseEvent *event)
