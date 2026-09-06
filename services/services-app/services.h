@@ -11,6 +11,7 @@
 #include "hotkeys/foresthotkeys.h"
 #include "notifications/notify.h"
 #include "polkit/polkitagent.h"
+#include "systemtray/statusnotifierwatcher.h"
 
 class services : public QObject, app_plugin_interface
 {
@@ -31,6 +32,7 @@ private:
     foresthotkeys *fhotkeys;
     notify *fnotify;
     polkitagent *fpolkit;
+    StatusNotifierWatcher *fsystemtray;
 };
 
 #endif // SERVICES_H

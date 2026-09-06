@@ -14,4 +14,7 @@ void services::setupPlug(){
     fnotify->setup();
 
     fpolkit = new polkitagent;
+
+    fsystemtray = new StatusNotifierWatcher;
+    fsystemtray->setup();
 }

@@ -1,16 +1,20 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "systray.h"
+#include "trayicon.h"
 
-#include "../../library/xcbutills/xcbutills.h"
-#include <xcb/damage.h>
-#include <xcb/render.h>
+#include <QDBusConnection>
+#include <QDBusInterface>
+#include <QDBusServiceWatcher>
+#include <QDebug>
 
-#define SYSTEM_TRAY_REQUEST_DOCK    0
-#define SYSTEM_TRAY_BEGIN_MESSAGE   1
-#define SYSTEM_TRAY_CANCEL_MESSAGE  2
-#define XEMBED_EMBEDDED_NOTIFY  0
-#define XEMBED_MAPPED          (1 << 0)
+namespace {
+
+constexpr char kWatcherService[] = "org.kde.StatusNotifierWatcher";
+constexpr char kWatcherPath[] = "/StatusNotifierWatcher";
+constexpr char kWatcherInterface[] = "org.kde.StatusNotifierWatcher";
+
+} // namespace
 
 systray::systray()
 {
@@ -18,241 +22,83 @@ systray::systray()
 
 systray::~systray()
 {
-    stoptray();
 }
 
 void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
 {
     Q_UNUSED(itemlist);
 
-    mDisplay = Xcbutills::display();
-    _NET_SYSTEM_TRAY_OPCODE = Xcbutills::atom("_NET_SYSTEM_TRAY_OPCODE");
-
-    traylayout = new QHBoxLayout(this);
-    traylayout->setContentsMargins(QMargins(0,0,0,0));
-    traylayout->setSpacing(0);
+    mainLayout = new QHBoxLayout(this);
+    mainLayout->setContentsMargins(QMargins(0,0,0,0));
+    mainLayout->setSpacing(0);
     layout->addWidget(this);
 
-    iconsize = QSize(22,22);
-    QTimer::singleShot(0, this, &systray::starttray);
-}
+    // services-app (which owns the watcher) has no guaranteed load-order
+    // relative to panel-app, so this can't just try once at startup - watch
+    // for the watcher actually appearing on the bus too, in case it hasn't
+    // registered yet by the time this plugin loads.
+    auto *watcherAppeared = new QDBusServiceWatcher(kWatcherService, QDBusConnection::sessionBus(),
+        QDBusServiceWatcher::WatchForRegistration, this);
+    connect(watcherAppeared, &QDBusServiceWatcher::serviceRegistered, this, &systray::registerHost);
 
-void systray::XcbEventFilter(xcb_generic_event_t *event)
-{
-    TrayIcon* icon;
-    int event_type = event->response_type & ~0x80;
-
-    switch (event_type)
-    {
-        case ClientMessage:
-            clientMessageEvent(event);
-            break;
-
-//        case ConfigureNotify:
-//            icon = findIcon(event->xconfigure.window);
-//            if (icon)
-//                icon->configureEvent(&(event->xconfigure));
-//            break;
-
-        case DestroyNotify: {
-            unsigned long event_window;
-            event_window = reinterpret_cast<xcb_destroy_notify_event_t*>(event)->window;
-            icon = findIcon(event_window);
-            if (icon)
-            {
-                icon->windowDestroyed(event_window);
-                mIcons.removeAll(icon);
-                delete icon;
-            }
-            break;
-        }
-        default:
-            if (event_type == mDamageEvent + XDamageNotify)
-            {
-                xcb_damage_notify_event_t* dmg = reinterpret_cast<xcb_damage_notify_event_t*>(event);
-                icon = findIcon(dmg->drawable);
-                if (icon)
-                    icon->updateicon();
-            }
-            break;
-    }
+    registerHost();
 }
 
 QHash<QString, QString> systray::getpluginfo()
 {
     QHash<QString, QString> info;
-    info["name"] = "System Tray";
-    info["needsXcbEvents"] = "true";
+    info["name"] = "systray";
     return info;
 }
 
-void systray::starttray()
+void systray::registerHost()
 {
-    Display* dsp = mDisplay;
-    Window root = Xcbutills::root_window();
-    QString s = QString("_NET_SYSTEM_TRAY_S%1").arg(DefaultScreen(dsp));
-    Atom _NET_SYSTEM_TRAY_S = Xcbutills::atom(s.toLatin1());
+    if (hostRegistered)
+        return;
 
-    if (XGetSelectionOwner(dsp, _NET_SYSTEM_TRAY_S) != None)
-    {
-        qWarning() << "Another systray is running";
-        //mValid = false;
+    QDBusInterface watcher(kWatcherService, kWatcherPath, kWatcherInterface, QDBusConnection::sessionBus());
+    if (!watcher.isValid()) {
+        qWarning() << "systray: StatusNotifierWatcher unavailable:" << watcher.lastError().message();
         return;
     }
 
-    // init systray protocol
-    mTrayId = XCreateSimpleWindow(dsp, root, -1, -1, 1, 1, 0, 0, 0);
+    hostRegistered = true;
+    watcher.asyncCall("RegisterStatusNotifierHost", QDBusConnection::sessionBus().baseService());
 
-    XSetSelectionOwner(dsp, _NET_SYSTEM_TRAY_S, mTrayId, CurrentTime);
-    if (XGetSelectionOwner(dsp, _NET_SYSTEM_TRAY_S) != mTrayId)
-    {
-        qWarning() << "Can't get systray manager";
-        stoptray();
-        //mValid = false;
-        return;
-    }
+    QDBusConnection::sessionBus().connect(kWatcherService, kWatcherPath, kWatcherInterface,
+        "StatusNotifierItemRegistered", this, SLOT(addItem(QString)));
+    QDBusConnection::sessionBus().connect(kWatcherService, kWatcherPath, kWatcherInterface,
+        "StatusNotifierItemUnregistered", this, SLOT(removeItem(QString)));
 
-    int orientation = 0; //0 = horizontal, 1 = vertical
-    XChangeProperty(dsp, mTrayId, Xcbutills::atom("_NET_SYSTEM_TRAY_ORIENTATION"), XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&orientation, 1);
-
-    // ** Visual ********************************
-    VisualID visualId = getVisual();
-    if (visualId)
-    {
-        XChangeProperty(mDisplay, mTrayId, Xcbutills::atom("_NET_SYSTEM_TRAY_VISUAL"), XA_VISUALID, 32, PropModeReplace, (unsigned char*)&visualId, 1);
-    }
-    // ******************************************
-
-    setIconSize(iconsize);
-
-    XClientMessageEvent ev;
-    ev.type = ClientMessage;
-    ev.window = root;
-    ev.message_type = Xcbutills::atom("MANAGER");
-    ev.format = 32;
-    ev.data.l[0] = CurrentTime;
-    ev.data.l[1] = long(_NET_SYSTEM_TRAY_S);
-    ev.data.l[2] = long(mTrayId);
-    ev.data.l[3] = 0;
-    ev.data.l[4] = 0;
-    XSendEvent(dsp, root, False, StructureNotifyMask, (XEvent*)&ev);
-
-    XDamageQueryExtension(mDisplay, &mDamageEvent, &mDamageError);
-
-    qDebug() << "Systray started";
+    const QStringList existing = watcher.property("RegisteredStatusNotifierItems").toStringList();
+    for (const QString &identifier : existing)
+        addItem(identifier);
 }
 
-void systray::stoptray()
+void systray::addItem(const QString &identifier)
 {
-    for (auto & icon : mIcons)
-        disconnect(icon, &QObject::destroyed, this, &systray::onIconDestroyed);
-    qDeleteAll(mIcons);
-    if (mTrayId)
-    {
-        XDestroyWindow(mDisplay, mTrayId);
-        mTrayId = 0;
-    }
-    //mValid = false;
-}
-
-void systray::onIconDestroyed(QObject * icon)
-{
-    //in the time QOjbect::destroyed is emitted, the child destructor
-    //is already finished, so the qobject_cast to child will return nullptr in all cases
-    mIcons.removeAll(static_cast<TrayIcon *>(icon));
-}
-
-void systray::addIcon(Window winId)
-{
-    // decline to add an icon for a window we already manage
-    TrayIcon *icon = findIcon(winId);
-    if(icon)
+    if (tIcons.contains(identifier))
         return;
 
-    icon = new TrayIcon(winId, iconsize);
-    mIcons.append(icon);
-    traylayout->addWidget(icon);
-    connect(icon, &QObject::destroyed, this, &systray::onIconDestroyed);
-}
-
-VisualID systray::getVisual()
-{
-    VisualID visualId = 0;
-    Display* dsp = mDisplay;
-
-    XVisualInfo templ;
-    templ.screen=0;  // default screen is usually 0?
-    templ.depth=32;
-    templ.c_class=TrueColor;
-
-    int nvi;
-    XVisualInfo* xvi = XGetVisualInfo(dsp, VisualScreenMask|VisualDepthMask|VisualClassMask, &templ, &nvi);
-
-    if (xvi)
-    {
-        int i;
-        XRenderPictFormat* format;
-        for (i = 0; i < nvi; i++)
-        {
-            format = XRenderFindVisualFormat(dsp, xvi[i].visual);
-            if (format && format->type == PictTypeDirect && format->direct.alphaMask)
-            {
-                visualId = xvi[i].visualid;
-                break;
-            }
-        }
-        XFree(xvi);
-    }
-
-    return visualId;
-}
-
-void systray::setIconSize(QSize icosize)
-{
-    iconsize = icosize;
-    unsigned long size = ulong(qMin(iconsize.width(), iconsize.height()));
-    XChangeProperty(mDisplay, mTrayId, Xcbutills::atom("_NET_SYSTEM_TRAY_ICON_SIZE"), XA_CARDINAL, 32, PropModeReplace, (unsigned char*)&size, 1);
-}
-
-TrayIcon* systray::findIcon(Window id)
-{
-    foreach(TrayIcon* icon, mIcons){
-        if (icon->iconId() == id || icon->windowId() == id)
-            return icon;
-    }
-    return nullptr;
-}
-
-void systray::clientMessageEvent(xcb_generic_event_t *e)
-{
-    unsigned long opcode;
-    unsigned long message_type;
-    Window id;
-    xcb_client_message_event_t* event = reinterpret_cast<xcb_client_message_event_t*>(e);
-    uint32_t* data32 = event->data.data32;
-    message_type = event->type;
-    opcode = data32[1];
-    if(message_type != _NET_SYSTEM_TRAY_OPCODE)
+    // identifier is "busName+path" - bus names never contain '/', so
+    // everything up to the first one is the service and everything from it
+    // onward (itself included) is the object path.
+    const int slashIndex = identifier.indexOf('/');
+    if (slashIndex < 0)
         return;
 
-    switch (opcode)
-    {
-        case SYSTEM_TRAY_REQUEST_DOCK:
-            id = data32[2];
-            if (id)
-                addIcon(id);
-            break;
+    const QString service = identifier.left(slashIndex);
+    const QString path = identifier.mid(slashIndex);
 
-        case SYSTEM_TRAY_BEGIN_MESSAGE:
-        case SYSTEM_TRAY_CANCEL_MESSAGE:
-            qDebug() << "we don't show balloon messages.";
-            break;
+    trayicon *icon = new trayicon(service, path);
+    tIcons.insert(identifier, icon);
+    mainLayout->addWidget(icon);
+}
 
-        default:
-//            if (opcode == xfitMan().atom("_NET_SYSTEM_TRAY_MESSAGE_DATA"))
-//                qDebug() << "message from dockapp:" << e->data.b;
-//            else
-//                qDebug() << "SYSTEM_TRAY : unknown message type" << opcode;
-            break;
+void systray::removeItem(const QString &identifier)
+{
+    if (trayicon *icon = tIcons.take(identifier)) {
+        icon->hide();
+        icon->deleteLater();
     }
 }

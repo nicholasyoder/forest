@@ -3,26 +3,18 @@
 #ifndef SYSTRAY_H
 #define SYSTRAY_H
 
-#include <QWidget>
+#include <QHash>
 #include <QHBoxLayout>
+#include <QWidget>
 
-//#include "panelbutton.h"
 #include "panelpluginterface.h"
-#include "trayicon.h"
 
-#include <X11/X.h>
-#include <X11/Xlib.h>
-#include <X11/Xutil.h>
-#include <X11/Xatom.h>
-#include <X11/extensions/Xrender.h>
-#include <X11/extensions/Xdamage.h>
-#include <xcb/xcb.h>
-#include <xcb/damage.h>
+class trayicon;
 
-#undef Bool // defined as int in X11/Xlib.h
-
-typedef long unsigned int luint;
-
+// Host half of the StatusNotifierItem tray: registers with the
+// StatusNotifierWatcher (services/services-app/systemtray, always running
+// independently of this plugin) and renders whatever items are currently
+// registered there as trayicon widgets.
 class systray : public QWidget, panelpluginterface
 {
     Q_OBJECT
@@ -35,33 +27,29 @@ public:
 
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
-    void closePlug(){this->close(); deleteLater();}
-    void XcbEventFilter(xcb_generic_event_t *event);
+    void closePlug(){close(); deleteLater();}
+    void XcbEventFilter(xcb_generic_event_t*){}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
 
+private:
+    void registerHost();
+
 private slots:
-    void starttray();
-    void stoptray();
-    void onIconDestroyed(QObject * icon);
-    void clientMessageEvent(xcb_generic_event_t *e);
-    int clientMessage(WId _wid, Atom _msg, luint data0, luint data1 = 0, luint data2 = 0, luint data3 = 0, luint data4 = 0) const;
-    void addIcon(Window id);
-    TrayIcon* findIcon(Window trayId);
+    // identifier is the StatusNotifierWatcher's "busName+path" string (see
+    // services/services-app/systemtray/statusnotifierwatcher.h).
+    void addItem(const QString &identifier);
+    void removeItem(const QString &identifier);
 
 private:
-    VisualID getVisual();
-    void setIconSize(QSize icosize);
-
-    QList<TrayIcon*> mIcons;
-
-    QSize iconsize;
-    Display* mDisplay;
-    Window mTrayId = 0;
-    int mDamageEvent = 0;
-    int mDamageError = 0;
-    Atom _NET_SYSTEM_TRAY_OPCODE;
-    QHBoxLayout *traylayout;
+    QHBoxLayout *mainLayout = nullptr;
+    QHash<QString, trayicon*> tIcons;
+    // Guards against registering/connecting twice - registerHost() is
+    // called both eagerly from setupPlug() and again if a QDBusServiceWatcher
+    // (see systray.cpp) later reports the watcher actually appearing, since
+    // services-app (which owns it) has no guaranteed load-order relative to
+    // panel-app.
+    bool hostRegistered = false;
 };
 
 #endif // SYSTRAY_H
