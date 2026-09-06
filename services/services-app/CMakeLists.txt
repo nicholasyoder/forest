@@ -13,7 +13,7 @@ add_library(services-app MODULE
     hotkeys/foresthotkeys.h
     hotkeys/hotkey.h
     hotkeys/globalshortcutsportal.h
-    hotkeys/qxt/keymapper_x11.h
+    hotkeys/keysym_table.h
     notifications/notify.h
     notifications/notifyadapter.h
     notifications/notifypopup.h
