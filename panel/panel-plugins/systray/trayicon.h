@@ -3,53 +3,55 @@
 #ifndef TRAYICON_H
 #define TRAYICON_H
 
-#include <QFrame>
-#include <QTimer>
 #include "panelbutton.h"
 
-#include <X11/X.h>
-#include <X11/extensions/Xdamage.h>
+class QDBusInterface;
+class DBusMenuImporter;
 
-#define TRAY_ICON_SIZE_DEFAULT 24
-
-class QWidget;
-class LXQtPanel;
-
-class TrayIcon: public panelbutton
+// Wraps one org.kde.StatusNotifierItem object at `service`+`path` on the
+// session bus (the identifier systray.cpp gets from the
+// StatusNotifierWatcher). All property reads/method calls are plain
+// QDBusInterface calls - the same hand-rolled-QtDBus style as
+// services/services-app/hotkeys/globalshortcutsportal.h - no codegen, no XML.
+class trayicon : public panelbutton
 {
     Q_OBJECT
-    Q_PROPERTY(QSize iconSize READ iconSize WRITE setIconSize)
 
 public:
-    TrayIcon(Window iconId, QSize const & iconSize);
-    virtual ~TrayIcon();
-
-    Window iconId() { return mIconId; }
-    Window windowId() { return mWindowId; }
-    void windowDestroyed(Window w);
-
-    QSize iconSize() const { return mIconSize; }
-    void setIconSize(QSize iconSize);
-    void updateicon();
-
-    QSize sizeHint() const override;
+    trayicon(const QString &service, const QString &path);
+    ~trayicon() override;
 
 protected:
-    void paintEvent(QPaintEvent*) override;
-    void leaveEvent(QEvent *event) override;
+    void wheelEvent(QWheelEvent *event) override;
+
+private slots:
+    void onLeftClicked();
+    void onRightClicked();
+    // panelbutton only splits left/right into their own signals - middle
+    // click (SecondaryActivate) is read off this general one instead.
+    void onMouseReleased(QMouseEvent *event);
+
+    // org.kde.StatusNotifierItem's own change signals - each just triggers
+    // a re-read of the relevant properties.
+    void onNewIcon();
+    void onNewAttentionIcon();
+    void onNewStatus(const QString &status);
+    void onNewToolTip();
+    void onNewTitle();
 
 private:
-    void init();
+    void updateIcon();
+    void updateToolTip();
+    QPoint activationPos() const;
 
-    QRect iconGeometry();
-    Window mIconId;
-    Window mWindowId;
-    QSize mIconSize;
-    Damage mDamage;
-    Display* mDisplay;
-    QImage getImageNonComposite();
-    QSize calculateClientWindowSize();
-    QTimer *highlight_hack_timer = nullptr;
+    QDBusInterface *item;
+    // Lazily created once a click actually needs it - most items are asked
+    // for their Menu path far less often than they change icon/tooltip.
+    DBusMenuImporter *menuImporter = nullptr;
+
+    QString m_service;
+    QString m_path;
+    QString m_status = QStringLiteral("Passive");
 };
 
 #endif // TRAYICON_H

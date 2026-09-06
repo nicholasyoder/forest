@@ -18,10 +18,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network WaylandClient
 find_package(PkgConfig REQUIRED)
 pkg_check_modules(KF6WINDOWSYSTEM IMPORTED_TARGET libKF6WindowSystem)
 pkg_check_modules(X11 REQUIRED IMPORTED_TARGET x11)
-pkg_check_modules(XCB REQUIRED IMPORTED_TARGET xcb xcb-composite xcb-image xcb-damage xcb-shape)
-pkg_check_modules(XRENDER REQUIRED IMPORTED_TARGET xrender)
-pkg_check_modules(XFIXES REQUIRED IMPORTED_TARGET xfixes)
-pkg_check_modules(XDAMAGE REQUIRED IMPORTED_TARGET xdamage)
 pkg_check_modules(XCURSOR REQUIRED IMPORTED_TARGET xcursor)
 pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 #pkg_check_modules(SENSORS REQUIRED IMPORTED_TARGET libsensors)
@@ -31,6 +27,7 @@ pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 
 find_package(KF6WindowSystem REQUIRED)
 find_package(LayerShellQt REQUIRED)
+find_package(dbusmenu-lxqt REQUIRED)
 
 find_path(SENSORS_INCLUDE_DIR sensors/sensors.h)
 find_library(SENSORS_LIBRARY NAMES sensors)

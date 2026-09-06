@@ -8,6 +8,7 @@ add_library(services-app MODULE
     notifications/notifypopup.cpp
     polkit/polkitagent.cpp
     polkit/polkitdialog.cpp
+    systemtray/statusnotifierwatcher.cpp
     services.h
     hotkeys/foresthotkeys.h
     hotkeys/hotkey.h
@@ -19,6 +20,7 @@ add_library(services-app MODULE
     polkit/polkitagent.h
     polkit/polkitdialog.h
     polkit/polkitdialog.ui
+    systemtray/statusnotifierwatcher.h
 )
 
 target_compile_definitions(services-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)

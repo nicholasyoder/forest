@@ -53,6 +53,13 @@ function(forest_link_layeroverlay target)
     target_link_libraries(${target} PRIVATE layeroverlay)
 endfunction()
 
+# forest_link_dbusmenu(target)
+# Links the dbusmenu-lxqt library (DBusMenu protocol client, used to render
+# a StatusNotifierItem's context menu)
+function(forest_link_dbusmenu target)
+    target_link_libraries(${target} PRIVATE dbusmenu-lxqt)
+endfunction()
+
 # forest_generate_wayland_protocol_client(target xml_path)
 # Generates and adds Qt Wayland client bindings for a vendored protocol XML
 # (via qt6_generate_wayland_protocol_client_sources) and links Qt6::WaylandClient.
