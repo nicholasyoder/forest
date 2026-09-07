@@ -81,7 +81,7 @@ private:
     bool shiftdown = false;
     bool updatepaused = false;
 
-    QList <QRect> screen_geos;
+    QList <QScreen *> tracked_screens;
     QList <wallpaperwidget *> wallwidgetlist;
     iconswidget *iwidget;
     QSettings *settings = new QSettings("Forest", "Forest");

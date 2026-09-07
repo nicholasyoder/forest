@@ -43,9 +43,9 @@ void desktop::reloadwallpaper(){
 }
 
 void desktop::loadwallpaperwidgets(){
-    screen_geos.clear();
+    tracked_screens.clear();
     foreach (QScreen *screen, qApp->screens()){
-        screen_geos.append(screen->geometry());
+        tracked_screens.append(screen);
         wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE);
         wallwidgetlist << wallwidget;
         wallwidget->windowHandle()->setScreen(screen); // pins this layer-shell surface to its output
@@ -194,11 +194,19 @@ QRect desktop::getusabledesktopspace(){
 }
 
 void desktop::handleScreenChange(){
-    // Check if anything actually changed and skip reloading if not
-    if(qApp->screens().length() == screen_geos.length()){
+    // Skip reloading only if every currently reported QScreen is one we're
+    // already tracking. Comparing by geometry alone (as this used to) is
+    // wrong: a screen that's replaced with an identical-geometry one - e.g.
+    // a compositor tearing down and recreating an output for the same
+    // physical monitor at the same position/resolution, which idle-blank
+    // wake can trigger - shows up here as a brand new QScreen pointer that
+    // happens to match an old geometry, and got wrongly treated as "nothing
+    // changed", leaving that screen's wallpaperwidget pinned to the now-dead
+    // QScreen forever.
+    if(qApp->screens().length() == tracked_screens.length()){
         bool skip = true;
         foreach (QScreen *screen, qApp->screens()){
-            if (!screen_geos.contains(screen->geometry())){
+            if (!tracked_screens.contains(screen)){
                 skip = false;
             }
         }
