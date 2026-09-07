@@ -13,6 +13,7 @@
 #include <QWindow>
 #include <QDeadlineTimer>
 #include <QEventLoop>
+#include <QPointer>
 #include <QTimer>
 
 enum PositionpPolicy { CenteredOnWidget, EdgeAlignedOnWidget, CenteredOnMouse, EdgeAlignedOnMouse };
@@ -147,6 +148,11 @@ public slots:
                 QCoreApplication::processEvents(QEventLoop::WaitForMoreEvents, 50);
         }
 
+        // The wait above can pump a deferred delete for launcherwidget
+        // (e.g. windowlist closing the window this popup is anchored to)
+        // - re-check rather than assume it's still alive below.
+        if (!launcherwidget) return;
+
         if (toplevelHandle)
             handle->setTransientParent(toplevelHandle);
 
@@ -218,6 +224,7 @@ protected:
 
 private slots:
     QWidget* getpanelwidget() {
+        if (!launcherwidget) return nullptr;
         QWidget *parent = launcherwidget->parentWidget();
         while (1) {
             if (parent){
@@ -231,7 +238,7 @@ private slots:
 private:
     //bool allowclose = false;
     QLayout *contentlayout;
-    QWidget *launcherwidget;
+    QPointer<QWidget> launcherwidget;
     PositionpPolicy pospolicy;
     QSettings *psettings = new QSettings("Forest","Panel");
     // True only for the single event-loop turn right after a launcher
