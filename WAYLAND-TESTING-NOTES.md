@@ -54,51 +54,33 @@ switch, per the decision not to add runtime platform branching in the code.
   struts, `desktop/desktop-app/wallpaperwidget.cpp` is a `LayerBackground`
   layer surface, and `Xcbutills::setPartialStrut()` — guard included — was
   deleted outright from `xcbutills.{h,cpp}` rather than reverted, exactly as
-  planned here. See `biome/docs/phase4-plan.md` Workstream A's session log
-  for the full writeup.
+  planned here.
 
-- **Three hardcoded `"Forest-wayland"` config-org overrides** — each swaps
-  the app's normal `QSettings("Forest", ...)` for `QSettings("Forest-wayland",
-  ...)` so Wayland testing reads a separate copy of the config instead of the
-  live X11 one. Flat hardcoded strings by design (no `platformName()` check),
-  per the decision to keep platform selection to branch switches, not runtime
-  detection. **All three must revert to `"Forest"` before this branch merges
-  back**, or the merged build will silently stop reading the real config on
-  every platform:
-  - `library/pluginutills/pluginutills.cpp:15` —
-    `QSettings("Forest-wayland","Forest")` in `get_plugin_paths()`. Controls
-    which top-level app plugins (`desktop-app`/`panel-app`/`services-app`)
-    load.
-  - `panel/panel-app/panel.h:63` — `QSettings("Forest-wayland","Panel")`.
-    Controls panel's own sub-plugin list (`windowlist`/`deskswitch`/
-    `systray`/etc.) and general panel settings.
-  - `services/services-app/hotkeys/foresthotkeys.cpp:49` —
-    `QSettings("Forest-wayland","Forest")` in `loadhotkeys()`. Controls the
-    configured global-hotkey list.
-
-  Note: `panel/panel-library/popup.h:132` still has the *original*
-  `QSettings("Forest","Panel")` — deliberately left untouched since it's
-  unrelated to plugin loading (popup positioning), but it's a reminder that
-  more `QSettings("Forest", ...)` call sites likely exist elsewhere in the
-  tree that never got audited for this split (see chat note from
-  2026-08-22 about theming/other plugin settings still reading the X11
-  config under Wayland).
+- ~~Three hardcoded `"Forest-wayland"` config-org overrides~~ — **resolved**.
+  `library/pluginutills/pluginutills.cpp`, `panel/panel-app/panel.h`, and
+  `services/services-app/hotkeys/foresthotkeys.cpp` each temporarily swapped
+  their normal `QSettings("Forest", ...)` for `QSettings("Forest-wayland",
+  ...)` so Wayland testing read a separate config copy instead of the live
+  X11 one. All three have since reverted back to `"Forest"` (confirmed by
+  grep — no `"Forest-wayland"` string remains anywhere in the tree).
 
 ## Local machine state (not in git — won't show up in `git diff`)
 
-- **`~/.config/Forest-wayland/Forest.conf`** — `[hotkeys]` section restored
-  2026-08-26 (full copy of the real hotkey list from `~/.config/Forest/`)
-  now that Workstream C (`biome/docs/phase4-plan.md`) has landed — the
-  `hotkeys/` code now binds through `org.freedesktop.portal.GlobalShortcuts`
-  instead of `XGrabKey`. Not yet manually confirmed by the user.
-- **`~/.config/Forest-wayland/Panel.conf`** — `systray` (plug-0008) still
-  set `enabled=false`. `windowlist` (plug-0004) was re-enabled 2026-08-23
-  once Workstream B (see `biome/docs/phase4-plan.md`) landed and was
-  manually confirmed on both sides — it now runs against
-  `wlr-foreign-toplevel-management-unstable-v1` instead of
-  `KX11Extras`/`Xcbutills::*`. `deskswitch` (plug-0009) stays
-  `enabled=false` — still unported X11-only code, gated on Workstream D
-  (workspaces, not started).
+**Note:** the two `~/.config/Forest-wayland/*.conf` entries below predate
+the "Forest-wayland" config-org revert above. Now that the code reads
+`QSettings("Forest", ...)` again everywhere, these settings need to live in
+`~/.config/Forest/{Forest,Panel}.conf` directly instead — worth confirming
+on the test machine that `hotkeys/`, `systray`, `windowlist`, and
+`deskswitch` are all in the expected enabled/disabled state there, since
+the old `-wayland`-suffixed files are no longer read by anything.
+
+- `[hotkeys]` — the real hotkey list binds through
+  `org.freedesktop.portal.GlobalShortcuts` now (not `XGrabKey`).
+- `Panel.conf` plugin state — `systray` (plug-0008): last known
+  `enabled=false`. `windowlist` (plug-0004): re-enabled once it was ported
+  to `wlr-foreign-toplevel-management-unstable-v1`. `deskswitch`
+  (plug-0009): re-enabled once ported to the `ext-workspace-v1` +
+  `org.biome.Workspaces` hybrid.
 - **`~/.config/Forest/Biome.conf`** — `[LayerShell]/scanoutFadingNamespaces`
   must include `forest-startup` (alongside the existing `forest-logout-dim`)
   for the main `forest` process's fullscreen startup black-overlay
