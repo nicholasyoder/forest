@@ -35,6 +35,21 @@ protected:
 
 private:
     QString m_identifier;
+    // `done` is a batch-commit signal, not a one-time "ready" event - the
+    // protocol re-sends it after every later change to title/app_id (see
+    // ext_foreign_toplevel_handle_v1's `done` doc comment), which happens
+    // for virtually every real window shortly after creation (Biome's
+    // foreign_toplevel_create() first creates this handle with a blank
+    // title/app_id, then pushes the real one moments later via
+    // wlr_ext_foreign_toplevel_handle_v1_update_state(), each triggering its
+    // own `done`). windowlist.cpp only wants the `identifier` (sent exactly
+    // once, at creation, and never re-sent - see that event's own doc
+    // comment) and deletes this handle right after its first `ready`, so
+    // without this guard a second `done` re-emits `ready` for an object
+    // that's about to be (or already was) freed - a real use-after-free
+    // crash confirmed via a segfault backtrace landing in
+    // windowlist::tryPairPendingHandles's extHandle->deleteLater() call.
+    bool m_readySent = false;
 };
 
 #endif // EXTFOREIGNTOPLEVELHANDLE_H

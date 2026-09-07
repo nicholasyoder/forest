@@ -15,6 +15,14 @@ void ExtForeignToplevelHandle::ext_foreign_toplevel_handle_v1_identifier(const Q
 }
 
 void ExtForeignToplevelHandle::ext_foreign_toplevel_handle_v1_done() {
+    // See m_readySent's declaration: `done` can legitimately fire again
+    // later (e.g. once Biome pushes this window's real title/app_id, right
+    // after creating this handle with a blank one) - only the first one
+    // means the identifier (sent once, at creation) is ready.
+    if (m_readySent) {
+        return;
+    }
+    m_readySent = true;
     emit ready(this);
 }
 
