@@ -5,6 +5,7 @@
 
 #include <QLabel>
 #include <QGridLayout>
+#include <QPointer>
 #include <QTimer>
 
 #include "popup.h"
@@ -48,7 +49,7 @@ private:
 
     bool popup_enabled = true;
 
-    windowbutton *currentbt = nullptr;
+    QPointer<windowbutton> currentbt;
     bool open = false;
 
     QTimer *openptimer = nullptr;
