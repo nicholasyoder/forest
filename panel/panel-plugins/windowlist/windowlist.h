@@ -5,6 +5,7 @@
 
 #include <QMainWindow>
 #include <QApplication>
+#include <QPointer>
 #include <QSettings>
 #include <QTimer>
 #include <QtDBus>
@@ -85,9 +86,17 @@ private:
 
     // Creation-order pairing between wlr-foreign-toplevel-management and
     // ext-foreign-toplevel-list handles for the same window - see
-    // extforeigntoplevellist.h.
-    QList<ForeignToplevelHandle*> pending_zwlr_handles;
-    QList<ExtForeignToplevelHandle*> pending_ext_handles;
+    // extforeigntoplevellist.h. QPointer, not a raw pointer: an entry here
+    // is a handle staged for pairing that hasn't been consumed yet, and
+    // Qt's deleteLater()-based deletion means "not consumed yet" and
+    // "already destroyed elsewhere" can't be told apart by pointer value
+    // alone with a raw QList<T*> - a real use-after-free this way already
+    // crashed once (fixed at its root by ExtForeignToplevelHandle's
+    // m_readySent guard, see that header), but QPointer auto-nulling on
+    // destruction makes tryPairPendingHandles() fail safe instead of
+    // dangling if some other bug ever re-introduces a stale entry.
+    QList<QPointer<ForeignToplevelHandle>> pending_zwlr_handles;
+    QList<QPointer<ExtForeignToplevelHandle>> pending_ext_handles;
     void tryPairPendingHandles();
 
     // identifier -> workspace index, refreshed from org.biome.Workspaces -

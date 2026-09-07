@@ -161,11 +161,16 @@ void windowlist::onExtToplevelClosed(ExtForeignToplevelHandle *handle){
 // is enough, with no shared key needed between the two protocols.
 void windowlist::tryPairPendingHandles(){
     while (!pending_zwlr_handles.isEmpty() && !pending_ext_handles.isEmpty()){
-        ForeignToplevelHandle *zwlrHandle = pending_zwlr_handles.takeFirst();
-        ExtForeignToplevelHandle *extHandle = pending_ext_handles.takeFirst();
-        if (button_list.contains(zwlrHandle))
-            button_list[zwlrHandle]->setIdentifier(extHandle->identifier());
-        extHandle->deleteLater();
+        QPointer<ForeignToplevelHandle> zwlrHandle = pending_zwlr_handles.takeFirst();
+        QPointer<ExtForeignToplevelHandle> extHandle = pending_ext_handles.takeFirst();
+        // Neither should ever actually be null here (see pending_zwlr_handles'
+        // declaration) - this is a fail-safe against a dangling entry, not
+        // the fix for one; a stale entry means a bug upstream re-queued an
+        // already-consumed handle, which this just stops from crashing.
+        if (zwlrHandle && button_list.contains(zwlrHandle))
+            button_list[zwlrHandle]->setIdentifier(extHandle ? extHandle->identifier() : QString());
+        if (extHandle)
+            extHandle->deleteLater();
     }
 }
 
