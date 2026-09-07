@@ -13,6 +13,7 @@
 #include <QWindow>
 #include <QDeadlineTimer>
 #include <QEventLoop>
+#include <QTimer>
 
 enum PositionpPolicy { CenteredOnWidget, EdgeAlignedOnWidget, CenteredOnMouse, EdgeAlignedOnMouse };
 
@@ -42,10 +43,11 @@ public:
         // considered and not attempted, on the evidence that KWin - despite
         // integrating shortcut dispatch directly into the compositor
         // process specifically to be able to see raw input - hasn't solved
-        // it either. Cost of Qt::ToolTip: the automatic "click outside
-        // closes it" a real grab provided for free is gone, so it's
-        // hand-rolled below via an application-wide event
-        // filter instead.
+        // it either. Cost of Qt::ToolTip: no automatic "click outside
+        // closes it", so it's hand-rolled below - an event filter for
+        // in-process clicks, plus event()'s WindowDeactivate handler for
+        // clicks on other apps (works because Biome grants this popup real
+        // focus despite no grab - see biome's xdg_shell.cpp).
         setWindowFlags(Qt::ToolTip);
         setAttribute(Qt::WA_TranslucentBackground);
 
@@ -176,24 +178,42 @@ protected:
     void keyPressEvent(QKeyEvent *event){emit keypressed(event);}//so the object controlling the popup can use keystokes
     void mouseReleaseEvent(QMouseEvent *event){emit mousereleased(event);}//and mouse clicks
 
-    // Restores the "click outside closes it" behavior Qt::Popup's grab used
-    // to provide for free, now that this is Qt::ToolTip and has none. Only
-    // catches presses Forest's own process actually receives - a click
-    // straight onto a genuinely different application's window still won't
-    // deliver anything to us without a grab, so this can't close the popup
-    // in that case. launcherwidget is excluded so a click on the button that
-    // toggles this popup open/closed falls through to that button's own
-    // click handler instead of racing it closed here first (which would
-    // otherwise make the button's own "already open, so close" branch fire
-    // on an already-closed popup and reopen it).
+    // Restores "click outside closes it" for in-process clicks (event()
+    // below covers clicks on other apps). launcherwidget is excluded so a
+    // click on the toggle button falls through to its own click handler
+    // instead of racing it closed here first. lastPressOnLauncher records
+    // that for event() too, since a launcher click deactivates this popup
+    // (real focus moving away) before Qt delivers the button's own release
+    // signal - cleared via singleShot rather than left for the next press
+    // to overwrite, so it can't stay stuck true across a later, unrelated
+    // deactivation.
     bool eventFilter(QObject *watched, QEvent *event) override {
         if (event->type() == QEvent::MouseButtonPress && isVisible()) {
             QWidget *clicked = qobject_cast<QWidget*>(watched);
-            if (clicked && clicked != this && !this->isAncestorOf(clicked)
-                && (!launcherwidget || (clicked != launcherwidget && !launcherwidget->isAncestorOf(clicked))))
+            bool onLauncher = clicked && launcherwidget
+                && (clicked == launcherwidget || launcherwidget->isAncestorOf(clicked));
+            if (onLauncher) {
+                lastPressOnLauncher = true;
+                QTimer::singleShot(0, this, [this]{ lastPressOnLauncher = false; });
+            } else if (clicked && clicked != this && !this->isAncestorOf(clicked)) {
                 emit outsideclicked();
+            }
         }
         return QWidget::eventFilter(watched, event);
+    }
+
+    // The cross-process half of "click outside closes it": eventFilter()
+    // can't see a click on another app's window, but this window losing
+    // active state (real keyboard focus, since Biome grants it despite no
+    // grab) fires for exactly that case. lastPressOnLauncher guards the
+    // same launcher-click race eventFilter() avoids - see its comment.
+    bool event(QEvent *e) override {
+        if (e->type() == QEvent::WindowDeactivate && isVisible()) {
+            bool skip = lastPressOnLauncher;
+            lastPressOnLauncher = false;
+            if (!skip) closepopup();
+        }
+        return QWidget::event(e);
     }
 
 private slots:
@@ -214,6 +234,10 @@ private:
     QWidget *launcherwidget;
     PositionpPolicy pospolicy;
     QSettings *psettings = new QSettings("Forest","Panel");
+    // True only for the single event-loop turn right after a launcher
+    // press - see eventFilter()'s comment for why it self-clears instead of
+    // waiting for the next press to overwrite it.
+    bool lastPressOnLauncher = false;
 };
 
 #endif // POPUPBOX_H
