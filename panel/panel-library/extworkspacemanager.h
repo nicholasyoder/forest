@@ -12,7 +12,8 @@ class ExtWorkspaceHandle;
 class ExtWorkspaceGroup;
 
 // Binds ext_workspace_manager_v1. Biome advertises a single workspace group
-// spanning all outputs (see biome/docs/phase4-plan.md Workstream D) with a
+// spanning all outputs (see biome/docs/architecture-notes.md's "Workspace
+// protocol (Workstream D)" section) with a
 // fixed set of workspaces created once at startup, so this class doesn't
 // track multiple groups.
 //

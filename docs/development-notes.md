@@ -32,7 +32,7 @@ a GitHub search happens to land on. Wire-tracing the actual protocol
 traffic settles it far more reliably:
 
 1. Launch Biome nested inside the current X11 session as a fast,
-   disposable, ground-truth compositor (see `biome/docs/plan.md`'s "Phase
+   disposable, ground-truth compositor (see `biome/docs/history.md`'s "Phase
    0 — dev loop" — wlroots auto-detects the nested X11 backend):
    ```sh
    env -u WAYLAND_DISPLAY DISPLAY=:0 WLR_BACKENDS=x11 \
