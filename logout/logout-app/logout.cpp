@@ -28,7 +28,7 @@ struct ActionData {
 const QMap<ActionType, ActionData> action_map = {
     {ActionType::SHUTDOWN, {"shutdown", {DBusMethod(DBusService::SYSTEMD, "PowerOff"), DBusMethod(DBusService::CONSOLEKIT, "Stop")}}},
     {ActionType::REBOOT, {"reboot", {DBusMethod(DBusService::SYSTEMD, "Reboot"), DBusMethod(DBusService::CONSOLEKIT, "Restart")}}},
-    {ActionType::LOGOUT, {"logout", {DBusMethod(DBusService::SYSTEMD, "TerminateSession")}}},
+    {ActionType::LOGOUT, {"logout", {DBusMethod(DBusService::SYSTEMD, "Terminate")}}},
     {ActionType::SUSPEND, {"logout", {DBusMethod(DBusService::SYSTEMD, "Suspend"), DBusMethod(DBusService::UPOWER, "Suspend"), DBusMethod(DBusService::PWMANAGEMENT, "Suspend")}}},
     {ActionType::HIBERNATE, {"hibernate", {DBusMethod(DBusService::SYSTEMD, "Hibernate"), DBusMethod(DBusService::UPOWER, "Hibernate"), DBusMethod(DBusService::PWMANAGEMENT, "Hibernate")}}}
 };
@@ -42,8 +42,15 @@ bool call_dbus_method(const QString &service,const QString &path, const QString 
 
     QDBusMessage msg;
     if(sysd){
-        if (method == "TerminateSession") msg = dbus.call(method, "");
+        // Session.Terminate() takes no arguments; Manager.PowerOff/Reboot/
+        // Suspend/Hibernate() take a single "interactive" bool.
+        if (method == "Terminate") msg = dbus.call(method);
         else msg = dbus.call(method, true);
+
+        if (msg.type() == QDBusMessage::ErrorMessage){
+            qWarning() << "D-Bus call failed:" << service << method << msg.errorMessage();
+            return false;
+        }
         if (msg.arguments().isEmpty() || msg.arguments().first().isNull())
             return true;
 
@@ -53,6 +60,10 @@ bool call_dbus_method(const QString &service,const QString &path, const QString 
     }
     else {
         msg = dbus.call(method);
+    }
+    if (msg.type() == QDBusMessage::ErrorMessage){
+        qWarning() << "D-Bus call failed:" << service << method << msg.errorMessage();
+        return false;
     }
     return msg.arguments().isEmpty() || msg.arguments().first().isNull() || msg.arguments().first().toBool();
 }
@@ -65,8 +76,16 @@ void call_dbus_methods(QList<DBusMethod> methods){
         switch (method.service) {
         case DBusService::SYSTEMD:
             service = "org.freedesktop.login1";
-            path = "/org/freedesktop/login1";
-            interface = "org.freedesktop.login1.Manager";
+            if (method.method == "Terminate") {
+                // Manager.TerminateSession() needs an explicit session id and
+                // has no "current session" shorthand - the per-session
+                // self object avoids needing to resolve one at all.
+                path = "/org/freedesktop/login1/session/self";
+                interface = "org.freedesktop.login1.Session";
+            } else {
+                path = "/org/freedesktop/login1";
+                interface = "org.freedesktop.login1.Manager";
+            }
             break;
         case DBusService::CONSOLEKIT:
             service = "org.freedesktop.ConsoleKit";
