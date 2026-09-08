@@ -43,7 +43,8 @@ private slots:
     // Per-desktop window-count dots: driven independently, from
     // org.biome.Workspaces over DBus - ext-workspace-v1 has no concept of
     // which windows belong to which workspace at all (see
-    // biome/docs/phase4-plan.md Workstream D). GetWindowWorkspaces/
+    // biome/docs/architecture-notes.md's "Workspace protocol (Workstream D)"
+    // section). GetWindowWorkspaces/
     // WindowWorkspacesChanged hand back identifier -> workspace index for
     // every open window; tallied into per-desktop counts here.
     void refreshWindowWorkspaces();

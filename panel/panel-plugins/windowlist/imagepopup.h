@@ -42,7 +42,8 @@ private:
     // arbitrary (possibly minimized/off-screen) client window's pixels -
     // only compositor-side output capture does. Icon-only for now; a live
     // wlr-screencopy capture of currently-mapped windows is a possible
-    // later upgrade - see biome/docs/phase4-plan.md's open-questions log.
+    // later upgrade - tracked as the screenshots item in biome/docs/roadmap.md's
+    // Phase 6.
     // The popup/timer/positioning/shadow machinery below is kept as-is so
     // that upgrade has somewhere to plug back in.
     QPixmap get_window_image();

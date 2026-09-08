@@ -13,7 +13,8 @@ class ExtWorkspaceManager;
 // Wraps one ext_workspace_handle_v1 - one per Biome workspace, created by
 // ExtWorkspaceManager::ext_workspace_manager_v1_workspace(). Biome's
 // workspace set is fixed at startup (no create_workspace/remove capability
-// is ever advertised - see biome/docs/phase4-plan.md Workstream D), so
+// is ever advertised - see biome/docs/architecture-notes.md's "Workspace
+// protocol (Workstream D)" section), so
 // removed() is only here for spec completeness, not because it's expected
 // to fire in practice.
 //

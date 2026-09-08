@@ -14,7 +14,8 @@ enum HK_Type
 
 // A single configured hotkey entry - just the DBus/exec action payload plus
 // enough to build a shortcuts-spec trigger string for the portal. No longer
-// grabs anything itself (see docs/phase4-plan.md's Workstream C): binding
+// grabs anything itself (see biome/docs/architecture-notes.md's "GlobalShortcuts
+// portal architecture (Workstream C)" section): binding
 // and dispatch both live one level up, in foresthotkeys/GlobalShortcutsPortal.
 class globalhotkey : public QObject
 {

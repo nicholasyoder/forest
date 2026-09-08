@@ -30,7 +30,7 @@ the IPC layer ever needs revisiting.
   (`~/.face` or `/var/lib/AccountsService/users/<username>`).
 - **`SessionListModel`** — reads `*.desktop` entries from
   `/usr/share/xsessions/` and `/usr/share/wayland-sessions/` (the latter
-  added for the Phase 5 Biome cutover — see `biome/docs/plan.md`).
+  added for the Phase 5 Biome cutover — see `biome/docs/history.md`).
 - **`GreeterWindow`** — fullscreen login UI: user/session selectors,
   password field, clock, shutdown/reboot buttons
   (`systemctl poweroff`/`reboot`), drives the auth flow through
