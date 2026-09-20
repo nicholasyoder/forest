@@ -11,7 +11,7 @@ SessionListModel::SessionListModel() {
     load();
 }
 
-void SessionListModel::loadDir(const QString &path) {
+void SessionListModel::loadDir(const QString &path, SessionType type) {
     QDir dir(path);
     if (!dir.exists())
         return;
@@ -44,13 +44,13 @@ void SessionListModel::loadDir(const QString &path) {
         }
 
         if (!name.isEmpty() && !exec.isEmpty())
-            m_sessions.append({name, exec});
+            m_sessions.append({name, exec, type});
     }
 }
 
 void SessionListModel::load() {
-    loadDir("/usr/share/xsessions");
-    loadDir("/usr/share/wayland-sessions");
+    loadDir("/usr/share/xsessions", SessionType::X11);
+    loadDir("/usr/share/wayland-sessions", SessionType::Wayland);
 
     if (m_sessions.isEmpty())
         qWarning() << "No sessions found in /usr/share/xsessions/ or /usr/share/wayland-sessions/";

@@ -1,0 +1,33 @@
+#!/bin/sh
+# Bootstraps Xorg via startx for an xsessions Exec=, since greetd execs
+# session commands directly with no DISPLAY and no X server of its own.
+set -eu
+
+if [ "$#" -lt 1 ]; then
+	echo "usage: forest-greeter-xsession <session-command> [args...]" >&2
+	exit 1
+fi
+
+if ! command -v startx >/dev/null 2>&1; then
+	echo "error: startx not found; install xinit to use xsessions entries" >&2
+	exit 1
+fi
+
+# startx only resolves the client via PATH-style lookup when given a direct
+# path; a bare name (Exec=bspwm) otherwise falls through to its default
+# client (xterm) silently.
+client="$1"
+shift
+resolved_client="$(command -v -- "${client}" 2>/dev/null || true)"
+if [ -n "${resolved_client}" ]; then
+	client="${resolved_client}"
+fi
+
+seat="${XDG_SEAT:-seat0}"
+
+# Xorg's /dev/tty0 auto-detection needs root and fails otherwise; passing
+# vtN explicitly on the command line is what skips that probe.
+if [ -n "${XDG_VTNR:-}" ]; then
+	exec startx "${client}" "$@" -- -seat "${seat}" -keeptty "vt${XDG_VTNR}"
+fi
+exec startx "${client}" "$@" -- -seat "${seat}" -keeptty
