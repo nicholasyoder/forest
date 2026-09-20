@@ -30,7 +30,10 @@ the IPC layer ever needs revisiting.
   (`~/.face` or `/var/lib/AccountsService/users/<username>`).
 - **`SessionListModel`** — reads `*.desktop` entries from
   `/usr/share/xsessions/` and `/usr/share/wayland-sessions/` (the latter
-  added for the Phase 5 Biome cutover — see `biome/docs/history.md`).
+  added for the Phase 5 Biome cutover — see `biome/docs/history.md`), tagged
+  with which directory they came from (`SessionType::X11`/`Wayland`). Forest's
+  own session is Wayland-only post-cutover, but other software's `xsessions`
+  entries (xfce, i3, bspwm, ...) still show up here.
 - **`GreeterWindow`** — fullscreen login UI: user/session selectors,
   password field, clock, shutdown/reboot buttons
   (`systemctl poweroff`/`reboot`), drives the auth flow through
@@ -53,3 +56,30 @@ greetd (VT1) → cage -s -- forest-greeter → user authenticates
   → forest-greeter sends start_session, exits → cage exits (-s flag)
   → greetd launches the selected session's Exec= (e.g. startforest-wayland)
 ```
+
+## X11 sessions
+
+greetd has no opinion on X vs Wayland — it just `exec`s whatever `start_session`
+argv it's given, with no `DISPLAY` and no X server. That's fine for
+`wayland-sessions` entries, but an `xsessions` entry (Forest itself doesn't
+ship one anymore, but other installed software's WMs/DEs might) needs an X
+server bootstrapped first, the way a traditional display manager's own
+`Xsession` script would do it.
+
+`GreeterWindow::onAuthSucceeded()` handles this by prefixing the session's
+`Exec=` with `/usr/share/forest/forest-greeter-xsession` when
+`SessionListModel` tagged it as `SessionType::X11`. That script resolves the
+client to an absolute path (`startx` silently falls back to `xterm` for a
+bare name it can't look up) and runs:
+
+```
+startx <resolved-client> -- -seat "${XDG_SEAT:-seat0}" -keeptty vt${XDG_VTNR}
+```
+
+`-seat`/`vtN` get Xorg GPU and VT access through logind instead of needing
+root — the VT number must be passed explicitly since Xorg only skips its
+(root-only) `/dev/tty0` probe when one's given on the command line.
+`XDG_SEAT`/`XDG_VTNR` come from the PAM session greetd opens, same as
+`XDG_SESSION_TYPE`. Requires `xinit` (`forest-greeter` Recommends it,
+along with `xserver-xorg`) — without it the wrapper fails with a clear
+"startx not found" instead of a silent hang.

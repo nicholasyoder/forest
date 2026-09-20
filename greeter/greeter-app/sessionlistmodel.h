@@ -6,9 +6,12 @@
 #include <QList>
 #include <QString>
 
+enum class SessionType { Wayland, X11 };
+
 struct SessionInfo {
     QString name;
     QString exec;
+    SessionType type;
 };
 
 class SessionListModel {
@@ -19,7 +22,7 @@ public:
 private:
     QList<SessionInfo> m_sessions;
     void load();
-    void loadDir(const QString &path);
+    void loadDir(const QString &path, SessionType type);
 };
 
 #endif // SESSIONLISTMODEL_H

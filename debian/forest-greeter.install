@@ -1,4 +1,5 @@
 usr/bin/forest-greeter
+usr/share/forest/forest-greeter-xsession
 etc/forest/greetd.toml
 usr/lib/systemd/system/greetd.service.d/50-forest.conf
 usr/share/forest/themes/*/greeter.css

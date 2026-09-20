@@ -353,7 +353,11 @@ void GreeterWindow::onAuthSucceeded()
         qWarning() << "No session selected";
         return;
     }
-    m_client->startSession(m_sessions.sessions().at(idx).exec);
+    const SessionInfo &session = m_sessions.sessions().at(idx);
+    if (session.type == SessionType::X11)
+        m_client->startSession("/usr/share/forest/forest-greeter-xsession " + session.exec);
+    else
+        m_client->startSession(session.exec);
 }
 
 void GreeterWindow::onAuthFailed(const QString &description)

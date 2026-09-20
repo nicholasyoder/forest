@@ -9,7 +9,7 @@ Rules-Requires-Root: no
 
 Package: forest
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, xfwm4, gtk2-engines-murrine, qt6ct, papirus-icon-theme, brightnessctl, gnome-screenshot, lxterminal, pcmanfm-qt, xinit, xserver-xorg, x11-xserver-utils, polkitd
+Depends: ${shlibs:Depends}, ${misc:Depends}, xfwm4, gtk2-engines-murrine, qt6ct, papirus-icon-theme, brightnessctl, gnome-screenshot, lxterminal, pcmanfm-qt, x11-xserver-utils, polkitd
 Description: lightweight Qt-based desktop environment
  Forest is a desktop environment built using Qt.
  It is still very much a work in progress so expect
@@ -18,7 +18,10 @@ Description: lightweight Qt-based desktop environment
 Package: forest-greeter
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, forest, greetd, cage
+Recommends: xinit, xserver-xorg
 Description: greetd greeter using the Forest theme system
  A Qt-based login greeter for the greetd display manager,
  styled with the Forest theme system. Runs inside the cage
- Wayland compositor on VT1.
+ Wayland compositor on VT1. xinit/xserver-xorg are only needed
+ to start xsessions entries (see forest-greeter-xsession); Forest's
+ own session is Wayland-only.
