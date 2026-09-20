@@ -14,7 +14,6 @@ set_target_properties(panel-app PROPERTIES CXX_STANDARD 11)
 
 target_link_libraries(panel-app PRIVATE
     Qt6::Core Qt6::Gui Qt6::DBus Qt6::Widgets
-    KF6WindowSystem
 )
 forest_link_panel_library(panel-app)
 forest_link_miscutills(panel-app)

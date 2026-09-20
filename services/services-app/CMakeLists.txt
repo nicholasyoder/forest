@@ -32,7 +32,6 @@ target_include_directories(services-app PRIVATE
 
 target_link_libraries(services-app PRIVATE
     Qt6::Widgets Qt6::DBus
-    KF6WindowSystem
     PkgConfig::POLKIT_QT6
     PkgConfig::XKBCOMMON
     Qt6Xdg

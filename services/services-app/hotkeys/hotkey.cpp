@@ -71,11 +71,8 @@ QString globalhotkey::triggerString() const {
     if (mods & Qt::ShiftModifier) parts << QStringLiteral("SHIFT");
     if (mods & Qt::MetaModifier) parts << QStringLiteral("LOGO");
 
-    // Look up the table qxt used for XGrabKey's media/brightness/function
-    // keys first - it maps Qt::Key to the matching X11/xkb keysym, and
-    // those numeric values are shared between X11's keysymdef.h and
-    // libxkbcommon's xkbcommon-keysyms.h, so no translation is needed
-    // beyond the cast.
+    // Media/brightness/function keys first: the table maps Qt::Key to xkb
+    // keysyms (same values as libxkbcommon's), so a cast is enough.
     xkb_keysym_t keysym = XKB_KEY_NoSymbol;
     int i = 0;
     while (KeyTbl[i]) {
@@ -86,10 +83,7 @@ QString globalhotkey::triggerString() const {
         i += 2;
     }
 
-    // Not in the table (an ordinary letter/digit/punctuation key, most
-    // commonly) - resolve via QKeySequence's own string form instead, the
-    // same fallback structure the old XStringToKeysym path used, but
-    // staying entirely off libX11.
+    // Not in the table (ordinary letter/digit/punctuation): resolve by name.
     if (keysym == XKB_KEY_NoSymbol) {
         const QByteArray name = QKeySequence(key).toString().toUtf8();
         keysym = xkb_keysym_from_name(name.constData(), XKB_KEYSYM_CASE_INSENSITIVE);

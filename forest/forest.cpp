@@ -44,11 +44,6 @@ void forest::setup(){
         QTimer::singleShot(1000, overlay, &QWidget::close);
 }
 
-void forest::XcbEventFilter(xcb_generic_event_t *event){
-    foreach (app_plugin_interface *interface, xcbpluglist)
-        interface->XcbEventFilter(event);
-}
-
 void forest::loadstylesheet(){
     qApp->setStyleSheet(fstyleloader::loadstyle("forest"));
 }
@@ -63,9 +58,6 @@ void forest::loadplugins(){
 
             app_plugin_interface *pluginterface = qobject_cast<app_plugin_interface *>(plugin);
             if (!pluginterface) continue;
-
-            if (pluginterface->needs_xcb_events())
-                xcbpluglist.append(pluginterface);
 
             pluginterface->setupPlug();
         }

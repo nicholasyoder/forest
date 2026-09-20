@@ -24,7 +24,6 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    void XcbEventFilter(xcb_generic_event_t*){}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
 

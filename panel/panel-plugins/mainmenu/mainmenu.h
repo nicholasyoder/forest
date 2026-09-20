@@ -28,7 +28,6 @@ public:
 
     void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    void XcbEventFilter(xcb_generic_event_t* /*event*/){}
     QHash<QString, QString> getpluginfo();
 
 public slots:

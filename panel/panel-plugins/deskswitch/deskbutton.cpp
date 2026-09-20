@@ -22,7 +22,6 @@ void deskbutton::setactive(int num)
     else
     {
         active = false;
-        //activeicon = X11UTILLS::getWindowIcon(X11UTILLS::getActiveWindow());
         this->update();
     }
 
