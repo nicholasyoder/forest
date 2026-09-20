@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "forestxcbeventfilter.h"
+#include "forest.h"
 #include "flogger.h"
 #include <QApplication>
 #include <LayerShellQt/Shell>
@@ -29,10 +29,6 @@ int main(int argc, char *argv[]){
     qunsetenv("QT_WAYLAND_SHELL_INTEGRATION");
     FLogger::install("forest");
     forest w;
-
-    forestXcbEventFilter *eventfilter = new forestXcbEventFilter;
-    eventfilter->f = &w;
-    a.installNativeEventFilter(eventfilter);
 
     w.setup();
 

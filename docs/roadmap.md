@@ -51,8 +51,16 @@ pattern), rather than designing it here ahead of time.
   `wlr-screencopy-unstable-v1` / `ext-image-copy-capture-v1`, once Biome
   roadmap Phase 6 lands one of those protocols. Decide native vs.
   portal-based when this is picked up.
-- **`debian/control` Depends correction.** Still lists X11-era deps
-  (`xfwm4`, `xinit`, `xserver-xorg`, `x11-xserver-utils`) that are wrong
-  post-cutover, but can't just become `Depends: biome` until Biome has its
-  own installable package — tracked in `biome/docs/roadmap.md`'s Known
-  Issues ("No Debian packaging"). Revisit once that lands.
+- **`debian/control` Depends: add Biome.** The X11-era `xfwm4` and
+  `x11-xserver-utils` deps are gone, but `forest` can't `Depends: biome`
+  until Biome has its own installable package — tracked in
+  `biome/docs/roadmap.md`'s Known Issues ("No Debian packaging"). Revisit
+  once that lands.
+- **Ship a Biome config with the Forest package.** Forest's layer-shell
+  surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-startup`
+  (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
+  all; neither repo ships a default today, so a fresh install gets no fades.
+  Since these are Forest app namespaces, the Forest package should install
+  the config rather than Biome hardcoding them. Undecided how: a system-wide
+  `/etc` file Biome reads, a drop-in directory, or a compiled-in default.
+  Needs Biome's config lookup order checked first (`biome/core/fade_config.cpp`).

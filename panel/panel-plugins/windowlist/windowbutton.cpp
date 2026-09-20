@@ -65,9 +65,8 @@ void windowbutton::mousePressEvent(QMouseEvent *event){
 }
 
 void windowbutton::mouseMoveEvent(QMouseEvent *event){
-    // Drag-up-to-fit-on-screen (the old Xcbutills::fitWindowOnScreen path)
-    // is dropped: wlr-foreign-toplevel-management has no move/resize/
-    // geometry requests at all, so there's nothing to port it to.
+    // No drag-up-to-fit-on-screen: wlr-foreign-toplevel-management has no
+    // move/resize/geometry requests.
     if (dragActive){
         if(event->pos().x() < -5){
             emit moved(this, true);

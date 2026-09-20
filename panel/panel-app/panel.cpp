@@ -34,12 +34,6 @@ void panel::setupPlug(){
     show();
 }
 
-void panel::XcbEventFilter(xcb_generic_event_t *event){
-    foreach (panelpluginterface *interface, xcbpluglist) {
-        interface->XcbEventFilter(event);
-    }
-}
-
 void panel::showsettings(){
     QProcess::startDetached("forest-settings", QStringList("Panel"));
 }
@@ -120,7 +114,6 @@ void panel::reloadplugins(){
         if (plug) plug->closePlug();
     }
 
-    xcbpluglist.clear();
     pluglist.clear();
     numofstretchplugs = 0;
 
@@ -143,9 +136,6 @@ void panel::addplugin(QString path){
                 pluglist.append(pluginterface);
 
                 QHash<QString, QString> info = pluginterface->getpluginfo();
-                if (info["needsXcbEvents"] == "true")
-                    xcbpluglist.append(pluginterface);
-
                 bool stretch = false;
                 if (info["stretch"] == "true"){
                     stretch = true;

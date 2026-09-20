@@ -12,7 +12,6 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     flags |= Qt::FramelessWindowHint;
     setWindowFlags(flags);
     setAttribute(Qt::WA_TranslucentBackground);
-    setAttribute(Qt::WA_X11NetWmWindowTypeDesktop);
     setAutoFillBackground(true);
 
     QVBoxLayout *contentsvlayout = new QVBoxLayout;

@@ -210,9 +210,6 @@ void windowlist::onWindowChanged(ForeignToplevelHandle *handle){
     windowbutton *wbt = button_list[handle];
     wbt->setText(handle->title());
     wbt->setIcon(iconresolver::iconForAppId(handle->appId()));
-    // Each handle already knows whether it itself is active, so no
-    // separate "current active window" query/tracking is needed here the
-    // way Xcbutills::getActiveWindow() required.
     wbt->setDown(handle->isActivated());
 }
 

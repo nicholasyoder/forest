@@ -39,8 +39,6 @@ public:
 
     //begin pluginterface
     void setupPlug();
-    void XcbEventFilter(xcb_generic_event_t *event);
-    bool needs_xcb_events(){ return true; }
     //end pluginterface
 
 public slots:
@@ -63,7 +61,6 @@ private:
     QSettings *settings = new QSettings("Forest","Panel");
     QBoxLayout *wlayout;
     panelpluginterface *pluginterface;
-    QList<panelpluginterface*> xcbpluglist;
     QList<panelpluginterface*> pluglist;
     AutoHideManager* autohide_manager = nullptr;
     GeometryManager* geometry_manager = nullptr;

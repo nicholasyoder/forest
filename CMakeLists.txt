@@ -16,7 +16,6 @@ find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network WaylandClient
 
 # Find external dependencies
 find_package(PkgConfig REQUIRED)
-pkg_check_modules(KF6WINDOWSYSTEM IMPORTED_TARGET libKF6WindowSystem)
 pkg_check_modules(XCURSOR REQUIRED IMPORTED_TARGET xcursor)
 pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 #pkg_check_modules(SENSORS REQUIRED IMPORTED_TARGET libsensors)
@@ -24,7 +23,6 @@ pkg_check_modules(POLKIT_QT6 REQUIRED IMPORTED_TARGET polkit-qt6-agent-1)
 pkg_check_modules(QT6XDG REQUIRED IMPORTED_TARGET Qt6Xdg)
 pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 
-find_package(KF6WindowSystem REQUIRED)
 find_package(LayerShellQt REQUIRED)
 find_package(dbusmenu-lxqt REQUIRED)
 

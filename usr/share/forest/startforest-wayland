@@ -96,6 +96,4 @@ dbus-update-activation-environment --systemd --all
 # Biome owns the seat/DRM and is the top-level process here - it creates its
 # Wayland socket, then forks forest-session as its own child once the socket
 # is live (see biome/core/main.cpp's -s flag), inheriting WAYLAND_DISPLAY.
-# This is the reverse of the old X11 flow, where X was already running
-# before forest-session spawned xfwm4 as a child.
 exec /usr/bin/biome -s /usr/bin/forest-session

@@ -9,8 +9,6 @@
 
 #include "popupmenu.h"
 
-#include <xcb/xcb.h>
-
 class panelpluginterface
 {
 
@@ -24,9 +22,6 @@ public:
 
     //used when editing what plugins are on the panel
     virtual void closePlug() = 0;
-
-    //pass xcb events on to plugins
-    virtual void XcbEventFilter(xcb_generic_event_t* /*event*/)= 0;
 
     //should return at least info[name] = plugname
     virtual QHash<QString, QString> getpluginfo() = 0;

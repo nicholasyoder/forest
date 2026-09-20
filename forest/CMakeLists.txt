@@ -3,7 +3,6 @@ add_executable(forest
     forest.cpp
     settings_upgrade_manager.cpp
     forest.h
-    forestxcbeventfilter.h
     settings_upgrade_manager.h
 )
 

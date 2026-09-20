@@ -31,14 +31,15 @@ between Qt5/Qt6 and between installed-package versions vs. whatever branch
 a GitHub search happens to land on. Wire-tracing the actual protocol
 traffic settles it far more reliably:
 
-1. Launch Biome nested inside the current X11 session as a fast,
+1. Launch Biome nested inside the running Biome session as a fast,
    disposable, ground-truth compositor (see `biome/docs/history.md`'s "Phase
-   0 — dev loop" — wlroots auto-detects the nested X11 backend):
+   0 — dev loop" — wlroots auto-detects the nested Wayland backend from the
+   parent's `WAYLAND_DISPLAY`):
    ```sh
-   env -u WAYLAND_DISPLAY DISPLAY=:0 WLR_BACKENDS=x11 \
-     /path/to/biome/build/core/biome
+   WLR_BACKENDS=wayland /path/to/biome/build/core/biome
    ```
-   (prints the `WAYLAND_DISPLAY` it picked, e.g. `wayland-0`).
+   (prints the `WAYLAND_DISPLAY` it picked, e.g. `wayland-1` — not the
+   parent's socket).
 2. Write a minimal throwaway Qt6 widgets program reproducing the exact
    shape under test (window flags, transient-parent calls, timing of
    `useLayerShell()` relative to `QApplication`, a fake non-toplevel
@@ -46,7 +47,7 @@ traffic settles it far more reliably:
    `LayerShellQt::Interface`.
 3. Run it against the nested instance with protocol tracing on:
    ```sh
-   env -u DISPLAY WAYLAND_DISPLAY=wayland-0 QT_QPA_PLATFORM=wayland \
+   env -u DISPLAY WAYLAND_DISPLAY=wayland-1 QT_QPA_PLATFORM=wayland \
      WAYLAND_DEBUG=1 ./throwaway-binary
    ```
 4. Grep the trace for `get_toplevel` vs `get_popup` vs `get_layer_surface` /

@@ -3,8 +3,7 @@
 ## Context
 
 Landed 2026-09-06: the system tray's StatusNotifierItem port
-(`panel/panel-plugins/systray/`, `services/services-app/systemtray/`) — see
-`WAYLAND-TESTING-NOTES.md` for that port's own scaffolding notes. Its
+(`panel/panel-plugins/systray/`, `services/services-app/systemtray/`). Its
 right-click context menu comes from `dbusmenu-lxqt`'s `DBusMenuImporter`,
 which builds and owns a real `QMenu`/`QAction` tree internally — there's no
 way to redirect it to build Forest's own `popupmenu`/`pmenuitem` widgets

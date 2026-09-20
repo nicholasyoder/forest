@@ -29,7 +29,7 @@ sudo systemctl enable --now greetd.service
 
 ## Building from Source
 
-**Dependencies Include:** CMake, Qt6, KF6WindowSystem, Qt6Xdg, X11/Xcb, ALSA (libasound2), libsensors
+**Dependencies Include:** CMake, Qt6, LayerShellQt, Qt6Xdg, libXcursor, xkbcommon, ALSA (libasound2), libsensors
 
 All dependencies should be available in the Debian 13 (Trixie) official repositories. Compatibility with the library versions on other distros is not guaranteed.
 

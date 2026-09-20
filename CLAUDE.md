@@ -44,8 +44,6 @@ Loaded by the `forest` main process at startup via `QPluginLoader`. Each impleme
 
 ```cpp
 virtual void setupPlug() = 0;
-virtual void XcbEventFilter(xcb_generic_event_t *event) = 0;
-virtual bool needs_xcb_events() = 0;
 ```
 
 Declare with `Q_DECLARE_INTERFACE(app_plugin_interface, "forest.app.plugin.interface")` and `Q_PLUGIN_METADATA(IID "forest.app.plugin.interface")`.
@@ -61,7 +59,6 @@ Loaded by `panel-app` at runtime. Each implements `panelpluginterface` (`panel/p
 ```cpp
 virtual void setupPlug(QBoxLayout *, QList<pmenuitem*>) = 0;
 virtual void closePlug() = 0;
-virtual void XcbEventFilter(xcb_generic_event_t *event) = 0;
 virtual QHash<QString, QString> getpluginfo() = 0;
 ```
 
