@@ -4,3 +4,14 @@
 .claude/
 build/
 CMakeLists.txt.user
+
+# dpkg-buildpackage byproducts
+obj-*-linux-gnu/
+debian/.debhelper/
+debian/debhelper-build-stamp
+debian/files
+debian/tmp/
+debian/forest/
+debian/forest-greeter/
+debian/*.debhelper.log
+debian/*.substvars
