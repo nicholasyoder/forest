@@ -2,22 +2,39 @@
 
 ## Build deb package
 
-### Install dependancies
+`debian/` is already set up (native source format, no upstream tarball) —
+there's no `dh_make` scaffolding step; that's only for a package that has no
+`debian/` directory yet.
 
-1. `sudo apt install dh-make devscripts`
+### Install dependencies
+
+1. `sudo apt build-dep .` — installs everything listed in `debian/control`'s
+   `Build-Depends`
+2. `sudo apt install devscripts` — only needed if using `debuild` below;
+   `dpkg-buildpackage` alone doesn't require it
 
 ### Generate the debian changelog
 
 1. `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`
 
-### Create package
-Note: replace `0.7.8` with the correct version number of the release.
+### Build the package
+
+Note: replace `0.8.0` with the correct version number of the release.
 
 1. Modify `debian/changelog`
-2. Copy / rename `forest` to a build directory named `forest-0.7.8`
-3. `cd forest-0.7.8`
-4. `dh_make -e <email address> -c lgpl3 --createorig`
-5. `debuild -us -uc`
+2. From `forest/`: `dpkg-buildpackage -us -uc -b` (or `debuild -us -uc` to
+   also run `lintian` on the result automatically)
+
+This produces `../forest_0.8.0_amd64.deb`, `../forest-greeter_0.8.0_amd64.deb`,
+and `-dbgsym` packages for each, in the parent directory. It does not install
+anything locally.
+
+It leaves build byproducts in the tree (`obj-*-linux-gnu/`, `debian/forest/`,
+`debian/forest-greeter/`, etc. — all gitignored). Remove them with:
+
+```
+dpkg-buildpackage -Tclean
+```
 
 ## Include deb in repo
 
