@@ -16,7 +16,6 @@ add_executable(forest-greeter
     sessionselectview.h
 )
 
-set_target_properties(forest-greeter PROPERTIES CXX_STANDARD 17)
 
 target_link_libraries(forest-greeter PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network)
 forest_link_flogger(forest-greeter)

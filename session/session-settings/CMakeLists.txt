@@ -8,7 +8,6 @@ add_library(session-settings MODULE
 )
 
 target_compile_definitions(session-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(session-settings PROPERTIES CXX_STANDARD 17)
 
 target_link_libraries(session-settings PRIVATE Qt6::Widgets)
 forest_link_pluginutills(session-settings)

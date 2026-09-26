@@ -11,7 +11,6 @@ add_library(services-settings MODULE
 )
 
 target_compile_definitions(services-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(services-settings PROPERTIES CXX_STANDARD 17)
 
 target_link_libraries(services-settings PRIVATE Qt6::Widgets Qt6::DBus)
 forest_link_pluginutills(services-settings)

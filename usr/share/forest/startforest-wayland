@@ -20,7 +20,7 @@ fi
 # Set qt6ct settings
 QT6CT_CONF_DIR="$XDG_CONFIG_HOME/qt6ct"
 if [ ! -f "$QT6CT_CONF_DIR/qt6ct.conf" ]; then
-        mkdir -p "$QT6CT_CONF_DIR"
+	mkdir -p "$QT6CT_CONF_DIR"
 	cp /usr/share/forest/qtct.conf "$QT6CT_CONF_DIR/qt6ct.conf"
 fi
 
@@ -41,10 +41,10 @@ fi
 
 # Setup gtk-3.0 themes
 GTK3_CONF_DIR="$XDG_CONFIG_HOME/gtk-3.0"
-GTK2_CONF_FILE="$GTK3_CONF_DIR/settings.ini"
-if [ ! -f "$GTK2_CONF_FILE" ]; then
-        mkdir -p "$GTK3_CONF_DIR"
-	cat << EOF > "$GTK2_CONF_FILE"
+GTK3_CONF_FILE="$GTK3_CONF_DIR/settings.ini"
+if [ ! -f "$GTK3_CONF_FILE" ]; then
+	mkdir -p "$GTK3_CONF_DIR"
+	cat << EOF > "$GTK3_CONF_FILE"
 [Settings]
 gtk-theme-name=Adwaita
 gtk-icon-theme-name=Papirus
@@ -73,7 +73,6 @@ fi
 # backend to bind to and hotkeys don't fire.
 export XDG_CURRENT_DESKTOP="Forest:biome"
 export QT_QPA_PLATFORMTHEME="qt6ct"
-export QT_QPA_PLATFORM="wayland"
 export XDG_SESSION_TYPE="wayland"
 
 # ~/.icons/default/index.theme is the freedesktop cursor-theme fallback file

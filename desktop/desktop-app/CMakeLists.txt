@@ -12,7 +12,6 @@ add_library(desktop-app MODULE
 )
 
 target_compile_definitions(desktop-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(desktop-app PROPERTIES CXX_STANDARD 11)
 
 target_link_libraries(desktop-app PRIVATE
     Qt6::Widgets Qt6::DBus

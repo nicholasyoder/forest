@@ -18,7 +18,9 @@ SessionApp::~SessionApp(){
 void SessionApp::startSession(){
 
     // Setup environment
-
+    // startforest-wayland's update runs before Biome creates the socket; push it before anything D-Bus-activates.
+    if (QProcess::execute("dbus-update-activation-environment", {"--systemd", "WAYLAND_DISPLAY"}) != 0)
+        qWarning() << "Failed to export WAYLAND_DISPLAY to the activation environment";
     // Setup Keyboard
 
     // Setup Mouse

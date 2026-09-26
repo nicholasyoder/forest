@@ -24,7 +24,6 @@ add_library(services-app MODULE
 )
 
 target_compile_definitions(services-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(services-app PROPERTIES CXX_STANDARD 11)
 
 target_include_directories(services-app PRIVATE
     ${CMAKE_SOURCE_DIR}/library
