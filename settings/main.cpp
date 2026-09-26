@@ -10,6 +10,8 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
+    // See forest/main.cpp's qunsetenv(QT_QPA_PLATFORM) comment.
+    qunsetenv("QT_QPA_PLATFORM");
     FLogger::install("settings");
 
     a.setStyleSheet(fstyleloader::loadstyle("settings"));

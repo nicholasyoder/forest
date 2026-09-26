@@ -7,6 +7,13 @@
 
 int main(int argc, char *argv[]){
     QApplication a(argc, argv);
+    // QT_QPA_PLATFORM=wayland is set by startforest-wayland so this process's
+    // own QApplication picks it up, but (like QT_WAYLAND_SHELL_INTEGRATION
+    // below) it would otherwise leak into every child forest spawns -
+    // including non-Forest apps that deliberately check for it being unset
+    // (e.g. FreeCAD forces xcb to dodge a Coin3D/EGL-on-Wayland bug, but only
+    // if this var isn't already set).
+    qunsetenv("QT_QPA_PLATFORM");
     // useLayerShell() just sets QT_WAYLAND_SHELL_INTEGRATION=layer-shell,
     // which the Wayland platform plugin only reads once, at QApplication
     // construction above - calling it after is a no-op for the process-wide
