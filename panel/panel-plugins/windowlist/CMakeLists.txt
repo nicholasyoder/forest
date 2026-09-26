@@ -22,9 +22,6 @@ add_library(windowlist MODULE
 )
 
 target_compile_definitions(windowlist PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-# QWaylandClientExtensionTemplate needs C++17 (if constexpr); the CXX_STANDARD 11
-# pin below predates this target's Wayland client binding.
-set_target_properties(windowlist PROPERTIES CXX_STANDARD 17)
 
 target_include_directories(windowlist PRIVATE ${CMAKE_SOURCE_DIR}/library)
 

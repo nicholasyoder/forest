@@ -7,7 +7,6 @@ add_library(clock MODULE
 )
 
 target_compile_definitions(clock PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(clock PROPERTIES CXX_STANDARD 11)
 
 target_link_libraries(clock PRIVATE Qt6::Core Qt6::Gui Qt6::DBus Qt6::Widgets)
 forest_link_panel_library(clock)

@@ -10,7 +10,6 @@ add_library(system-settings MODULE
 )
 
 target_compile_definitions(system-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(system-settings PROPERTIES CXX_STANDARD 17)
 
 target_link_libraries(system-settings PRIVATE
     Qt6::Widgets Qt6::DBus

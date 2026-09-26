@@ -5,7 +5,6 @@ add_library(desktop-settings MODULE
 )
 
 target_compile_definitions(desktop-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(desktop-settings PROPERTIES CXX_STANDARD 17)
 
 target_link_libraries(desktop-settings PRIVATE
     Qt6::Widgets Qt6::DBus

@@ -18,7 +18,6 @@ add_library(mainmenu MODULE
 )
 
 target_compile_definitions(mainmenu PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
-set_target_properties(mainmenu PROPERTIES CXX_STANDARD 11)
 
 target_include_directories(mainmenu PRIVATE ${CMAKE_SOURCE_DIR}/library)
 

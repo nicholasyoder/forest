@@ -7,7 +7,6 @@ add_executable(forest
 )
 
 target_compile_definitions(forest PRIVATE QT_DEPRECATED_WARNINGS)
-set_target_properties(forest PROPERTIES CXX_STANDARD 11)
 
 target_link_libraries(forest PRIVATE
     Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus
