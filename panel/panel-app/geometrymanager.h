@@ -3,10 +3,9 @@
 #ifndef GEOMETRYMANAGER_H
 #define GEOMETRYMANAGER_H
 
-#include <QList>
+#include <QPointer>
+#include <QScreen>
 #include <QWidget>
-
-class QScreen;
 
 namespace LayerShellQt {
 class Window;
@@ -29,24 +28,20 @@ signals:
 
 private:
     void build_shell();
-    void handle_screen_change();
+    void rebuild_shell();
+    void handle_geometry_change();
 
-    // The caller's content widget (panel or HiddenPanel) - never itself a
-    // top-level. Reparented into a fresh shell on each build_shell(), so its
-    // state (loaded plugins, DBus registration, ...) survives a rebuild.
+    // Content widget (panel or HiddenPanel); reparented into each new shell so its state survives.
     QWidget* panel_widget = nullptr;
 
-    // The actual top-level, layer-shell-bound window - a bare translucent/
-    // frameless frame around panel_widget. See build_shell()'s comment.
+    // Layer-shell top-level wrapping panel_widget. See build_shell().
     QWidget* shell = nullptr;
+    QPointer<QScreen> shell_screen;
 
     LayerShellQt::Window* layer_window = nullptr;
     int fixed_panel_size = 0;
     QString panel_position;
     bool reserve_screen_space = false;
-
-    // Screens seen as of the last handle_screen_change() - see its comment.
-    QList<QScreen*> tracked_screens;
 };
 
 #endif // GEOMETRYMANAGER_H

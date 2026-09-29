@@ -26,11 +26,9 @@ void desktop::setupPlug(){
 
     QDBusConnection::sessionBus().registerObject("/org/forest/desktop", this, QDBusConnection::ExportScriptableSlots);
 
-    RunOnce* runner = new RunOnce(2000);
-    connect(qApp, &QGuiApplication::screenAdded, runner, &RunOnce::try_activate);
-    connect(qApp, &QGuiApplication::screenRemoved, runner, &RunOnce::try_activate);
-    connect(qApp->primaryScreen(), &QScreen::geometryChanged, runner, &RunOnce::try_activate);
-    connect(runner, &RunOnce::activated, this, &desktop::handleScreenChange);
+    ScreenTracker *tracker = new ScreenTracker(this);
+    connect(tracker, &ScreenTracker::screens_replaced, this, &desktop::handleScreenChange);
+    connect(tracker, &ScreenTracker::geometry_changed, this, &desktop::handleScreenChange);
 }
 
 //called by dbus to load new wallpaper
@@ -43,16 +41,13 @@ void desktop::reloadwallpaper(){
 }
 
 void desktop::loadwallpaperwidgets(){
-    tracked_screens.clear();
+    QScreen *primary = ScreenTracker::primary();
     foreach (QScreen *screen, qApp->screens()){
-        tracked_screens.append(screen);
-        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE);
+        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen);
         wallwidgetlist << wallwidget;
-        wallwidget->windowHandle()->setScreen(screen); // pins this layer-shell surface to its output
-        wallwidget->setFixedSize(screen->size());
 
-        if (screen == qApp->primaryScreen()){
-            iwidget = new iconswidget(screen->size(), getusabledesktopspace());
+        if (screen == primary){
+            iwidget = new iconswidget(screen->size(), getusabledesktopspace(screen));
             QVBoxLayout *vlayout = new QVBoxLayout;
             vlayout->setContentsMargins(QMargins(0,0,0,0));
             vlayout->addWidget(iwidget);
@@ -120,7 +115,7 @@ void desktop::setupmenus(){
         deskmenu->addAction(pasteaction);
 
         QAction *selectallaction = new QAction(QIcon(), "Select all", this);
-        connect(selectallaction, &QAction::triggered, iwidget, &iconswidget::selectall);
+        connect(selectallaction, &QAction::triggered, this, [this](){ iwidget->selectall(); }); // iwidget is recreated on screen changes
         deskmenu->addAction(selectallaction);
 
         QAction *refreshaction = new QAction(QIcon(), "Refresh", this);
@@ -187,33 +182,13 @@ void desktop::saveiconlocations(QHash<QString, QString> poshash){
 }
 
 //get rid of this...
-QRect desktop::getusabledesktopspace(){
+QRect desktop::getusabledesktopspace(QScreen *screen){
     int iconmargin = 10;
 
-    return QRect(iconmargin, iconmargin, qApp->primaryScreen()->size().width() - (iconmargin*2), qApp->primaryScreen()->size().height() - (iconmargin*2));
+    return QRect(iconmargin, iconmargin, screen->size().width() - (iconmargin*2), screen->size().height() - (iconmargin*2));
 }
 
 void desktop::handleScreenChange(){
-    // Skip reloading only if every currently reported QScreen is one we're
-    // already tracking. Comparing by geometry alone (as this used to) is
-    // wrong: a screen that's replaced with an identical-geometry one - e.g.
-    // a compositor tearing down and recreating an output for the same
-    // physical monitor at the same position/resolution, which idle-blank
-    // wake can trigger - shows up here as a brand new QScreen pointer that
-    // happens to match an old geometry, and got wrongly treated as "nothing
-    // changed", leaving that screen's wallpaperwidget pinned to the now-dead
-    // QScreen forever.
-    if(qApp->screens().length() == tracked_screens.length()){
-        bool skip = true;
-        foreach (QScreen *screen, qApp->screens()){
-            if (!tracked_screens.contains(screen)){
-                skip = false;
-            }
-        }
-
-        if(skip) return;
-    }
-
     foreach(wallpaperwidget *ww, wallwidgetlist){
         ww->close();
         ww->deleteLater();

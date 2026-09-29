@@ -3,29 +3,23 @@
 #include "wallpaperwidget.h"
 
 #include <LayerShellQt/Window>
+#include <QScreen>
+#include <QWindow>
 
-wallpaperwidget::wallpaperwidget(QImage *image, WALLPAPER_MODE imode){
+wallpaperwidget::wallpaperwidget(QImage *image, WALLPAPER_MODE imode, QScreen *screen){
     Qt::WindowFlags flags;
     flags |= Qt::FramelessWindowHint;
     flags |= Qt::WindowStaysOnBottomHint;
     setWindowFlags(flags);
 
     winId(); // force native window creation so windowHandle() is valid
+    windowHandle()->setScreen(screen);
+    resize(screen->size()); // pre-configure size: a layout-sized (0x0) top-level never maps
     LayerShellQt::Window *layer_window = LayerShellQt::Window::get(windowHandle());
     layer_window->setLayer(LayerShellQt::Window::LayerBackground);
     layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop | LayerShellQt::Window::AnchorBottom
                               | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
-    // -1, not 0: the background should extend fully behind any panel's
-    // reserved exclusive zone (standard wallpaper/lock-screen idiom, see the
-    // wlr-layer-shell-unstable-v1 protocol's own set_exclusive_zone doc
-    // comment). 0 would mean "respect other surfaces' exclusive zones", so
-    // Biome's arrange_layers() would configure this surface against the
-    // panel-shrunk usable_area instead of the full output - conflicting with
-    // this widget's own setFixedSize(screen->size()) in desktop.cpp and
-    // triggering continuous reconfigure/recommit churn (handle_layer_surface_commit
-    // reruns arrange_layers() on every commit from any layer surface on the
-    // output), which is what was making the cursor jerky whenever the panel
-    // reserved space.
+    // -1: extend behind panels' exclusive zones instead of being shrunk by them.
     layer_window->setExclusiveZone(-1);
     layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
     layer_window->setScope("forest-desktop");

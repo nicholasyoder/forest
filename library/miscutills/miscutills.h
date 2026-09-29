@@ -4,7 +4,10 @@
 #define MISCUTILLS_H
 
 #include <QImage>
+#include <QPointer>
 #include <QTimer>
+
+class QScreen;
 
 enum WALLPAPER_MODE { Fill, Fit, Stretch, Tile, Center};
 
@@ -45,8 +48,30 @@ signals:
 public slots:
     void try_activate();
 private:
-    int run_delay;
-    QTimer *timer = nullptr;
+    QTimer timer;
+};
+
+// Debounced screen-layout watcher. Tracks QPointers, not raw QScreen*, since a
+// replacement QScreen can reuse a removed one's address.
+class ScreenTracker: public QObject {
+    Q_OBJECT
+public:
+    explicit ScreenTracker(QObject *parent = nullptr);
+
+    // Screen for single-screen surfaces (panel, desktop icons, dialogs): the
+    // output named by Forest.conf's display/primary_screen if connected, else the top-left one.
+    static QScreen* primary();
+
+signals:
+    void screens_replaced(); // added/removed/recreated - surfaces on old screens are gone
+    void geometry_changed(); // same screens, new geometry
+
+private:
+    void watch(QScreen *screen);
+    void handle_change();
+
+    QList<QPointer<QScreen>> tracked_screens;
+    RunOnce runner{2000};
 };
 
 #endif // MISCUTILLS_H

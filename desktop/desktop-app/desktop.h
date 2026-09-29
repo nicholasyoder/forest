@@ -51,7 +51,7 @@ private slots:
     void updateicons();
     void loadicon(QString file);
     void saveiconlocations(QHash<QString, QString> poshash);
-    QRect getusabledesktopspace();
+    QRect getusabledesktopspace(QScreen *screen);
     void handleScreenChange();
 
     void handleiconactivated(QString iconID){fmutils::openfile(iconID);}
@@ -79,9 +79,8 @@ private:
     bool shiftdown = false;
     bool updatepaused = false;
 
-    QList <QScreen *> tracked_screens;
     QList <wallpaperwidget *> wallwidgetlist;
-    iconswidget *iwidget;
+    iconswidget *iwidget = nullptr;
     QSettings *settings = new QSettings("Forest", "Forest");
     QMenu *deskmenu = new QMenu;
     QMenu *iconmenu = new QMenu;
