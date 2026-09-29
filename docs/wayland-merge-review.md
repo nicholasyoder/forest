@@ -9,7 +9,7 @@ Some items need manual verification by the user (behavioural/visual) — marked
 
 ---
 
-## Phase 1 — Session environment & startup cleanup (small, low risk)
+## Phase 1 — Session environment & startup cleanup (small, low risk) — done, 25da548
 
 - [x] **1.1 Drop `QT_QPA_PLATFORM` entirely.** `usr/share/forest/startforest-wayland`
   exports `QT_QPA_PLATFORM=wayland`, then `forest/main.cpp`,
@@ -45,30 +45,40 @@ Some items need manual verification by the user (behavioural/visual) — marked
   - `startforest-wayland`: gtk-3.0 block reuses the `GTK2_CONF_FILE` variable
     name; mixed tab/space indentation.
 
-## Phase 2 — Panel popups (`panel/panel-library/popup.h`)
+## Phase 2 — Panel popups (`panel/panel-library/popup.h`) — done
 
-- [ ] **2.1 Mouse-anchored policies were lost.** `CenteredOnMouse` /
+- [x] **2.1 Mouse-anchored policies were lost.** `CenteredOnMouse` /
   `EdgeAlignedOnMouse` are ignored by the new `positionOnLauncher()`. Windowlist's
   right-click menu uses `CenteredOnMouse` (`windowlist.cpp:30`), and since
   windowlist is the stretch widget the menu now centres on the whole taskbar.
   Fix: for `*OnMouse`, use a 1px-wide anchor rect at
   `launcherwidget->mapFromGlobal(QCursor::pos()).x()` (Qt still knows the pointer
   position within its own surface). **(manual test)**
-- [ ] **2.2 Anchor rect relative to the wrong widget.** It's computed against the
+- [x] **2.2 Anchor rect relative to the wrong widget.** It's computed against the
   `objectName == "panel"` widget, but the xdg positioner is relative to the
   toplevel (`launcherwidget->window()`, i.e. GeometryManager's shell). Only works
   because the shell layout has zero margins. Map to `window()` instead; delete
   `getpanelwidget()`.
-- [ ] **2.3 Nested event loop in `positionOnLauncher()`.** The `processEvents`
+- [x] **2.3 Nested event loop in `positionOnLauncher()`.** The `processEvents`
   wait for the parent to be exposed can delete `launcherwidget` (already guarded)
   *and* `this` (not guarded). Replace with deferring `show()` until the
   toplevel's Expose event (event filter on the toplevel `QWindow`, or a
   `QPointer<popup>` guard as a minimum).
-- [ ] **2.4 App-wide event filter always installed.** Each popup does
+- [x] **2.4 App-wide event filter always installed.** Each popup does
   `qApp->installEventFilter(this)` in its constructor and keeps it while hidden.
   Install in `showpopup()`, remove on hide/close.
-- [ ] **2.5 Condense comments** (see Phase 7 — popup.h has ~80 lines of comments,
+- [x] **2.5 Condense comments** (see Phase 7 — popup.h has ~80 lines of comments,
   the constructor block alone is 22).
+- [x] **2.6 Found during testing** (window preview, `windowlist/imagepopup.cpp`):
+  - The expose wait needs the old 500ms cap: QtWayland reports a visible
+    panel unexposed after any frame-callback timeout, so an uncapped wait
+    could hang forever. (Why Biome withholds frame callbacks from a visible
+    panel is still open — investigate on the Biome side.)
+  - Preview never auto-closed: `QCursor::pos()` goes stale once the pointer
+    leaves our surfaces; use `underMouse()`.
+  - Preview reopened at 10x10 after a click-off close: imagepopup's
+    `resize(10,10)` while hidden stuck. `finishShow()` now `adjustSize()`s;
+    the resize hacks are gone.
 
 ## Phase 3 — Screen tracking (panel geometry + desktop wallpaper)
 
@@ -175,7 +185,7 @@ commit messages. Also remove references to Biome file paths / "Workstream D" /
 session logs that will go stale. Do this per file alongside the phase that
 touches it where possible; whatever's left, here.
 
-- [ ] `panel/panel-library/popup.h` — ~80 lines; every block → 1–2 lines.
+- [x] `panel/panel-library/popup.h` — ~80 lines; every block → 1–2 lines. (Phase 2)
 - [ ] `panel/panel-plugins/systray/trayicon.cpp` — ADL note, empty-list signature
   note, raw `Properties.Get` rationale, `showTrayMenu` history (~60 lines).
 - [ ] `services/services-app/systemtray/statusnotifierwatcher.h` — 17-line block →
