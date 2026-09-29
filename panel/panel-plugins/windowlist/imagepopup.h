@@ -35,7 +35,6 @@ private slots:
     void deleteopenptimer();
     void closewindow(){if(currentbt){ currentbt->toplevelHandle()->requestClose(); closepopup();}}
     void raisewindow(){if(currentbt){ currentbt->toplevelHandle()->activate(); closepopup();}}
-    //void resizepbox(){pbox->resize(pbox->sizeHint()); pbox->positionOnLauncher();}
 
 private:
     // No wlr-foreign-toplevel-management equivalent exists for capturing an

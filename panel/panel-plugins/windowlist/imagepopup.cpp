@@ -46,16 +46,12 @@ void imagepopup::btmouseEnter(windowbutton *bt){
     else {
         QPixmap pix = get_window_image();
 
-        scrshotlabel->setPixmap(QPixmap());
-        pbox->setMinimumSize(0,0);
-        pbox->resize(10,10);
         pbox->close();
 
         scrshotlabel->resize(pix.size());
         scrshotlabel->setPixmap(pix);
         pbox->changelauncher(currentbt);
-        pbox->positionOnLauncher();
-        pbox->show();
+        pbox->showpopup();
     }
 }
 
@@ -101,8 +97,8 @@ void imagepopup::tryclosepopup(){
         return;
     }
 
-    QRect r(0,0, currentbt->width(), currentbt->height());
-    if (!(r.contains(currentbt->mapFromGlobal(QCursor::pos())) || pbox->geometry().contains(QCursor::pos())))
+    // Not QCursor::pos(): on Wayland it goes stale once the pointer leaves our surfaces.
+    if (!(currentbt->underMouse() || pbox->underMouse()))
         closepopup();
 }
 
@@ -119,8 +115,6 @@ void imagepopup::closepopup(){
     currentbt = nullptr;
 
     scrshotlabel->setPixmap(QPixmap());
-    pbox->setMinimumSize(0,0);
-    pbox->resize(10,10);
     pbox->closepopup();
 }
 
