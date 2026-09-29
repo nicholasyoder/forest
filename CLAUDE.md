@@ -87,7 +87,7 @@ Themes are selected from user-visible themes (those without `hidden=True`): `Cir
 All in `library/`:
 - **`fstyleloader`** — theme CSS loading (header-only implementation in `.h`)
 - **`flogger`** — logging setup; call `FLogger::install("appname")` at startup
-- **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`
+- **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
 - **`pluginutills`** — plugin path resolution for both plugin types
 - **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `PanelButton`, `GraphWidget`)
 

@@ -80,23 +80,32 @@ Some items need manual verification by the user (behavioural/visual) — marked
     `resize(10,10)` while hidden stuck. `finishShow()` now `adjustSize()`s;
     the resize hacks are gone.
 
-## Phase 3 — Screen tracking (panel geometry + desktop wallpaper)
+## Phase 3 — Screen tracking & primary screen — done
 
-- [ ] **3.1 Address reuse in `QScreen*` comparison.** `GeometryManager::handle_screen_change()`
-  (`panel/panel-app/geometrymanager.cpp`) and `desktop::handleScreenChange()`
-  (`desktop/desktop-app/desktop.cpp`) compare against a stored `QList<QScreen*>`.
-  With the 2s `RunOnce` debounce, a removed QScreen's memory can be reused by its
-  replacement, which then looks "unchanged" — the exact bug this was meant to
-  fix. Use `QList<QPointer<QScreen>>` (nulls on deletion).
-- [ ] **3.2 Extract the shared logic** — both files implement the same
-  "any screen added/removed/replaced?" check. One helper (miscutills) fixes 3.1
-  once.
-- [ ] **3.3 Stale primary-screen connection.** Both connect
-  `qApp->primaryScreen()`'s `geometryChanged` once at startup; after that screen
-  is replaced nothing watches geometry. Connect to every screen (re-hook on
-  `screenAdded`). Related roadmap item: "Primary screen setting".
-- [ ] **3.4** `wallpaperwidget`/`layeroverlay`: `setFixedSize(screen->size())` is
-  redundant on a surface anchored to all four edges — check and drop if so.
+Root cause of panel vs. icons/logout landing on different outputs: nothing chose
+a screen explicitly. The panel's fresh shell got whatever screen Qt assigned a
+new top-level; icons/logout used `qApp->primaryScreen()` (first output Qt saw).
+
+- [x] **3.1–3.3** `ScreenTracker` (miscutills): debounced, tracks
+  `QList<QPointer<QScreen>>`, watches every screen's `geometryChanged`, emits
+  `screens_replaced()` / `geometry_changed()`. Replaces the duplicated checks in
+  `GeometryManager` and `desktop`. Also fixed `RunOnce` leaking a `QTimer` per fire.
+- [x] **Primary screen.** `ScreenTracker::primary()`: `display/primary_screen`
+  (output name, e.g. `DP-1`) in `~/.config/Forest/Forest.conf`, else the
+  top-left screen (min x, then y). Hand-edited for now; UI comes with the
+  display settings plugin. Panel, desktop icons and logout dialog pin to it;
+  the panel rebuilds if it changes on a geometry change.
+- [x] **6.3 (moved here)** Logout dialog: `setScreen(primary())`, anchors/margins dropped.
+- [x] **3.4** Dropped `setFixedSize(screen->size())` on all-edge-anchored
+  surfaces (LayerShellQt sends 0 for doubly-anchored dims). The wallpaper still
+  needs an initial `resize(screen->size())`: with the icons layout it's
+  otherwise 0x0 and Qt never maps it. `layeroverlay`/`wallpaperwidget` now
+  take their `QScreen*` (first half of 6.4).
+- [x] Desktop "Select all" was bound to the first `iconswidget`, dead after any
+  screen change.
+- [x] **(manual test)** after `three.sh`: panel/icons/logout on DP-1; live
+  layout switch; monitor sleep/wake; logout centred on the scaled 4K;
+  wallpaper fills each screen behind the panel.
 
 ## Phase 4 — Windowlist, deskswitch & Wayland object lifetimes
 
@@ -160,14 +169,10 @@ Some items need manual verification by the user (behavioural/visual) — marked
   layer surface (`LayerOverlay`/`LayerTop`, anchored bottom-right with margins,
   keyboard interactivity none) — `layeroverlay`/`wallpaperwidget` show the
   pattern. **(manual test)**
-- [ ] **6.3 Logout dialog centering** (`logout/logout-app/logout.cpp`, constructor):
-  layer-shell margins are output-relative, so adding `screen_geo.x()/y()` is
-  wrong for a primary not at 0,0. With no anchors, layer-shell centres the
-  surface — drop anchors and margins.
+- [x] **6.3 Logout dialog centering** — done in Phase 3.
 - [ ] **6.4 Layer overlay per-screen loop duplicated 3×** (`forest/forest.cpp`,
-  `logout.cpp` constructor and `start_action()`): `new layeroverlay` →
-  `setScreen` → `setFixedSize` → `show`. Add a `QScreen*` ctor arg or a static
-  `showOnAllScreens(...)`. Rename/merge `logoutmanager::startbackfade()` — it no
+  `logout.cpp` constructor and `start_action()`). `QScreen*` ctor arg added in
+  Phase 3; a static `showOnAllScreens(...)` could still collapse the loops. Rename/merge `logoutmanager::startbackfade()` — it no
   longer fades anything.
 - [ ] **6.5 Cursor settings** (`system/system-settings/cursorthemesettings.cpp`):
   `org.biome.Cursor.SetTheme` is a blocking bespoke call. Decide whether Biome
@@ -193,8 +198,8 @@ touches it where possible; whatever's left, here.
 - [ ] `panel/panel-plugins/windowlist/extforeigntoplevelhandle.h` (`m_readySent`),
   `windowlist.h` (pending queues), `windowlist.cpp` (`tryPairPendingHandles`,
   `onWindowAdded`), `extforeigntoplevellist.h`.
-- [ ] `panel/panel-app/geometrymanager.{h,cpp}`, `desktop/desktop-app/wallpaperwidget.cpp`
-  (exclusive zone), `desktop/desktop-app/desktop.cpp` (`handleScreenChange`).
+- [x] `panel/panel-app/geometrymanager.{h,cpp}`, `desktop/desktop-app/wallpaperwidget.cpp`
+  (exclusive zone), `desktop/desktop-app/desktop.cpp` (`handleScreenChange`). (Phase 3)
 - [ ] `logout/logout-app/logout.cpp` (`startbackfade`, `start_action`, `cancel`).
 - [ ] `services/services-app/hotkeys/foresthotkeys.cpp` (`pauseHotkeys`),
   `globalshortcutsportal.{h,cpp}`, `hotkey.h`, `keysym_table.h` header note.

@@ -21,9 +21,7 @@ void forest::setup(){
 
     QList<layeroverlay*> startup_overlays;
     foreach (QScreen *screen, qApp->screens()){
-        layeroverlay *overlay = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerOverlay, "forest-startup");
-        overlay->windowHandle()->setScreen(screen);
-        overlay->setFixedSize(screen->size());
+        layeroverlay *overlay = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerOverlay, "forest-startup", screen);
         overlay->show();
         startup_overlays << overlay;
     }

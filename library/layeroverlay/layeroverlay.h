@@ -8,10 +8,12 @@
 
 #include <LayerShellQt/Window>
 
+class QScreen;
+
 class layeroverlay : public QWidget{
     Q_OBJECT
 public:
-    layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope);
+    layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen);
 
 private:
     void paintEvent(QPaintEvent *);

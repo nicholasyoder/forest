@@ -30,16 +30,10 @@ pattern), rather than designing it here ahead of time.
   hand-binding it — worth checking whether Forest should bind `libkscreen`
   directly too, or go through a different Qt-native path, when this is
   actually designed. Ideas to fold in:
-  - **Primary screen setting.** Which output the panel, desktop icons and
-    notification popups go on. Today none of them choose: the panel never
-    calls `setScreen()` (`panel-app/geometrymanager.cpp`) and inherits Qt's
-    `primaryScreen()`, which is whichever output Qt saw first and doesn't
-    change when another monitor is enabled later — so after switching layouts
-    live, the panel stays put (e.g. on what is now the middle monitor). Add one
-    Forest-side "primary screen" helper backed by this setting, used by the
-    panel (`build_shell()`), `desktop.cpp`'s icons and `notifypopup.cpp`, and
-    re-evaluated when any screen's geometry changes (the panel currently only
-    watches the primary's). Client-side by design; Biome stays out of it.
+  - **Primary screen setting.** `ScreenTracker::primary()` (miscutills) already
+    reads `display/primary_screen` (output name) from `Forest.conf`, falling
+    back to the top-left screen; panel, desktop icons and logout use it. Only
+    the UI is missing. `notifypopup.cpp` should use it when ported (review 6.2).
   - **Display profiles.** Named layouts (which outputs are on, mode/scale/
     position, and the primary screen) stored in Forest's settings and applied
     through the output-management protocol, replacing hand-rolled

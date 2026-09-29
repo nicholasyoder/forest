@@ -3,13 +3,15 @@
 #include "layeroverlay.h"
 
 #include <QPainter>
+#include <QWindow>
 
-layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope) : color(color){
+layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen) : color(color){
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_DeleteOnClose);
     setWindowFlags(Qt::FramelessWindowHint);
 
     winId(); // force native window creation so windowHandle() is valid
+    windowHandle()->setScreen(screen);
     LayerShellQt::Window *layer_window = LayerShellQt::Window::get(windowHandle());
     layer_window->setLayer(layer);
     layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop | LayerShellQt::Window::AnchorBottom

@@ -11,6 +11,8 @@
 
 #include <LayerShellQt/Window>
 
+#include "miscutills.h"
+
 enum class DBusService {SYSTEMD, CONSOLEKIT, UPOWER, PWMANAGEMENT};
 
 struct DBusMethod {
@@ -131,18 +133,13 @@ logoutmanager::logoutmanager(){
     layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
     layer_window->setScope("forest-logout");
 
-    QRect screen_geo = qApp->primaryScreen()->geometry();
-    layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop | LayerShellQt::Window::AnchorLeft));
-    layer_window->setMargins(QMargins(
-        screen_geo.x() + (screen_geo.width() / 2 - sizeHint().width() / 2),
-        screen_geo.y() + (screen_geo.height() / 2 - sizeHint().height() / 2),
-        0, 0
-    ));
+    // No anchors: layer-shell centres the surface. LayerShellQt defaults to all four.
+    layer_window->setAnchors(LayerShellQt::Window::Anchors());
+    if (QScreen *primary = ScreenTracker::primary())
+        windowHandle()->setScreen(primary);
 
     foreach(QScreen* screen, qApp->screens()){
-        layeroverlay *background_fader = new layeroverlay(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim");
-        background_fader->windowHandle()->setScreen(screen);
-        background_fader->setFixedSize(screen->size());
+        layeroverlay *background_fader = new layeroverlay(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim", screen);
         background_fader->show();
         background_faders.append(background_fader);
     }
@@ -243,9 +240,7 @@ void logoutmanager::start_action(ActionType action){
     // avoid any flicker gap) up to full black. The old overlays are never
     // explicitly closed; the process exits shortly after regardless.
     foreach(QScreen* screen, qApp->screens()){
-        layeroverlay *blackout_widget = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerTop, "forest-logout-dim");
-        blackout_widget->windowHandle()->setScreen(screen);
-        blackout_widget->setFixedSize(screen->size());
+        layeroverlay *blackout_widget = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerTop, "forest-logout-dim", screen);
         blackout_widget->show();
     }
 

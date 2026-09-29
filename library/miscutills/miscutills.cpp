@@ -5,7 +5,10 @@
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QDebug>
+#include <QGuiApplication>
 #include <QProcess>
+#include <QScreen>
+#include <QSettings>
 #include <QPainter>
 #include <QRegularExpression>
 #include <QIcon>
@@ -139,13 +142,62 @@ namespace miscutills {
 }
 
 RunOnce::RunOnce(int delay){
-    run_delay = delay;
+    timer.setSingleShot(true);
+    timer.setInterval(delay);
+    connect(&timer, &QTimer::timeout, this, &RunOnce::activated);
 }
 
 void RunOnce::try_activate(){
-    if(timer && timer->isActive()){timer->stop(); delete timer;}
-    timer = new QTimer();
-    connect(timer, &QTimer::timeout, this, &RunOnce::activated);
-    timer->setSingleShot(true);
-    timer->start(run_delay);
+    timer.start();
+}
+
+ScreenTracker::ScreenTracker(QObject *parent) : QObject(parent){
+    foreach (QScreen *screen, qApp->screens()){
+        tracked_screens << screen;
+        watch(screen);
+    }
+
+    connect(qApp, &QGuiApplication::screenAdded, this, [this](QScreen *screen){
+        watch(screen);
+        runner.try_activate();
+    });
+    connect(qApp, &QGuiApplication::screenRemoved, &runner, &RunOnce::try_activate);
+    connect(&runner, &RunOnce::activated, this, &ScreenTracker::handle_change);
+}
+
+QScreen* ScreenTracker::primary(){
+    QList<QScreen*> screens = qApp->screens();
+    QString name = QSettings("Forest", "Forest").value("display/primary_screen").toString();
+    QScreen *best = nullptr;
+    foreach (QScreen *screen, screens){
+        if (!name.isEmpty() && screen->name() == name)
+            return screen;
+        QPoint pos = screen->geometry().topLeft();
+        if (!best || pos.x() < best->geometry().x() || (pos.x() == best->geometry().x() && pos.y() < best->geometry().y()))
+            best = screen;
+    }
+    return best;
+}
+
+void ScreenTracker::watch(QScreen *screen){
+    connect(screen, &QScreen::geometryChanged, &runner, &RunOnce::try_activate);
+}
+
+void ScreenTracker::handle_change(){
+    QList<QScreen*> screens = qApp->screens();
+    bool replaced = screens.length() != tracked_screens.length();
+    foreach (const QPointer<QScreen> &screen, tracked_screens){
+        if (!screen || !screens.contains(screen.data()))
+            replaced = true;
+    }
+
+    if (replaced){
+        tracked_screens.clear();
+        foreach (QScreen *screen, screens)
+            tracked_screens << screen;
+        emit screens_replaced();
+    }
+    else {
+        emit geometry_changed();
+    }
 }
