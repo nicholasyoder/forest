@@ -22,21 +22,28 @@ public:
     void setup();
 
 public slots:
-    void reloadhotkeys();
-
     //called by dbus
-    void showdesktop();
+    void reloadhotkeys();
     void pauseHotkeys();
     void resumeHotkeys();
 
 private slots:
-    void loadhotkeys();
     void dispatch(QString id);
 
 private:
+    void loadhotkeys();
+    // Drives the portal session towards the wanted state, one async step at a time.
+    void reconcile();
+
     GlobalShortcutsPortal *portal = nullptr;
     QList<globalhotkey*> hotkeylist;
+
+    // Wanted state
     bool paused = false;
+    bool configChanged = true;
+    // Actual state
+    bool sessionOpen = false;
+    bool busy = false;
 };
 
 #endif // FORESTHOTKEYS_H

@@ -27,22 +27,14 @@ void globalhotkey::exec(){
         }
     }
     else{
-        if (dbusbus == "Session" || dbusbus == ""){
-            QDBusInterface dbus(dbusservice, dbuspath, dbusinterface, QDBusConnection::sessionBus());
-            if (!dbus.isValid()){
-                qDebug() << "QDBusInterface is not valid!";
-                return ;
-            }
-            dbus.call(dbusmethod);
-        }
-        else{
-            QDBusInterface dbus(dbusservice, dbuspath, dbusinterface, QDBusConnection::systemBus());
-            if (!dbus.isValid()){
-                qDebug() << "QDBusInterface is not valid!";
-                return ;
-            }
-            dbus.call(dbusmethod);
-        }
+        QDBusConnection bus = (dbusbus.isEmpty() || dbusbus == "Session")
+            ? QDBusConnection::sessionBus() : QDBusConnection::systemBus();
+        const QDBusMessage call = QDBusMessage::createMethodCall(dbusservice, dbuspath, dbusinterface, dbusmethod);
+        auto *watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), this);
+        connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *w) {
+            if (w->isError()) qWarning() << "globalhotkey:" << hotkey_id << "D-Bus call failed:" << w->error().message();
+            w->deleteLater();
+        });
     }
 }
 
@@ -55,12 +47,8 @@ QString globalhotkey::triggerString() const {
     const Qt::KeyboardModifiers mods = combo.keyboardModifiers();
     const Qt::Key key = combo.key();
 
-    // Bare-Meta-tap - foresthotkeys::loadhotkeys() builds this exact
-    // QKeySequence(Qt::Key_Meta) (key with no modifiers) for the "Meta"
-    // sentinel in Forest.conf. The shortcuts-spec grammar has no syntax for
-    // a modifier used as a "key" like Qt does here, so this maps onto
-    // biome/core/keybindings.cpp's parse_trigger() modifier-only extension
-    // instead: the trigger string is just the modifier name on its own.
+    // Bare-Meta tap ("Meta" in Forest.conf). Not in the shortcuts spec;
+    // Biome accepts a lone modifier name as an extension.
     if (key == Qt::Key_Meta && mods == Qt::NoModifier) {
         return QStringLiteral("LOGO");
     }
