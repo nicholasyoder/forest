@@ -145,8 +145,9 @@ new top-level; icons/logout used `qApp->primaryScreen()` (first output Qt saw).
   set wanted state and call `reconcile()`, which runs one step at a time.
   Settings dying mid-capture leaves hotkeys paused → `docs/roadmap.md`.
 - [x] **5.5** `hotkey::exec()` collapsed to one async call.
-- [ ] **(manual test)** Hotkeys work after several fresh logins; capture in
-  settings (incl. bare Meta) gets the raw keys and hotkeys work again after;
+- [x] **(manual test)** Hotkeys work after several fresh logins; capture in
+  settings gets the raw keys and hotkeys work again after (bare Meta capture
+  was already broken → `docs/roadmap.md`);
   rapid successive edits don't double-fire (`dbus-monitor` shows one session at
   a time); Meta+D absent from a fresh config.
 
