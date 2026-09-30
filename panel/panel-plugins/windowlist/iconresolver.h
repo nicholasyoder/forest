@@ -6,11 +6,7 @@
 #include <QIcon>
 #include <QString>
 
-// Resolves a Wayland toplevel's app_id to an icon. Unlike X11's
-// _NET_WM_ICON, wlr-foreign-toplevel-management carries no icon data at
-// all - only app_id - so this has to go through the app's .desktop file,
-// same pattern already used in quicklaunch/launcher.cpp and
-// mainmenu/itemhandler.cpp.
+// app_id -> icon via the app's .desktop file; foreign-toplevel carries no icon data.
 namespace iconresolver{
     QIcon iconForAppId(const QString &appId);
 }

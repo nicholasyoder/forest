@@ -4,33 +4,46 @@
 
 #include "extworkspacehandle.h"
 
-// Matches the forward declaration of ExtWorkspaceManager::m_group in
-// extworkspacemanager.h - defined at file scope (not inside an anonymous
-// namespace) so it's the same type as that field's pointee.
-//
-// Minimal wrapper for ext_workspace_group_handle_v1 - Biome advertises
-// exactly one group (see extworkspacemanager.h) and never sends
-// output_enter/leave (its workspace model is global, not per-output) or
-// workspace_enter/leave beyond the initial burst, so there is nothing
-// meaningful to surface from it; it only needs to exist so the protocol
-// object has somewhere to receive events without erroring.
+// Only kept so the group proxy exists to receive events and is destroyed
+// when the compositor removes it; its output/workspace membership is unused.
 class ExtWorkspaceGroup : public QtWayland::ext_workspace_group_handle_v1 {
 public:
-    explicit ExtWorkspaceGroup(struct ::ext_workspace_group_handle_v1 *object)
-        : QtWayland::ext_workspace_group_handle_v1(object) {
+    ExtWorkspaceGroup(struct ::ext_workspace_group_handle_v1 *object, ExtWorkspaceManager *manager)
+        : QtWayland::ext_workspace_group_handle_v1(object), m_manager(manager) {
     }
     ~ExtWorkspaceGroup() {
         destroy();
     }
+
+protected:
+    void ext_workspace_group_handle_v1_removed() override {
+        m_manager->removeGroup(this);
+    }
+
+private:
+    ExtWorkspaceManager *m_manager;
 };
 
-ExtWorkspaceManager::ExtWorkspaceManager() : QWaylandClientExtensionTemplate<ExtWorkspaceManager>(1) {
+ExtWorkspaceManager::ExtWorkspaceManager(QObject *parent)
+    : QWaylandClientExtensionTemplate<ExtWorkspaceManager>(1) {
+    setParent(parent);
+}
+
+ExtWorkspaceManager::~ExtWorkspaceManager() {
+    qDeleteAll(m_groups);
+}
+
+void ExtWorkspaceManager::release() {
+    setParent(nullptr);
+    if (isActive())
+        stop();
+    else
+        deleteLater();
 }
 
 void ExtWorkspaceManager::ext_workspace_manager_v1_workspace_group(
         struct ::ext_workspace_group_handle_v1 *workspace_group) {
-    delete m_group;
-    m_group = new ExtWorkspaceGroup(workspace_group);
+    m_groups << new ExtWorkspaceGroup(workspace_group, this);
 }
 
 void ExtWorkspaceManager::ext_workspace_manager_v1_workspace(struct ::ext_workspace_handle_v1 *workspace) {
@@ -43,9 +56,20 @@ void ExtWorkspaceManager::ext_workspace_manager_v1_done() {
     emit workspacesChanged();
 }
 
+void ExtWorkspaceManager::ext_workspace_manager_v1_finished() {
+    // `finished` is a destructor event; libwayland leaves freeing the proxy to us.
+    wl_proxy_destroy(reinterpret_cast<wl_proxy *>(object()));
+    deleteLater();
+}
+
 void ExtWorkspaceManager::onWorkspaceRemoved(ExtWorkspaceHandle *handle) {
     m_workspaces.removeAll(handle);
     handle->deleteLater();
+}
+
+void ExtWorkspaceManager::removeGroup(ExtWorkspaceGroup *group) {
+    m_groups.removeAll(group);
+    delete group;
 }
 
 int ExtWorkspaceManager::activeWorkspaceIndex() const {

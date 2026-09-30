@@ -5,12 +5,12 @@
 
 #include <QWidget>
 #include <QVBoxLayout>
-#include <QVariantMap>
 
 #include "panelbutton.h"
 #include "panelpluginterface.h"
 #include "deskbutton.h"
 #include "extworkspacemanager.h"
+#include "biomeworkspaces.h"
 
 class deskswitch : public panelbutton, panelpluginterface {
     Q_OBJECT
@@ -34,28 +34,16 @@ private slots:
     void setupbts();
     void switchtodesk(int index);
 
-    // Active-desktop highlighting: driven by ext-workspace-v1's own state,
-    // fired after every workspacesChanged() (initial burst, and again after
-    // every subsequent activate()/commit() round trip).
     void onWorkspacesChanged();
-
-    // Per-desktop window-count dots: driven independently, from
-    // org.biome.Workspaces over DBus - ext-workspace-v1 has no concept of
-    // which windows belong to which workspace at all (see
-    // biome/docs/architecture-notes.md's "Workspace protocol (Workstream D)"
-    // section). GetWindowWorkspaces/
-    // WindowWorkspacesChanged hand back identifier -> workspace index for
-    // every open window; tallied into per-desktop counts here.
-    void refreshWindowWorkspaces();
-    void onWindowWorkspacesChanged(QVariantMap windowWorkspaces);
+    // Per-desktop window-count dots.
+    void updateWindowCounts();
 
 private:
-    void applyWindowWorkspaces(const QVariantMap &windowWorkspaces);
-
     QHBoxLayout *basehlayout;
     QList<deskbutton*> dbuttons;
     popupmenu *pmenu;
     ExtWorkspaceManager *workspace_manager = nullptr;
+    BiomeWorkspaces *biome_workspaces = nullptr;
 };
 
 #endif // DESKSWITCH_H

@@ -37,14 +37,8 @@ private slots:
     void raisewindow(){if(currentbt){ currentbt->toplevelHandle()->activate(); closepopup();}}
 
 private:
-    // No wlr-foreign-toplevel-management equivalent exists for capturing an
-    // arbitrary (possibly minimized/off-screen) client window's pixels -
-    // only compositor-side output capture does. Icon-only for now; a live
-    // wlr-screencopy capture of currently-mapped windows is a possible
-    // later upgrade - tracked as the screenshots item in biome/docs/roadmap.md's
-    // Phase 6.
-    // The popup/timer/positioning/shadow machinery below is kept as-is so
-    // that upgrade has somewhere to plug back in.
+    // Icon-only: no protocol here captures an arbitrary window's pixels
+    // (would need ext-image-copy-capture / wlr-screencopy).
     QPixmap get_window_image();
 
     bool popup_enabled = true;

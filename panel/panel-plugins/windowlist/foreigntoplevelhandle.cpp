@@ -5,8 +5,8 @@
 #include <QGuiApplication>
 #include <qguiapplication_platform.h>
 
-ForeignToplevelHandle::ForeignToplevelHandle(struct ::zwlr_foreign_toplevel_handle_v1 *object)
-    : QtWayland::zwlr_foreign_toplevel_handle_v1(object){
+ForeignToplevelHandle::ForeignToplevelHandle(struct ::zwlr_foreign_toplevel_handle_v1 *object, QObject *parent)
+    : QObject(parent), QtWayland::zwlr_foreign_toplevel_handle_v1(object){
 }
 
 ForeignToplevelHandle::~ForeignToplevelHandle(){
@@ -48,9 +48,7 @@ void ForeignToplevelHandle::zwlr_foreign_toplevel_handle_v1_state(wl_array *stat
     m_minimized = false;
     m_activated = false;
 
-    // wl_array_for_each() assigns (array)->data (void*) straight into pos,
-    // which is a C-only implicit conversion - not valid in C++ - so this
-    // walks the array by hand instead.
+    // wl_array_for_each() relies on C's implicit void* conversion; not valid C++.
     const uint32_t *entries = static_cast<const uint32_t *>(state->data);
     size_t count = state->size / sizeof(uint32_t);
     for (size_t i = 0; i < count; i++){

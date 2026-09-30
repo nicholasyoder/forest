@@ -10,18 +10,8 @@
 
 class ExtWorkspaceManager;
 
-// Wraps one ext_workspace_handle_v1 - one per Biome workspace, created by
-// ExtWorkspaceManager::ext_workspace_manager_v1_workspace(). Biome's
-// workspace set is fixed at startup (no create_workspace/remove capability
-// is ever advertised - see biome/docs/architecture-notes.md's "Workspace
-// protocol (Workstream D)" section), so
-// removed() is only here for spec completeness, not because it's expected
-// to fire in practice.
-//
-// Unlike ForeignToplevelHandle/zwlr_foreign_toplevel_handle_v1, this
-// protocol has no per-handle `done` event - atomicity is at the manager
-// level instead (see ExtWorkspaceManager's header comment), so this class
-// just caches each event as it arrives with no batching of its own.
+// No per-handle `done`; ExtWorkspaceManager::workspacesChanged() marks a
+// consistent snapshot.
 class ExtWorkspaceHandle : public QObject, public QtWayland::ext_workspace_handle_v1 {
     Q_OBJECT
 
@@ -32,9 +22,7 @@ public:
     QString name() const { return m_name; }
     bool isActive() const { return m_active; }
 
-    // Issues the `activate` request followed by the manager's `commit` -
-    // ext-workspace-v1 batches state changes at the manager level, so a
-    // bare activate() request alone has no effect until commit() follows.
+    // Sends `activate` plus the manager's `commit`, without which it has no effect.
     void activate();
 
 signals:

@@ -4,11 +4,25 @@
 
 #include "extforeigntoplevelhandle.h"
 
-ExtForeignToplevelList::ExtForeignToplevelList()
+ExtForeignToplevelList::ExtForeignToplevelList(QObject *parent)
     : QWaylandClientExtensionTemplate<ExtForeignToplevelList>(1) {
+    setParent(parent);
+}
+
+void ExtForeignToplevelList::release() {
+    setParent(nullptr);
+    if (isActive())
+        stop();
+    else
+        deleteLater();
 }
 
 void ExtForeignToplevelList::ext_foreign_toplevel_list_v1_toplevel(struct ::ext_foreign_toplevel_handle_v1 *toplevel) {
-    auto *handle = new ExtForeignToplevelHandle(toplevel);
+    auto *handle = new ExtForeignToplevelHandle(toplevel, this);
     emit toplevelCreated(handle);
+}
+
+void ExtForeignToplevelList::ext_foreign_toplevel_list_v1_finished() {
+    destroy();
+    deleteLater();
 }

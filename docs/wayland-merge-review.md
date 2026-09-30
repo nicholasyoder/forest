@@ -107,32 +107,29 @@ new top-level; icons/logout used `qApp->primaryScreen()` (first output Qt saw).
   layout switch; monitor sleep/wake; logout centred on the scaled 4K;
   wallpaper fills each screen behind the panel.
 
-## Phase 4 — Windowlist, deskswitch & Wayland object lifetimes
+## Phase 4 — Windowlist, deskswitch & Wayland object lifetimes — done
 
-- [ ] **4.1 Plugin reload leaks bound protocol objects.** `windowlist`'s
-  destructor frees nothing (`ForeignToplevelManager`, `ExtForeignToplevelList`,
-  `ExtWorkspaceManager`, handles); `deskswitch` never frees its
-  `ExtWorkspaceManager`. After a panel reload (panel settings), the old managers
-  stay bound and keep allocating a handle per new window forever. Send each
-  manager's `stop` request, parent/delete them and their handles.
-- [ ] **4.2 Shared `org.biome.Workspaces` client.** Constants,
-  `GetWindowWorkspaces`, and the `WindowWorkspacesChanged` subscription are
-  copy-pasted across `deskswitch.cpp`, `windowlist.cpp`, `windowbutton.cpp`.
-  Put one small async client class in panel-library next to
-  `ExtWorkspaceManager` (also covers Phase 6 async work for these calls).
-- [ ] **4.3 Button creation / icon resolution.** `onWindowAdded` creates the
-  button before the first `done`, so title/app_id are always empty initially;
-  `iconresolver::iconForAppId` then reloads the .desktop file on *every*
-  `changed` (every title change — terminals/browsers do this constantly).
-  Create the button on first `changed`; only re-resolve the icon when app_id
-  actually changes.
-- [ ] **4.4 `ExtWorkspaceManager` assumes one group.**
-  `ext_workspace_manager_v1_workspace_group` deletes the previous group — under a
-  compositor with per-output groups that destroys live handles. Keep a list.
-- [ ] **4.5 Decide: skip wlr/ext handle pairing when `org.biome` isn't on the
-  bus.** Pairing by creation order is safe under Biome (verified: closed handles
-  are removed from both queues), but relies on a Biome-only ordering guarantee
-  and exists only to feed `org.biome.Workspaces`.
+- [x] **4.1 Plugin reload leaks bound protocol objects.** Managers are parented
+  to the plugin and own their handles; the plugin destructor calls `release()`
+  (`stop`, then destroy the proxy and self-delete on `finished` — the generated
+  `*_finished()` handlers are empty and none of the three has a destructor
+  request). Safe because panel plugins are never unloaded.
+- [x] **4.2 Shared `org.biome.Workspaces` client.** `BiomeWorkspaces`
+  (panel-library): cached map, async `GetWindowWorkspaces`/`MoveToplevelToWorkspace`.
+- [x] **4.3 Button creation / icon resolution.** Button created on the first
+  `done`; identifier lives on `ForeignToplevelHandle` (pairing can finish
+  first); icon re-resolved only when app_id changes.
+- [x] **4.4 Group lifetime.** Groups kept in a list and destroyed on `removed`.
+  Multi-group *semantics* (one active workspace per group) → `docs/roadmap.md`.
+- [x] **4.5** `BiomeWorkspaces::isAvailable()` is a sync bus-daemon check at
+  construction (Biome owns `org.biome` before forking the session). Without it,
+  ext-foreign-toplevel-list isn't bound, nothing is paired, and "Move to
+  desktop" is hidden. Late binding isn't an option: wlroots replays toplevels
+  newest-first, so a late ext replay wouldn't line up with the wlr queue.
+- [x] **(manual test)** Reload the panel (panel settings) several times, then
+  open/close windows: no crash, taskbar/deskswitch correct. `WAYLAND_DEBUG=1`
+  shows `stop` → `finished` per manager. Window buttons still filter per
+  desktop; "Move to desktop" works; icons correct for terminals/browsers.
 
 ## Phase 5 — Hotkeys (GlobalShortcuts portal)
 
@@ -195,20 +192,21 @@ touches it where possible; whatever's left, here.
   note, raw `Properties.Get` rationale, `showTrayMenu` history (~60 lines).
 - [ ] `services/services-app/systemtray/statusnotifierwatcher.h` — 17-line block →
   "QDBusContext only works on the object passed to registerObject(), not an adaptor."
-- [ ] `panel/panel-plugins/windowlist/extforeigntoplevelhandle.h` (`m_readySent`),
+- [x] `panel/panel-plugins/windowlist/extforeigntoplevelhandle.h` (`m_readySent`),
   `windowlist.h` (pending queues), `windowlist.cpp` (`tryPairPendingHandles`,
-  `onWindowAdded`), `extforeigntoplevellist.h`.
+  `onWindowAdded`), `extforeigntoplevellist.h`. (Phase 4)
 - [x] `panel/panel-app/geometrymanager.{h,cpp}`, `desktop/desktop-app/wallpaperwidget.cpp`
   (exclusive zone), `desktop/desktop-app/desktop.cpp` (`handleScreenChange`). (Phase 3)
 - [ ] `logout/logout-app/logout.cpp` (`startbackfade`, `start_action`, `cancel`).
 - [ ] `services/services-app/hotkeys/foresthotkeys.cpp` (`pauseHotkeys`),
   `globalshortcutsportal.{h,cpp}`, `hotkey.h`, `keysym_table.h` header note.
-- [ ] `panel/panel-library/extworkspace{manager,handle}.{h,cpp}`,
-  `panel/panel-plugins/deskswitch/deskswitch.h`, `mainmenu.cpp` (outsideclicked).
-- [ ] `panel/panel-library/CMakeLists.txt`, `panel/panel-plugins/windowlist/CMakeLists.txt`
-  (protocol vendoring notes).
-- [ ] `panel/panel-plugins/windowlist/imagepopup.h`, `windowbutton.{h,cpp}` —
-  drop "matches the old X11 menu" notes.
+- [x] `panel/panel-library/extworkspace{manager,handle}.{h,cpp}`,
+  `panel/panel-plugins/deskswitch/deskswitch.h`. (Phase 4)
+- [ ] `mainmenu.cpp` (outsideclicked).
+- [x] `panel/panel-library/CMakeLists.txt`, `panel/panel-plugins/windowlist/CMakeLists.txt`
+  (protocol vendoring notes). (Phase 4)
+- [x] `panel/panel-plugins/windowlist/imagepopup.h`, `windowbutton.{h,cpp}` —
+  drop "matches the old X11 menu" notes. (Phase 4)
 - [ ] `forest/forest.cpp` startup overlay comment.
 - [ ] Docs: `docs/qmenu-migration-plan.md` is mostly resolved-bug narrative — trim
   to what's still actionable (Task 1); trim the history paragraph at the end of
@@ -219,5 +217,5 @@ touches it where possible; whatever's left, here.
 ## Suggested merge gate
 
 Before merging into develop: Phase 1, 2.1, 3.1–3.2, 4.1, 5.1, 6.2, 6.3, and
-Phase 7. The async D-Bus work (5.2, 6.1, 4.2) and the Biome-coupling decisions
-(4.4, 4.5, 6.5) can follow on develop.
+Phase 7. The async D-Bus work (5.2, 6.1) and the 6.5 cursor decision can follow
+on develop.
