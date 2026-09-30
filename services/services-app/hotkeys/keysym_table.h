@@ -31,13 +31,7 @@
 
 #include <Qt>
 
-// X11 keysym values and libxkbcommon keysym values are the same numbers
-// (xkbcommon's keysyms header is generated from the same upstream
-// keysymdef.h X11 uses) - pulling the table's XKB_KEY_* values from here instead
-// keeps this file (and the rest of hotkeys/, which is otherwise X11-free
-// since the portal-based rewrite) off libX11 entirely. Unlike X11's own
-// keysymdef.h, xkbcommon's header has no MISCELLANY/LATIN1/KOREAN/XKB_KEYS
-// feature gates - everything below is always available unconditionally.
+// xkbcommon keysyms have the same values as X11 keysymdef.h, so no libX11.
 #include <xkbcommon/xkbcommon-keysyms.h>
 
 //

@@ -10,32 +10,35 @@ constexpr char kGlobalShortcutsIface[] = "org.freedesktop.portal.GlobalShortcuts
 constexpr char kRequestIface[] = "org.freedesktop.portal.Request";
 constexpr char kSessionIface[] = "org.freedesktop.portal.Session";
 
-// Forwards a Request object's one-shot Response signal to an arbitrary
-// std::function - QDBusConnection::connect() needs a real Qt slot, so this
-// is the shim that lets awaitResponse() take a lambda per call instead of
-// one fixed slot per possible caller. Deletes itself once fired.
+// QDBusConnection::connect() needs a real slot; this forwards one Request's
+// outcome to a callback, exactly once. Its bus match goes away with it.
 class PortalRequest : public QObject {
     Q_OBJECT
 
 public:
-    explicit PortalRequest(std::function<void(uint, const QVariantMap &)> callback, QObject *parent = nullptr)
+    explicit PortalRequest(std::function<void(bool)> callback, QObject *parent = nullptr)
         : QObject(parent), m_callback(std::move(callback)) {
     }
 
-public slots:
-    void onResponse(uint code, const QVariantMap &results) {
-        m_callback(code, results);
+    void finish(bool ok) {
+        if (m_done) return;
+        m_done = true;
+        m_callback(ok);
         deleteLater();
     }
 
+public slots:
+    void onResponse(uint code, const QVariantMap &) {
+        if (code != 0) qWarning() << "GlobalShortcutsPortal: request failed, response code" << code;
+        finish(code == 0);
+    }
+
 private:
-    std::function<void(uint, const QVariantMap &)> m_callback;
+    std::function<void(bool)> m_callback;
+    bool m_done = false;
 };
 
-// One entry of the portal's `a(sa{sv})` shortcuts array - mirrors
-// biome/ipc/global_shortcuts_portal.h's GlobalShortcutSpec exactly (same
-// wire shape), redeclared here since forest and biome are separate repos
-// with no shared header.
+// One entry of the portal's `a(sa{sv})` shortcuts array.
 struct PortalShortcutSpec {
     QString id;
     QVariantMap options;
@@ -61,9 +64,29 @@ const QDBusArgument &operator>>(const QDBusArgument &arg, PortalShortcutSpec &sp
     return arg;
 }
 
+QString newHandleToken() {
+    static int counter = 0;
+    return QStringLiteral("forest_hotkeys_%1").arg(counter++);
+}
+
+// Unique bus name mangled per the portal object-path convention.
+QString escapedSender() {
+    QString sender = QDBusConnection::sessionBus().baseService();
+    sender.remove(0, 1);
+    sender.replace('.', '_');
+    return sender;
+}
+
+QDBusMessage portalCall(const QString &method) {
+    return QDBusMessage::createMethodCall(kBusService, kObjectPath, kGlobalShortcutsIface, method);
+}
+
 } // namespace
 
 GlobalShortcutsPortal::GlobalShortcutsPortal(QObject *parent) : QObject(parent) {
+    qDBusRegisterMetaType<PortalShortcutSpec>();
+    qDBusRegisterMetaType<QList<PortalShortcutSpec>>();
+
     const bool ok = QDBusConnection::sessionBus().connect(
         QString(kBusService), QString(kObjectPath), QString(kGlobalShortcutsIface),
         QStringLiteral("Activated"), this,
@@ -74,94 +97,55 @@ GlobalShortcutsPortal::GlobalShortcutsPortal(QObject *parent) : QObject(parent) 
     }
 }
 
-QString GlobalShortcutsPortal::newHandleToken() {
-    static QAtomicInt counter{0};
-    return QStringLiteral("forest_hotkeys_%1").arg(counter.fetchAndAddRelaxed(1));
-}
+void GlobalShortcutsPortal::sendRequest(const QDBusMessage &call, const QString &handleToken,
+        std::function<void(bool ok)> then) {
+    const QString path = QStringLiteral("/org/freedesktop/portal/desktop/request/%1/%2")
+        .arg(escapedSender(), handleToken);
 
-namespace {
-
-// Sender name mangled the way every portal object-path convention requires
-// (drop the leading ':', '.' -> '_') - shared by the Request path (derived
-// from the daemon's own CreateSession/BindShortcuts return value) and the
-// Session path below (which, unlike the Request path, is never handed back
-// by the daemon at all - the client is required to derive it itself from
-// its own sender name and the session_handle_token it chose).
-QString escapedSender() {
-    QString sender = QDBusConnection::sessionBus().baseService();
-    sender.remove(0, 1);
-    sender.replace('.', '_');
-    return sender;
-}
-
-} // namespace
-
-void GlobalShortcutsPortal::awaitResponse(const QDBusObjectPath &path,
-        std::function<void(uint code, const QVariantMap &results)> then) {
     auto *request = new PortalRequest(std::move(then), this);
-    const bool ok = QDBusConnection::sessionBus().connect(
-        QString(kBusService), path.path(), QString(kRequestIface), QStringLiteral("Response"),
-        request, SLOT(onResponse(uint, QVariantMap)));
-    if (!ok) {
-        qWarning() << "GlobalShortcutsPortal: failed to connect to Request::Response at" << path.path();
-        request->onResponse(1, {});
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (!bus.connect(QString(kBusService), path, QString(kRequestIface), QStringLiteral("Response"),
+            request, SLOT(onResponse(uint, QVariantMap)))) {
+        qWarning() << "GlobalShortcutsPortal: failed to connect to Request::Response at" << path;
+        request->finish(false);
+        return;
     }
+
+    auto *watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), request);
+    connect(watcher, &QDBusPendingCallWatcher::finished, request, [request, path, call](QDBusPendingCallWatcher *w) {
+        const QDBusPendingReply<QDBusObjectPath> reply = *w;
+        w->deleteLater();
+        if (reply.isError()) {
+            qWarning() << "GlobalShortcutsPortal:" << call.member() << "failed:" << reply.error().message();
+            request->finish(false);
+        } else if (reply.value().path() != path) {
+            // Pre-1.0 portals chose their own path; we'd never see the Response.
+            qWarning() << "GlobalShortcutsPortal: unexpected request path" << reply.value().path();
+            request->finish(false);
+        }
+    });
 }
 
 void GlobalShortcutsPortal::createSession(std::function<void(bool ok)> onReady) {
-    QDBusInterface iface(kBusService, kObjectPath, kGlobalShortcutsIface, QDBusConnection::sessionBus());
-    if (!iface.isValid()) {
-        qWarning() << "GlobalShortcutsPortal: GlobalShortcuts interface unavailable:"
-                   << QDBusConnection::sessionBus().lastError().message();
-        onReady(false);
-        return;
-    }
-
+    const QString handleToken = newHandleToken();
     const QString sessionToken = newHandleToken();
     QVariantMap options;
-    options.insert(QStringLiteral("handle_token"), newHandleToken());
+    options.insert(QStringLiteral("handle_token"), handleToken);
     options.insert(QStringLiteral("session_handle_token"), sessionToken);
 
-    // Per the portal spec's session-handle convention, this path is never
-    // handed back in the Response - it's derived the same way the daemon
-    // itself derives it, from our own sender name and the
-    // session_handle_token we just chose, so it's set here rather than
-    // read out of `results` below.
+    // Derived from our sender + token; it's not returned in the Response.
     m_sessionHandle = QDBusObjectPath(
         QStringLiteral("/org/freedesktop/portal/desktop/session/%1/%2").arg(escapedSender(), sessionToken));
 
-    const QDBusReply<QDBusObjectPath> reply = iface.call(QStringLiteral("CreateSession"), options);
-    if (!reply.isValid()) {
-        qWarning() << "GlobalShortcutsPortal: CreateSession call failed:" << reply.error().message();
-        m_sessionHandle = QDBusObjectPath();
-        onReady(false);
-        return;
-    }
-
-    awaitResponse(reply.value(), [this, onReady](uint code, const QVariantMap &results) {
-        Q_UNUSED(results);
-        if (code != 0) {
-            qWarning() << "GlobalShortcutsPortal: CreateSession request failed, response code" << code;
-            m_sessionHandle = QDBusObjectPath();
-            onReady(false);
-            return;
-        }
-        onReady(true);
+    QDBusMessage call = portalCall(QStringLiteral("CreateSession"));
+    call << options;
+    sendRequest(call, handleToken, [this, onReady](bool ok) {
+        if (!ok) m_sessionHandle = QDBusObjectPath();
+        onReady(ok);
     });
 }
 
 void GlobalShortcutsPortal::bindShortcuts(const QList<globalhotkey *> &hotkeys, std::function<void(bool ok)> onDone) {
-    qDBusRegisterMetaType<PortalShortcutSpec>();
-    qDBusRegisterMetaType<QList<PortalShortcutSpec>>();
-
-    QDBusInterface iface(kBusService, kObjectPath, kGlobalShortcutsIface, QDBusConnection::sessionBus());
-    if (!iface.isValid()) {
-        qWarning() << "GlobalShortcutsPortal: GlobalShortcuts interface unavailable:"
-                   << QDBusConnection::sessionBus().lastError().message();
-        onDone(false);
-        return;
-    }
-
     QList<PortalShortcutSpec> shortcuts;
     for (globalhotkey *item : hotkeys) {
         const QString trigger = item->triggerString();
@@ -176,34 +160,33 @@ void GlobalShortcutsPortal::bindShortcuts(const QList<globalhotkey *> &hotkeys, 
         shortcuts.append(spec);
     }
 
+    const QString handleToken = newHandleToken();
     QVariantMap options;
-    options.insert(QStringLiteral("handle_token"), newHandleToken());
+    options.insert(QStringLiteral("handle_token"), handleToken);
 
-    const QDBusReply<QDBusObjectPath> reply = iface.call(QStringLiteral("BindShortcuts"), m_sessionHandle,
-        QVariant::fromValue(shortcuts), QString(), options);
-    if (!reply.isValid()) {
-        qWarning() << "GlobalShortcutsPortal: BindShortcuts call failed:" << reply.error().message();
-        onDone(false);
-        return;
-    }
-
-    awaitResponse(reply.value(), [onDone](uint code, const QVariantMap &) {
-        onDone(code == 0);
-    });
+    QDBusMessage call = portalCall(QStringLiteral("BindShortcuts"));
+    call << QVariant::fromValue(m_sessionHandle) << QVariant::fromValue(shortcuts) << QString() << options;
+    sendRequest(call, handleToken, std::move(onDone));
 }
 
 void GlobalShortcutsPortal::closeSession(std::function<void()> onClosed) {
-    if (!m_sessionHandle.path().isEmpty()) {
-        QDBusInterface iface(kBusService, m_sessionHandle.path(), kSessionIface, QDBusConnection::sessionBus());
-        if (iface.isValid()) {
-            const QDBusReply<void> reply = iface.call(QStringLiteral("Close"));
-            if (!reply.isValid()) {
-                qWarning() << "GlobalShortcutsPortal: Session.Close() failed:" << reply.error().message();
-            }
-        }
-        m_sessionHandle = QDBusObjectPath();
+    if (m_sessionHandle.path().isEmpty()) {
+        onClosed();
+        return;
     }
-    onClosed();
+
+    const QDBusMessage call = QDBusMessage::createMethodCall(
+        kBusService, m_sessionHandle.path(), kSessionIface, QStringLiteral("Close"));
+    m_sessionHandle = QDBusObjectPath();
+
+    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(call), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [onClosed](QDBusPendingCallWatcher *w) {
+        if (w->isError()) {
+            qWarning() << "GlobalShortcutsPortal: Session.Close() failed:" << w->error().message();
+        }
+        w->deleteLater();
+        onClosed();
+    });
 }
 
 void GlobalShortcutsPortal::handleActivated(const QDBusObjectPath &session_handle, const QString &shortcut_id,

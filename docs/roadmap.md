@@ -66,3 +66,14 @@ pattern), rather than designing it here ahead of time.
   `etc/forest/Panel.conf`). Rename all three together and add an
   `upgrade_x_y_z()` to `forest/settings_upgrade_manager.cpp` that rewrites
   existing users' `~/.config/Forest/Panel.conf`.
+- **Show desktop hotkey.** The X11 `showdesktop` slot and its Meta+D default
+  were dropped. No standard protocol exists; the decoupled route is
+  `set_minimized` on every wlr-foreign-toplevel handle, so it belongs next to
+  windowlist's handles in the panel. Existing users' `Forest.conf` still has
+  the dead `item-0003` entry — rewrite it via `settings_upgrade_manager.cpp`.
+- **Hotkeys stay paused if settings dies mid-capture.** `pauseHotkeys` has no
+  owner; watch the caller's bus name (`QDBusServiceWatcher`) and resume when
+  it vanishes.
+- **Hotkey capture can't record a bare Meta tap.** `edithotkeywidget::keyPressEvent`
+  appends `Meta+` and waits for a non-modifier key; with no `keyReleaseEvent`
+  it never produces the `Meta` value `foresthotkeys` understands. Pre-existing.

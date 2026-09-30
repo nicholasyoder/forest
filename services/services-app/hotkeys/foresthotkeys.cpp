@@ -6,6 +6,7 @@ foresthotkeys::foresthotkeys(){
 }
 
 foresthotkeys::~foresthotkeys(){
+    qDeleteAll(hotkeylist);
 }
 
 void foresthotkeys::setup(){
@@ -14,17 +15,7 @@ void foresthotkeys::setup(){
 
     portal = new GlobalShortcutsPortal(this);
     connect(portal, &GlobalShortcutsPortal::shortcutActivated, this, &foresthotkeys::dispatch);
-
-    // Portal setup is inherently async - nothing can be bound until the
-    // session exists, so loadhotkeys() (and everything it triggers) waits
-    // for createSession()'s callback rather than running synchronously here.
-    portal->createSession([this](bool ok) {
-        if (!ok) {
-            qCritical() << "foresthotkeys: failed to create a GlobalShortcuts portal session";
-            return;
-        }
-        loadhotkeys();
-    });
+    reconcile();
 }
 
 void foresthotkeys::dispatch(QString id){
@@ -37,37 +28,59 @@ void foresthotkeys::dispatch(QString id){
     }
 }
 
+// Closes the session rather than just muting dispatch: Biome keeps swallowing
+// bound keys otherwise, and hotkey capture in settings needs them.
 void foresthotkeys::pauseHotkeys(){
-    // A flag toggle alone isn't enough: it only gates dispatch() below, but
-    // the portal's bindings are still registered in Biome's compositor-side
-    // key-match table, which means Biome still swallows every bound key at
-    // the compositor level regardless of what forest does with the
-    // Activated signal afterward. edithotkeywidget's whole reason for
-    // calling this is to let a raw keypress (e.g. Meta) reach its own
-    // capture widget instead - which needs Biome to actually stop
-    // intercepting it, i.e. the session's bindings gone, not just muted
-    // client-side.
     paused = true;
-    portal->closeSession([]() {});
+    reconcile();
 }
 
 void foresthotkeys::resumeHotkeys(){
+    paused = false;
+    reconcile();
+}
+
+void foresthotkeys::reloadhotkeys(){
+    configChanged = true;
+    reconcile();
+}
+
+void foresthotkeys::reconcile(){
+    if (busy) return;
+
+    if (sessionOpen && (paused || configChanged)) {
+        busy = true;
+        portal->closeSession([this]() {
+            sessionOpen = false;
+            busy = false;
+            reconcile();
+        });
+        return;
+    }
+    if (sessionOpen || paused) return;
+
+    busy = true;
     portal->createSession([this](bool ok) {
         if (!ok) {
-            qCritical() << "foresthotkeys: failed to re-create the GlobalShortcuts portal session on resume";
-            paused = false;
+            qCritical() << "foresthotkeys: failed to create a GlobalShortcuts portal session";
+            busy = false;
             return;
         }
+        sessionOpen = true;
+        configChanged = false;
+        loadhotkeys();
         portal->bindShortcuts(hotkeylist, [this](bool bound) {
-            if (!bound) {
-                qCritical() << "foresthotkeys: BindShortcuts request failed on resume";
-            }
-            paused = false;
+            if (!bound) qCritical() << "foresthotkeys: BindShortcuts request failed";
+            busy = false;
+            reconcile();
         });
     });
 }
 
 void foresthotkeys::loadhotkeys(){
+    qDeleteAll(hotkeylist);
+    hotkeylist.clear();
+
     QSettings settings("Forest","Forest");
     settings.beginGroup("hotkeys");
 
@@ -107,32 +120,4 @@ void foresthotkeys::loadhotkeys(){
     }
 
     qInfo() << "Loaded" << hotkeylist.count() << "hotkeys";
-
-    portal->bindShortcuts(hotkeylist, [](bool ok) {
-        if (!ok) {
-            qCritical() << "foresthotkeys: BindShortcuts request failed";
-        }
-    });
-}
-
-void foresthotkeys::showdesktop(){
-    qWarning() << "foresthotkeys::showdesktop: no Biome equivalent to _NET_SHOWING_DESKTOP yet - stubbed out";
-}
-
-void foresthotkeys::reloadhotkeys(){
-    while (hotkeylist.length() > 0){
-        globalhotkey *shcut = hotkeylist.takeAt(0);
-        delete shcut;
-    }
-    hotkeylist.clear();
-
-    portal->closeSession([this]() {
-        portal->createSession([this](bool ok) {
-            if (!ok) {
-                qCritical() << "foresthotkeys: failed to re-create the GlobalShortcuts portal session on reload";
-                return;
-            }
-            loadhotkeys();
-        });
-    });
 }

@@ -12,11 +12,7 @@ enum HK_Type
     Type_Dbus
 };
 
-// A single configured hotkey entry - just the DBus/exec action payload plus
-// enough to build a shortcuts-spec trigger string for the portal. No longer
-// grabs anything itself (see biome/docs/architecture-notes.md's "GlobalShortcuts
-// portal architecture (Workstream C)" section): binding
-// and dispatch both live one level up, in foresthotkeys/GlobalShortcutsPortal.
+// One configured hotkey: its action, plus its portal id/description/trigger.
 class globalhotkey : public QObject
 {
     Q_OBJECT
@@ -24,18 +20,12 @@ class globalhotkey : public QObject
 public:
     globalhotkey(const QString &id, const QString &description, const QKeySequence &sequence, HK_Type type);
 
-    // The portal shortcut id - reuses the QSettings group name
-    // (foresthotkeys::loadhotkeys()'s "item-0001" etc.), already unique.
+    // The Forest.conf group name, e.g. "item-0001".
     QString id() const { return hotkey_id; }
 
-    // Forest.conf's "description" value for this entry, passed through as
-    // the portal shortcut's description vardict key.
     QString description() const { return hotkey_description; }
 
-    // Builds the shortcuts-spec grammar trigger string
-    // (biome/core/keybindings.cpp's parse_trigger()) from the stored
-    // QKeySequence - e.g. "CTRL+ALT+Return", or "LOGO" alone for the
-    // bare-Meta-tap binding.
+    // Shortcuts-spec trigger, e.g. "CTRL+ALT+Return"; "LOGO" for bare Meta.
     QString triggerString() const;
 
 public slots:

@@ -131,25 +131,24 @@ new top-level; icons/logout used `qApp->primaryScreen()` (first output Qt saw).
   shows `stop` → `finished` per manager. Window buttons still filter per
   desktop; "Move to desktop" works; icons correct for terminals/browsers.
 
-## Phase 5 — Hotkeys (GlobalShortcuts portal)
+## Phase 5 — Hotkeys (GlobalShortcuts portal) — done
 
-- [ ] **5.1 Request/Response race.** `GlobalShortcutsPortal::awaitResponse()`
-  subscribes to `org.freedesktop.portal.Request::Response` only *after*
-  `CreateSession`/`BindShortcuts` returns. Biome auto-accepts instantly, so the
-  Response can be emitted before the match rule exists — hotkeys silently never
-  bind. Per the portal spec: compute the request path
-  (`/org/freedesktop/portal/desktop/request/<escapedSender>/<handle_token>`) and
-  subscribe *before* the call. `escapedSender()` already exists for this.
-- [ ] **5.2 Make portal calls async** (`QDBusMessage::createMethodCall` +
-  `asyncCall`). Currently `QDBusInterface` (blocking introspection) + blocking
-  `call()` against a D-Bus-activated service that can be slow at session start,
-  blocking the whole `forest` process (panel + desktop).
-- [ ] **5.3 `showdesktop` is a warning stub** — remove the slot/any default
-  binding, or add a roadmap item.
-- [ ] **5.4 `reloadhotkeys()` while paused** rebinds keys during hotkey capture
-  in settings — check whether that path can happen.
-- [ ] **5.5** `hotkey::exec()`: the session/system bus branches are identical except
-  the connection (pre-existing) — collapse; use `asyncCall`.
+- [x] **5.1 Request/Response race.** `sendRequest()` derives the request path
+  from `handle_token` and subscribes before sending; a mismatched returned
+  path (pre-1.0 portal) fails cleanly instead of hanging.
+- [x] **5.2 Async portal calls** — `createMethodCall` + `asyncCall` throughout,
+  including `Session.Close`.
+- [x] **5.3 `showdesktop` stub** removed with its Meta+D default → `docs/roadmap.md`
+  (foreign-toplevel `set_minimized`; upgrade existing configs).
+- [x] **5.4 Pause/resume/reload races.** Overlapping close/create/bind chains
+  leaked sessions and bound a list `reloadhotkeys()` had deleted. All three now
+  set wanted state and call `reconcile()`, which runs one step at a time.
+  Settings dying mid-capture leaves hotkeys paused → `docs/roadmap.md`.
+- [x] **5.5** `hotkey::exec()` collapsed to one async call.
+- [ ] **(manual test)** Hotkeys work after several fresh logins; capture in
+  settings (incl. bare Meta) gets the raw keys and hotkeys work again after;
+  rapid successive edits don't double-fire (`dbus-monitor` shows one session at
+  a time); Meta+D absent from a fresh config.
 
 ## Phase 6 — Remaining async D-Bus + unported/coupled components
 
@@ -198,8 +197,8 @@ touches it where possible; whatever's left, here.
 - [x] `panel/panel-app/geometrymanager.{h,cpp}`, `desktop/desktop-app/wallpaperwidget.cpp`
   (exclusive zone), `desktop/desktop-app/desktop.cpp` (`handleScreenChange`). (Phase 3)
 - [ ] `logout/logout-app/logout.cpp` (`startbackfade`, `start_action`, `cancel`).
-- [ ] `services/services-app/hotkeys/foresthotkeys.cpp` (`pauseHotkeys`),
-  `globalshortcutsportal.{h,cpp}`, `hotkey.h`, `keysym_table.h` header note.
+- [x] `services/services-app/hotkeys/foresthotkeys.cpp` (`pauseHotkeys`),
+  `globalshortcutsportal.{h,cpp}`, `hotkey.h`, `keysym_table.h` header note. (Phase 5)
 - [x] `panel/panel-library/extworkspace{manager,handle}.{h,cpp}`,
   `panel/panel-plugins/deskswitch/deskswitch.h`. (Phase 4)
 - [ ] `mainmenu.cpp` (outsideclicked).
