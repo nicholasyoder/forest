@@ -110,6 +110,7 @@ void panel::loadplugins(){
 }
 
 void panel::reloadplugins(){
+    settings->sync();
     foreach(panelpluginterface *plug, pluglist){
         if (plug) plug->closePlug();
     }

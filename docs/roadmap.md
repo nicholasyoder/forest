@@ -60,3 +60,9 @@ pattern), rather than designing it here ahead of time.
   `org.biome.Workspaces` (`BiomeWorkspaces`, hidden when absent) — replace it
   with a standard protocol if one appears (ext-workspace has no toplevel
   membership).
+- **Rename the panel `seperator` config value to `separator`.** The display
+  string is fixed, but `plug-NNNN/path=seperator` is still what
+  `Panel.conf` stores (`panel.cpp`, `panelsettings.cpp`,
+  `etc/forest/Panel.conf`). Rename all three together and add an
+  `upgrade_x_y_z()` to `forest/settings_upgrade_manager.cpp` that rewrites
+  existing users' `~/.config/Forest/Panel.conf`.
