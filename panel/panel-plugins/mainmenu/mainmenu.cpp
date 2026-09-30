@@ -51,7 +51,7 @@ void mainmenu::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
 QHash<QString, QString> mainmenu::getpluginfo(){
     QHash<QString, QString> info;
-    info["name"] = "Mainmenu";
+    info["name"] = "Main Menu";
     return info;
 }
 

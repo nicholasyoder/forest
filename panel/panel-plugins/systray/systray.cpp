@@ -47,7 +47,7 @@ void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
 QHash<QString, QString> systray::getpluginfo()
 {
     QHash<QString, QString> info;
-    info["name"] = "systray";
+    info["name"] = "System Tray";
     return info;
 }
 

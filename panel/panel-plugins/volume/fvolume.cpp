@@ -50,7 +50,7 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
 QHash<QString, QString> fvolume::getpluginfo(){
     QHash<QString, QString> info;
-    info["name"] = "Volume control";
+    info["name"] = "Volume Control";
     return info;
 }
 

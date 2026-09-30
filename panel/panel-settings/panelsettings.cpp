@@ -81,11 +81,11 @@ void PanelSettings::load_applets(){
         QString path = settings.value(key+"/path").toString();
         bool enabled = settings.value(key+"/enabled", false).toBool();
         if (path == "seperator"){
-            QListWidgetItem *item = new QListWidgetItem("Seperator");
+            QListWidgetItem *item = new QListWidgetItem("Separator");
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
             item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
             applet_list_w->addItem(item);
-            path_hash["Seperator"] = path;
+            path_hash["Separator"] = path;
         }
         else {
             QPluginLoader plugloader(path);

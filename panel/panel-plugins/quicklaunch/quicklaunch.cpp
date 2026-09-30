@@ -34,7 +34,7 @@ void quicklaunch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
 QHash<QString, QString> quicklaunch::getpluginfo(){
     QHash<QString, QString> info;
-    info["name"] = "Quicklaunch";
+    info["name"] = "Quick Launch";
     return info;
 }
 
