@@ -4,19 +4,12 @@
 
 #include "extworkspacehandle.h"
 
-#include <QDBusConnection>
-#include <QDBusInterface>
-#include <QDBusReply>
-
-namespace {
-constexpr char kBiomeService[] = "org.biome";
-constexpr char kWorkspacesPath[] = "/org/biome/Workspaces";
-constexpr char kWorkspacesInterface[] = "org.biome.Workspaces";
-}
-
 deskswitch::deskswitch() {}
 
-deskswitch::~deskswitch() {}
+deskswitch::~deskswitch() {
+    if (workspace_manager)
+        workspace_manager->release();
+}
 
 void deskswitch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 {
@@ -32,14 +25,11 @@ void deskswitch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 
     connect(this, &deskswitch::rightclicked, pmenu, &popupmenu::show);
 
-    // No manual seeding needed: binding the manager makes the compositor
-    // replay the full workspace list (workspace_group + one workspace per
-    // index + done) immediately - see extworkspacemanager.h.
-    workspace_manager = new ExtWorkspaceManager();
+    workspace_manager = new ExtWorkspaceManager(this);
     connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &deskswitch::onWorkspacesChanged);
 
-    QDBusConnection::sessionBus().connect(kBiomeService, kWorkspacesPath, kWorkspacesInterface,
-        "WindowWorkspacesChanged", this, SLOT(onWindowWorkspacesChanged(QVariantMap)));
+    biome_workspaces = new BiomeWorkspaces(this);
+    connect(biome_workspaces, &BiomeWorkspaces::windowWorkspacesChanged, this, &deskswitch::updateWindowCounts);
 }
 
 QHash<QString, QString> deskswitch::getpluginfo(){
@@ -64,7 +54,7 @@ void deskswitch::setupbts(){
         connect(this, SIGNAL(activate(int)), bt, SLOT(setactive(int)));
         dbuttons << bt;
     }
-    refreshWindowWorkspaces();
+    updateWindowCounts();
 }
 
 void deskswitch::switchtodesk(int index){
@@ -79,32 +69,15 @@ void deskswitch::switchtodesk(int index){
 void deskswitch::onWorkspacesChanged(){
     const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
 
-    // Biome's workspace count is fixed at startup, so this only rebuilds
-    // buttons on the very first burst in practice - every later done()
-    // (following a switch) just updates the active highlight below.
     if (workspaces.length() != dbuttons.length())
         setupbts();
 
     emit activate(workspace_manager->activeWorkspaceIndex());
 }
 
-void deskswitch::refreshWindowWorkspaces(){
-    QDBusInterface iface(kBiomeService, kWorkspacesPath, kWorkspacesInterface, QDBusConnection::sessionBus());
-    QDBusReply<QVariantMap> reply = iface.call("GetWindowWorkspaces");
-    if (reply.isValid())
-        applyWindowWorkspaces(reply.value());
-}
-
-void deskswitch::onWindowWorkspacesChanged(QVariantMap windowWorkspaces){
-    applyWindowWorkspaces(windowWorkspaces);
-}
-
-// windowWorkspaces is identifier -> workspace index, one entry per open
-// window (see org.biome.Workspaces.GetWindowWorkspaces) - tallied here into
-// the per-desktop counts deskbutton actually displays.
-void deskswitch::applyWindowWorkspaces(const QVariantMap &windowWorkspaces){
+void deskswitch::updateWindowCounts(){
     QHash<int, int> counts;
-    foreach (const QVariant &workspace, windowWorkspaces)
+    foreach (const QVariant &workspace, biome_workspaces->windowWorkspaces())
         counts[workspace.toInt()]++;
 
     foreach (deskbutton *bt, dbuttons)

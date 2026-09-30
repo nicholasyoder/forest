@@ -53,3 +53,10 @@ pattern), rather than designing it here ahead of time.
   the config rather than Biome hardcoding them. Undecided how: a system-wide
   `/etc` file Biome reads, a drop-in directory, or a compiled-in default.
   Needs Biome's config lookup order checked first (`biome/core/fade_config.cpp`).
+- **Workspaces beyond Biome's model.** deskswitch/windowlist assume one
+  ext-workspace group (a single active workspace); a compositor with
+  per-output groups would need per-group handling. The window -> workspace
+  mapping and "move to desktop" still go through the Biome-only
+  `org.biome.Workspaces` (`BiomeWorkspaces`, hidden when absent) — replace it
+  with a standard protocol if one appears (ext-workspace has no toplevel
+  membership).

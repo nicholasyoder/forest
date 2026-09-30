@@ -5,7 +5,7 @@
 #include "extworkspacemanager.h"
 
 ExtWorkspaceHandle::ExtWorkspaceHandle(struct ::ext_workspace_handle_v1 *object, ExtWorkspaceManager *manager)
-    : QtWayland::ext_workspace_handle_v1(object), m_manager(manager) {
+    : QObject(manager), QtWayland::ext_workspace_handle_v1(object), m_manager(manager) {
 }
 
 ExtWorkspaceHandle::~ExtWorkspaceHandle() {

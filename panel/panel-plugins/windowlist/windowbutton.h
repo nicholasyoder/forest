@@ -7,23 +7,19 @@
 #include "popupmenu.h"
 #include "foreigntoplevelhandle.h"
 #include "extworkspacemanager.h"
+#include "biomeworkspaces.h"
 
 class windowbutton : public panelbutton{
     Q_OBJECT
 
 public:
-    explicit windowbutton(ForeignToplevelHandle *handle, QIcon icon, QString text, ExtWorkspaceManager *workspaceManager);
+    windowbutton(ForeignToplevelHandle *handle, ExtWorkspaceManager *workspaceManager, BiomeWorkspaces *biomeWorkspaces);
 
     ForeignToplevelHandle *toplevelHandle(){return handle;}
 
-    // Set once ext-foreign-toplevel-list's identifier arrives for this
-    // window - see windowlist.cpp's pairing queue (tryPairPendingHandles()).
-    // Empty until then, which only briefly matters: moveToDesktop() reads
-    // this lazily at click time (by which point pairing has essentially
-    // always completed), and windowlist's per-desktop visibility filter
-    // treats an unpaired button as visible until it can be classified.
-    void setIdentifier(const QString &id){m_identifier = id;}
-    QString identifier() const{return m_identifier;}
+    // Updates text/icon/state from the handle; the icon is only re-resolved
+    // when app_id changes.
+    void syncFromHandle();
 
 signals:
     void moved(windowbutton *wbt, bool left);
@@ -42,11 +38,7 @@ private slots:
     void close_w();
     void demaximize_w();
 
-    // Builds one "move to this desktop" item per workspace into desk_menu -
-    // deferred until workspace_manager has its initial workspace list
-    // (org.biome.Workspaces/ext-workspace-v1 have no other way to enumerate
-    // them). Biome's workspace set is fixed at startup, so this only ever
-    // runs once in practice.
+    // Deferred until workspace_manager has its initial workspace list.
     void populateDeskMenu();
     void moveToDesktop(int workspace);
 
@@ -58,15 +50,14 @@ protected:
 private:
     ForeignToplevelHandle *handle;
     ExtWorkspaceManager *workspace_manager;
-    QString m_identifier;
+    BiomeWorkspaces *biome_workspaces;
+    QString m_appId;
 
     bool dragActive = false;
     bool allowReleaseAction = true;
     QPoint dragPos;
 
     popupmenu *pmenu = nullptr;
-    // "Move to Desktop" submenu, one item per workspace - see
-    // populateDeskMenu().
     popupmenu *desk_menu = nullptr;
 };
 

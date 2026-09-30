@@ -2,17 +2,17 @@
 
 #include "windowlist.h"
 
-#include "iconresolver.h"
-
-namespace {
-constexpr char kBiomeService[] = "org.biome";
-constexpr char kWorkspacesPath[] = "/org/biome/Workspaces";
-constexpr char kWorkspacesInterface[] = "org.biome.Workspaces";
-}
-
 windowlist::windowlist(){}
 
-windowlist::~windowlist(){}
+windowlist::~windowlist(){
+    // Handles are the managers' children, freed once each manager finishes.
+    if (toplevel_manager)
+        toplevel_manager->release();
+    if (ext_toplevel_list)
+        ext_toplevel_list->release();
+    if (workspace_manager)
+        workspace_manager->release();
+}
 
 void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     layout->addWidget(this);
@@ -40,24 +40,21 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
 
     loadsettings();
 
-    // No manual seeding step needed here: binding the manager makes the
-    // compositor replay a `toplevel` event for every already-open window,
-    // same as it does for windows opened afterward.
-    toplevel_manager = new ForeignToplevelManager();
-    connect(toplevel_manager, &ForeignToplevelManager::toplevelCreated, this, &windowlist::onWindowAdded);
+    biome_workspaces = new BiomeWorkspaces(this);
+    connect(biome_workspaces, &BiomeWorkspaces::windowWorkspacesChanged, this, &windowlist::refreshVisibility);
 
-    ext_toplevel_list = new ExtForeignToplevelList();
-    connect(ext_toplevel_list, &ExtForeignToplevelList::toplevelCreated, this, &windowlist::onExtToplevelCreated);
-
-    workspace_manager = new ExtWorkspaceManager();
-    // Re-filter on every desktop switch (as well as the initial burst,
-    // which is when workspace_manager->activeWorkspaceIndex() first becomes
-    // valid) - see refreshVisibility().
+    workspace_manager = new ExtWorkspaceManager(this);
     connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowlist::refreshVisibility);
 
-    refreshWindowWorkspaces();
-    QDBusConnection::sessionBus().connect(kBiomeService, kWorkspacesPath, kWorkspacesInterface,
-        "WindowWorkspacesChanged", this, SLOT(onWindowWorkspacesChanged(QVariantMap)));
+    toplevel_manager = new ForeignToplevelManager(this);
+    connect(toplevel_manager, &ForeignToplevelManager::toplevelCreated, this, &windowlist::onWindowAdded);
+
+    // Identifiers only matter to org.biome.Workspaces. Bound together with
+    // toplevel_manager so both replays line up for pairing.
+    if (biome_workspaces->isAvailable()){
+        ext_toplevel_list = new ExtForeignToplevelList(this);
+        connect(ext_toplevel_list, &ExtForeignToplevelList::toplevelCreated, this, &windowlist::onExtToplevelCreated);
+    }
 }
 
 QHash<QString, QString> windowlist::getpluginfo(){
@@ -93,16 +90,24 @@ void windowlist::showsettingswidget(){
 
 
 void windowlist::onWindowAdded(ForeignToplevelHandle *handle){
-    // No filtering: wlr-foreign-toplevel-management has no window-type/
-    // skip-taskbar concept, so unlike the old KWindowInfo-based
-    // acceptWindow(), every toplevel the compositor reports gets a button.
-    if (button_list.contains(handle))
-        return;
-
     connect(handle, &ForeignToplevelHandle::changed, this, &windowlist::onWindowChanged);
     connect(handle, &ForeignToplevelHandle::closed, this, &windowlist::onWindowRemoved);
 
-    windowbutton *wbt = new windowbutton(handle, iconresolver::iconForAppId(handle->appId()), handle->title(), workspace_manager);
+    // Queued now, not on first `done`: pairing depends on creation order.
+    if (ext_toplevel_list){
+        pending_zwlr_handles << handle;
+        tryPairPendingHandles();
+    }
+}
+
+// The button is created on the first `done`, once title/app_id are known.
+void windowlist::onWindowChanged(ForeignToplevelHandle *handle){
+    if (windowbutton *wbt = button_list.value(handle)){
+        wbt->syncFromHandle();
+        return;
+    }
+
+    windowbutton *wbt = new windowbutton(handle, workspace_manager, biome_workspaces);
     connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
     connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
     connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);
@@ -111,32 +116,17 @@ void windowlist::onWindowAdded(ForeignToplevelHandle *handle){
     mainlayout->addWidget(wbt, 1);
     button_list[handle] = wbt;
 
-    pending_zwlr_handles << handle;
-    tryPairPendingHandles();
-
-    // window_workspaces won't have this window's entry yet at this exact
-    // point (it's keyed by ext-foreign-toplevel-list identifier, which may
-    // not even be paired yet - see tryPairPendingHandles() above), but
-    // Biome's own WindowWorkspacesChanged signal (fired synchronously from
-    // foreign_toplevel_create()) should arrive and correct this on its own
-    // almost immediately. This call is just to avoid a visible flash on a
-    // non-active desktop in the meantime - refreshVisibility() defaults an
-    // unclassified window to visible, which is only wrong for a window
-    // that maps directly onto an inactive workspace, a rare/brief case.
     refreshVisibility();
 }
 
 void windowlist::onWindowRemoved(ForeignToplevelHandle *handle){
-    if(!button_list.contains(handle))
-        return;
-
     pending_zwlr_handles.removeAll(handle);
 
-    windowbutton *wbt = button_list[handle];
-    button_list.remove(handle);
-    mainlayout->removeWidget(wbt);
-    wbt->close();
-    wbt->deleteLater();
+    if (windowbutton *wbt = button_list.take(handle)){
+        mainlayout->removeWidget(wbt);
+        wbt->close();
+        wbt->deleteLater();
+    }
     handle->deleteLater();
 }
 
@@ -155,62 +145,35 @@ void windowlist::onExtToplevelClosed(ExtForeignToplevelHandle *handle){
     handle->deleteLater();
 }
 
-// See extforeigntoplevellist.h: Biome creates the wlr_ and ext_ handle for
-// a given toplevel back-to-back, so the two managers' `toplevel` events
-// arrive in the same relative order - simple front-of-both-queues pairing
-// is enough, with no shared key needed between the two protocols.
 void windowlist::tryPairPendingHandles(){
+    bool paired = false;
     while (!pending_zwlr_handles.isEmpty() && !pending_ext_handles.isEmpty()){
         QPointer<ForeignToplevelHandle> zwlrHandle = pending_zwlr_handles.takeFirst();
         QPointer<ExtForeignToplevelHandle> extHandle = pending_ext_handles.takeFirst();
-        // Neither should ever actually be null here (see pending_zwlr_handles'
-        // declaration) - this is a fail-safe against a dangling entry, not
-        // the fix for one; a stale entry means a bug upstream re-queued an
-        // already-consumed handle, which this just stops from crashing.
-        if (zwlrHandle && button_list.contains(zwlrHandle))
-            button_list[zwlrHandle]->setIdentifier(extHandle ? extHandle->identifier() : QString());
+        // QPointer: fail safe if a stale entry is ever re-queued.
+        if (zwlrHandle && extHandle)
+            zwlrHandle->setIdentifier(extHandle->identifier());
         if (extHandle)
             extHandle->deleteLater();
+        paired = true;
     }
+    if (paired)
+        refreshVisibility();
 }
 
-void windowlist::refreshWindowWorkspaces(){
-    QDBusInterface iface(kBiomeService, kWorkspacesPath, kWorkspacesInterface, QDBusConnection::sessionBus());
-    QDBusReply<QVariantMap> reply = iface.call("GetWindowWorkspaces");
-    if (reply.isValid())
-        onWindowWorkspacesChanged(reply.value());
-}
-
-void windowlist::onWindowWorkspacesChanged(QVariantMap windowWorkspaces){
-    window_workspaces = windowWorkspaces;
-    refreshVisibility();
-}
-
-// Shows only the buttons whose window is on the active workspace - see
-// this header's doc comment on refreshVisibility(). A button whose
-// identifier isn't in window_workspaces yet (still pairing, or Biome
-// hasn't reported it back yet) defaults to visible rather than hidden, so
-// a brand-new window doesn't flash out of existence for a moment.
+// Only the active workspace's windows are shown. Unclassified windows
+// (unpaired, or not yet reported by Biome) default to visible.
 void windowlist::refreshVisibility(){
     int active = workspace_manager->activeWorkspaceIndex();
     if (active < 0)
         return;
 
+    const QVariantMap &windowWorkspaces = biome_workspaces->windowWorkspaces();
     foreach (windowbutton *wbt, button_list){
-        const QString identifier = wbt->identifier();
-        bool visible = !window_workspaces.contains(identifier) || window_workspaces.value(identifier).toInt() == active;
+        const QString identifier = wbt->toplevelHandle()->identifier();
+        bool visible = !windowWorkspaces.contains(identifier) || windowWorkspaces.value(identifier).toInt() == active;
         wbt->setVisible(visible);
     }
-}
-
-void windowlist::onWindowChanged(ForeignToplevelHandle *handle){
-    if(!button_list.contains(handle))
-        return;
-
-    windowbutton *wbt = button_list[handle];
-    wbt->setText(handle->title());
-    wbt->setIcon(iconresolver::iconForAppId(handle->appId()));
-    wbt->setDown(handle->isActivated());
 }
 
 void windowlist::onButtonMoved(windowbutton *wbt, bool left){

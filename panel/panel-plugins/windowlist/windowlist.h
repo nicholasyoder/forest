@@ -8,7 +8,6 @@
 #include <QPointer>
 #include <QSettings>
 #include <QTimer>
-#include <QtDBus>
 #include <QGenericPlugin>
 
 #include "windowbutton.h"
@@ -17,6 +16,7 @@
 #include "extforeigntoplevellist.h"
 #include "extforeigntoplevelhandle.h"
 #include "extworkspacemanager.h"
+#include "biomeworkspaces.h"
 
 #include "imagepopup.h"
 #include "settingswidget.h"
@@ -62,15 +62,6 @@ private slots:
     void onButtonEnter(windowbutton *wbt);
     void onButtonLeave(windowbutton *);
 
-    // Per-desktop filtering: only the active workspace's windows are shown
-    // (see org.biome.Workspaces.GetWindowWorkspaces - neither
-    // wlr-foreign-toplevel-management nor ext-workspace-v1 has any
-    // toplevel<->workspace concept on its own). Re-run on every trigger
-    // that could change which buttons should be visible: the cached
-    // mapping changing (a window opened/closed/moved) or the active
-    // workspace itself changing (a desktop switch).
-    void refreshWindowWorkspaces();
-    void onWindowWorkspacesChanged(QVariantMap windowWorkspaces);
     void refreshVisibility();
 
 private:
@@ -82,24 +73,12 @@ private:
     ExtForeignToplevelList *ext_toplevel_list = nullptr;
     ExtWorkspaceManager *workspace_manager = nullptr;
 
-    // Creation-order pairing between wlr-foreign-toplevel-management and
-    // ext-foreign-toplevel-list handles for the same window - see
-    // extforeigntoplevellist.h. QPointer, not a raw pointer: an entry here
-    // is a handle staged for pairing that hasn't been consumed yet, and
-    // Qt's deleteLater()-based deletion means "not consumed yet" and
-    // "already destroyed elsewhere" can't be told apart by pointer value
-    // alone with a raw QList<T*> - a real use-after-free this way already
-    // crashed once (fixed at its root by ExtForeignToplevelHandle's
-    // m_readySent guard, see that header), but QPointer auto-nulling on
-    // destruction makes tryPairPendingHandles() fail safe instead of
-    // dangling if some other bug ever re-introduces a stale entry.
+    // Paired front-to-front; see extforeigntoplevellist.h.
     QList<QPointer<ForeignToplevelHandle>> pending_zwlr_handles;
     QList<QPointer<ExtForeignToplevelHandle>> pending_ext_handles;
     void tryPairPendingHandles();
 
-    // identifier -> workspace index, refreshed from org.biome.Workspaces -
-    // see refreshVisibility().
-    QVariantMap window_workspaces;
+    BiomeWorkspaces *biome_workspaces = nullptr;
 
     int maxbtsize;
 
