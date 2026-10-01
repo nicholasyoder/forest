@@ -36,4 +36,7 @@ target_link_libraries(services-app PRIVATE
     Qt6Xdg
 )
 
+forest_link_miscutills(services-app)
+forest_link_layershellqt(services-app)
+
 install(TARGETS services-app LIBRARY DESTINATION lib/forest)

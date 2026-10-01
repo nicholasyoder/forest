@@ -2,18 +2,14 @@
 
 #include "cursorthemesettings.h"
 
-#include <QDBusConnection>
-#include <QDBusInterface>
 #include <QDir>
 #include <QLabel>
+#include <QProcess>
 #include <QSettings>
 
 #include <X11/Xcursor/Xcursor.h>
 
 namespace {
-constexpr char kBiomeService[] = "org.biome";
-constexpr char kCursorPath[] = "/org/biome/Cursor";
-constexpr char kCursorInterface[] = "org.biome.Cursor";
 constexpr int kDefaultCursorSize = 24;
 }
 
@@ -190,10 +186,7 @@ void CursorThemeSettings::set_cursor_theme(QListWidgetItem *item){
         indexTheme.close();
     }
 
-    // Live-updates Biome's own compositor-drawn cursor (decorations, resize
-    // cursors, XWayland's default, and any cursor-shape-v1 client) - see
-    // biome/ipc/cursor_bridge.h. Everything else picks up the index.theme
-    // change above on its own next start, per this settings page's note.
-    QDBusInterface iface(kBiomeService, kCursorPath, kCursorInterface, QDBusConnection::sessionBus());
-    iface.call(QStringLiteral("SetTheme"), theme, size);
+    // The compositor watches index.theme; GTK on Wayland reads GSettings instead.
+    QProcess::startDetached("gsettings", {"set", "org.gnome.desktop.interface", "cursor-theme", theme});
+    QProcess::startDetached("gsettings", {"set", "org.gnome.desktop.interface", "cursor-size", QString::number(size)});
 }

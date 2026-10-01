@@ -354,10 +354,10 @@ void GreeterWindow::onAuthSucceeded()
         return;
     }
     const SessionInfo &session = m_sessions.sessions().at(idx);
+    QStringList cmd = QProcess::splitCommand(session.exec);
     if (session.type == SessionType::X11)
-        m_client->startSession("/usr/share/forest/forest-greeter-xsession " + session.exec);
-    else
-        m_client->startSession(session.exec);
+        cmd.prepend("/usr/share/forest/forest-greeter-xsession");
+    m_client->startSession(cmd);
 }
 
 void GreeterWindow::onAuthFailed(const QString &description)

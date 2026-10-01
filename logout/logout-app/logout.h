@@ -21,12 +21,11 @@ public:
     ~logoutmanager();
 
 public slots:
-    void startbackfade();
+    void set_initial_focus();
     void activate(){this->activateWindow();}
 
 private slots:
     void keyPressEvent(QKeyEvent *event);
-    void set_initial_focus();
     void start_action(ActionType action);
     void do_action(ActionType action);
     void cancel();

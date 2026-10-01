@@ -33,8 +33,6 @@ if [ ! -f "$GTK2_CONF_FILE" ]; then
 gtk-theme-name="Forest"
 gtk-icon-theme-name="Papirus"
 gtk-font-name="Sans 10"
-gtk-cursor-theme-name="Adwaita"
-gtk-cursor-theme-size=0
 
 EOF
 fi
@@ -49,8 +47,6 @@ if [ ! -f "$GTK3_CONF_FILE" ]; then
 gtk-theme-name=Adwaita
 gtk-icon-theme-name=Papirus
 gtk-font-name=Sans 10
-gtk-cursor-theme-name=Adwaita
-gtk-cursor-theme-size=0
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
 gtk-button-images=0
@@ -75,13 +71,8 @@ export XDG_CURRENT_DESKTOP="Forest:biome"
 export QT_QPA_PLATFORMTHEME="qt6ct"
 export XDG_SESSION_TYPE="wayland"
 
-# ~/.icons/default/index.theme is the freedesktop cursor-theme fallback file
-# that cursorthemesettings.cpp maintains as a side effect of applying a
-# theme (see forest/system/system-settings/cursorthemesettings.cpp) - read
-# the user's saved choice back out of it so Biome's own cursor manager and
-# any client that reads XCURSOR_THEME/XCURSOR_SIZE directly (SDL, some GTK
-# contexts) picks it up from the very first frame, since there is no
-# live-reload path for a theme change once clients are already running.
+# Export the cursor settings saves to index.theme for clients that only read
+# XCURSOR_THEME/XCURSOR_SIZE (SDL, XWayland GTK).
 INDEX_THEME="$HOME/.icons/default/index.theme"
 if [ -f "$INDEX_THEME" ]; then
 	XCURSOR_THEME_VALUE=$(sed -n 's/^Inherits=//p' "$INDEX_THEME" | head -1)

@@ -8,7 +8,6 @@
 
 #include <LayerShellQt/Window>
 #include <QApplication>
-#include <QScreen>
 #include <QTimer>
 
 forest::forest(){}
@@ -19,12 +18,7 @@ void forest::setup(){
     SettingsUpgradeManager upgrade_manager(this);
     upgrade_manager.perform_upgrades();
 
-    QList<layeroverlay*> startup_overlays;
-    foreach (QScreen *screen, qApp->screens()){
-        layeroverlay *overlay = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerOverlay, "forest-startup", screen);
-        overlay->show();
-        startup_overlays << overlay;
-    }
+    const QList<layeroverlay*> startup_overlays = layeroverlay::showOnAllScreens(Qt::black, LayerShellQt::Window::LayerOverlay, "forest-startup");
 
     loadstylesheet();
     loadplugins();
@@ -34,11 +28,9 @@ void forest::setup(){
     if (!QDBusConnection::sessionBus().registerObject("/org/forest", this, QDBusConnection::ExportAllSlots))
         qCritical() << "Failed to register /org/forest object on DBus:" << QDBusConnection::sessionBus().lastError().message();
 
-    // Biome fades this out compositor-side on close() (namespace
-    // "forest-startup", see biome/desktop/layer_shell.cpp / fade_config.h) -
-    // revealing the wallpaper/panel/icons, which are already fully rendered
-    // underneath by now, all at once.
-    foreach (layeroverlay* overlay, startup_overlays)
+    // The compositor fades the "forest-startup" namespace out on close,
+    // revealing the already-rendered desktop at once.
+    for (layeroverlay *overlay : startup_overlays)
         QTimer::singleShot(1000, overlay, &QWidget::close);
 }
 
