@@ -138,11 +138,7 @@ logoutmanager::logoutmanager(){
     if (QScreen *primary = ScreenTracker::primary())
         windowHandle()->setScreen(primary);
 
-    foreach(QScreen* screen, qApp->screens()){
-        layeroverlay *background_fader = new layeroverlay(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim", screen);
-        background_fader->show();
-        background_faders.append(background_fader);
-    }
+    background_faders = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim");
 }
 
 logoutmanager::~logoutmanager(){}
@@ -201,21 +197,6 @@ void logoutmanager::setup(){
     QWidget::setTabOrder(hibernatebt, closebt);
 }
 
-void logoutmanager::startbackfade(){
-    // The dialog and its dim overlays already fade in on their own the
-    // moment each is mapped - Biome fades any layer-shell surface whose
-    // namespace is configured for it (see biome/desktop/layer_shell.cpp and
-    // biome/core/fade_config.h). Two independent mechanisms/config keys:
-    // the dialog's own "forest-logout" namespace uses the simple per-pixel
-    // opacity fade ([LayerShell]/fadingNamespaces); the dim overlay's
-    // "forest-logout-dim" namespace (layeroverlay.cpp) uses the opaque
-    // scanout-snapshot fade ([LayerShell]/scanoutFadingNamespaces), which
-    // avoids the composited-render-path cost a fullscreen translucent
-    // overlay would otherwise force on every tick. Nothing left to do here
-    // but grab focus.
-    set_initial_focus();
-}
-
 void logoutmanager::set_initial_focus(){
     activateWindow();
     focusbt->setFocus();
@@ -231,23 +212,12 @@ void logoutmanager::keyPressEvent(QKeyEvent *event){
 }
 
 void logoutmanager::start_action(ActionType action){
-    close(); // fades out via Biome (see startbackfade())
+    close(); // the compositor fades layer surfaces in/out by namespace
 
-    // Rather than retargeting the existing dim overlays' opacity (Wayland
-    // has no protocol for a client to retarget an already-mapped surface's
-    // opacity), open new fully-opaque ones - they fade in from whatever's
-    // behind them (the old half-dim overlays, deliberately left open to
-    // avoid any flicker gap) up to full black. The old overlays are never
-    // explicitly closed; the process exits shortly after regardless.
-    foreach(QScreen* screen, qApp->screens()){
-        layeroverlay *blackout_widget = new layeroverlay(QColor(0, 0, 0, 255), LayerShellQt::Window::LayerTop, "forest-logout-dim", screen);
-        blackout_widget->show();
-    }
+    // Can't retarget a mapped surface's opacity; stack opaque overlays over the dim ones instead.
+    layeroverlay::showOnAllScreens(Qt::black, LayerShellQt::Window::LayerTop, "forest-logout-dim");
 
-    // Comfortably above Biome's own kFadeDurationMs (desktop/layer_shell.cpp,
-    // 220ms) - the process staying alive/connected for this long is what
-    // lets the dialog's own opacity fade-out actually finish before its
-    // content goes away underneath it.
+    // Stay alive past the compositor's fade (~220ms) so the fade-out can finish.
     QTimer::singleShot(250, this, [this, action](){do_action(action);});
 }
 
@@ -259,9 +229,8 @@ void logoutmanager::do_action(ActionType action){
 }
 
 void logoutmanager::cancel(){
-    close(); // fades out via Biome
-    foreach(layeroverlay* background_fader, background_faders)
-        background_fader->close(); // fades out via Biome
-    // See start_action()'s matching comment above.
+    close();
+    for (layeroverlay *background_fader : std::as_const(background_faders))
+        background_fader->close();
     QTimer::singleShot(250, qApp, SLOT(quit()));
 }

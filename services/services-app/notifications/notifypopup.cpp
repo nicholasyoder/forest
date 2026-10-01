@@ -5,12 +5,14 @@
 #include <QDialog>
 #include <QScrollArea>
 #include <QMouseEvent>
+#include <QWindow>
+
+#include <LayerShellQt/Window>
+
+#include "miscutills.h"
 
 notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id){
-    Qt::WindowFlags flags;
-    flags |= Qt::WindowStaysOnTopHint;
-    flags |= Qt::FramelessWindowHint;
-    setWindowFlags(flags);
+    setWindowFlags(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAutoFillBackground(true);
 
@@ -84,12 +86,19 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     qreal height_percent = settings.value("height", 0.7).toReal();
     qreal width_percent = settings.value("width", 0.5).toReal();
 
-    QRect screengeo = qApp->primaryScreen()->availableGeometry();
+    QScreen *screen = ScreenTracker::primary();
+    if (!screen)
+        screen = qApp->primaryScreen();
+    QRect screengeo = screen->availableGeometry();
     popupQFrame->setMaximumSize(screengeo.width() * width_percent, screengeo.height() * height_percent);
-    QTimer::singleShot(0, this, [this]() {  // Run with 0 timer so layout happens and move works with actual widget dimensions
-        QRect geo = qApp->primaryScreen()->availableGeometry();
-        move(geo.x() + geo.width() - width(), geo.y() + geo.height() - height());
-    });
+
+    winId(); // force native window creation so windowHandle() is valid
+    windowHandle()->setScreen(screen);
+    LayerShellQt::Window *layer_window = LayerShellQt::Window::get(windowHandle());
+    layer_window->setLayer(LayerShellQt::Window::LayerOverlay);
+    layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorRight));
+    layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+    layer_window->setScope("forest-notification");
 
     popupid = id;
 

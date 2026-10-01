@@ -2,6 +2,7 @@
 
 #include "layeroverlay.h"
 
+#include <QGuiApplication>
 #include <QPainter>
 #include <QWindow>
 
@@ -19,6 +20,16 @@ layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer laye
     layer_window->setExclusiveZone(-1);
     layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
     layer_window->setScope(scope);
+}
+
+QList<layeroverlay*> layeroverlay::showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope){
+    QList<layeroverlay*> overlays;
+    for (QScreen *screen : QGuiApplication::screens()){
+        layeroverlay *overlay = new layeroverlay(color, layer, scope, screen);
+        overlay->show();
+        overlays << overlay;
+    }
+    return overlays;
 }
 
 void layeroverlay::paintEvent(QPaintEvent *){

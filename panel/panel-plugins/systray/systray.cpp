@@ -4,8 +4,11 @@
 #include "trayicon.h"
 
 #include <QDBusConnection>
-#include <QDBusInterface>
+#include <QDBusConnectionInterface>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QDBusServiceWatcher>
+#include <QDBusVariant>
 #include <QDebug>
 
 namespace {
@@ -56,23 +59,35 @@ void systray::registerHost()
     if (hostRegistered)
         return;
 
-    QDBusInterface watcher(kWatcherService, kWatcherPath, kWatcherInterface, QDBusConnection::sessionBus());
-    if (!watcher.isValid()) {
-        qWarning() << "systray: StatusNotifierWatcher unavailable:" << watcher.lastError().message();
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (!bus.interface()->isServiceRegistered(kWatcherService))
         return;
-    }
 
     hostRegistered = true;
-    watcher.asyncCall("RegisterStatusNotifierHost", QDBusConnection::sessionBus().baseService());
+    QDBusMessage registerMsg = QDBusMessage::createMethodCall(kWatcherService, kWatcherPath, kWatcherInterface,
+                                                              "RegisterStatusNotifierHost");
+    registerMsg << bus.baseService();
+    bus.asyncCall(registerMsg);
 
-    QDBusConnection::sessionBus().connect(kWatcherService, kWatcherPath, kWatcherInterface,
+    bus.connect(kWatcherService, kWatcherPath, kWatcherInterface,
         "StatusNotifierItemRegistered", this, SLOT(addItem(QString)));
-    QDBusConnection::sessionBus().connect(kWatcherService, kWatcherPath, kWatcherInterface,
+    bus.connect(kWatcherService, kWatcherPath, kWatcherInterface,
         "StatusNotifierItemUnregistered", this, SLOT(removeItem(QString)));
 
-    const QStringList existing = watcher.property("RegisteredStatusNotifierItems").toStringList();
-    for (const QString &identifier : existing)
-        addItem(identifier);
+    QDBusMessage getMsg = QDBusMessage::createMethodCall(kWatcherService, kWatcherPath,
+                                                         "org.freedesktop.DBus.Properties", "Get");
+    getMsg << QString::fromLatin1(kWatcherInterface) << QStringLiteral("RegisteredStatusNotifierItems");
+    auto *watcher = new QDBusPendingCallWatcher(bus.asyncCall(getMsg), this);
+    connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *watcher) {
+        watcher->deleteLater();
+        const QDBusPendingReply<QDBusVariant> reply = *watcher;
+        if (reply.isError()) {
+            qWarning() << "systray: reading registered items failed:" << reply.error().message();
+            return;
+        }
+        for (const QString &identifier : reply.value().variant().toStringList())
+            addItem(identifier);
+    });
 }
 
 void systray::addItem(const QString &identifier)

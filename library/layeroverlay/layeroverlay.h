@@ -14,6 +14,7 @@ class layeroverlay : public QWidget{
     Q_OBJECT
 public:
     layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen);
+    static QList<layeroverlay*> showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope);
 
 private:
     void paintEvent(QPaintEvent *);

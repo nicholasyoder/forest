@@ -11,6 +11,6 @@ int main(int argc, char *argv[]){
     a.setStyleSheet(fstyleloader::loadstyle("logout"));
     logoutmanager w;
     w.show();
-    w.startbackfade();
+    w.set_initial_focus();
     return a.exec();
 }

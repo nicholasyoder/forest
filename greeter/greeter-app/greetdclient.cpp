@@ -42,14 +42,11 @@ void GreetdClient::postAuthResponse(const QString &response) {
     sendMessage(msg);
 }
 
-void GreetdClient::startSession(const QString &sessionExec) {
+void GreetdClient::startSession(const QStringList &cmd) {
     m_state = State::StartingSession;
-    QJsonArray cmd;
-    for (const QString &part : sessionExec.split(' ', Qt::SkipEmptyParts))
-        cmd.append(part);
     QJsonObject msg;
     msg["type"] = "start_session";
-    msg["cmd"] = cmd;
+    msg["cmd"] = QJsonArray::fromStringList(cmd);
     msg["env"] = QJsonArray();
     sendMessage(msg);
 }

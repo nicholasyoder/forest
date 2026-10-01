@@ -10,29 +10,8 @@
 
 class QDBusServiceWatcher;
 
-// Implements org.kde.StatusNotifierWatcher, the DBus singleton every
-// StatusNotifierItem-publishing app (network applets, chat clients, media
-// players, etc.) registers itself with. Nothing else provides this on a
-// bare Biome session - there's no Plasma/GNOME Shell running it - so
-// Forest owns it unconditionally at startup, the same reasoning as why
-// Forest owns its own GlobalShortcuts portal client.
-//
-// This is registered directly (QDBusConnection::registerObject(path, this,
-// ExportAllSlots | ExportAllSignals | ExportAllProperties), same pattern
-// forest.cpp itself uses for org.forest) rather than via a
-// QDBusAbstractAdaptor: QDBusContext::message() - needed here to identify
-// which connection is actually calling RegisterStatusNotifierItem/Host,
-// since callers can't be trusted to self-report their own bus name -
-// simply does not work when QDBusContext is mixed into an adaptor. Qt's
-// dispatcher only ever attaches the calling context to the object that was
-// itself passed to registerObject(), never to an adaptor child, no matter
-// its access specifier (confirmed the hard way: this crashed with a null
-// context deref every time a real call came in, moving QDBusContext from
-// protected to public on the adaptor didn't help, and it only stopped
-// crashing once the interface was registered on this object directly).
-//
-// panel/panel-plugins/systray is the Host that reads what gets registered
-// here and renders it.
+// org.kde.StatusNotifierWatcher; panel/panel-plugins/systray is the host.
+// QDBusContext only works on the object passed to registerObject(), not an adaptor.
 class StatusNotifierWatcher : public QObject, public QDBusContext
 {
     Q_OBJECT

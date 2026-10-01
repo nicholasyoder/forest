@@ -151,34 +151,37 @@ new top-level; icons/logout used `qApp->primaryScreen()` (first output Qt saw).
   rapid successive edits don't double-fire (`dbus-monitor` shows one session at
   a time); Meta+D absent from a fresh config.
 
-## Phase 6 — Remaining async D-Bus + unported/coupled components
+## Phase 6 — Remaining async D-Bus + unported/coupled components — done
 
-- [ ] **6.1 Tray (`panel/panel-plugins/systray/trayicon.cpp`) is fully
-  synchronous.** Each item builds a `QDBusInterface` (blocking introspection) and
-  does 3–4 blocking property reads per `NewIcon`. One hung tray app freezes the
-  panel for up to 25s. Switch to one async `org.freedesktop.DBus.Properties.GetAll`
-  per change signal. Also: `QIcon::setThemeSearchPaths` is appended to globally
-  per item; SNI `Passive` status is ignored (spec says hide).
-- [ ] **6.2 Notification popups not ported.**
-  `services/services-app/notifications/notifypopup.cpp:89-92` still positions a
-  plain frameless toplevel with `move()` — a no-op for xdg toplevels. It lands
-  wherever Biome places it, appears in the windowlist, can take focus. Make it a
-  layer surface (`LayerOverlay`/`LayerTop`, anchored bottom-right with margins,
-  keyboard interactivity none) — `layeroverlay`/`wallpaperwidget` show the
-  pattern. **(manual test)**
+- [x] **6.1 Tray fully async.** One coalesced `Properties.GetAll` per change
+  signal; method calls via `createMethodCall` + `asyncCall`; no
+  `QDBusInterface` (host registration too). Metatype registration and
+  `operator<<`s dropped (only manual demarshalling is needed). Passive items
+  hidden; `IconThemePath` searched directly instead of appended to the global
+  theme search paths.
+- [x] **6.2 Notification popups** are `LayerOverlay` surfaces on the primary
+  screen, anchored bottom-right, keyboard interactivity none (scope
+  `forest-notification`). Multiple popups still overlap, as on X11.
 - [x] **6.3 Logout dialog centering** — done in Phase 3.
-- [ ] **6.4 Layer overlay per-screen loop duplicated 3×** (`forest/forest.cpp`,
-  `logout.cpp` constructor and `start_action()`). `QScreen*` ctor arg added in
-  Phase 3; a static `showOnAllScreens(...)` could still collapse the loops. Rename/merge `logoutmanager::startbackfade()` — it no
-  longer fades anything.
-- [ ] **6.5 Cursor settings** (`system/system-settings/cursorthemesettings.cpp`):
-  `org.biome.Cursor.SetTheme` is a blocking bespoke call. Decide whether Biome
-  should instead watch `~/.icons/default/index.theme` or the portal Settings
-  `cursor-theme` key (decoupling goal). Also check whether GTK apps pick up the
-  change (startforest-wayland hardcodes Adwaita into gtk-3.0 `settings.ini`).
-- [ ] **6.6 Greeter** `GreetdClient::startSession` splits Exec on spaces
-  (pre-existing, more visible with the xsession wrapper) — use
-  `QProcess::splitCommand`.
+- [x] **6.4** `layeroverlay::showOnAllScreens()` replaces the three loops;
+  `startbackfade()` removed (`main` calls `set_initial_focus()`).
+- [x] **6.5 Cursor settings.** Biome watches `~/.icons/default/index.theme`
+  (`ipc/cursor_theme_watcher`) and `org.biome.Cursor` is gone. Settings also
+  sets GSettings `org.gnome.desktop.interface cursor-theme/size` (what GTK
+  reads on Wayland; `libglib2.0-bin` added to Depends); `startforest-wayland`
+  no longer hardcodes Adwaita into the generated GTK configs.
+- [x] **6.6 Greeter** uses `QProcess::splitCommand`; `startSession` takes a
+  `QStringList`.
+- [x] **(manual test)** Notifications: bottom-right of the primary screen above
+  the panel, not in the windowlist, no focus steal; hover pause and
+  click-for-detail work. Tray: icons/tooltips/click/middle/scroll/menu for
+  nm-applet, a Qt app and a non-Qt SNI; a Passive item disappears; `kill -STOP`
+  on a tray app doesn't freeze the panel (needed an async Introspect before
+  creating `DBusMenuImporter`, whose ctor introspects synchronously). Cursor: changing theme/size in
+  settings updates decorations/Qt cursors live, GTK apps follow. Logout
+  dim/blackout and startup overlay unchanged. Greeter still starts sessions.
+  Notifications first covered the panel: Biome placed non-exclusive surfaces
+  in one pass with exclusive ones; fixed there (two-pass arrange).
 
 ## Phase 7 — Comment pass
 
@@ -188,16 +191,16 @@ session logs that will go stale. Do this per file alongside the phase that
 touches it where possible; whatever's left, here.
 
 - [x] `panel/panel-library/popup.h` — ~80 lines; every block → 1–2 lines. (Phase 2)
-- [ ] `panel/panel-plugins/systray/trayicon.cpp` — ADL note, empty-list signature
-  note, raw `Properties.Get` rationale, `showTrayMenu` history (~60 lines).
-- [ ] `services/services-app/systemtray/statusnotifierwatcher.h` — 17-line block →
-  "QDBusContext only works on the object passed to registerObject(), not an adaptor."
+- [x] `panel/panel-plugins/systray/trayicon.cpp` — ADL note, empty-list signature
+  note, raw `Properties.Get` rationale, `showTrayMenu` history (~60 lines). (Phase 6)
+- [x] `services/services-app/systemtray/statusnotifierwatcher.h` — 17-line block →
+  "QDBusContext only works on the object passed to registerObject(), not an adaptor." (Phase 6)
 - [x] `panel/panel-plugins/windowlist/extforeigntoplevelhandle.h` (`m_readySent`),
   `windowlist.h` (pending queues), `windowlist.cpp` (`tryPairPendingHandles`,
   `onWindowAdded`), `extforeigntoplevellist.h`. (Phase 4)
 - [x] `panel/panel-app/geometrymanager.{h,cpp}`, `desktop/desktop-app/wallpaperwidget.cpp`
   (exclusive zone), `desktop/desktop-app/desktop.cpp` (`handleScreenChange`). (Phase 3)
-- [ ] `logout/logout-app/logout.cpp` (`startbackfade`, `start_action`, `cancel`).
+- [x] `logout/logout-app/logout.cpp` (`startbackfade`, `start_action`, `cancel`). (Phase 6)
 - [x] `services/services-app/hotkeys/foresthotkeys.cpp` (`pauseHotkeys`),
   `globalshortcutsportal.{h,cpp}`, `hotkey.h`, `keysym_table.h` header note. (Phase 5)
 - [x] `panel/panel-library/extworkspace{manager,handle}.{h,cpp}`,
@@ -207,7 +210,7 @@ touches it where possible; whatever's left, here.
   (protocol vendoring notes). (Phase 4)
 - [x] `panel/panel-plugins/windowlist/imagepopup.h`, `windowbutton.{h,cpp}` —
   drop "matches the old X11 menu" notes. (Phase 4)
-- [ ] `forest/forest.cpp` startup overlay comment.
+- [x] `forest/forest.cpp` startup overlay comment. (Phase 6)
 - [ ] Docs: `docs/qmenu-migration-plan.md` is mostly resolved-bug narrative — trim
   to what's still actionable (Task 1); trim the history paragraph at the end of
   `docs/development-notes.md`'s "Debugging Wayland" section.
@@ -216,6 +219,4 @@ touches it where possible; whatever's left, here.
 
 ## Suggested merge gate
 
-Before merging into develop: Phase 1, 2.1, 3.1–3.2, 4.1, 5.1, 6.2, 6.3, and
-Phase 7. The async D-Bus work (5.2, 6.1) and the 6.5 cursor decision can follow
-on develop.
+Before merging into develop: Phases 1–6 (done) and the rest of Phase 7.
