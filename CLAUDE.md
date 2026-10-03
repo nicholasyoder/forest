@@ -17,6 +17,11 @@ cmake --build build/Desktop-Debug
 itself) installs a `build/Desktop-Debug` build into `/opt/forest-build/usr/`,
 which `/usr/bin/forest`, `/usr/lib/forest`, `/usr/share/forest`, and
 `/usr/share/wallpapers/forest` all symlink into — so it needs no `sudo`.
+Use it (run from `build/`, after a full build) to stage changes for testing
+rather than copying files into `/opt/forest-build` by hand. It always ends with
+a `file INSTALL cannot set permissions on "/etc/forest"` error: that step needs
+root and runs last, so it's expected and harmless unless something under
+`etc/forest/` actually changed (then the user has to install that part manually).
 
 There are no tests. Build a single target with:
 ```sh
