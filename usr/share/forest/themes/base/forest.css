@@ -69,6 +69,7 @@
 
 QMenu {
     background: grey;
+    border: none; /* declared so menuanchor can derive margin from the metrics */
     padding: 3px;
     icon-size: 22px;
     font-size: 10pt; /* on ::item, Qt sizes items with the wrong font */

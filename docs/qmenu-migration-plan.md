@@ -89,9 +89,8 @@
   For submenus it uses anchor `TopRight`, gravity `BottomRight`, and
   `flip_x | slide_y`, which Forest should match. The dynamic properties
   still take precedence in 6.11, so Forest's version stays correct after a
-  Qt upgrade. The submenu part can be deleted once Forest targets Qt ≥ 6.11
-  (Trixie ships 6.8.2). Root menus opened at a point still need Forest's
-  anchors even in 6.11.
+  Qt upgrade. Root menus opened at a point still need Forest's anchors even
+  in 6.11, and so do submenus (see Phase 1's margin note).
 - **Multi-monitor caveat.** `QMenu` picks `screenAt(p)` for size limits,
   and `p` is in the bogus frame, so very tall menus on a smaller secondary
   screen may size against the wrong screen. Placement is still correct.
@@ -144,26 +143,21 @@ Checked against `qstylesheetstyle.cpp` 6.8.2:
 4. Exit when the look is signed off. Positioning will still be off here;
    that's Phase 1.
 
-### Phase 1: positioning helper (new `library/` static lib, shared by panel and desktop)
+### Phase 1: positioning helper — done
 
-1. `anchorMenu(QMenu*, QWidget *anchor, QRect rectInAnchor, Qt::Edges anchorEdges, Qt::Edges gravity, uint constraints)`:
-   `ensurePolished()`, `winId()`, then an explicit
-   `setTransientParent(anchor->window()->windowHandle())` (needed for
-   autohide's `is_panel_popup()` chain), then the four properties.
-2. Move `popup::positionOnLauncher()`'s `PositionpPolicy` math into a shared
-   function so `popup` and the panel's `QMenu` path compute identical
-   anchors.
-3. Submenu filter (app-wide `QEvent::Show` on a `QMenu`): find the parent
-   among `menuAction()->associatedObjects()`, the visible `QMenu` that isn't
-   the submenu itself. Anchor to `parent->actionGeometry(menuAction())`
-   with the Qt 6.11 values above. Note in a comment that it can go once
-   Qt ≥ 6.11.
-4. Validate on the testbeds before touching consumers:
-   - tray: anchor on the `trayicon` instead of `QCursor::pos()`. Check the
-     VPN submenu bug is gone.
-   - desktop: anchor a 1×1 rect at the click position in wallpaper-local
-     coordinates.
-   - "Create New" near the bottom and right edges.
+- `library/menuanchor`: `anchorMenu()`, `anchorMenuAtPoint()`, and the
+  app-wide `MenuFilter` (translucency + submenu anchoring), installed in
+  `forest.cpp`.
+- `panel-library/panelanchor`: `PositionpPolicy` math shared by `popup` and
+  `anchorMenuOnLauncher()`, the entry point for Phase 2's panel menus.
+- Testbeds converted: tray (anchored on the `trayicon`), desktop and
+  desktop-icon menus (`anchorMenuAtPoint`).
+- **Margins.** The QSS `margin` is transparent window area, so anchors must
+  offset by it or menus land beside the visible frame. `menuanchor` derives it
+  as `PM_MenuPanelWidth − PM_DefaultFrameWidth`, which only holds while the
+  `QMenu` rule declares a border (base sets `border: none`). Submenus anchor
+  to the parent's visible frame and align first items, so keep the filter
+  even after Qt ≥ 6.11: Qt's own submenu anchor ignores the margin.
 
 ### Phase 2: convert consumers
 

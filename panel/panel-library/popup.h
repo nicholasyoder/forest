@@ -13,9 +13,8 @@
 #include <QWindow>
 #include <QPointer>
 #include <QTimer>
-#include <QCursor>
 
-enum PositionpPolicy { CenteredOnWidget, EdgeAlignedOnWidget, CenteredOnMouse, EdgeAlignedOnMouse };
+#include "panelanchor.h"
 
 class popup : public QWidget
 {
@@ -146,25 +145,10 @@ private:
         // Explicit parent: QtWayland otherwise guesses from the last input window.
         handle->setTransientParent(toplevel->windowHandle());
 
-        bool top = QSettings("Forest","Panel").value("position").toString().toLower() == "top";
-
-        // Full toplevel height so the edges below are the panel's, not the launcher's.
-        QRect anchorRect;
-        if (pospolicy == CenteredOnMouse || pospolicy == EdgeAlignedOnMouse)
-            anchorRect = QRect(toplevel->mapFromGlobal(QCursor::pos()).x(), 0, 1, toplevel->height());
-        else
-            anchorRect = QRect(launcherwidget->mapTo(toplevel, QPoint(0,0)).x(), 0, launcherwidget->width(), toplevel->height());
-
-        Qt::Edges edge = top ? Qt::Edges(Qt::BottomEdge) : Qt::Edges(Qt::TopEdge);
-        Qt::Edges gravity = edge;
-        if (pospolicy == EdgeAlignedOnWidget || pospolicy == EdgeAlignedOnMouse) {
-            edge |= Qt::LeftEdge;
-            gravity |= Qt::RightEdge;
-        }
-
-        handle->setProperty("_q_waylandPopupAnchorRect", anchorRect);
-        handle->setProperty("_q_waylandPopupAnchor", QVariant::fromValue(edge));
-        handle->setProperty("_q_waylandPopupGravity", QVariant::fromValue(gravity));
+        const PanelAnchor anchor = panelAnchor(launcherwidget, pospolicy);
+        handle->setProperty("_q_waylandPopupAnchorRect", anchor.rect);
+        handle->setProperty("_q_waylandPopupAnchor", QVariant::fromValue(anchor.anchor));
+        handle->setProperty("_q_waylandPopupGravity", QVariant::fromValue(anchor.gravity));
     }
 
     void finishShow(){

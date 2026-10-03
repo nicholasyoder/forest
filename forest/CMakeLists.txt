@@ -15,5 +15,6 @@ forest_link_pluginutills(forest)
 forest_link_flogger(forest)
 forest_link_layershellqt(forest)
 forest_link_layeroverlay(forest)
+forest_link_menuanchor(forest)
 
 install(TARGETS forest RUNTIME DESTINATION bin)

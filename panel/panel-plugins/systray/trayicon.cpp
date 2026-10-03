@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "trayicon.h"
+#include "panelanchor.h"
 
-#include <QCursor>
 #include <QDBusArgument>
 #include <QDBusConnection>
 #include <QDBusObjectPath>
@@ -248,7 +248,9 @@ void trayicon::onRightClicked()
 
 void trayicon::showTrayMenu()
 {
-    menuImporter->menu()->popup(QCursor::pos());
+    QMenu *menu = menuImporter->menu();
+    anchorMenuOnLauncher(menu, this, CenteredOnWidget);
+    menu->popup(mapToGlobal(QPoint(0, 0)));
 }
 
 void trayicon::onMouseReleased(QMouseEvent *event)
