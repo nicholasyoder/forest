@@ -3,13 +3,13 @@
 #include "launcher.h"
 #include <qt6xdg/XdgDesktopFile>
 
-launcher::launcher(int num, QString desktopfilepath){
+launcher::launcher(int num, QString desktopfilepath) : panelbutton(Icon) {
     lnum = num;
     dfilepath = desktopfilepath;
 
     XdgDesktopFile deskfile;
     deskfile.load(dfilepath);
-    setupIconButton(deskfile.icon(QIcon::fromTheme("application-x-executable")));
+    setIcon(deskfile.icon(QIcon::fromTheme("application-x-executable")));
     connect(this, &launcher::leftclicked, this, &launcher::runcommand);
 }
 

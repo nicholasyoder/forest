@@ -13,9 +13,10 @@ struct MenuItem {
 
 windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, ExtWorkspaceManager *workspaceManager,
         BiomeWorkspaces *biomeWorkspaces)
-    : handle(toplevelHandle), workspace_manager(workspaceManager), biome_workspaces(biomeWorkspaces){
+    : panelbutton(IconAndText), handle(toplevelHandle), workspace_manager(workspaceManager), biome_workspaces(biomeWorkspaces){
     m_appId = handle->appId();
-    setupIconAndTextButton(handle->title(), iconresolver::iconForAppId(m_appId));
+    setText(handle->title());
+    setIcon(iconresolver::iconForAppId(m_appId));
     setDown(handle->isActivated());
 
     pmenu = new popupmenu(this, CenteredOnWidget);

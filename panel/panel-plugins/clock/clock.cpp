@@ -3,12 +3,12 @@
 #include "clock.h"
 #include "clocksettingswidget.h"
 
-clockplug::clockplug(){}
+clockplug::clockplug() : panelbutton(Text) {}
 
 clockplug::~clockplug(){}
 
 void clockplug::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
-    setupTextButton("12:00");
+    setText("12:00");
 
     QTimer *uptimer = new QTimer;
     connect(uptimer, SIGNAL(timeout()), this, SLOT(updatetime()));

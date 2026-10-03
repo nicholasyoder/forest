@@ -25,37 +25,15 @@ class panelbutton : public QFrame
     Q_OBJECT
 
 public:
-    panelbutton(){ setObjectName("panelButton"); setProperty("buttontype", "Custom");}
+    enum Type { Custom, Icon, Text, IconAndText };
 
-    void setupIconButton(QIcon icon, int customiconsize = 0){
-        setProperty("buttontype", "Icon");
-        setIcon(icon);
-        setupiconsize(customiconsize);
-    }
-
-    void setupIconButton(QString icon, int customiconsize = 0){
-        setProperty("buttontype", "Icon");
-        setIcon(geticon(icon));
-        setupiconsize(customiconsize);
-    }
-
-    void setupTextButton(QString text){
-        setProperty("buttontype", "Text");
-        setText(text);
-    }
-
-    void setupIconAndTextButton(QString text, QString icon, int customiconsize = 0){
-        setProperty("buttontype", "IconAndText");
-        setText(text);
-        setIcon(geticon(icon));
-        setupiconsize(customiconsize);
-    }
-
-    void setupIconAndTextButton(QString text, QIcon icon, int customiconsize = 0){
-        setProperty("buttontype", "IconAndText");
-        setText(text);
-        setIcon(icon);
-        setupiconsize(customiconsize);
+    // Fixed at construction: QSS [buttontype=...] rules are only matched at polish time.
+    explicit panelbutton(Type type = Custom){
+        static const char *const names[] = {"Custom", "Icon", "Text", "IconAndText"};
+        setObjectName("panelButton");
+        setProperty("buttontype", names[type]);
+        if (type == Icon || type == IconAndText)
+            bticonsize = miscutills::get_iconsize_stylesheet("#panelButton\\[buttontype=\"" + QString(names[type]) + "\"\\]", qApp->styleSheet());
     }
 
 
@@ -79,16 +57,6 @@ public:
             }
         }
         return ico;
-    }
-
-    void setupiconsize(int customiconsize){
-        QSize iconsize;
-        if (customiconsize != 0){ iconsize = QSize(customiconsize, customiconsize);}
-        else{
-            QString type = this->property("buttontype").toString();
-            iconsize = miscutills::get_iconsize_stylesheet("#"+objectName()+"\\[buttontype=\""+type+"\"\\]", qApp->styleSheet());
-        }
-        setIconSize(iconsize);
     }
 
     QString text(){return bttext;}

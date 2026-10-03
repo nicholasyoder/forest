@@ -111,7 +111,7 @@ QIcon iconFromName(const QString &name, const QString &themePath) {
 } // namespace
 
 trayicon::trayicon(const QString &service, const QString &path)
-    : m_service(service), m_path(path)
+    : panelbutton(Icon), m_service(service), m_path(path)
 {
     // Hidden until the first GetAll reply, and while Status is Passive.
     setVisible(false);
@@ -185,7 +185,7 @@ void trayicon::applyProperties(const QVariantMap &props)
         icon = iconFromPixmaps(demarshall<QList<StatusNotifierIconPixmap>>(props.value("IconPixmap"), QDBusArgument::ArrayType));
     if (icon.isNull())
         icon = QIcon::fromTheme("image-missing");
-    setupIconButton(icon);
+    setIcon(icon);
 
     const auto tooltip = demarshall<StatusNotifierToolTip>(props.value("ToolTip"), QDBusArgument::StructureType);
     QString text = tooltip.title;
