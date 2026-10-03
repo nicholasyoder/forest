@@ -84,12 +84,7 @@ void CursorThemeSettings::load_cursor_themes(){
     theme_list.sort();
     cursor_theme_list->clear();
 
-    // ~/.icons/default/index.theme is the freedesktop fallback every Xcursor
-    // loader (X11's libXcursor and Wayland's libwayland-cursor alike) uses
-    // when no theme name is given outright - cursorthemesettings itself
-    // maintains this file (see set_cursor_theme() below), so it doubles as
-    // this settings page's own persisted "currently selected" state, with
-    // nothing X11-specific about reading it back.
+    // The Xcursor fallback theme file; set_cursor_theme() writes it, so it's also our saved state.
     QSettings index_theme(
         QDir::home().filePath(QStringLiteral(".icons/default/index.theme")), QSettings::IniFormat);
     index_theme.beginGroup(QStringLiteral("Icon Theme"));
