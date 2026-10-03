@@ -35,6 +35,13 @@ QList<settings_item*> PanelSettings::get_settings_items(){
     settings_widget *autohide_item = new settings_widget("Hide when not in use", "", autohide_select);
     behavior_cat->add_child(autohide_item);
 
+    autohide_delay_input = new QSpinBox();
+    autohide_delay_input->setRange(0, 10000);
+    autohide_delay_input->setSingleStep(100);
+    autohide_delay_input->setSuffix(" ms");
+    settings_widget *autohide_delay_item = new settings_widget("Hide delay", "", autohide_delay_input);
+    behavior_cat->add_child(autohide_delay_item);
+
 
     settings_category *applets_cat = new settings_category("Applets", "", "preferences-plugin");
     connect(applets_cat, &settings_category::opened, this, &PanelSettings::load_applets);
@@ -55,17 +62,26 @@ QList<settings_item*> PanelSettings::get_settings_items(){
 void PanelSettings::load_behavior_settings(){
     QSettings settings("Forest", "Panel");
 
-    position_select->setCurrentText(settings.value("position").toString());
-    autohide_select->setCurrentText(settings.value("autohide", false).toBool() ? "Enable" : "Disable");
+    {
+        // Runs on every open; don't write back half-loaded state.
+        const QSignalBlocker b1(position_select), b2(autohide_select), b3(autohide_delay_input);
+        position_select->setCurrentText(settings.value("position").toString());
+        autohide_select->setCurrentText(settings.value("autohide", false).toBool() ? "Enable" : "Disable");
+        autohide_delay_input->setValue(settings.value("autohide_delay", 1000).toInt());
+    }
+    autohide_delay_input->setEnabled(autohide_select->currentText() == "Enable");
 
-    connect(position_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings);
-    connect(autohide_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings);
+    connect(position_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings, Qt::UniqueConnection);
+    connect(autohide_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings, Qt::UniqueConnection);
+    connect(autohide_delay_input, &QSpinBox::valueChanged, this, &PanelSettings::set_behavior_settings, Qt::UniqueConnection);
 }
 
 void PanelSettings::set_behavior_settings(){
     QSettings settings("Forest", "Panel");
     settings.setValue("position", position_select->currentText());
     settings.setValue("autohide", autohide_select->currentText() == "Enable");
+    settings.setValue("autohide_delay", autohide_delay_input->value());
+    autohide_delay_input->setEnabled(autohide_select->currentText() == "Enable");
     settings.sync();
 
     miscutills::call_dbus("forest/panel/reloadsettings");

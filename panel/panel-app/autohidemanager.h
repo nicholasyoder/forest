@@ -3,32 +3,35 @@
 #ifndef AUTOHIDEMANAGER_H
 #define AUTOHIDEMANAGER_H
 
-#include <QDateTime>
+#include <QPointer>
 #include <QTimer>
+#include <QWidget>
 
+class GeometryManager;
+
+// Hover-driven: Wayland gives the panel's layer surface no focus on hover, so focus can't drive it.
 class AutoHideManager : public QObject {
     Q_OBJECT
 public:
-    explicit AutoHideManager(QObject *parent = nullptr);
+    explicit AutoHideManager(GeometryManager *geometry, QObject *parent = nullptr);
     ~AutoHideManager();
 
+    void set_delay(int ms);
+    void start(); // hide after the delay unless hovered
+
+protected:
     bool eventFilter(QObject* obj, QEvent* event) override;
 
-    // Also called from panel on settings reload to start autohide
-    void close_eventually();
-
-signals:
-    void show();
-    void hide();
-
-private slots:
-    void check_focus();
-    void maybe_close();
-
 private:
-    QTimer *check_focus_timer = nullptr;
-    QTimer *maybe_close_timer = nullptr;
-    QDateTime lost_focus_time;
+    void watch_shell(QWidget *new_shell);
+    void handle_focus_change(QWindow *focus);
+    void maybe_hide();
+    bool is_panel_popup(QWindow *window) const;
+    bool panel_popup_visible() const;
+
+    GeometryManager *geometry = nullptr;
+    QPointer<QWidget> shell;
+    QTimer hide_timer;
 };
 
 #endif // AUTOHIDEMANAGER_H

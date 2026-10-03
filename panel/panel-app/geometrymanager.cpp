@@ -45,6 +45,7 @@ void GeometryManager::rebuild_shell() {
     build_shell(); // reparents panel_widget out of old_shell
     update_geometry();
     old_shell->deleteLater();
+    emit shell_changed(shell);
 }
 
 void GeometryManager::handle_geometry_change() {
@@ -93,4 +94,25 @@ void GeometryManager::update_geometry(){
 
     layer_window->setExclusiveZone(reserve_screen_space ? fixed_panel_size : 0);
     shell->show();
+    apply_collapsed();
+}
+
+void GeometryManager::set_collapsed(bool c){
+    if (collapsed == c)
+        return;
+    collapsed = c;
+    apply_collapsed();
+}
+
+// Collapsed keeps the surface mapped (no remap focus-steal, popups stay anchored);
+// the mask becomes its Wayland input region, leaving a 1px hover strip on the edge.
+void GeometryManager::apply_collapsed(){
+    if (collapsed) {
+        panel_widget->hide();
+        int y = panel_position == "top" ? 0 : fixed_panel_size - 1;
+        shell->setMask(QRegion(0, y, QWIDGETSIZE_MAX, 1)); // compositor clips to surface width
+    } else {
+        shell->clearMask();
+        panel_widget->show();
+    }
 }

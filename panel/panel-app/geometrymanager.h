@@ -23,15 +23,22 @@ public slots:
     void set_panel_position(QString position);
     void set_reserve_screen_space(bool reserve);
     void update_geometry();
+    void set_collapsed(bool collapsed);
+
+public:
+    bool is_collapsed() const { return collapsed; }
+    QWidget *shell_widget() const { return shell; }
 
 signals:
+    void shell_changed(QWidget *shell);
 
 private:
     void build_shell();
     void rebuild_shell();
     void handle_geometry_change();
+    void apply_collapsed();
 
-    // Content widget (panel or HiddenPanel); reparented into each new shell so its state survives.
+    // Content widget (the panel); reparented into each new shell so its state survives.
     QWidget* panel_widget = nullptr;
 
     // Layer-shell top-level wrapping panel_widget. See build_shell().
@@ -42,6 +49,7 @@ private:
     int fixed_panel_size = 0;
     QString panel_position;
     bool reserve_screen_space = false;
+    bool collapsed = false;
 };
 
 #endif // GEOMETRYMANAGER_H
