@@ -77,3 +77,28 @@ pattern), rather than designing it here ahead of time.
 - **Hotkey capture can't record a bare Meta tap.** `edithotkeywidget::keyPressEvent`
   appends `Meta+` and waits for a non-modifier key; with no `keyReleaseEvent`
   it never produces the `Meta` value `foresthotkeys` understands. Pre-existing.
+- **Autohide panel likely leaves an input-blocking strip (test + fix).**
+  `panel::hide()` / `HiddenPanel::hide()` only hide the child widget; the
+  layer-shell `shell` in `GeometryManager` stays mapped at full height,
+  transparent, and still takes input over windows at that edge. Likely fix:
+  `GeometryManager` hides/shows `shell` along with its content widget.
+- **Suspend/hibernate from logout likely leaves a black screen on resume
+  (test + fix).** `start_action()` maps opaque black top-layer overlays, and
+  `call_dbus_methods()` only quits on failure; a successful `Suspend` returns
+  immediately and `forest-logout` stays up with the overlays (keyboard
+  interactivity none, so Escape can't clear them). Quit after a successful
+  suspend/hibernate. Also SUSPEND's `action_map` key is `"logout"`.
+- **Desktop-icons surface needs `KeyboardInteractivityOnDemand`.**
+  `wallpaperwidget` requests `None`; icon rename, Delete/Shift+Delete and
+  Ctrl-click multi-select only work because Biome grants focus to any clicked
+  surface regardless. Switch the primary-screen (icons) surface to
+  `OnDemand` *before* Biome fixes that (Biome roadmap, Known issues), or
+  desktop keyboard input breaks.
+- **Hotkeys don't recover from portal failures.** A failed `createSession`
+  is terminal (no retry), and a portal restart or `Session::Closed` leaves
+  `sessionOpen` true with hotkeys dead until relog. Watch the
+  `org.freedesktop.portal.Desktop` owner and `Session::Closed`, and retry.
+- **`DesktopNames` mismatch.** `wayland-sessions/Forest.desktop` has
+  `DesktopNames=Forest`, but `startforest-wayland` exports
+  `XDG_CURRENT_DESKTOP=Forest:biome` (needed for `biome-portals.conf`).
+  Make them agree (likely `DesktopNames=Forest;biome`).
