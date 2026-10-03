@@ -24,10 +24,7 @@ class StatusNotifierWatcher : public QObject, public QDBusContext
 public:
     explicit StatusNotifierWatcher(QObject *parent = nullptr);
 
-    // Registers /StatusNotifierWatcher and both org.kde.StatusNotifierWatcher
-    // and org.freedesktop.StatusNotifierWatcher service names on the
-    // session bus - real items/hosts are split between the two namespaces
-    // in practice, so this owns both rather than guessing which is needed.
+    // Owns both the org.kde and org.freedesktop names; real items use either.
     void setup();
 
     QStringList registeredStatusNotifierItems() const;
@@ -35,21 +32,13 @@ public:
     int protocolVersion() const { return 0; }
 
 public slots:
-    // service is either a bare bus name (item lives at the default
-    // "/StatusNotifierItem" path on that connection) or, if it starts with
-    // "/", an object path on the calling connection - both conventions are
-    // used by real-world items. The caller's actual bus identity always
-    // comes from the DBus message itself (QDBusContext::message()), never
-    // trusted from the string argument, so a connection can't register an
-    // identifier claiming to be a different app.
+    // service: bus name (default /StatusNotifierItem path) or an object path on
+    // the caller. The bus name always comes from the message, never the argument.
     void RegisterStatusNotifierItem(const QString &service);
     void RegisterStatusNotifierHost(const QString &service);
 
 signals:
-    // Both carry the same "busName+path" identifier format used by every
-    // other real StatusNotifierWatcher implementation (confirmed against
-    // LXQt's), e.g. "org.example.Notifier/StatusNotifierItem" - a Host
-    // reconstructs the item's DBus service+path from this one string.
+    // Identifier is "busName/path", e.g. "org.example.Notifier/StatusNotifierItem".
     void StatusNotifierItemRegistered(const QString &service);
     void StatusNotifierItemUnregistered(const QString &service);
     void StatusNotifierHostRegistered();

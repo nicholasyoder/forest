@@ -11,10 +11,7 @@
 
 class trayicon;
 
-// Host half of the StatusNotifierItem tray: registers with the
-// StatusNotifierWatcher (services/services-app/systemtray, always running
-// independently of this plugin) and renders whatever items are currently
-// registered there as trayicon widgets.
+// StatusNotifierHost: renders the items registered with services-app's watcher.
 class systray : public QWidget, panelpluginterface
 {
     Q_OBJECT
@@ -43,11 +40,7 @@ private slots:
 private:
     QHBoxLayout *mainLayout = nullptr;
     QHash<QString, trayicon*> tIcons;
-    // Guards against registering/connecting twice - registerHost() is
-    // called both eagerly from setupPlug() and again if a QDBusServiceWatcher
-    // (see systray.cpp) later reports the watcher actually appearing, since
-    // services-app (which owns it) has no guaranteed load-order relative to
-    // panel-app.
+    // registerHost() runs at setup and again when the watcher appears.
     bool hostRegistered = false;
 };
 

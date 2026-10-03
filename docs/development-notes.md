@@ -77,7 +77,3 @@ traffic settles it far more reliably:
 No real mouse/keyboard interaction is needed for reproducing a
 hotkey/D-Bus-triggered code path — a `QTimer::singleShot` calling `show()`
 directly reproduces it fine.
-
-(Originally written while diagnosing why some panel popups picked up a
-Biome-drawn border — see `panel/panel-library/popup.h`'s constructor and
-`positionOnLauncher()` for the resulting fixes and their rationale.)

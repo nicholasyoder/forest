@@ -183,7 +183,7 @@ new top-level; icons/logout used `qApp->primaryScreen()` (first output Qt saw).
   Notifications first covered the panel: Biome placed non-exclusive surfaces
   in one pass with exclusive ones; fixed there (two-pass arrange).
 
-## Phase 7 — Comment pass
+## Phase 7 — Comment pass — done
 
 Project rule: comments 1–3 lines, non-obvious fact only; history belongs in
 commit messages. Also remove references to Biome file paths / "Workstream D" /
@@ -205,18 +205,21 @@ touches it where possible; whatever's left, here.
   `globalshortcutsportal.{h,cpp}`, `hotkey.h`, `keysym_table.h` header note. (Phase 5)
 - [x] `panel/panel-library/extworkspace{manager,handle}.{h,cpp}`,
   `panel/panel-plugins/deskswitch/deskswitch.h`. (Phase 4)
-- [ ] `mainmenu.cpp` (outsideclicked).
+- [x] `mainmenu.cpp` (outsideclicked).
 - [x] `panel/panel-library/CMakeLists.txt`, `panel/panel-plugins/windowlist/CMakeLists.txt`
   (protocol vendoring notes). (Phase 4)
 - [x] `panel/panel-plugins/windowlist/imagepopup.h`, `windowbutton.{h,cpp}` —
   drop "matches the old X11 menu" notes. (Phase 4)
 - [x] `forest/forest.cpp` startup overlay comment. (Phase 6)
-- [ ] Docs: `docs/qmenu-migration-plan.md` is mostly resolved-bug narrative — trim
+- [x] Docs: `docs/qmenu-migration-plan.md` is mostly resolved-bug narrative — trim
   to what's still actionable (Task 1); trim the history paragraph at the end of
   `docs/development-notes.md`'s "Debugging Wayland" section.
+- [x] Leftovers: `systray.{h,cpp}`, `statusnotifierwatcher.h` (signal/slot
+  notes), `cursorthemesettings.cpp` (index.theme), `startforest-wayland`
+  (Biome source path).
 
 ---
 
 ## Suggested merge gate
 
-Before merging into develop: Phases 1–6 (done) and the rest of Phase 7.
+Before merging into develop: Phases 1–7 — all done.

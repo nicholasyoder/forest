@@ -36,10 +36,7 @@ void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
     mainLayout->setSpacing(0);
     layout->addWidget(this);
 
-    // services-app (which owns the watcher) has no guaranteed load-order
-    // relative to panel-app, so this can't just try once at startup - watch
-    // for the watcher actually appearing on the bus too, in case it hasn't
-    // registered yet by the time this plugin loads.
+    // services-app (owns the watcher) may load after panel-app; retry when it appears.
     auto *watcherAppeared = new QDBusServiceWatcher(kWatcherService, QDBusConnection::sessionBus(),
         QDBusServiceWatcher::WatchForRegistration, this);
     connect(watcherAppeared, &QDBusServiceWatcher::serviceRegistered, this, &systray::registerHost);
