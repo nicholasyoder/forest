@@ -5,7 +5,7 @@
 #include <QDBusConnection>
 #include <QTimer>
 
-mainmenu::mainmenu(){
+mainmenu::mainmenu() : panelbutton(Icon) {
 
 }
 
@@ -82,7 +82,7 @@ void mainmenu::closemenu(){
 
 void mainmenu::loadSettings(){
     settings->sync();
-    setupIconButton(settings->value("menuicon", "/usr/share/forest/pics/logo-small.png").toString());
+    setIcon(settings->value("menuicon", "/usr/share/forest/pics/logo-small.png").toString());
 }
 
 void mainmenu::loadUI(){

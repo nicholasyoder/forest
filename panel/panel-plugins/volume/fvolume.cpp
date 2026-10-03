@@ -5,11 +5,11 @@
 #include "fvolume.h"
 #include "settingswidget.h"
 
-fvolume::fvolume(){}
+fvolume::fvolume() : panelbutton(Icon) {}
 
 void fvolume::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     layout->addWidget(this);
-    setupIconButton("audio-volume-muted");
+    setIcon("audio-volume-muted");
 
     save_runner = new RunOnce(1000);
     connect(save_runner, &RunOnce::activated, this, &fvolume::save_volumes);

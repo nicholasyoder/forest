@@ -12,8 +12,8 @@ nmcontrol::~nmcontrol(){
 
 void nmcontrol::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 {
-    p_button = new panelbutton;
-    p_button->setupIconButton("network-wired-offline");
+    p_button = new panelbutton(panelbutton::Icon);
+    p_button->setIcon("network-wired-offline");
     layout->addWidget(p_button);
 
     p_menu = new popupmenu(p_button, CenteredOnWidget);
