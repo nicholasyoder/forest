@@ -19,5 +19,6 @@ target_link_libraries(desktop-app PRIVATE
 )
 forest_link_miscutills(desktop-app)
 forest_link_layershellqt(desktop-app)
+forest_link_menuanchor(desktop-app)
 
 install(TARGETS desktop-app LIBRARY DESTINATION lib/forest)

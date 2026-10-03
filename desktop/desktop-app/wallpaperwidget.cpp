@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "wallpaperwidget.h"
+#include "menuanchor.h"
 
 #include <LayerShellQt/Window>
 #include <QScreen>
@@ -38,8 +39,10 @@ void wallpaperwidget::paintEvent(QPaintEvent *){
 }
 
 void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event){
-    if (event->button() == Qt::RightButton)
-        if (cmenu) cmenu->exec(event->pos());
+    if (event->button() == Qt::RightButton && cmenu) {
+        menuanchor::anchorMenuAtPoint(cmenu, this, event->pos());
+        cmenu->exec(event->globalPosition().toPoint());
+    }
 }
 
 void wallpaperwidget::setup_wallpaper(){

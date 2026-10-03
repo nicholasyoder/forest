@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "desktopicon.h"
+#include "menuanchor.h"
 
 desktopicon::desktopicon(QString text, QIcon ico, QString ID, QMenu *contextmenu){
     icon = ico;
@@ -99,7 +100,8 @@ void desktopicon::mouseReleaseEvent(QMouseEvent *event){
         }
     }
     else if (event->button() == Qt::RightButton){
-        cmenu->exec(event->globalPos());
+        menuanchor::anchorMenuAtPoint(cmenu, this, event->pos());
+        cmenu->exec(event->globalPosition().toPoint());
     }
 }
 

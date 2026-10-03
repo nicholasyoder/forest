@@ -2,31 +2,14 @@
 
 #include "forest.h"
 #include "layeroverlay.h"
+#include "menuanchor.h"
 #include "pluginutills.h"
 #include "../library/fstyleloader/fstyleloader.h"
 #include "settings_upgrade_manager.h"
 
 #include <LayerShellQt/Window>
 #include <QApplication>
-#include <QMenu>
 #include <QTimer>
-
-namespace {
-// Rounded QSS menu corners need translucency before the native window exists;
-// app-wide so it also catches menus Forest doesn't build (dbusmenu, QLineEdit).
-class MenuTranslucencyFilter : public QObject{
-public:
-    using QObject::QObject;
-
-protected:
-    bool eventFilter(QObject *watched, QEvent *event) override{
-        if (event->type() == QEvent::Polish)
-            if (QMenu *menu = qobject_cast<QMenu*>(watched))
-                menu->setAttribute(Qt::WA_TranslucentBackground);
-        return false;
-    }
-};
-}
 
 forest::forest(){}
 
@@ -38,7 +21,7 @@ void forest::setup(){
 
     const QList<layeroverlay*> startup_overlays = layeroverlay::showOnAllScreens(Qt::black, LayerShellQt::Window::LayerOverlay, "forest-startup");
 
-    qApp->installEventFilter(new MenuTranslucencyFilter(this));
+    qApp->installEventFilter(new menuanchor::MenuFilter(this));
     loadstylesheet();
     loadplugins();
 
