@@ -65,8 +65,38 @@ QWidget[FSS-widget-type="pane"] {
     border-left: 1px solid rgba(55,55,55, 60%);
 }
 
-#popupMenuSeperator { 
-    background: rgba(200,200,200, 80%); 
+#popupMenuSeperator {
+    background: rgba(200,200,200, 80%);
+}
+
+QMenu {
+    background: rgba(30,30,30, 100%);
+    border-color: rgba(0,0,0, 40%);
+    color: white;
+}
+
+QMenu::item {
+    color: white;
+}
+
+QMenu::item:selected {
+    background: rgba(50,50,50, 70%);
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+QMenu::item:selected:pressed {
+    background: rgba(40,40,40, 70%);
+}
+
+QMenu::item:disabled {
+    color: rgb(120,120,120);
+}
+
+QMenu::separator {
+    background: rgba(200,200,200, 80%);
 }
 
 #panelMainmenuSearchbox {

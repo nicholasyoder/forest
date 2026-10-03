@@ -157,6 +157,18 @@ Larger work — write a plan doc when picked up.
 
 ### Needs research
 
+- **Panel popups rely on a Biome-only focus exception.** `popup.h` popups
+  (main-menu launcher, volume, calendar, battery, sensors, nmcontrol,
+  windowlist thumbnails) are non-grabbing `Qt::ToolTip` xdg_popups. Their
+  keyboard input (e.g. the main-menu search box) and click-outside-closes
+  (`WindowDeactivate`) only work because Biome focuses any layer-shell-owned
+  popup (`popup_wants_keyboard_focus()`). On other compositors they get no
+  keys and don't close. Likely direction: click-opened popups become grabbing
+  `Qt::Popup`s (fresh press serial, like QMenus). The hotkey-opened launcher
+  has no serial, so it needs something else, e.g. its own layer surface with
+  keyboard interactivity when hotkey-opened. Then Biome drops the exception
+  (Biome roadmap, Known issues). Independent of the QMenu migration: QMenus
+  grab and don't use it.
 - **Combined taskbar and quicklaunch** (#55). Pinned launchers that become
   window buttons when running (KDE icons-only task manager / Plank style).
   The hard part is matching toplevel `app_id`s to `.desktop` files reliably;
