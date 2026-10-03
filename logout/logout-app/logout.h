@@ -27,12 +27,12 @@ public slots:
 private slots:
     void keyPressEvent(QKeyEvent *event);
     void start_action(ActionType action);
-    void do_action(ActionType action);
     void cancel();
 
 private:
     void setup();
-    QList<layeroverlay*> background_faders;
+    void close_overlays();
+    QList<layeroverlay*> overlays;
     iconbutton *focusbt = nullptr;
     QSettings *settings = nullptr;
 };

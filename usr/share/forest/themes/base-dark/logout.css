@@ -11,6 +11,10 @@
     color: white;
 }
 
+#logout_MainWindow iconbutton QLabel:disabled {
+    color: rgba(255,255,255, 35%);
+}
+
 #logout_MainWindow iconbutton:hover {
     background: rgba(50,50,50, 70%);
     border-top: 1px solid rgba(60,60,60, 60%);
