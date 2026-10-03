@@ -13,111 +13,38 @@
 
 #include "miscutills.h"
 
-enum class DBusService {SYSTEMD, CONSOLEKIT, UPOWER, PWMANAGEMENT};
-
-struct DBusMethod {
-    DBusService service;
-    QString method;
-
-    DBusMethod(const DBusService& s, const QString& m) : service(s), method(m) {}
-};
-
 struct ActionData {
     QString key;
-    QList<DBusMethod> methods;
+    QString method; // org.freedesktop.login1 method
 };
 
 const QMap<ActionType, ActionData> action_map = {
-    {ActionType::SHUTDOWN, {"shutdown", {DBusMethod(DBusService::SYSTEMD, "PowerOff"), DBusMethod(DBusService::CONSOLEKIT, "Stop")}}},
-    {ActionType::REBOOT, {"reboot", {DBusMethod(DBusService::SYSTEMD, "Reboot"), DBusMethod(DBusService::CONSOLEKIT, "Restart")}}},
-    {ActionType::LOGOUT, {"logout", {DBusMethod(DBusService::SYSTEMD, "Terminate")}}},
-    {ActionType::SUSPEND, {"logout", {DBusMethod(DBusService::SYSTEMD, "Suspend"), DBusMethod(DBusService::UPOWER, "Suspend"), DBusMethod(DBusService::PWMANAGEMENT, "Suspend")}}},
-    {ActionType::HIBERNATE, {"hibernate", {DBusMethod(DBusService::SYSTEMD, "Hibernate"), DBusMethod(DBusService::UPOWER, "Hibernate"), DBusMethod(DBusService::PWMANAGEMENT, "Hibernate")}}}
+    {ActionType::SHUTDOWN, {"shutdown", "PowerOff"}},
+    {ActionType::REBOOT, {"reboot", "Reboot"}},
+    {ActionType::LOGOUT, {"logout", "Terminate"}},
+    {ActionType::SUSPEND, {"suspend", "Suspend"}},
+    {ActionType::HIBERNATE, {"hibernate", "Hibernate"}}
 };
 
-bool call_dbus_method(const QString &service,const QString &path, const QString &interface, const QString & method, bool sysd){
-    QDBusInterface dbus(service, path, interface, QDBusConnection::systemBus());
-    if (!dbus.isValid()){
-        qWarning() << "Failed to connect to dbus system bus. Unable to perform dbus call: " << service <<  method;
-        return false;
-    }
+const QString LOGIN1_SERVICE = "org.freedesktop.login1";
+const QString LOGIN1_PATH = "/org/freedesktop/login1";
+const QString LOGIN1_MANAGER = "org.freedesktop.login1.Manager";
 
+// Returns an invalid QDBusError on success.
+QDBusError call_login1(const QString &method){
     QDBusMessage msg;
-    if(sysd){
-        // Session.Terminate() takes no arguments; Manager.PowerOff/Reboot/
-        // Suspend/Hibernate() take a single "interactive" bool.
-        if (method == "Terminate") msg = dbus.call(method);
-        else msg = dbus.call(method, true);
-
-        if (msg.type() == QDBusMessage::ErrorMessage){
-            qWarning() << "D-Bus call failed:" << service << method << msg.errorMessage();
-            return false;
-        }
-        if (msg.arguments().isEmpty() || msg.arguments().first().isNull())
-            return true;
-
-        QString response = msg.arguments().first().toString();
-        qDebug() << response;
-        return response == "yes" || response == "challenge";
-    }
-    else {
-        msg = dbus.call(method);
-    }
-    if (msg.type() == QDBusMessage::ErrorMessage){
-        qWarning() << "D-Bus call failed:" << service << method << msg.errorMessage();
-        return false;
-    }
-    return msg.arguments().isEmpty() || msg.arguments().first().isNull() || msg.arguments().first().toBool();
+    if (method == "Terminate") // the per-session self object avoids resolving our session id
+        msg = QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH + "/session/self", "org.freedesktop.login1.Session", method);
+    else // Manager methods take an "interactive" (polkit auth) bool
+        msg = QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH, LOGIN1_MANAGER, method) << true;
+    return QDBusError(QDBusConnection::systemBus().call(msg));
 }
 
-void call_dbus_methods(QList<DBusMethod> methods){
-    //Try to call the specified dbus methods in order, quiting as soon as a call is successful.
-    bool success = false;
-    foreach(DBusMethod method, methods){
-        QString service; QString path; QString interface;
-        switch (method.service) {
-        case DBusService::SYSTEMD:
-            service = "org.freedesktop.login1";
-            if (method.method == "Terminate") {
-                // Manager.TerminateSession() needs an explicit session id and
-                // has no "current session" shorthand - the per-session
-                // self object avoids needing to resolve one at all.
-                path = "/org/freedesktop/login1/session/self";
-                interface = "org.freedesktop.login1.Session";
-            } else {
-                path = "/org/freedesktop/login1";
-                interface = "org.freedesktop.login1.Manager";
-            }
-            break;
-        case DBusService::CONSOLEKIT:
-            service = "org.freedesktop.ConsoleKit";
-            path = "/org/freedesktop/ConsoleKit/Manager";
-            interface = "org.freedesktop.ConsoleKit.Manager";
-            break;
-        case DBusService::UPOWER:
-            service = interface = "org.freedesktop.UPower";
-            path = "/org/freedesktop/UPower";
-            break;
-        case DBusService::PWMANAGEMENT:
-            service = interface = "org.freedesktop.PowerManagement";
-            path = "/org/freedesktop/PowerManagement";
-            break;
-        default:
-            break;
-        }
-        if(call_dbus_method(service, path, interface, method.method, method.service == DBusService::SYSTEMD)){
-            success = true;
-            break;
-        }
-    }
-    if(!success){
-        QString msg = "Failed to call dbus methods: ";
-        foreach(DBusMethod method, methods)
-            msg += method.method + " ";
-
-        qWarning() << msg;
-        qApp->quit();
-    }
+bool login1_can(const QString &method){
+    QDBusMessage reply = QDBusConnection::systemBus().call(
+        QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH, LOGIN1_MANAGER, "Can" + method));
+    const QString answer = reply.arguments().value(0).toString();
+    return answer == "yes" || answer == "challenge";
 }
 
 logoutmanager::logoutmanager(){
@@ -138,7 +65,7 @@ logoutmanager::logoutmanager(){
     if (QScreen *primary = ScreenTracker::primary())
         windowHandle()->setScreen(primary);
 
-    background_faders = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim");
+    overlays = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim");
 }
 
 logoutmanager::~logoutmanager(){}
@@ -185,6 +112,14 @@ void logoutmanager::setup(){
     else if (lastaction == "logout") focusbt = logoutbt;
     else if (lastaction == "suspend") focusbt = suspendbt;
     else if (lastaction == "hibernate") focusbt = hibernatebt;
+
+    // e.g. hibernate is "na" under Secure Boot lockdown
+    const QList<std::pair<iconbutton*, QString>> gated = {{shutdownbt, "PowerOff"}, {rebootbt, "Reboot"},
+                                                          {suspendbt, "Suspend"}, {hibernatebt, "Hibernate"}};
+    for (const auto &[bt, method] : gated)
+        bt->setEnabled(login1_can(method));
+    if (!focusbt->isEnabled()) focusbt = logoutbt;
+
     connect(shutdownbt, &iconbutton::clicked, this, [this](){start_action(ActionType::SHUTDOWN);});
     connect(rebootbt, &iconbutton::clicked, this, [this](){start_action(ActionType::REBOOT);});
     connect(logoutbt, &iconbutton::clicked, this, [this](){start_action(ActionType::LOGOUT);});
@@ -214,23 +149,37 @@ void logoutmanager::keyPressEvent(QKeyEvent *event){
 void logoutmanager::start_action(ActionType action){
     close(); // the compositor fades layer surfaces in/out by namespace
 
-    // Can't retarget a mapped surface's opacity; stack opaque overlays over the dim ones instead.
-    layeroverlay::showOnAllScreens(Qt::black, LayerShellQt::Window::LayerTop, "forest-logout-dim");
+    const bool session_survives = action == ActionType::SUSPEND || action == ActionType::HIBERNATE;
+    if (session_survives)
+        close_overlays();
+    else // Can't retarget a mapped surface's opacity; stack opaque overlays over the dim ones instead.
+        overlays += layeroverlay::showOnAllScreens(Qt::black, LayerShellQt::Window::LayerTop, "forest-logout-dim");
 
     // Stay alive past the compositor's fade (~220ms) so the fade-out can finish.
-    QTimer::singleShot(250, this, [this, action](){do_action(action);});
+    QTimer::singleShot(250, this, [this, action, session_survives](){
+        const ActionData action_data = action_map.value(action);
+        settings->setValue("lastaction", action_data.key);
+        settings->sync();
+
+        const QDBusError error = call_login1(action_data.method);
+        if (error.isValid()){
+            qWarning() << "login1" << action_data.method << "failed:" << error.message();
+            close_overlays();
+            QMessageBox::warning(nullptr, "Logout", QString("Failed to %1: %2").arg(action_data.key, error.message()));
+        }
+        if (error.isValid() || session_survives)
+            qApp->quit();
+    });
 }
 
-void logoutmanager::do_action(ActionType action){
-    auto action_data = action_map.value(action);
-    settings->setValue("lastaction", action_data.key);
-    settings->sync();
-    call_dbus_methods(action_data.methods);
+void logoutmanager::close_overlays(){
+    for (layeroverlay *overlay : std::as_const(overlays))
+        overlay->close();
+    overlays.clear();
 }
 
 void logoutmanager::cancel(){
     close();
-    for (layeroverlay *background_fader : std::as_const(background_faders))
-        background_fader->close();
+    close_overlays();
     QTimer::singleShot(250, qApp, SLOT(quit()));
 }

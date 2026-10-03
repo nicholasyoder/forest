@@ -14,12 +14,6 @@ Bugs and cleanups — roughly a single sitting each, no design work needed.
 
 ### Bugs
 
-- **Suspend/hibernate from logout likely leaves a black screen on resume
-  (test + fix).** `start_action()` maps opaque black top-layer overlays, and
-  `call_dbus_methods()` only quits on failure; a successful `Suspend` returns
-  immediately and `forest-logout` stays up with the overlays (keyboard
-  interactivity none, so Escape can't clear them). Quit after a successful
-  suspend/hibernate. Also SUSPEND's `action_map` key is `"logout"`.
 - **Desktop-icons surface needs `KeyboardInteractivityOnDemand`.**
   `wallpaperwidget` requests `None`; icon rename, Delete/Shift+Delete and
   Ctrl-click multi-select only work because Biome grants focus to any clicked
