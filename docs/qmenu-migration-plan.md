@@ -2,43 +2,201 @@
 
 ## Why
 
-The tray's context menu comes from `dbusmenu-lxqt`'s `DBusMenuImporter`,
-which always builds a real `QMenu` (no way to make it build Forest's
-`popupmenu` instead). Converting Forest's own popup menus to `QMenu` +
-QSS gives the tray menu matching styling for free; until then it ships
-unstyled on purpose (no one-off tray QSS).
+- The tray's context menu comes from `dbusmenu-lxqt`'s `DBusMenuImporter`,
+  which always builds a real `QMenu`. Converting Forest's own menus to
+  `QMenu` + QSS styles the tray menu for free. Until then it ships unstyled
+  on purpose (no one-off tray QSS).
+- Real submenus: windowlist's "Move to desktop" fakes one today, and the
+  planned directory-menu plugin (`roadmap.md`) needs nested cascades.
+- Keyboard navigation, disabled/checkable items, and grab-based dismissal
+  all come for free.
 
-## Current native popup-menu system
+## Current state
 
-- `panel/panel-library/popupmenu.h` — `popupmenu`, `pmenuitem` (a styled
-  `QPushButton`), `menuseperator`. Flat only: windowlist's "Move to desktop"
-  (`windowbutton.cpp`) fakes a submenu by opening a second `popupmenu`.
-- `panel/panel-library/popup.h` — the positioned window. Uses `Qt::ToolTip`
-  rather than `Qt::Popup` because an `xdg_popup` grab needs a recent input
-  serial, which hotkey/D-Bus-triggered opens don't have; click-outside is
-  hand-rolled instead.
-- Consumers (grep `new popupmenu(` / `popupmenu *` under `panel/panel-plugins/`):
-  `mainmenu`, `windowlist`, `volume`, `clock`, `sensors`, `memorymonitor`,
-  `cpumonitor`, `quicklaunch`, `nmcontrol`, `deskswitch`.
+- `panel/panel-library/popupmenu.h`: `popupmenu`, `pmenuitem` (a styled
+  `QPushButton`), `menuseperator`. Flat only.
+- `panel/panel-library/popup.h`: the positioned window, also used directly
+  by non-menu popups (mainmenu launcher, volume, clock calendar, battery,
+  sensors, nmcontrol, windowlist thumbnails). Those **stay on `popup`**.
+  Only `popupmenu` goes away.
+- `popupmenu` consumers: `mainmenu`, `windowlist` (+ `windowbutton`),
+  `volume`, `clock`, `sensors`, `memorymonitor`, `cpumonitor`,
+  `quicklaunch`, `nmcontrol`, `deskswitch`. `panel-app/panel.cpp` hands
+  every plugin a "Panel Settings" `pmenuitem` through
+  `panelpluginterface::setupPlug(QBoxLayout*, QList<pmenuitem*>)`.
+- Already `QMenu` (all in the `forest` process, so they share the app
+  stylesheet): tray menus (`systray/trayicon.cpp`), mainmenu's app
+  right-click (`mainmenu/contextmenu.cpp`), and the desktop and desktop-icon
+  menus (`desktop-app/desktop.cpp`, which has a "Create New" submenu).
+- No theme has any `QMenu` rules yet.
+- `#popupMenuItem` is also the object name of mainmenu's launcher list
+  entries (`mainmenu/menuitem.cpp`, which also reads its icon size from
+  that rule), so that rule can't simply be deleted.
 
-## Task: convert `popupmenu`/`pmenuitem`/`menuseperator` → `QMenu`/`QAction`
+## Findings
 
-- Replace each consumer with `QMenu` + `QAction`s.
-- Write QSS for `QMenu`, `QMenu::item`, `QMenu::separator` (+ hover/selected)
-  in the theme CSS to match the current `#popup` / `#popupMenuItem` /
-  `#popupMenuSeperator` rules in `usr/share/forest/themes/base/forest.css`.
-- Decide what replaces the `Qt::ToolTip` workaround: `QMenu` always grabs.
-  Check per consumer whether it can open without preceding input (mainmenu
-  can — it has a hotkey); those that can't don't need the workaround.
-- Use `QMenu::addMenu()` for windowbutton's desktop submenu.
-- Autohide: `AutoHideManager::is_panel_popup()` only sees windows whose
-  `QWindow::transientParent()` chains to the panel shell. Give each `QMenu` an
-  explicit transient parent, or the panel may collapse under it — already the
-  case for mainmenu's parentless `new QMenu` in `contextmenu.cpp`.
+### Biome: nothing blocks this
 
-## Known issue (upstream, revisit during the task)
+- **Grab serials.** QtWayland (6.8.2) makes a `Qt::Popup` an `xdg_popup` and
+  grabs it with the last *press* serial (button or key). It only falls back
+  to a toplevel if the process has had no input at all
+  (`QWaylandXdgSurface` ctor). Panel menus open on button release
+  (`panelbutton::mouseReleaseEvent`), right after a press, so the grab
+  serial is valid per spec on any compositor. wlroots 0.18 ignores the
+  serial anyway. The `Qt::ToolTip` workaround in `popup.h` exists for
+  hotkey-opened popups (the main-menu launcher), not for menus.
+- **Constraints.** Biome already calls `wlr_xdg_popup_unconstrain_from_box`
+  for layer-shell popups, popup-on-popup chains, and `reposition`. wlroots
+  implements slide/flip/resize itself, so the positioner values below work
+  without changes.
+- **Keyboard and dismissal.** Grabbing popups get keys and outside-click
+  dismissal through wlroots' popup grab. Clicks on Forest's own surfaces
+  reach Qt, which closes the menu.
+- **Not changing here:** `popup_wants_keyboard_focus()`
+  (`biome/desktop/xdg_shell.cpp`) gives focus to every layer-shell-owned
+  popup chain. That's a Forest-shaped exception that only `popup.h`'s
+  non-grabbing popups need. QMenus grab, so the standard grab branch covers
+  them. Don't add anything that leans on the layer-shell branch: on Biome
+  both branches say yes, so testing can't catch it. Rethinking `popup.h` is
+  tracked in both roadmaps.
 
-nm-applet's "VPN Connections" submenu is positioned wrong vertically. Biome
-passes its `xdg_positioner` through unmodified; the anchor rect itself is
-outside the parent menu's geometry, pointing at `dbusmenu-lxqt`/Qt's Wayland
-submenu positioning.
+### Positioning: why it breaks today, and the fix
+
+- **Root cause.** LayerShellQt (6.3.4) never tells Qt where a layer surface
+  is, so Qt puts the panel and wallpaper at (0,0) in its global frame.
+  `QMenu` 6.8.2 computes popup positions and clamps them to
+  `QScreen::availableGeometry()` in that bogus frame:
+  - A root menu's position only works by accident: QtWayland's default
+    anchor is `menu pos − parent pos`, which is still in the parent's own
+    frame.
+  - A submenu gets clamped against a screen rect that doesn't line up with
+    its parent. The anchor rect then lands outside the parent menu, which is
+    the nm-applet "VPN Connections" bug. It isn't `dbusmenu-lxqt`'s or
+    Biome's fault. The desktop's "Create New" submenu has the same bug near
+    screen edges.
+- **Fix: set the xdg_positioner properties ourselves.** QtWayland reads the
+  `_q_waylandPopupAnchorRect` / `Anchor` / `Gravity` / `ConstraintAdjustment`
+  dynamic properties every time it creates a popup's shell surface. That
+  happens on every show, and it's the same mechanism `popup.h` already uses.
+  When these properties are set, QMenu's own (wrong) position is ignored for
+  placement. Qt then takes the compositor's configured position back into
+  its geometry, so later submenu math stays consistent.
+- **Timing.** The properties have to be on `menu->windowHandle()` before the
+  platform window is shown. `QShowEvent` is sent before `show_sys()`, so an
+  app-wide `QEvent::Show` filter is early enough.
+- **Upstream.** Qt 6.11 makes `QMenu` Wayland-aware
+  (`QWaylandWindow::setParentControlGeometry` + Menu/SubMenu window types).
+  For submenus it uses anchor `TopRight`, gravity `BottomRight`, and
+  `flip_x | slide_y`, which Forest should match. The dynamic properties
+  still take precedence in 6.11, so Forest's version stays correct after a
+  Qt upgrade. The submenu part can be deleted once Forest targets Qt ≥ 6.11
+  (Trixie ships 6.8.2). Root menus opened at a point still need Forest's
+  anchors even in 6.11.
+- **Multi-monitor caveat.** `QMenu` picks `screenAt(p)` for size limits,
+  and `p` is in the bogus frame, so very tall menus on a smaller secondary
+  screen may size against the wrong screen. Placement is still correct.
+  Acceptable for now.
+
+### Styling: QSS can do what the current menus do
+
+Checked against `qstylesheetstyle.cpp` 6.8.2:
+
+| Current rule | QMenu equivalent | Notes |
+|---|---|---|
+| `#popup` background / border / radius / padding / margin | `QMenu { … }` | `padding` → `PM_MenuH/VMargin`. `margin` stays transparent. |
+| rounded corners | `QMenu { border-radius }` + `WA_TranslucentBackground` | Needs the attribute *before* the native window exists (see below). |
+| `#popupMenuItem` height / padding / border / radius / font | `QMenu::item { min-height; max-height; padding; border…; border-radius }`, `QMenu { font-size }` | Any box or border on `::item` switches Qt to full stylesheet drawing, which is what we want. `font-size` on `::item` makes Qt size icon items too narrow. Icons ignore `::item` padding, so they're placed with `QMenu::icon { left }`. |
+| `icon-size: 22px` on the item | `QMenu { icon-size: 22px }` | `PM_SmallIconSize` reads it from the **QMenu** rule, not `::item`. |
+| `:hover` | `QMenu::item:selected` | Also the keyboard highlight. |
+| `:pressed` | `QMenu::item:selected:pressed` | QMenu sets `State_Sunken` while the mouse is down. |
+| `#popupMenuSeperator` | `QMenu::separator { height: 1px; margin: 4px 2px; background }` | Margins add to the row height. |
+| (none today) | `QMenu::right-arrow`, `QMenu::indicator:checked/:exclusive`, `QMenu::item:disabled` | Needed for tray menus and submenus. |
+
+- **Translucency hook.** An app-wide `QEvent::Polish` filter sets
+  `WA_TranslucentBackground` on every `QMenu`. `QMenu::popup()`/`exec()`
+  polish before creating the window. That catches menus Forest doesn't
+  construct itself: `DBusMenuImporter`'s menus and submenus, and Qt's own
+  `QLineEdit` context menu in the mainmenu search box. Anything that calls
+  `winId()` on a menu early must call `ensurePolished()` first.
+- **Fallback** if QSS can't express something: a `QProxyStyle` under the
+  stylesheet style, which is still app-wide and still covers dbusmenu menus.
+  Only use it if the spike proves it's needed.
+- No shadows or animations wanted. QMenu's fade/scroll effects
+  (`UI_AnimateMenu`/`UI_FadeMenu`) create extra windows, so disable them if
+  the platform theme turns them on.
+
+## Plan
+
+### Phase 0: styling spike (no C++ consumer changes) — done
+
+1. Add `QMenu` / `QMenu::item` / `::separator` / `::right-arrow` /
+   `::indicator` rules next to the existing `#popup*` rules in `base`,
+   `base-light`, `base-dark`, `base-rounded`, and `base-circle` `forest.css`.
+2. Add the `Polish` → `WA_TranslucentBackground` filter in the `forest`
+   main process (`forest/forest.cpp`).
+3. Compare side by side in all four visible themes. Already-`QMenu`
+   testbeds, no conversions needed:
+   - desktop right-click: icons, separators, a submenu
+   - nm-applet tray menu: checkable items, disabled items, a submenu
+   - mainmenu app right-click
+
+   Compare against a current `popupmenu` (e.g. clock right-click).
+4. Exit when the look is signed off. Positioning will still be off here;
+   that's Phase 1.
+
+### Phase 1: positioning helper (new `library/` static lib, shared by panel and desktop)
+
+1. `anchorMenu(QMenu*, QWidget *anchor, QRect rectInAnchor, Qt::Edges anchorEdges, Qt::Edges gravity, uint constraints)`:
+   `ensurePolished()`, `winId()`, then an explicit
+   `setTransientParent(anchor->window()->windowHandle())` (needed for
+   autohide's `is_panel_popup()` chain), then the four properties.
+2. Move `popup::positionOnLauncher()`'s `PositionpPolicy` math into a shared
+   function so `popup` and the panel's `QMenu` path compute identical
+   anchors.
+3. Submenu filter (app-wide `QEvent::Show` on a `QMenu`): find the parent
+   among `menuAction()->associatedObjects()`, the visible `QMenu` that isn't
+   the submenu itself. Anchor to `parent->actionGeometry(menuAction())`
+   with the Qt 6.11 values above. Note in a comment that it can go once
+   Qt ≥ 6.11.
+4. Validate on the testbeds before touching consumers:
+   - tray: anchor on the `trayicon` instead of `QCursor::pos()`. Check the
+     VPN submenu bug is gone.
+   - desktop: anchor a 1×1 rect at the click position in wallpaper-local
+     coordinates.
+   - "Create New" near the bottom and right edges.
+
+### Phase 2: convert consumers
+
+1. Change `panelpluginterface::setupPlug` to `QList<QAction*>`, and make
+   `panel.cpp`'s "Panel Settings" a `QAction`. All plugins are in-tree.
+2. Convert each `popupmenu` consumer. windowbutton's desktop list becomes
+   `addMenu()`.
+3. Launcher toggle: `panelbutton` opens on release, so right-clicking the
+   launcher while its menu is open lets the press close the menu and the
+   release reopen it. Guard this in the panel helper (`popup.h` solves the
+   same problem with `lastPressOnLauncher`).
+4. `mainmenu/contextmenu.cpp`: anchor on the app entry. Its transient parent
+   is the launcher popup window, which chains to the panel, so autohide
+   still works.
+5. Delete `popupmenu` / `pmenuitem` / `menuseperator` and the
+   `#popupMenuSeperator` rules. Rename mainmenu's remaining
+   `#popupMenuItem` to `#panelMainMenuItem` in every theme, including
+   the `get_iconsize_stylesheet` lookup.
+
+### Phase 3: cleanup
+
+- Update `CLAUDE.md`'s `setupPlug` signature.
+- Mark the directory-menu plugin as unblocked in `roadmap.md`.
+- Delete this file.
+
+## Test checklist (manual)
+
+- Every converted menu in all four themes. Hover, keyboard
+  (arrows/Enter/Esc), disabled and checkable items.
+- Top and bottom panel positions. Launchers near both screen corners
+  (slide). A submenu near the right edge (flip_x) and bottom (slide_y).
+- Autohide panel: it stays revealed while a menu or submenu is open, and
+  collapses after the menu closes.
+- Click outside: on another app's window, on the desktop, on a different
+  panel launcher, on the same launcher (toggle).
+- Theme switch while running re-styles open and future menus.

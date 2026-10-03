@@ -23,7 +23,19 @@ QWidget[FSS-widget-type="pane"] {
 
 #popupMenuItem {
     border: 1px solid rgba(0,0,0, 0%);
-    border-radius: 3px; 
+    border-radius: 3px;
+}
+
+QMenu {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 7px;
+}
+
+QMenu::item {
+    border: 1px solid transparent;
+    border-radius: 3px;
 }
 
 #panelMainmenuSearchbox {

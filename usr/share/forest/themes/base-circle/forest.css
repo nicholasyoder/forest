@@ -51,6 +51,25 @@
     padding: 6px;
 }
 
+QMenu {
+    border: 1px solid lightgrey;
+    border-radius: 20px;
+    margin: 5px;
+    padding: 7px;
+}
+
+QMenu::item {
+    min-height: 18px;
+    max-height: 18px;
+    border: 1px solid transparent;
+    border-radius: 16px;
+    padding: 6px 14px;
+}
+
+QMenu::icon, QMenu::indicator {
+    left: 10px;
+}
+
 #panelMainmenuSearchbox {
     border: 1px solid lightgrey;
     border-bottom-left-radius: 14px;

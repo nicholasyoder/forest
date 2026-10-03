@@ -69,6 +69,36 @@ QWidget[FSS-widget-type="pane"] {
     background: rgba(180,180,180, 80%);
 }
 
+QMenu {
+    background: rgba(235,235,235, 98%);
+    border-color: rgba(255,255,255, 90%);
+    color: black;
+}
+
+QMenu::item {
+    color: black;
+}
+
+QMenu::item:selected {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+QMenu::item:selected:pressed {
+    background: rgba(245,245,245, 100%);
+}
+
+QMenu::item:disabled {
+    color: rgb(150,150,150);
+}
+
+QMenu::separator {
+    background: rgba(180,180,180, 80%);
+}
+
 #panelMainmenuSearchbox {
     background: rgb(220,220,220);
     border-color: rgb(200,200,200);

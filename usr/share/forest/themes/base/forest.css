@@ -67,6 +67,31 @@
     margin-left: 2px;
 }
 
+QMenu {
+    background: grey;
+    padding: 3px;
+    icon-size: 22px;
+    font-size: 10pt; /* on ::item, Qt sizes items with the wrong font */
+}
+
+/* Text starts at padding-left + icon-size + 4, so padding-left = icon indent + gap - 4. */
+QMenu::item {
+    min-height: 22px;
+    max-height: 22px;
+    padding: 4px 12px;
+}
+
+/* Positioned from the item's padding edge; ::item padding doesn't apply. */
+QMenu::icon, QMenu::indicator {
+    left: 8px;
+}
+
+QMenu::separator {
+    background: black;
+    height: 1px;
+    margin: 4px 2px;
+}
+
 /* Desktop icons stuff is identical across themes for now */
 #desktopIcon {
     border: 1px solid transparent;
