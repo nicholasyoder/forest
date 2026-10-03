@@ -62,10 +62,16 @@ Which plugins are loaded is controlled by `QSettings("Forest","Forest")` under t
 Loaded by `panel-app` at runtime. Each implements `panelpluginterface` (`panel/panel-library/panelpluginterface.h`):
 
 ```cpp
-virtual void setupPlug(QBoxLayout *, QList<pmenuitem*>) = 0;
+virtual void setupPlug(QBoxLayout *, QList<QAction*>) = 0;
 virtual void closePlug() = 0;
 virtual QHash<QString, QString> getpluginfo() = 0;
 ```
+
+The `QAction` list is panel-wide items (e.g. "Panel Settings") to put in the plugin's context menu.
+
+### Menus
+
+All menus are `QMenu`, styled by the theme's `QMenu` rules. Qt can't place popups off layer surfaces (it thinks the panel/desktop sit at (0,0)), so open them via `popupMenuOnLauncher()` (`panelanchor.h`, panel launchers) or `menuanchor::anchorMenuAtPoint()` (`library/menuanchor`), never a bare `popup(pos)`. `menuanchor::MenuFilter`, installed app-wide in `forest.cpp`, handles translucency and submenu placement.
 
 ### Settings Plugins
 
@@ -94,6 +100,7 @@ All in `library/`:
 - **`flogger`** — logging setup; call `FLogger::install("appname")` at startup
 - **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
 - **`pluginutills`** — plugin path resolution for both plugin types
+- **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
 - **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `PanelButton`, `GraphWidget`)
 
 Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(target)`) link these static libs.

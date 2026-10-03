@@ -4,8 +4,8 @@ Forward-looking, Forest-specific work items, split by size. Several features
 are blocked on protocol work that has to land in Biome first (see
 `biome/docs/roadmap.md`). Kept at bullet-list altitude deliberately: when a
 feature is actually picked up, draft a real implementation plan for it then
-(a new `docs/<item>-plan.md`, following the existing `docs/greeter-plan.md` /
-`docs/qmenu-migration-plan.md` pattern), rather than designing it here ahead
+(a new `docs/<item>-plan.md`, following the existing `docs/greeter-plan.md`
+pattern), rather than designing it here ahead
 of time. Small fixes don't need a plan doc.
 
 ## Small fixes
@@ -184,7 +184,7 @@ Larger work — write a plan doc when picked up.
 ### Low priority
 
 - **Directory menu.** Panel plugin that browses a folder as cascading menus.
-  Needs real submenus, so it waits on `docs/qmenu-migration-plan.md`.
+  Unblocked: panel menus are QMenus with real submenus.
 - **Theme editor.** Customize accent/highlight colours on top of a theme,
   up to a full theme editor.
 
