@@ -217,7 +217,8 @@ void trayicon::onRightClicked()
 {
     if (!m_menuPath.isEmpty() && m_menuPath != QLatin1String("/")) {
         if (menuImporter) {
-            menuImporter->updateMenu();
+            if (!menuClosedByLauncherClick(menuImporter->menu(), this))
+                menuImporter->updateMenu();
             return;
         }
         // DBusMenuImporter's ctor introspects synchronously, so only create it
@@ -249,8 +250,7 @@ void trayicon::onRightClicked()
 void trayicon::showTrayMenu()
 {
     QMenu *menu = menuImporter->menu();
-    anchorMenuOnLauncher(menu, this, CenteredOnWidget);
-    menu->popup(mapToGlobal(QPoint(0, 0)));
+    popupMenuOnLauncher(menu, this, CenteredOnWidget);
 }
 
 void trayicon::onMouseReleased(QMouseEvent *event)

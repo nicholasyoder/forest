@@ -4,6 +4,7 @@
 #define FVOLUME_H
 
 #include <QWidget>
+#include <QMenu>
 #include <QHBoxLayout>
 #include <QSlider>
 #include <QIcon>
@@ -13,7 +14,6 @@
 #include "panelpluginterface.h"
 #include "panelbutton.h"
 #include "popup.h"
-#include "popupmenu.h"
 
 #include "audioengine.h"
 #include "audiodevice.h"
@@ -27,9 +27,10 @@ class fvolume : public panelbutton, panelpluginterface
 
 public:
     fvolume();
+    ~fvolume() override { delete pmenu; }
 
     //begin plugin interface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugin interface
@@ -63,7 +64,7 @@ private:
 
     popup *popupbox;
     QVBoxLayout * popup_layout = nullptr;
-    popupmenu *pmenu;
+    QMenu *pmenu = nullptr;
 
     RunOnce* save_runner = nullptr;
 };

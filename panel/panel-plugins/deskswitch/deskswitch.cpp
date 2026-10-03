@@ -7,11 +7,12 @@
 deskswitch::deskswitch() {}
 
 deskswitch::~deskswitch() {
+    delete pmenu;
     if (workspace_manager)
         workspace_manager->release();
 }
 
-void deskswitch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
+void deskswitch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 {
     basehlayout = new QHBoxLayout(this);
     basehlayout->setContentsMargins(QMargins(0,0,0,0));
@@ -19,11 +20,10 @@ void deskswitch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
 
     layout->addWidget(this);
 
-    pmenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    connect(this, &deskswitch::rightclicked, pmenu, &popupmenu::show);
+    connect(this, &deskswitch::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
 
     workspace_manager = new ExtWorkspaceManager(this);
     connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &deskswitch::onWorkspacesChanged);

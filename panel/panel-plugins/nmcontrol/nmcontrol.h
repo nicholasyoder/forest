@@ -4,12 +4,12 @@
 #define NMCONTROL_H
 
 #include <QWidget>
+#include <QMenu>
 #include <QVBoxLayout>
 
 #include "panelpluginterface.h"
 #include "panelbutton.h"
 #include "popup.h"
-#include "popupmenu.h"
 
 //#include <KF5/NetworkManagerQt
 class nmcontrol : public QObject, panelpluginterface
@@ -23,7 +23,7 @@ public:
     ~nmcontrol();
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){p_button->close(); p_button->deleteLater(); this->deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
@@ -35,7 +35,7 @@ private slots:
 
 private:
     panelbutton *p_button = nullptr;
-    popupmenu *p_menu = nullptr;
+    QMenu *p_menu = nullptr;
     popup *p_box = nullptr;
 
 };

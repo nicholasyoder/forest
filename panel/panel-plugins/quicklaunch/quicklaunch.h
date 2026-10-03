@@ -4,6 +4,7 @@
 #define QUICKLAUNCH_H
 
 #include <QWidget>
+#include <QMenu>
 #include <QSettings>
 #include <QHBoxLayout>
 #include <QGenericPlugin>
@@ -11,6 +12,7 @@
 
 #include "launcher.h"
 #include "panelpluginterface.h"
+#include "panelanchor.h"
 
 class quicklaunch : public QWidget, panelpluginterface {
     Q_OBJECT
@@ -22,7 +24,7 @@ public:
     ~quicklaunch();
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
@@ -47,7 +49,7 @@ private:
     QList<launcher*> launcherlist;
     QHBoxLayout *basehlayout = new QHBoxLayout;
     QBoxLayout *parentlayout;
-    popupmenu *pmenu;
+    QMenu *pmenu = nullptr;
     int currentlauncher = 0;
     QSettings *settings;
 

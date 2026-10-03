@@ -4,6 +4,7 @@
 #define MAINMENU_H
 
 #include <QStackedLayout>
+#include <QMenu>
 #include <QLineEdit>
 
 #include "panelpluginterface.h"
@@ -26,7 +27,7 @@ public:
     mainmenu();
     ~mainmenu();
 
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
 
@@ -49,7 +50,7 @@ private:
     QSettings *settings = new QSettings("Forest","Main Menu");
 
     popup *pBox = nullptr;
-    popupmenu *pMenu = nullptr;
+    QMenu *pMenu = nullptr;
     contextmenu *cMenu = nullptr;
     QStackedLayout *pagesLayout = new QStackedLayout;
     QVBoxLayout *categoriesVLayout = new QVBoxLayout;

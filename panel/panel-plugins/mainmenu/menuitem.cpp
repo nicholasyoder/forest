@@ -9,9 +9,9 @@ menuitem::menuitem(QUuid id, QIcon icon, QString text){
     itemID = id;
     itemIcon = icon;
     itemText = text;
-    itemIconSize = miscutills::get_iconsize_stylesheet("#popupMenuItem", qApp->styleSheet());
+    itemIconSize = miscutills::get_iconsize_stylesheet("#panelMainMenuItem", qApp->styleSheet());
     setContextMenuPolicy(Qt::CustomContextMenu);
-    setObjectName("popupMenuItem");
+    setObjectName("panelMainMenuItem");
 }
 
 void menuitem::setState(ITEM_STATE state){

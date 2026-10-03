@@ -11,7 +11,7 @@ batterymonitor::~batterymonitor()
 {
 }
 
-void batterymonitor::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
+void batterymonitor::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 {
     this->setLayout(basehlayout);
     basehlayout->setContentsMargins(QMargins(0,0,0,0));

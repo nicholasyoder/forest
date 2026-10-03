@@ -2,6 +2,7 @@
 
 #include "contextmenu.h"
 #include "propertieswidget.h"
+#include "menuanchor.h"
 
 #include <QMenu>
 #include <QtDBus>
@@ -9,26 +10,22 @@
 
 contextmenu::contextmenu()
 {
-
+    cmenu = new QMenu;
+    cmenu->addAction(XdgIcon::fromTheme("list-add"), "Add to quicklaunch", this, &contextmenu::add2Quicklaunch);
+    cmenu->addAction(XdgIcon::fromTheme("user-desktop"), "Show on desktop", this, &contextmenu::showOnDesktop);
+    //cmenu->addAction(XdgIcon::fromTheme("application-x-executable"), "Run as root", this, &contextmenu::runAsRoot);
+    cmenu->addAction(XdgIcon::fromTheme("edit-entry"), "Properties", this, &contextmenu::showProperties);
 }
 
-void contextmenu::show(XdgDesktopFile deskfile, QPoint pos){
-    currentDeskFile = deskfile;
+contextmenu::~contextmenu()
+{
+    delete cmenu;
+}
 
-    QMenu *cmenu = new QMenu;
-    QAction *qlaunch = new QAction(XdgIcon::fromTheme("list-add"), "Add to quicklaunch");
-    connect(qlaunch, &QAction::triggered, this, &contextmenu::add2Quicklaunch);
-    cmenu->addAction(qlaunch);
-    QAction *desktop = new QAction(XdgIcon::fromTheme("user-desktop"), "Show on desktop");
-    connect(desktop, &QAction::triggered, this, &contextmenu::showOnDesktop);
-    cmenu->addAction(desktop);
-    //QAction *root = new QAction(XdgIcon::fromTheme("application-x-executable"), "Run as root");
-    //connect(root, &QAction::triggered, this, &contextmenu::runAsRoot);
-    //cmenu->addAction(root);
-    QAction *prop = new QAction(XdgIcon::fromTheme("edit-entry"), "Properties");
-    connect(prop, &QAction::triggered, this, &contextmenu::showProperties);
-    cmenu->addAction(prop);
-    cmenu->popup(pos);
+void contextmenu::show(XdgDesktopFile deskfile, QWidget *anchor, QPoint pos){
+    currentDeskFile = deskfile;
+    menuanchor::anchorMenuAtPoint(cmenu, anchor, pos);
+    cmenu->popup(anchor->mapToGlobal(pos));
 }
 
 void contextmenu::add2Quicklaunch(){

@@ -15,7 +15,6 @@
 #include <QColor>
 
 #include "popup.h"
-#include "popupmenu.h"
 #include "panelbutton.h"
 
 class SensorWidget : public QLabel, panelpluginterface
@@ -26,9 +25,10 @@ class SensorWidget : public QLabel, panelpluginterface
 
 public:
     SensorWidget();
+    ~SensorWidget() override { delete pmenu; }
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
@@ -45,7 +45,7 @@ private:
     QLabel *mLabelInfo;
     QString popuptext;
     popup *popupbox;
-    popupmenu *pmenu;
+    QMenu *pmenu = nullptr;
 
     Sensors *mSensors = nullptr;
     std::vector<Chip> mDetectedChips;

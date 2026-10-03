@@ -8,7 +8,6 @@ add_library(panel-library STATIC
     panelpluginterface.h
     popup.h
     panelanchor.h
-    popupmenu.h
     panelbutton.h
     graphwidget.h
     extworkspacemanager.h

@@ -7,7 +7,7 @@
 #include <QHBoxLayout>
 #include <QVariant>
 
-#include "popupmenu.h"
+class QAction;
 
 class panelpluginterface
 {
@@ -18,7 +18,7 @@ public:
     virtual ~panelpluginterface() {}
 
     //called soon after plugin constuctor runs
-    virtual void setupPlug(QBoxLayout *, QList<pmenuitem*>)= 0;
+    virtual void setupPlug(QBoxLayout *, QList<QAction*>)= 0;
 
     //used when editing what plugins are on the panel
     virtual void closePlug() = 0;
@@ -29,7 +29,7 @@ public:
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_INTERFACE(panelpluginterface, "forest.panel.plugin.interface")
+Q_DECLARE_INTERFACE(panelpluginterface, "forest.panel.plugin.interface/2")
 
 QT_END_NAMESPACE
 

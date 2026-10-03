@@ -27,7 +27,7 @@ systray::~systray()
 {
 }
 
-void systray::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist)
+void systray::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 {
     Q_UNUSED(itemlist);
 

@@ -7,7 +7,7 @@
 
 fvolume::fvolume() : panelbutton(Icon) {}
 
-void fvolume::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void fvolume::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     layout->addWidget(this);
     setIcon("audio-volume-muted");
 
@@ -17,23 +17,16 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     popup_layout = new QVBoxLayout;
     popupbox = new popup(popup_layout, this, CenteredOnWidget);
 
-    pmenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    pmenu->addseperator();
-    pmenuitem *settings_item = new pmenuitem("Manage devices", QIcon::fromTheme("preferences-sound"));
-    connect(settings_item, &pmenuitem::clicked, this, &fvolume::showsettings);
-    pmenu->additem(settings_item);
-    pmenuitem *refresh_item = new pmenuitem("Re-scan devices", QIcon::fromTheme("reload"));
-    connect(refresh_item, &pmenuitem::clicked, this, &fvolume::loadsettings);
-    pmenu->additem(refresh_item);
-    pmenuitem *muted_item = new pmenuitem("Toggle Muted", QIcon::fromTheme("audio-volume-muted"));
-    connect(muted_item, &pmenuitem::clicked, this, &fvolume::togglemuted);
-    pmenu->additem(muted_item);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("preferences-sound"), "Manage devices", this, &fvolume::showsettings);
+    pmenu->addAction(QIcon::fromTheme("reload"), "Re-scan devices", this, &fvolume::loadsettings);
+    pmenu->addAction(QIcon::fromTheme("audio-volume-muted"), "Toggle Muted", this, &fvolume::togglemuted);
 
     connect(this, &fvolume::leftclicked, popupbox, &popup::showpopup);
-    connect(this, &fvolume::rightclicked, pmenu, &popupmenu::show);
+    connect(this, &fvolume::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
     connect(this, &fvolume::mouseReleased, this, &fvolume::handlemouseReleased);
 
     loadsettings();

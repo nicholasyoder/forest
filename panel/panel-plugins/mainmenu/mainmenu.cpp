@@ -10,10 +10,11 @@ mainmenu::mainmenu() : panelbutton(Icon) {
 }
 
 mainmenu::~mainmenu(){
-
+    delete pMenu;
+    delete cMenu;
 }
 
-void mainmenu::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void mainmenu::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     layout->addWidget(this);
 
     itemHandler = new itemhandler();
@@ -33,18 +34,11 @@ void mainmenu::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     appLdr->load();
 
     //popup menu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-    pMenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pMenu->additem(item);
-
-    //pmenu->addseperator();
-    //pmenuitem *item = new pmenuitem("Menu Settings", QIcon::fromTheme("configure"));
-    //connect(item, &pmenuitem::clicked, this, &mainmenu::showsettingswidget);
-    //pmenu->additem(item);
-    //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    pMenu = new QMenu;
+    pMenu->addActions(itemlist);
 
     connect(this, &mainmenu::leftclicked, this, &mainmenu::showmenu);
-    connect(this, &mainmenu::rightclicked, pMenu, &popupmenu::show);
+    connect(this, &mainmenu::rightclicked, this, [this]{ popupMenuOnLauncher(pMenu, this, CenteredOnWidget); });
 
     QDBusConnection::sessionBus().registerObject("/org/forest/panel/mainmenu", this, QDBusConnection::ExportAllSlots);
 }

@@ -45,11 +45,11 @@ QWidget[FSS-widget-type="pane"] {
     color: black;
 }
 
-#popupMenuItem {
+#panelMainMenuItem {
     color: black;
 }
 
-#popupMenuItem:hover  {
+#panelMainMenuItem:hover  {
     background: rgba(255,255,255, 100%);
     border-top: 1px solid rgba(160,160,160, 30%);
     border-right: 1px solid rgba(160,160,160, 35%);
@@ -57,16 +57,12 @@ QWidget[FSS-widget-type="pane"] {
     border-left: 1px solid rgba(160,160,160, 30%);
 }
 
-#popupMenuItem:pressed  {
+#panelMainMenuItem:pressed  {
     background: rgba(245,245,245, 100%);
     border-top: 1px solid rgba(160,160,160, 30%);
     border-right: 1px solid rgba(160,160,160, 35%);
     border-bottom: 1px solid rgba(160,160,160, 40%);
     border-left: 1px solid rgba(160,160,160, 30%);
-}
-
-#popupMenuSeperator {
-    background: rgba(180,180,180, 80%);
 }
 
 QMenu {

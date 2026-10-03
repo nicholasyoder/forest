@@ -87,7 +87,7 @@ void itemhandler::itemEvent(QUuid uuid, ITEM_EVENT eventtype, QEvent *event){
         if(mevent->button() == Qt::LeftButton)
             itemActivated(uuid);
         else if(mevent->button() == Qt::RightButton)
-            showContextMenu(itemHash[uuid]->mapToGlobal(mevent->pos()));
+            showContextMenu(itemHash[uuid], mevent->pos());
     }
     else if(eventtype == DRAG){
         if(appHash.contains(currentItem))
@@ -127,9 +127,9 @@ void itemhandler::incrementHits(QString name){
     settings->endGroup();
 }
 
-void itemhandler::showContextMenu(QPoint pos){
+void itemhandler::showContextMenu(QWidget *anchor, QPoint pos){
     if(itemHash.contains(currentItem)){
-        emit requestContextMenu(appHash[currentItem], pos);
+        emit requestContextMenu(appHash[currentItem], anchor, pos);
     }
 }
 

@@ -4,7 +4,11 @@
 #define CONTEXTMENU_H
 
 #include <QObject>
+#include <QPoint>
 #include <qt6xdg/XdgDesktopFile>
+
+class QMenu;
+class QWidget;
 
 class contextmenu : public QObject
 {
@@ -12,9 +16,11 @@ class contextmenu : public QObject
 
 public:
     contextmenu();
+    ~contextmenu();
 
 public slots:
-    void show(XdgDesktopFile deskfile, QPoint pos);
+    // pos is in anchor's coordinates.
+    void show(XdgDesktopFile deskfile, QWidget *anchor, QPoint pos);
 
 private slots:
     void add2Quicklaunch();
@@ -24,6 +30,7 @@ private slots:
 
 private:
     XdgDesktopFile currentDeskFile;
+    QMenu *cmenu = nullptr;
 };
 
 #endif // CONTEXTMENU_H
