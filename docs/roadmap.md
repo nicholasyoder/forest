@@ -1,35 +1,82 @@
 # Forest Roadmap
 
-Forward-looking, Forest-specific work items — most blocked on protocol work
-that has to land in Biome first (see `biome/docs/roadmap.md`). Kept at
-bullet-list altitude deliberately: when an item is actually picked up, draft
-a real implementation plan for it then (a new `docs/<item>-plan.md`,
-following the existing `docs/greeter-plan.md` / `docs/qmenu-migration-plan.md`
-pattern), rather than designing it here ahead of time.
+Forward-looking, Forest-specific work items, split by size. Several features
+are blocked on protocol work that has to land in Biome first (see
+`biome/docs/roadmap.md`). Kept at bullet-list altitude deliberately: when a
+feature is actually picked up, draft a real implementation plan for it then
+(a new `docs/<item>-plan.md`, following the existing `docs/greeter-plan.md` /
+`docs/qmenu-migration-plan.md` pattern), rather than designing it here ahead
+of time. Small fixes don't need a plan doc.
 
-## Items
+## Small fixes
 
-- **Session locker.** Blocked on Biome roadmap Phase 6: `ext-idle-notify-v1`
-  for idle-triggered lock timing and `wlr-output-power-management-unstable-v1`
-  for display blanking (both not yet built); `ext-session-lock-v1` itself is
-  already implemented on Biome's side and confirmed working with swaylock.
-  A prior plan doc for this existed but was written entirely against X11
-  (`XScreenSaverQueryInfo()` idle polling, Xlib `DPMSForceLevel()`,
-  `XGrabKeyboard`/`XGrabPointer`/`X11BypassWindowManagerHint` for the lock
-  surface) and was removed as dead weight — none of that works under Biome.
-  Write a fresh plan against the Wayland protocols above when this is picked
-  up; the PAM/logind integration side of the old plan (PAM auth in a
-  `QThread`, `org.freedesktop.login1` `Lock`/`Unlock`/`PrepareForSleep`
-  integration) is unaffected by the display-server change and can likely
-  carry over as-is.
+Bugs and cleanups — roughly a single sitting each, no design work needed.
+
+### Bugs
+
+- **Suspend/hibernate from logout likely leaves a black screen on resume
+  (test + fix).** `start_action()` maps opaque black top-layer overlays, and
+  `call_dbus_methods()` only quits on failure; a successful `Suspend` returns
+  immediately and `forest-logout` stays up with the overlays (keyboard
+  interactivity none, so Escape can't clear them). Quit after a successful
+  suspend/hibernate. Also SUSPEND's `action_map` key is `"logout"`.
+- **Autohide panel likely leaves an input-blocking strip (test + fix).**
+  `panel::hide()` / `HiddenPanel::hide()` only hide the child widget; the
+  layer-shell `shell` in `GeometryManager` stays mapped at full height,
+  transparent, and still takes input over windows at that edge. Likely fix:
+  `GeometryManager` hides/shows `shell` along with its content widget.
+- **Desktop-icons surface needs `KeyboardInteractivityOnDemand`.**
+  `wallpaperwidget` requests `None`; icon rename, Delete/Shift+Delete and
+  Ctrl-click multi-select only work because Biome grants focus to any clicked
+  surface regardless. Switch the primary-screen (icons) surface to
+  `OnDemand` *before* Biome fixes that (Biome roadmap, Known issues), or
+  desktop keyboard input breaks.
+- **`DesktopNames` mismatch.** `wayland-sessions/Forest.desktop` has
+  `DesktopNames=Forest`, but `startforest-wayland` exports
+  `XDG_CURRENT_DESKTOP=Forest:biome` (needed for `biome-portals.conf`).
+  Make them agree (likely `DesktopNames=Forest;biome`).
+
+### Hotkeys
+
+- **Hotkeys stay paused if settings dies mid-capture.** `pauseHotkeys` has no
+  owner; watch the caller's bus name (`QDBusServiceWatcher`) and resume when
+  it vanishes.
+- **Hotkeys don't recover from portal failures.** A failed `createSession`
+  is terminal (no retry), and a portal restart or `Session::Closed` leaves
+  `sessionOpen` true with hotkeys dead until relog. Watch the
+  `org.freedesktop.portal.Desktop` owner and `Session::Closed`, and retry.
+- **Hotkey capture can't record a bare Meta tap.** `edithotkeywidget::keyPressEvent`
+  appends `Meta+` and waits for a non-modifier key; with no `keyReleaseEvent`
+  it never produces the `Meta` value `foresthotkeys` understands. Pre-existing.
+- **Show desktop hotkey.** The X11 `showdesktop` slot and its Meta+D default
+  were dropped. No standard protocol exists; the decoupled route is
+  `set_minimized` on every wlr-foreign-toplevel handle, so it belongs next to
+  windowlist's handles in the panel. Existing users' `Forest.conf` still has
+  the dead `item-0003` entry — rewrite it via `settings_upgrade_manager.cpp`.
+
+### Cleanups
+
+- **Rename the panel `seperator` config value to `separator`.** The display
+  string is fixed, but `plug-NNNN/path=seperator` is still what
+  `Panel.conf` stores (`panel.cpp`, `panelsettings.cpp`,
+  `etc/forest/Panel.conf`). Rename all three together and add an
+  `upgrade_x_y_z()` to `forest/settings_upgrade_manager.cpp` that rewrites
+  existing users' `~/.config/Forest/Panel.conf`.
+
+## Features
+
+Larger work — write a plan doc when picked up.
+
+### Ready
+
 - **Display settings plugin.** New `system-settings` plugin for multi-monitor
-  configuration (mode/scale/position/rotation). No longer blocked: Biome
-  implements `wlr-output-management-unstable-v1` (`wlr-randr` works today;
-  Biome rejects layouts with gaps between outputs). Biome's own roadmap notes
-  reusing `libkscreen`'s existing backend for that protocol rather than
-  hand-binding it — worth checking whether Forest should bind `libkscreen`
-  directly too, or go through a different Qt-native path, when this is
-  actually designed. Ideas to fold in:
+  configuration (mode/scale/position/rotation). Biome implements
+  `wlr-output-management-unstable-v1` (`wlr-randr` works today; Biome rejects
+  layouts with gaps between outputs). Biome's own roadmap notes reusing
+  `libkscreen`'s existing backend for that protocol rather than hand-binding
+  it — worth checking whether Forest should bind `libkscreen` directly too,
+  or go through a different Qt-native path, when this is actually designed.
+  Ideas to fold in:
   - **Primary screen setting.** `ScreenTracker::primary()` (miscutills) already
     reads `display/primary_screen` (output name) from `Forest.conf`, falling
     back to the top-left screen; panel, desktop icons and logout use it. Only
@@ -38,6 +85,26 @@ pattern), rather than designing it here ahead of time.
     position, and the primary screen) stored in Forest's settings and applied
     through the output-management protocol, replacing hand-rolled
     `wlr-randr` scripts and the swap-`Biome.conf`-and-relog workflow.
+- **Ship a Biome config with the Forest package.** Smaller than the others
+  but needs a cross-repo design decision. Forest's layer-shell surfaces need
+  `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-startup`
+  (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
+  all; neither repo ships a default today, so a fresh install gets no fades.
+  Since these are Forest app namespaces, the Forest package should install
+  the config rather than Biome hardcoding them. Undecided how: a system-wide
+  `/etc` file Biome reads, a drop-in directory, or a compiled-in default.
+  Needs Biome's config lookup order checked first (`biome/core/fade_config.cpp`).
+
+### Blocked on Biome
+
+- **Session locker.** Blocked on Biome roadmap Phase 6: `ext-idle-notify-v1`
+  for idle-triggered lock timing and `wlr-output-power-management-unstable-v1`
+  for display blanking (both not yet built); `ext-session-lock-v1` itself is
+  already implemented on Biome's side and confirmed working with swaylock.
+  A prior plan doc existed but was X11-only and was removed. Write a fresh
+  plan against the Wayland protocols above; the PAM/logind side of the old
+  plan (PAM auth in a `QThread`, `org.freedesktop.login1`
+  `Lock`/`Unlock`/`PrepareForSleep` integration) can likely carry over as-is.
 - **Screenshot tool.** Forest currently just depends on `gnome-screenshot`
   (`debian/control`). Under Wayland that needs either portal-based
   screenshot support (`xdg-desktop-portal`'s Screenshot interface, which
@@ -45,14 +112,9 @@ pattern), rather than designing it here ahead of time.
   `wlr-screencopy-unstable-v1` / `ext-image-copy-capture-v1`, once Biome
   roadmap Phase 6 lands one of those protocols. Decide native vs.
   portal-based when this is picked up.
-- **Ship a Biome config with the Forest package.** Forest's layer-shell
-  surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-startup`
-  (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
-  all; neither repo ships a default today, so a fresh install gets no fades.
-  Since these are Forest app namespaces, the Forest package should install
-  the config rather than Biome hardcoding them. Undecided how: a system-wide
-  `/etc` file Biome reads, a drop-in directory, or a compiled-in default.
-  Needs Biome's config lookup order checked first (`biome/core/fade_config.cpp`).
+
+### Longer-term (decoupling)
+
 - **Workspaces beyond Biome's model.** deskswitch/windowlist assume one
   ext-workspace group (a single active workspace); a compositor with
   per-output groups would need per-group handling. The window -> workspace
@@ -60,45 +122,3 @@ pattern), rather than designing it here ahead of time.
   `org.biome.Workspaces` (`BiomeWorkspaces`, hidden when absent) — replace it
   with a standard protocol if one appears (ext-workspace has no toplevel
   membership).
-- **Rename the panel `seperator` config value to `separator`.** The display
-  string is fixed, but `plug-NNNN/path=seperator` is still what
-  `Panel.conf` stores (`panel.cpp`, `panelsettings.cpp`,
-  `etc/forest/Panel.conf`). Rename all three together and add an
-  `upgrade_x_y_z()` to `forest/settings_upgrade_manager.cpp` that rewrites
-  existing users' `~/.config/Forest/Panel.conf`.
-- **Show desktop hotkey.** The X11 `showdesktop` slot and its Meta+D default
-  were dropped. No standard protocol exists; the decoupled route is
-  `set_minimized` on every wlr-foreign-toplevel handle, so it belongs next to
-  windowlist's handles in the panel. Existing users' `Forest.conf` still has
-  the dead `item-0003` entry — rewrite it via `settings_upgrade_manager.cpp`.
-- **Hotkeys stay paused if settings dies mid-capture.** `pauseHotkeys` has no
-  owner; watch the caller's bus name (`QDBusServiceWatcher`) and resume when
-  it vanishes.
-- **Hotkey capture can't record a bare Meta tap.** `edithotkeywidget::keyPressEvent`
-  appends `Meta+` and waits for a non-modifier key; with no `keyReleaseEvent`
-  it never produces the `Meta` value `foresthotkeys` understands. Pre-existing.
-- **Autohide panel likely leaves an input-blocking strip (test + fix).**
-  `panel::hide()` / `HiddenPanel::hide()` only hide the child widget; the
-  layer-shell `shell` in `GeometryManager` stays mapped at full height,
-  transparent, and still takes input over windows at that edge. Likely fix:
-  `GeometryManager` hides/shows `shell` along with its content widget.
-- **Suspend/hibernate from logout likely leaves a black screen on resume
-  (test + fix).** `start_action()` maps opaque black top-layer overlays, and
-  `call_dbus_methods()` only quits on failure; a successful `Suspend` returns
-  immediately and `forest-logout` stays up with the overlays (keyboard
-  interactivity none, so Escape can't clear them). Quit after a successful
-  suspend/hibernate. Also SUSPEND's `action_map` key is `"logout"`.
-- **Desktop-icons surface needs `KeyboardInteractivityOnDemand`.**
-  `wallpaperwidget` requests `None`; icon rename, Delete/Shift+Delete and
-  Ctrl-click multi-select only work because Biome grants focus to any clicked
-  surface regardless. Switch the primary-screen (icons) surface to
-  `OnDemand` *before* Biome fixes that (Biome roadmap, Known issues), or
-  desktop keyboard input breaks.
-- **Hotkeys don't recover from portal failures.** A failed `createSession`
-  is terminal (no retry), and a portal restart or `Session::Closed` leaves
-  `sessionOpen` true with hotkeys dead until relog. Watch the
-  `org.freedesktop.portal.Desktop` owner and `Session::Closed`, and retry.
-- **`DesktopNames` mismatch.** `wayland-sessions/Forest.desktop` has
-  `DesktopNames=Forest`, but `startforest-wayland` exports
-  `XDG_CURRENT_DESKTOP=Forest:biome` (needed for `biome-portals.conf`).
-  Make them agree (likely `DesktopNames=Forest;biome`).
