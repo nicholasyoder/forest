@@ -6,10 +6,10 @@
 using namespace miscutills;
 
 memmon::memmon(){}
-memmon::~memmon(){}
+memmon::~memmon(){ delete pmenu; }
 
 //beginning of plugin interface
-void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void memmon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     gwidget = new graphwidget;
     settings = new QSettings("Forest", "Memory Monitor");
 
@@ -19,17 +19,14 @@ void memmon::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     setLayout(vlayout);
     layout->addWidget(this);
 
-    pmenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    pmenu->addseperator();
-    pmenuitem *item = new pmenuitem("Memory Monitor Settings", QIcon::fromTheme("configure"));
-    connect(item, &pmenuitem::clicked, this, &memmon::showsettingswidget);
-    pmenu->additem(item);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("configure"), "Memory Monitor Settings", this, &memmon::showsettingswidget);
 
     connect(this, &memmon::leftclicked, this, &memmon::runcommand);
-    connect(this, &memmon::rightclicked, pmenu, &popupmenu::show);
+    connect(this, &memmon::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
 
     loadsettings();
 }

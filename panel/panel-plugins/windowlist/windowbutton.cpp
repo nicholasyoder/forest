@@ -19,15 +19,9 @@ windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, ExtWorkspaceMa
     setIcon(iconresolver::iconForAppId(m_appId));
     setDown(handle->isActivated());
 
-    pmenu = new popupmenu(this, CenteredOnWidget);
-    desk_menu = new popupmenu(this, CenteredOnWidget);
-
-    // popupmenu has no submenus; this item closes pmenu and opens desk_menu.
-    if (biome_workspaces->isAvailable()){
-        pmenuitem *desk_item = new pmenuitem("Move to desktop", QIcon::fromTheme("window-next"));
-        connect(desk_item, &pmenuitem::clicked, desk_menu, &popupmenu::show);
-        pmenu->additem(desk_item);
-    }
+    pmenu = new QMenu;
+    if (biome_workspaces->isAvailable())
+        desk_menu = pmenu->addMenu(QIcon::fromTheme("window-next"), "Move to desktop");
 
     MenuItem pmenu_items[] = {
         {"Raise", "arrow-up", &windowbutton::raise_w},
@@ -36,11 +30,8 @@ windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, ExtWorkspaceMa
         {"Minimize", "arrow-down-double", &windowbutton::minimize_w},
         {"Close", "window-close", &windowbutton::close_w}
     };
-    for (const auto& item : pmenu_items) {
-        pmenuitem *menu_item = new pmenuitem(item.text, QIcon::fromTheme(item.icon));
-        connect(menu_item, &pmenuitem::clicked, this, item.slot);
-        pmenu->additem(menu_item);
-    }
+    for (const auto& item : pmenu_items)
+        pmenu->addAction(QIcon::fromTheme(item.icon), item.text, this, item.slot);
 
     if (workspace_manager->workspaces().isEmpty())
         connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowbutton::populateDeskMenu);
@@ -97,13 +88,8 @@ void windowbutton::mouseReleaseEvent(QMouseEvent *event){
         raise_w();
     }
     else if(event->button() == Qt::RightButton){
-        QSize sizeHint = pmenu->popupw->sizeHint();
-        if (width() > sizeHint.width())
-            pmenu->popupw->setFixedSize(width(), sizeHint.height());
-        else
-            pmenu->popupw->setFixedSize(sizeHint.width(), sizeHint.height());
-
-        pmenu->show();
+        pmenu->setMinimumWidth(width());
+        popupMenuOnLauncher(pmenu, this, CenteredOnWidget);
     }
 }
 
@@ -129,12 +115,12 @@ void windowbutton::demaximize_w(){
 
 void windowbutton::populateDeskMenu(){
     disconnect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowbutton::populateDeskMenu);
+    if (!desk_menu)
+        return;
 
     const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
     for (int index = 0; index < workspaces.length(); index++){
-        pmenuitem *item = new pmenuitem("Desktop " + QString::number(index + 1));
-        connect(item, &pmenuitem::clicked, this, [this, index](){ moveToDesktop(index); });
-        desk_menu->additem(item);
+        desk_menu->addAction("Desktop " + QString::number(index + 1), this, [this, index](){ moveToDesktop(index); });
     }
 }
 

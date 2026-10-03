@@ -167,8 +167,11 @@ Larger work — write a plan doc when picked up.
   `Qt::Popup`s (fresh press serial, like QMenus). The hotkey-opened launcher
   has no serial, so it needs something else, e.g. its own layer surface with
   keyboard interactivity when hotkey-opened. Then Biome drops the exception
-  (Biome roadmap, Known issues). Independent of the QMenu migration: QMenus
-  grab and don't use it.
+  (Biome roadmap, Known issues). Panel QMenus grab and don't use it, with one
+  exception: mainmenu's app right-click menu is a grabbing xdg_popup whose
+  parent is the non-grabbing launcher popup. xdg-shell says that's an
+  `invalid_grab` error; wlroots doesn't check, but stricter compositors may.
+  A grabbing launcher popup fixes this too.
 - **Combined taskbar and quicklaunch** (#55). Pinned launchers that become
   window buttons when running (KDE icons-only task manager / Plank style).
   The hard part is matching toplevel `app_id`s to `.desktop` files reliably;

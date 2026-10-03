@@ -3,6 +3,7 @@
 #ifndef PANEL_H
 #define PANEL_H
 
+#include <QAction>
 #include <QBoxLayout>
 #include <QFrame>
 #include <QSettings>
@@ -58,6 +59,7 @@ private:
     QString pnum(int number) {if(number<10) return "0"+QString::number(number); else return QString::number(number);}
 
     int numofstretchplugs = 0;
+    QAction *settingsaction = nullptr; // shared by every plugin's menu
     QSettings *settings = new QSettings("Forest","Panel");
     QBoxLayout *wlayout;
     panelpluginterface *pluginterface;

@@ -118,12 +118,11 @@ void panel::addplugin(QString path){
                     numofstretchplugs++;
                 }
 
-                pmenuitem *settingsitem = new pmenuitem("Panel Settings", QIcon::fromTheme("preferences-system"));
-                connect(settingsitem, &pmenuitem::clicked, this, &panel::showsettings);
-                QList<pmenuitem*> itemlist;
-                itemlist.append(settingsitem);
-
-                pluginterface->setupPlug(wlayout, itemlist);
+                if (!settingsaction) {
+                    settingsaction = new QAction(QIcon::fromTheme("preferences-system"), "Panel Settings", this);
+                    connect(settingsaction, &QAction::triggered, this, &panel::showsettings);
+                }
+                pluginterface->setupPlug(wlayout, {settingsaction});
 
                 if (stretch)
                     wlayout->setStretch(wlayout->count()-1, 5);

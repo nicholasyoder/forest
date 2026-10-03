@@ -7,20 +7,19 @@ nmcontrol::nmcontrol(){
 }
 
 nmcontrol::~nmcontrol(){
-
+    delete p_menu;
 }
 
-void nmcontrol::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist)
+void nmcontrol::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 {
     p_button = new panelbutton(panelbutton::Icon);
     p_button->setIcon("network-wired-offline");
     layout->addWidget(p_button);
 
-    p_menu = new popupmenu(p_button, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        p_menu->additem(item);
+    p_menu = new QMenu;
+    p_menu->addActions(itemlist);
 
-    connect(p_button, &panelbutton::rightclicked, p_menu, &popupmenu::show);
+    connect(p_button, &panelbutton::rightclicked, this, [this]{ popupMenuOnLauncher(p_menu, p_button, CenteredOnWidget); });
 
     QVBoxLayout *popuplayout = new QVBoxLayout;
     p_box = new popup(popuplayout, p_button, CenteredOnWidget);

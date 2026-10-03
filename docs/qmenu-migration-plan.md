@@ -159,7 +159,7 @@ Checked against `qstylesheetstyle.cpp` 6.8.2:
   to the parent's visible frame and align first items, so keep the filter
   even after Qt ≥ 6.11: Qt's own submenu anchor ignores the margin.
 
-### Phase 2: convert consumers
+### Phase 2: convert consumers — implemented, needs manual testing
 
 1. Change `panelpluginterface::setupPlug` to `QList<QAction*>`, and make
    `panel.cpp`'s "Panel Settings" a `QAction`. All plugins are in-tree.

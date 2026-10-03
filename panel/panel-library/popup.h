@@ -115,7 +115,8 @@ protected:
             if (onLauncher) {
                 lastPressOnLauncher = true;
                 QTimer::singleShot(0, this, [this]{ lastPressOnLauncher = false; });
-            } else if (clicked && clicked != this && !this->isAncestorOf(clicked)) {
+            } else if (clicked && clicked != this && !this->isAncestorOf(clicked)
+                       && !isChainedPopup(clicked->window()->windowHandle())) {
                 emit outsideclicked();
             }
         }
@@ -123,9 +124,10 @@ protected:
     }
 
     // Cross-process click-outside: Biome gives this window real focus despite no grab.
+    // A chained grabbing popup (e.g. a context menu) takes focus without closing this.
     bool event(QEvent *e) override {
         if (e->type() == QEvent::WindowDeactivate && isVisible()) {
-            bool skip = lastPressOnLauncher;
+            bool skip = lastPressOnLauncher || chainedPopupVisible();
             lastPressOnLauncher = false;
             if (!skip) closepopup();
         }
@@ -133,6 +135,22 @@ protected:
     }
 
 private:
+    // A popup window transient (directly or not) to this one.
+    bool isChainedPopup(QWindow *window) const {
+        QWindow *self = windowHandle();
+        if (!window || window == self) return false;
+        for (window = window->transientParent(); window; window = window->transientParent())
+            if (window == self) return true;
+        return false;
+    }
+
+    bool chainedPopupVisible() const {
+        const auto windows = QGuiApplication::topLevelWindows();
+        for (QWindow *window : windows)
+            if (window->isVisible() && isChainedPopup(window)) return true;
+        return false;
+    }
+
     // Placed via xdg_positioner (anchor rect relative to the parent toplevel) since
     // layer surfaces have no known global position. Private QtWayland properties,
     // same as LayerShellQt/Plasma use.

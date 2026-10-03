@@ -3,22 +3,19 @@
 #include "quicklaunch.h"
 
 quicklaunch::quicklaunch(QWidget *parent) : QWidget(parent){}
-quicklaunch::~quicklaunch(){}
+quicklaunch::~quicklaunch(){ delete pmenu; }
 
-void quicklaunch::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void quicklaunch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     basehlayout->setContentsMargins(QMargins(0,0,0,0));
     basehlayout->setSpacing(0);
     this->setLayout(basehlayout);
     this->setAcceptDrops(true);
 
-    pmenu = new popupmenu(this, EdgeAlignedOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    pmenu->addseperator();
-    pmenuitem *item2 = new pmenuitem("Remove Launcher", QIcon::fromTheme("remove"));
-    connect(item2, &QPushButton::clicked, this, &quicklaunch::removelauncher);
-    pmenu->additem(item2);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("remove"), "Remove Launcher", this, &quicklaunch::removelauncher);
 
     parentlayout = layout;
 
@@ -133,8 +130,7 @@ void quicklaunch::loadlaunchers(){
 
 void quicklaunch::showpopupmenu(int launchernum){
     currentlauncher = launchernum;
-    pmenu->changelauncher(launcherlist.at(currentlauncher));
-    pmenu->show();
+    popupMenuOnLauncher(pmenu, launcherlist.at(currentlauncher), EdgeAlignedOnWidget);
 }
 
 void quicklaunch::removelauncher(){

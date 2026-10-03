@@ -8,7 +8,7 @@
 SensorWidget::SensorWidget(){
 }
 
-void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     setText(QChar(0x00B0)+QString::number(100));
 
     mSensors = new Sensors;
@@ -37,15 +37,12 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     popupbox = new popup(vlayout, pbutton, CenteredOnWidget);
     connect(pbutton, &panelbutton::leftclicked, popupbox, &popup::showpopup);
 
-    pmenu = new popupmenu(pbutton, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    pmenu->addseperator();
-    pmenuitem *item = new pmenuitem("Sensors Settings", QIcon::fromTheme("configure"));
-    connect(item, &pmenuitem::clicked, this, &SensorWidget::showsettingswidget);
-    pmenu->additem(item);
-    connect(pbutton, &panelbutton::rightclicked, pmenu, &popupmenu::show);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("configure"), "Sensors Settings", this, &SensorWidget::showsettingswidget);
+    connect(pbutton, &panelbutton::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, pbutton, CenteredOnWidget); });
 
     timer=new QTimer;
     connect(timer,SIGNAL(timeout()),this,SLOT(updateSensor()));

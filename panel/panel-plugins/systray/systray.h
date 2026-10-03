@@ -23,7 +23,7 @@ public:
     ~systray();
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface

@@ -5,6 +5,7 @@
 windowlist::windowlist(){}
 
 windowlist::~windowlist(){
+    delete pmenu;
     // Handles are the managers' children, freed once each manager finishes.
     if (toplevel_manager)
         toplevel_manager->release();
@@ -14,7 +15,7 @@ windowlist::~windowlist(){
         workspace_manager->release();
 }
 
-void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void windowlist::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     layout->addWidget(this);
 
     QHBoxLayout *baseLayout = new QHBoxLayout;
@@ -27,14 +28,11 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     baseLayout->addWidget(swidget);
     this->setLayout(baseLayout);
 
-    pmenu = new popupmenu(this, CenteredOnMouse);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    pmenu->addseperator();
-    pmenuitem *item = new pmenuitem("Windowlist Settings", QIcon::fromTheme("configure"));
-    connect(item, &pmenuitem::clicked, this, &windowlist::showsettingswidget);
-    pmenu->additem(item);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("configure"), "Windowlist Settings", this, &windowlist::showsettingswidget);
 
     ipopup = new imagepopup(this);
 
@@ -73,7 +71,7 @@ void windowlist::reloadsettings(){
 
 void windowlist::mouseReleaseEvent(QMouseEvent *event){
     if (event->button() == Qt::RightButton)
-        pmenu->show();
+        popupMenuOnLauncher(pmenu, this, CenteredOnMouse);
 }
 
 void windowlist::loadsettings(){

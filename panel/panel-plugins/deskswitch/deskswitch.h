@@ -4,10 +4,12 @@
 #define DESKSWITCH_H
 
 #include <QWidget>
+#include <QMenu>
 #include <QVBoxLayout>
 
 #include "panelbutton.h"
 #include "panelpluginterface.h"
+#include "panelanchor.h"
 #include "deskbutton.h"
 #include "extworkspacemanager.h"
 #include "biomeworkspaces.h"
@@ -22,7 +24,7 @@ public:
     ~deskswitch();
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
@@ -41,7 +43,7 @@ private slots:
 private:
     QHBoxLayout *basehlayout;
     QList<deskbutton*> dbuttons;
-    popupmenu *pmenu;
+    QMenu *pmenu = nullptr;
     ExtWorkspaceManager *workspace_manager = nullptr;
     BiomeWorkspaces *biome_workspaces = nullptr;
 };

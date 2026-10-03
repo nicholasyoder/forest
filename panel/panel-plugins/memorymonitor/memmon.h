@@ -30,7 +30,7 @@ public:
     ~memmon();
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
@@ -52,7 +52,7 @@ private slots:
 private:
     QSettings *settings = nullptr;
     graphwidget *gwidget;
-    popupmenu *pmenu;
+    QMenu *pmenu = nullptr;
     QTimer *refreshtimer = new QTimer;
     int swapbehavior = 1;
     QString clickedcommand;

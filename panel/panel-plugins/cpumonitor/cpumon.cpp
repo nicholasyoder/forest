@@ -6,10 +6,10 @@
 using namespace miscutills;
 
 cpumon::cpumon(){}
-cpumon::~cpumon(){}
+cpumon::~cpumon(){ delete pmenu; }
 
 //beginning of plugin interface
-void cpumon::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist){
+void cpumon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     gwidget = new graphwidget;
     settings = new QSettings("Forest", "CPU Monitor");
 
@@ -19,17 +19,13 @@ void cpumon::setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist){
     setLayout(vlayout);
     layout->addWidget(this);
 
-    pmenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist){
-        pmenu->additem(item);
-    }
-    pmenu->addseperator();
-    pmenuitem *item = new pmenuitem("CPU Monitor Settings", QIcon::fromTheme("configure"));
-    connect(item, &pmenuitem::clicked, this, &cpumon::showsettingswidget);
-    pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("configure"), "CPU Monitor Settings", this, &cpumon::showsettingswidget);
 
     connect(this, &cpumon::leftclicked, this, &cpumon::runcommand);
-    connect(this, &cpumon::rightclicked, pmenu, &popupmenu::show);
+    connect(this, &cpumon::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
 
     loadsettings();
 }

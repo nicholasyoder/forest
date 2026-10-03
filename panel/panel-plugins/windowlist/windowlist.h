@@ -4,6 +4,7 @@
 #define WINDOWLIST_H
 
 #include <QMainWindow>
+#include <QMenu>
 #include <QApplication>
 #include <QPointer>
 #include <QSettings>
@@ -21,6 +22,7 @@
 #include "imagepopup.h"
 #include "settingswidget.h"
 #include "panelpluginterface.h"
+#include "panelanchor.h"
 
 class windowlist : public QWidget, panelpluginterface{
     Q_OBJECT
@@ -32,7 +34,7 @@ public:
     ~windowlist();
 
     //begin plugin interface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){ close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugin interface
@@ -82,7 +84,7 @@ private:
 
     int maxbtsize;
 
-    popupmenu *pmenu = nullptr;
+    QMenu *pmenu = nullptr;
     imagepopup *ipopup = nullptr;
 
     settingswidget *swidget = new settingswidget;

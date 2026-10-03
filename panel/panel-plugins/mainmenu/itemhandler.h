@@ -41,13 +41,13 @@ public slots:
 signals:
     void appLaunch();
     void categorySelect(int index);
-    void requestContextMenu(XdgDesktopFile deskfile, QPoint pos);
+    void requestContextMenu(XdgDesktopFile deskfile, QWidget *anchor, QPoint pos);
 
 private slots:
     void itemEvent(QUuid uuid, ITEM_EVENT eventtype, QEvent *event);
     void itemActivated(QUuid id);
     void incrementHits(QString name);
-    void showContextMenu(QPoint pos);
+    void showContextMenu(QWidget *anchor, QPoint pos);
     void doDrag();
     void trySetAllowSelectByMouse();
 

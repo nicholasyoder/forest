@@ -3,8 +3,10 @@
 #ifndef WINDOWBUTTON_H
 #define WINDOWBUTTON_H
 
+#include <QMenu>
+
 #include "panelbutton.h"
-#include "popupmenu.h"
+#include "panelanchor.h"
 #include "foreigntoplevelhandle.h"
 #include "extworkspacemanager.h"
 #include "biomeworkspaces.h"
@@ -14,6 +16,7 @@ class windowbutton : public panelbutton{
 
 public:
     windowbutton(ForeignToplevelHandle *handle, ExtWorkspaceManager *workspaceManager, BiomeWorkspaces *biomeWorkspaces);
+    ~windowbutton() override { delete pmenu; }
 
     ForeignToplevelHandle *toplevelHandle(){return handle;}
 
@@ -57,8 +60,8 @@ private:
     bool allowReleaseAction = true;
     QPoint dragPos;
 
-    popupmenu *pmenu = nullptr;
-    popupmenu *desk_menu = nullptr;
+    QMenu *pmenu = nullptr;
+    QMenu *desk_menu = nullptr; // pmenu's submenu, only with Biome workspaces
 };
 
 #endif // WINDOWBUTTON_H

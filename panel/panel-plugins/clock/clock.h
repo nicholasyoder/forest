@@ -4,6 +4,7 @@
 #define CLOCK_H
 
 #include <QWidget>
+#include <QMenu>
 #include <QLabel>
 #include <QVBoxLayout>
 #include <QDateTime>
@@ -15,7 +16,6 @@
 #include "panelpluginterface.h"
 #include "panelbutton.h"
 #include "popup.h"
-#include "popupmenu.h"
 
 class clockplug : public panelbutton, panelpluginterface {
     Q_OBJECT
@@ -27,7 +27,7 @@ public:
     ~clockplug();
 
     //begin plugininterface
-    void setupPlug(QBoxLayout *layout, QList<pmenuitem*> itemlist);
+    void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
     QHash<QString, QString> getpluginfo();
     //end plugininterface
@@ -45,7 +45,7 @@ private:
     QDate currentDate;
     QCalendarWidget *cwidget = new QCalendarWidget;
     popup *popupbox;
-    popupmenu *pmenu;
+    QMenu *pmenu = nullptr;
 };
 
 #endif // CLOCK_H

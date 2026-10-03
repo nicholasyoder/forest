@@ -5,9 +5,9 @@
 
 clockplug::clockplug() : panelbutton(Text) {}
 
-clockplug::~clockplug(){}
+clockplug::~clockplug(){ delete pmenu; }
 
-void clockplug::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
+void clockplug::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     setText("12:00");
 
     QTimer *uptimer = new QTimer;
@@ -18,21 +18,18 @@ void clockplug::setupPlug(QBoxLayout *layout, QList<pmenuitem *> itemlist){
     popuplayout->addWidget(cwidget);
     popupbox = new popup(popuplayout, this, CenteredOnWidget);
 
-    pmenu = new popupmenu(this, CenteredOnWidget);
-    foreach (pmenuitem *item, itemlist)
-        pmenu->additem(item);
+    pmenu = new QMenu;
+    pmenu->addActions(itemlist);
 
-    pmenu->addseperator();
-    pmenuitem *item = new pmenuitem("Clock Settings", QIcon::fromTheme("configure"));
-    connect(item, &pmenuitem::clicked, this, &clockplug::showsettingswidget);
-    pmenu->additem(item);
+    pmenu->addSeparator();
+    pmenu->addAction(QIcon::fromTheme("configure"), "Clock Settings", this, &clockplug::showsettingswidget);
 
     layout->addWidget(this);
 
     loadsettings();
 
     connect(this, &clockplug::leftclicked, this, &clockplug::showpopup);
-    connect(this, &clockplug::rightclicked, pmenu, &popupmenu::show);
+    connect(this, &clockplug::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
 }
 
 QHash<QString, QString> clockplug::getpluginfo(){
