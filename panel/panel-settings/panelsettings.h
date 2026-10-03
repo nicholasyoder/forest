@@ -4,6 +4,7 @@
 #define PANELSETTINGS_H
 
 #include <QComboBox>
+#include <QSpinBox>
 #include "../../settings/widgets/listwidget.h"
 #include <QDebug>
 #include <QDropEvent>
@@ -66,6 +67,7 @@ private:
     QString padwithzeros(int number);
     QComboBox *position_select = nullptr;
     QComboBox *autohide_select = nullptr;
+    QSpinBox *autohide_delay_input = nullptr;
     ListWidget *applet_list_w = nullptr;
     QHash <QString, QString> path_hash;
 };

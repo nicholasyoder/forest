@@ -1,11 +1,9 @@
 add_library(panel-app MODULE
     autohidemanager.cpp
     geometrymanager.cpp
-    hiddenpanel.cpp
     panel.cpp
     autohidemanager.h
     geometrymanager.h
-    hiddenpanel.h
     panel.h
 )
 

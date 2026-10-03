@@ -20,11 +20,6 @@ Bugs and cleanups — roughly a single sitting each, no design work needed.
   immediately and `forest-logout` stays up with the overlays (keyboard
   interactivity none, so Escape can't clear them). Quit after a successful
   suspend/hibernate. Also SUSPEND's `action_map` key is `"logout"`.
-- **Autohide panel likely leaves an input-blocking strip (test + fix).**
-  `panel::hide()` / `HiddenPanel::hide()` only hide the child widget; the
-  layer-shell `shell` in `GeometryManager` stays mapped at full height,
-  transparent, and still takes input over windows at that edge. Likely fix:
-  `GeometryManager` hides/shows `shell` along with its content widget.
 - **Desktop-icons surface needs `KeyboardInteractivityOnDemand`.**
   `wallpaperwidget` requests `None`; icon rename, Delete/Shift+Delete and
   Ctrl-click multi-select only work because Biome grants focus to any clicked

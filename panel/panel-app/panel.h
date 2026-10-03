@@ -64,7 +64,6 @@ private:
     QList<panelpluginterface*> pluglist;
     AutoHideManager* autohide_manager = nullptr;
     GeometryManager* geometry_manager = nullptr;
-    GeometryManager *hp_geometry_manager = nullptr;
     panelQFrame *pframe = nullptr;
 };
 

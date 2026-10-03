@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "panel.h"
-#include "hiddenpanel.h"
 
 panel::panel(){}
 
@@ -45,43 +44,19 @@ void panel::loadsettings(){
     geometry_manager->set_reserve_screen_space(!autohide);
 
     if (autohide && !autohide_manager){
-        autohide_manager = new AutoHideManager(this);
-        connect(autohide_manager, &AutoHideManager::show, this, &panel::show);
-        connect(autohide_manager, &AutoHideManager::hide, this, &panel::hide);
-        installEventFilter(autohide_manager);
-
-        HiddenPanel* hidden_panel = new HiddenPanel;
-        connect(autohide_manager, &AutoHideManager::show, hidden_panel, &HiddenPanel::hide);
-        connect(autohide_manager, &AutoHideManager::hide, hidden_panel, &HiddenPanel::show);
-        connect(hidden_panel, &HiddenPanel::activated, this, &panel::show);
-
-        hp_geometry_manager = new GeometryManager(hidden_panel);
-        hp_geometry_manager->set_fixed_size(1);
-
-        if(this->isVisible()) // During settings reload
-            autohide_manager->close_eventually(); // Start autohide process
-        // During normal startup settings load, close_eventually will be
-        // called by the show event filter in AutoHideManager
+        autohide_manager = new AutoHideManager(geometry_manager, this);
+        autohide_manager->start();
     }
     else if (!autohide && autohide_manager){
-        autohide_manager->disconnect();
-        delete autohide_manager;
+        delete autohide_manager; // expands the panel
         autohide_manager = nullptr;
-
-        hp_geometry_manager->disconnect();
-        delete hp_geometry_manager;
-        hp_geometry_manager = nullptr;
-
-        this->show();
     }
+    if (autohide_manager)
+        autohide_manager->set_delay(settings->value("autohide_delay", 1000).toInt());
 
     QString position = settings->value("position", "bottom").toString().toLower();
     geometry_manager->set_panel_position(position);
     geometry_manager->update_geometry();
-    if (hp_geometry_manager){
-        hp_geometry_manager->set_panel_position(position);
-        hp_geometry_manager->update_geometry();
-    }
 }
 
 void panel::loadplugins(){
