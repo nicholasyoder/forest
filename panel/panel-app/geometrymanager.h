@@ -30,7 +30,6 @@ public:
     QWidget *shell_widget() const { return shell; }
 
 signals:
-    void shell_changed(QWidget *shell);
 
 private:
     void build_shell();

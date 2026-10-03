@@ -39,6 +39,7 @@ QList<settings_item*> PanelSettings::get_settings_items(){
     autohide_delay_input->setRange(0, 10000);
     autohide_delay_input->setSingleStep(100);
     autohide_delay_input->setSuffix(" ms");
+    autohide_delay_input->setKeyboardTracking(false); // one reload per edit, not per keystroke
     settings_widget *autohide_delay_item = new settings_widget("Hide delay", "", autohide_delay_input);
     behavior_cat->add_child(autohide_delay_item);
 

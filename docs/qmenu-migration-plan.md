@@ -31,6 +31,10 @@ unstyled on purpose (no one-off tray QSS).
   Check per consumer whether it can open without preceding input (mainmenu
   can — it has a hotkey); those that can't don't need the workaround.
 - Use `QMenu::addMenu()` for windowbutton's desktop submenu.
+- Autohide: `AutoHideManager::is_panel_popup()` only sees windows whose
+  `QWindow::transientParent()` chains to the panel shell. Give each `QMenu` an
+  explicit transient parent, or the panel may collapse under it — already the
+  case for mainmenu's parentless `new QMenu` in `contextmenu.cpp`.
 
 ## Known issue (upstream, revisit during the task)
 

@@ -45,7 +45,6 @@ void GeometryManager::rebuild_shell() {
     build_shell(); // reparents panel_widget out of old_shell
     update_geometry();
     old_shell->deleteLater();
-    emit shell_changed(shell);
 }
 
 void GeometryManager::handle_geometry_change() {

@@ -4,23 +4,22 @@
 
 #include <QEvent>
 #include <QGuiApplication>
+#include <QWidget>
 #include <QWindow>
 
 #include "geometrymanager.h"
 
+// App-wide filter: QWindow sends Show/Hide via sendEvent, so popups are seen regardless of focus.
 AutoHideManager::AutoHideManager(GeometryManager *geometry, QObject *parent)
     : QObject{parent}, geometry(geometry) {
     hide_timer.setSingleShot(true);
     hide_timer.setInterval(1000);
     connect(&hide_timer, &QTimer::timeout, this, &AutoHideManager::maybe_hide);
-    connect(qApp, &QGuiApplication::focusWindowChanged, this, &AutoHideManager::handle_focus_change);
-    connect(geometry, &GeometryManager::shell_changed, this, &AutoHideManager::watch_shell);
-    watch_shell(geometry->shell_widget());
+    qApp->installEventFilter(this);
 }
 
 AutoHideManager::~AutoHideManager(){
-    if (shell)
-        shell->removeEventFilter(this);
+    qApp->removeEventFilter(this);
     geometry->set_collapsed(false);
 }
 
@@ -32,45 +31,45 @@ void AutoHideManager::start(){
     hide_timer.start();
 }
 
-void AutoHideManager::watch_shell(QWidget *new_shell){
-    if (shell)
-        shell->removeEventFilter(this);
-    shell = new_shell;
-    shell->installEventFilter(this);
-}
-
 bool AutoHideManager::eventFilter(QObject* obj, QEvent* event){
-    if (obj == shell) {
-        if (event->type() == QEvent::Enter) {
+    switch (event->type()) {
+    case QEvent::Enter:
+        if (obj == geometry->shell_widget()) {
             hide_timer.stop();
             geometry->set_collapsed(false);
-        } else if (event->type() == QEvent::Leave) {
-            hide_timer.start();
         }
+        break;
+    case QEvent::Leave:
+        if (obj == geometry->shell_widget())
+            hide_timer.start();
+        break;
+    case QEvent::Show: // reveals for popups opened while collapsed (e.g. main menu hotkey)
+        if (obj->isWindowType() && is_panel_popup(static_cast<QWindow*>(obj))) {
+            hide_timer.stop();
+            geometry->set_collapsed(false);
+        }
+        break;
+    case QEvent::Hide:
+        if (obj->isWindowType() && is_panel_popup(static_cast<QWindow*>(obj)))
+            hide_timer.start();
+        break;
+    default:
+        break;
     }
     return QObject::eventFilter(obj, event);
 }
 
-// Reveals for popups opened while collapsed (e.g. main menu hotkey); the
-// timer then polls until the popup closes, however it's closed.
-void AutoHideManager::handle_focus_change(QWindow *focus){
-    if (is_panel_popup(focus))
-        geometry->set_collapsed(false);
-    hide_timer.start();
-}
-
+// No re-arm: the next shell Leave or popup Hide restarts the timer.
 void AutoHideManager::maybe_hide(){
-    if (!shell || shell->underMouse())
-        return; // Leave re-arms
-    if (panel_popup_visible()) {
-        hide_timer.start(); // popup close gives no reliable signal here
+    QWidget *shell = geometry->shell_widget();
+    if (!shell || shell->underMouse() || panel_popup_visible())
         return;
-    }
     geometry->set_collapsed(true);
 }
 
 // A window transient to the shell (panel-library/popup.h sets that parent).
 bool AutoHideManager::is_panel_popup(QWindow *window) const {
+    QWidget *shell = geometry->shell_widget();
     if (!shell || !window)
         return false;
     QWindow *shell_window = shell->windowHandle();
