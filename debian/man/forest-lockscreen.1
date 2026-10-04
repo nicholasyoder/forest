@@ -1,0 +1,29 @@
+.TH FOREST-LOCKSCREEN 1 "October 2026" "forest" "Forest desktop environment"
+.SH NAME
+forest-lockscreen \- Forest lock screen
+.SH SYNOPSIS
+.B forest-lockscreen
+.SH DESCRIPTION
+.B forest-lockscreen
+locks the session through the Wayland
+.I ext-session-lock-v1
+protocol, asks for the user's password (PAM service
+.IR forest-locker ),
+unlocks and exits. It prints
+.B locked
+on standard output once the compositor confirms the screen is covered.
+It is styled with the active Forest theme's
+.IR greeter.css .
+.PP
+It is normally started by
+.BR forest-locker (1)
+rather than by hand.
+.SH SIGNALS
+.TP
+.B SIGUSR1
+Unlock without authenticating.
+.SH EXIT STATUS
+0 after unlocking; non-zero if the session couldn't be locked (for
+example, another locker already holds the lock).
+.SH SEE ALSO
+.BR forest-locker (1)

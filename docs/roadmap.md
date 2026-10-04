@@ -35,24 +35,15 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
   Decide when picked up. Active-window capture has no standard path on
   wlroots 0.18 (per-toplevel capture needs 0.19), so that hotkey may become
   region capture instead.
-- **Session locker / screensaver** (#5). Required to replace Biome's
-  hardcoded idle-blank stopgap. Biome 0.1.0 provides `ext-idle-notify-v1`
-  (idle timing), `wlr-output-power-management-unstable-v1` (blanking) and
-  already has `ext-session-lock-v1` (works with swaylock). The Forest client
-  watches idle-notify, locks via session-lock, and turns outputs off/on via
-  output-power; it also needs idle/lock settings in `forest-settings`. The
-  PAM/logind side of the old X11-only plan (PAM auth in a `QThread`,
-  `org.freedesktop.login1` `Lock`/`Unlock`/`PrepareForSleep`) can likely
-  carry over as-is.
-- **Settings upgrade for 0.9.0.** Default `Forest.conf` still says
-  `version=0.7.9` (0.8.0 shipped without a bump), so no upgrade runs for
-  existing users. Bump it to `0.9.0` and add `upgrade_0_9_0()` to
-  `forest/settings_upgrade_manager.cpp` that: drops the dead show-desktop
-  `item-0003` hotkey, rewrites the `gnome-screenshot` hotkeys to whatever
-  replaces them, and renames `plug-NNNN/path=seperator` to `separator` in
-  `~/.config/Forest/Panel.conf` (see Cleanups).
+- **Settings upgrade for 0.9.0.** `version` is bumped to `0.9.0` and
+  `upgrade_0_9_0()` (`forest/settings_upgrade_manager.cpp`) adds the session
+  locker's Meta+L hotkey and settings plugin. Still to add: drop the dead
+  show-desktop `item-0003` hotkey, rewrite the `gnome-screenshot` hotkeys to
+  whatever replaces them, and rename `plug-NNNN/path=seperator` to
+  `separator` in `~/.config/Forest/Panel.conf` (see Cleanups). Keep each step
+  idempotent: testers re-run it by resetting `version`.
 - **Ship a Biome config with the Forest package.** Forest's layer-shell
-  surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-startup`
+  surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-locker-dim,forest-startup`
   (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
   all; neither repo ships a default today, so a fresh install gets no fades.
   Since these are Forest app namespaces, the Forest package should install

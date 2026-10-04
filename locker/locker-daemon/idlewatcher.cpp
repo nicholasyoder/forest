@@ -2,12 +2,13 @@
 
 #include "idlewatcher.h"
 
+#include <algorithm>
+
 #include <QDebug>
 #include <QGuiApplication>
 #include <QWaylandClientExtension>
 #include <qguiapplication_platform.h>
 
-#include "lockersettings.h"
 #include "qwayland-ext-idle-notify-v1.h"
 
 class IdleNotifier : public QWaylandClientExtensionTemplate<IdleNotifier>, public QtWayland::ext_idle_notifier_v1 {
@@ -17,11 +18,14 @@ public:
 
 class IdleNotification : public QtWayland::ext_idle_notification_v1 {
 public:
-    IdleNotification(IdleWatcher *watcher, IdleWatcher::Threshold threshold, ::ext_idle_notification_v1 *object)
-        : QtWayland::ext_idle_notification_v1(object), m_watcher(watcher), m_threshold(threshold) {}
+    IdleNotification(IdleWatcher *watcher, IdleWatcher::Threshold threshold, int timeoutMs,
+                     ::ext_idle_notification_v1 *object)
+        : QtWayland::ext_idle_notification_v1(object), m_watcher(watcher), m_threshold(threshold)
+        , m_timeoutMs(timeoutMs) {}
     ~IdleNotification() override { destroy(); }
 
     IdleWatcher::Threshold threshold() const { return m_threshold; }
+    int timeoutMs() const { return m_timeoutMs; }
     bool isIdle() const { return m_idle; }
 
 protected:
@@ -40,8 +44,16 @@ protected:
 private:
     IdleWatcher *m_watcher;
     IdleWatcher::Threshold m_threshold;
+    int m_timeoutMs;
     bool m_idle = false;
 };
+
+namespace {
+
+// Dim warning shown this long before the displays turn off.
+constexpr int DimLeadMs = 10000;
+
+} // namespace
 
 IdleWatcher::IdleWatcher(QObject *parent)
     : QObject(parent)
@@ -62,25 +74,53 @@ bool IdleWatcher::isValid() const
     return m_notifier->isActive();
 }
 
-void IdleWatcher::configure(const LockerConfig &config, bool locked)
+void IdleWatcher::configure(const LockerConfig &config)
 {
-    for (Threshold threshold : {DisplayOff, LockedDisplayOff})
-        remove(threshold);
-    add(DisplayOff, config.displayOffMs);
-    m_lockedDisplayOffMs = config.lockedDisplayOffMs;
-    m_locked = locked;
-    if (locked)
-        add(LockedDisplayOff, m_lockedDisplayOffMs);
+    m_config = config;
+    sync();
 }
 
 void IdleWatcher::setLocked(bool locked)
 {
-    if (locked == m_locked)
-        return;
     m_locked = locked;
-    remove(LockedDisplayOff);
-    if (locked)
-        add(LockedDisplayOff, m_lockedDisplayOffMs);
+    sync();
+}
+
+void IdleWatcher::setInhibited(bool inhibited)
+{
+    m_inhibited = inhibited;
+    sync();
+}
+
+int IdleWatcher::timeoutFor(Threshold threshold) const
+{
+    switch (threshold) {
+    case Dim:
+        if (m_locked || m_inhibited || !m_config.dimBeforeDisplayOff || m_config.displayOffMs <= DimLeadMs)
+            return 0;
+        return m_config.displayOffMs - DimLeadMs;
+    case DisplayOff:
+        // Bus inhibitors can't tell whether their window is visible, so the lock overrides them.
+        return !m_inhibited || m_locked ? m_config.displayOffMs : 0;
+    case LockedDisplayOff:
+        return m_locked ? m_config.lockedDisplayOffMs : 0;
+    }
+    return 0;
+}
+
+void IdleWatcher::sync()
+{
+    for (Threshold threshold : {Dim, DisplayOff, LockedDisplayOff}) {
+        int timeoutMs = timeoutFor(threshold);
+        auto it = std::find_if(m_notifications.begin(), m_notifications.end(),
+                               [threshold](IdleNotification *n) { return n->threshold() == threshold; });
+        if (it != m_notifications.end()) {
+            if ((*it)->timeoutMs() == timeoutMs)
+                continue;
+            remove(*it);
+        }
+        add(threshold, timeoutMs);
+    }
 }
 
 void IdleWatcher::add(Threshold threshold, int timeoutMs)
@@ -90,24 +130,19 @@ void IdleWatcher::add(Threshold threshold, int timeoutMs)
     auto *app = qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>();
     if (!app || !app->seat())
         return;
-    m_notifications.append(new IdleNotification(this, threshold,
+    m_notifications.append(new IdleNotification(this, threshold, timeoutMs,
                                                 m_notifier->get_idle_notification(timeoutMs, app->seat())));
 }
 
-void IdleWatcher::remove(Threshold threshold)
+void IdleWatcher::remove(IdleNotification *notification)
 {
-    for (auto it = m_notifications.begin(); it != m_notifications.end();) {
-        if ((*it)->threshold() != threshold) {
-            ++it;
-            continue;
-        }
-        // Its resumed would never arrive, leaving the displays dark.
-        bool wasIdle = (*it)->isIdle();
-        delete *it;
-        it = m_notifications.erase(it);
-        if (wasIdle)
-            emit resumed();
-    }
+    m_notifications.removeOne(notification);
+    bool wasIdle = notification->isIdle();
+    delete notification;
+    // Its resumed would never arrive; any still-idle notification will deliver one.
+    if (wasIdle && std::none_of(m_notifications.begin(), m_notifications.end(),
+                                [](IdleNotification *n) { return n->isIdle(); }))
+        emit resumed();
 }
 
 void IdleWatcher::notificationIdled(IdleNotification *notification)

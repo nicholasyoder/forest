@@ -19,6 +19,7 @@ struct ActionData {
 };
 
 const QMap<ActionType, ActionData> action_map = {
+    {ActionType::LOCK, {"lock", "Lock"}},
     {ActionType::SHUTDOWN, {"shutdown", "PowerOff"}},
     {ActionType::REBOOT, {"reboot", "Reboot"}},
     {ActionType::LOGOUT, {"logout", "Terminate"}},
@@ -33,7 +34,7 @@ const QString LOGIN1_MANAGER = "org.freedesktop.login1.Manager";
 // Returns an invalid QDBusError on success.
 QDBusError call_login1(const QString &method){
     QDBusMessage msg;
-    if (method == "Terminate") // the per-session self object avoids resolving our session id
+    if (method == "Terminate" || method == "Lock") // the per-session self object avoids resolving our session id
         msg = QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH + "/session/self", "org.freedesktop.login1.Session", method);
     else // Manager methods take an "interactive" (polkit auth) bool
         msg = QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH, LOGIN1_MANAGER, method) << true;
@@ -88,6 +89,8 @@ void logoutmanager::setup(){
     basevlayout->addLayout(closehlayout);
     QHBoxLayout *actionshlayout = new QHBoxLayout;
     actionshlayout->setSpacing(0);
+    iconbutton *lockbt = new iconbutton(QIcon::fromTheme("system-lock-screen"), 48, 48, true, "Lock");
+    actionshlayout->addWidget(lockbt);
     iconbutton *shutdownbt = new iconbutton(QIcon::fromTheme("system-shutdown"), 48, 48, true, "Shutdown");
     actionshlayout->addWidget(shutdownbt);
     iconbutton *rebootbt = new iconbutton(QIcon::fromTheme("system-reboot"), 48, 48, true, "Reboot");
@@ -107,7 +110,8 @@ void logoutmanager::setup(){
     vlayout->addWidget(mainframe);
 
     QString lastaction = settings->value("lastaction", "shutdown").toString();
-    if (lastaction == "shutdown") focusbt = shutdownbt;
+    if (lastaction == "lock") focusbt = lockbt;
+    else if (lastaction == "shutdown") focusbt = shutdownbt;
     else if (lastaction == "reboot") focusbt = rebootbt;
     else if (lastaction == "logout") focusbt = logoutbt;
     else if (lastaction == "suspend") focusbt = suspendbt;
@@ -120,11 +124,13 @@ void logoutmanager::setup(){
         bt->setEnabled(login1_can(method));
     if (!focusbt->isEnabled()) focusbt = logoutbt;
 
+    connect(lockbt, &iconbutton::clicked, this, [this](){start_action(ActionType::LOCK);});
     connect(shutdownbt, &iconbutton::clicked, this, [this](){start_action(ActionType::SHUTDOWN);});
     connect(rebootbt, &iconbutton::clicked, this, [this](){start_action(ActionType::REBOOT);});
     connect(logoutbt, &iconbutton::clicked, this, [this](){start_action(ActionType::LOGOUT);});
     connect(suspendbt, &iconbutton::clicked, this, [this](){start_action(ActionType::SUSPEND);});
     connect(hibernatebt, &iconbutton::clicked, this, [this](){start_action(ActionType::HIBERNATE);});
+    QWidget::setTabOrder(lockbt, shutdownbt);
     QWidget::setTabOrder(shutdownbt, rebootbt);
     QWidget::setTabOrder(rebootbt, logoutbt);
     QWidget::setTabOrder(logoutbt, suspendbt);
@@ -149,7 +155,7 @@ void logoutmanager::keyPressEvent(QKeyEvent *event){
 void logoutmanager::start_action(ActionType action){
     close(); // the compositor fades layer surfaces in/out by namespace
 
-    const bool session_survives = action == ActionType::SUSPEND || action == ActionType::HIBERNATE;
+    const bool session_survives = action == ActionType::LOCK || action == ActionType::SUSPEND || action == ActionType::HIBERNATE;
     if (session_survives)
         close_overlays();
     else // Can't retarget a mapped surface's opacity; stack opaque overlays over the dim ones instead.

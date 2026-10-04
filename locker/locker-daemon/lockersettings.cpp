@@ -18,7 +18,8 @@ int minutesMs(const QSettings &settings, const char *key, double fallback)
 
 bool LockerConfig::operator==(const LockerConfig &other) const
 {
-    return displayOffMs == other.displayOffMs && lockOnDisplayOff == other.lockOnDisplayOff
+    return displayOffMs == other.displayOffMs && dimBeforeDisplayOff == other.dimBeforeDisplayOff
+        && lockOnDisplayOff == other.lockOnDisplayOff
         && lockOnSuspend == other.lockOnSuspend
         && lockedDisplayOffMs == other.lockedDisplayOffMs;
 }
@@ -43,6 +44,7 @@ void LockerSettings::reload()
     QSettings settings("Forest", "Locker");
     LockerConfig config;
     config.displayOffMs = minutesMs(settings, "display_off_minutes", 10);
+    config.dimBeforeDisplayOff = settings.value("dim_before_display_off", true).toBool();
     config.lockOnDisplayOff = settings.value("lock_on_display_off", true).toBool();
     config.lockOnSuspend = settings.value("lock_on_suspend", true).toBool();
     config.lockedDisplayOffMs = minutesMs(settings, "locked_display_off_minutes", 1);

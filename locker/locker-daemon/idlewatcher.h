@@ -6,7 +6,8 @@
 #include <QList>
 #include <QObject>
 
-struct LockerConfig;
+#include "lockersettings.h"
+
 class IdleNotifier;
 class IdleNotification;
 
@@ -14,7 +15,7 @@ class IdleNotification;
 class IdleWatcher : public QObject {
     Q_OBJECT
 public:
-    enum Threshold { DisplayOff, LockedDisplayOff };
+    enum Threshold { Dim, DisplayOff, LockedDisplayOff };
     Q_ENUM(Threshold)
 
     explicit IdleWatcher(QObject *parent = nullptr);
@@ -22,24 +23,29 @@ public:
 
     // False if the compositor lacks ext-idle-notify-v1.
     bool isValid() const;
-    void configure(const LockerConfig &config, bool locked);
-    // Adds or drops only the while-locked threshold, so the others keep their timers.
+    void configure(const LockerConfig &config);
     void setLocked(bool locked);
+    // org.freedesktop.ScreenSaver inhibitors: suspend the unlocked thresholds.
+    void setInhibited(bool inhibited);
 
 signals:
     void idled(IdleWatcher::Threshold threshold);
     void resumed();
 
 private:
+    int timeoutFor(Threshold threshold) const;
+    // Re-arms only thresholds whose timeout changed, so the others keep their timers.
+    void sync();
     void add(Threshold threshold, int timeoutMs);
-    void remove(Threshold threshold);
+    void remove(IdleNotification *notification);
     void notificationIdled(IdleNotification *notification);
     void notificationResumed(IdleNotification *notification);
 
     IdleNotifier *m_notifier;
     QList<IdleNotification *> m_notifications;
-    int m_lockedDisplayOffMs = 0;
+    LockerConfig m_config;
     bool m_locked = false;
+    bool m_inhibited = false;
 
     friend class IdleNotification;
 };

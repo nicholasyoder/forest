@@ -13,8 +13,9 @@ class QScreen;
 class layeroverlay : public QWidget{
     Q_OBJECT
 public:
-    layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen);
-    static QList<layeroverlay*> showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope);
+    // passInput: empty input region, so clicks reach whatever is below.
+    layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen, bool passInput = false);
+    static QList<layeroverlay*> showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, bool passInput = false);
 
 private:
     void paintEvent(QPaintEvent *);

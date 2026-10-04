@@ -16,6 +16,7 @@ private:
     void load_defaults();
 
     void upgrade_0_7_9();
+    void upgrade_0_9_0();
 };
 
 #endif // SETTINGSUPGRADEMANAGER_H

@@ -1,0 +1,34 @@
+.TH FOREST-LOCKER 1 "October 2026" "forest" "Forest desktop environment"
+.SH NAME
+forest-locker \- Forest idle and session lock daemon
+.SH SYNOPSIS
+.B forest-locker
+.RB [ \-\-no\-logind ]
+.SH DESCRIPTION
+.B forest-locker
+dims the screen, turns displays off and locks the session after the idle
+timeouts configured under Lock Screen in
+.BR forest-settings (1)
+(stored in
+.IR ~/.config/Forest/Locker.conf ).
+It locks by running
+.BR forest-lockscreen (1),
+and restarts it if it crashes while the session should be locked.
+.PP
+It also locks on logind's
+.B Lock
+signal (e.g.
+.BR "loginctl lock-session" )
+and before suspend, and provides the
+.B org.freedesktop.ScreenSaver
+service so applications can inhibit idle or request a lock.
+.PP
+It is started by
+.BR forest-session (1).
+.SH OPTIONS
+.TP
+.B \-\-no\-logind
+Don't talk to logind: no lock or sleep signals, and no locked/idle hints.
+.SH SEE ALSO
+.BR forest-lockscreen (1),
+.BR forest-session (1)

@@ -6,10 +6,10 @@
 #include <QPainter>
 #include <QWindow>
 
-layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen) : color(color){
+layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, QScreen *screen, bool passInput) : color(color){
     setAttribute(Qt::WA_TranslucentBackground);
     setAttribute(Qt::WA_DeleteOnClose);
-    setWindowFlags(Qt::FramelessWindowHint);
+    setWindowFlags(passInput ? Qt::FramelessWindowHint | Qt::WindowTransparentForInput : Qt::FramelessWindowHint);
 
     winId(); // force native window creation so windowHandle() is valid
     windowHandle()->setScreen(screen);
@@ -22,10 +22,10 @@ layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer laye
     layer_window->setScope(scope);
 }
 
-QList<layeroverlay*> layeroverlay::showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope){
+QList<layeroverlay*> layeroverlay::showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, bool passInput){
     QList<layeroverlay*> overlays;
     for (QScreen *screen : QGuiApplication::screens()){
-        layeroverlay *overlay = new layeroverlay(color, layer, scope, screen);
+        layeroverlay *overlay = new layeroverlay(color, layer, scope, screen, passInput);
         overlay->show();
         overlays << overlay;
     }
