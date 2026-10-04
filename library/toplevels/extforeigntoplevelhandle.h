@@ -30,7 +30,7 @@ protected:
 
 private:
     QString m_identifier;
-    // `done` repeats on every title/app_id change; windowlist deletes the
+    // `done` repeats on every title/app_id change; ToplevelTracker deletes the
     // handle after the first ready(), so it must only fire once.
     bool m_readySent = false;
 };

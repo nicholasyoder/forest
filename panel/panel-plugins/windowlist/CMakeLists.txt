@@ -3,20 +3,12 @@ add_library(windowlist MODULE
     settingswidget.cpp
     windowbutton.cpp
     windowlist.cpp
-    foreigntoplevelmanager.cpp
-    foreigntoplevelhandle.cpp
-    extforeigntoplevellist.cpp
-    extforeigntoplevelhandle.cpp
     iconresolver.cpp
     closebutton.h
     imagepopup.h
     settingswidget.h
     windowbutton.h
     windowlist.h
-    foreigntoplevelmanager.h
-    foreigntoplevelhandle.h
-    extforeigntoplevellist.h
-    extforeigntoplevelhandle.h
     iconresolver.h
     settingswidget.ui
 )
@@ -30,10 +22,6 @@ target_link_libraries(windowlist PRIVATE
 )
 forest_link_panel_library(windowlist)
 forest_link_miscutills(windowlist)
-forest_generate_wayland_protocol_client(windowlist ${CMAKE_SOURCE_DIR}/protocol/wlr-foreign-toplevel-management-unstable-v1.xml)
-
-pkg_get_variable(WAYLAND_PROTOCOLS_DATADIR wayland-protocols pkgdatadir)
-forest_generate_wayland_protocol_client(windowlist
-    "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml")
+forest_link_toplevels(windowlist)
 
 install(TARGETS windowlist LIBRARY DESTINATION lib/forest/panel)

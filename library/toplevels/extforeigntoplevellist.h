@@ -10,7 +10,7 @@
 class ExtForeignToplevelHandle;
 
 // Bound only for the per-window `identifier` org.biome.Workspaces keys on.
-// windowlist pairs these with wlr handles by creation order, which relies
+// ToplevelTracker pairs these with wlr handles by creation order, which relies
 // on Biome creating both handles back-to-back (neither protocol links them).
 class ExtForeignToplevelList : public QWaylandClientExtensionTemplate<ExtForeignToplevelList>,
                                 public QtWayland::ext_foreign_toplevel_list_v1 {

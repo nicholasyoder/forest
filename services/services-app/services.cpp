@@ -15,6 +15,9 @@ void services::setupPlug(){
 
     fpolkit = new polkitagent;
 
+    fshowdesktop = new ShowDesktop;
+    fshowdesktop->setup();
+
     fsystemtray = new StatusNotifierWatcher;
     fsystemtray->setup();
 }

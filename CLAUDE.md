@@ -104,6 +104,7 @@ All in `library/`:
 - **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
 - **`pluginutills`** — plugin path resolution for both plugin types
 - **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
+- **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `BiomeWorkspaces`, and `ToplevelTracker` (open windows + which are on the active workspace)
 - **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `PanelButton`, `GraphWidget`)
 
 Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(target)`) link these static libs.

@@ -22,7 +22,7 @@ public:
     bool isMinimized() const{return m_minimized;}
     bool isActivated() const{return m_activated;}
 
-    // ext-foreign-toplevel-list identifier, paired in by windowlist; empty
+    // ext-foreign-toplevel-list identifier, paired in by ToplevelTracker; empty
     // until paired or when org.biome isn't available.
     QString identifier() const{return m_identifier;}
     void setIdentifier(const QString &identifier){m_identifier = identifier;}
@@ -31,6 +31,7 @@ public:
     void setMaximized();
     void unsetMaximized();
     void setMinimized();
+    void unsetMinimized();
     void requestClose();
 
 signals:

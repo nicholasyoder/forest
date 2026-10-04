@@ -109,7 +109,8 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
         settings->setValue(plugin + "/name", "locker");
         settings->setValue(plugin + "/settings-only", true);
     }
-    // gnome-screenshot can't capture under Biome; customized actions are left alone.
+    // gnome-screenshot can't capture under Biome, and show desktop moved off
+    // /org/forest/hotkeys; customized actions are left alone.
     settings->beginGroup("hotkeys");
     foreach (QString child, settings->childGroups()){
         QString action = settings->value(child + "/action").toString();
@@ -119,6 +120,8 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
             settings->setValue(child + "/action", "forest-screenshot --region");
             settings->setValue(child + "/description", "screenshot region");
         }
+        else if (action == "DBUS:bus=Session,service=org.forest,path=/org/forest/hotkeys,method=showdesktop")
+            settings->setValue(child + "/action", "DBUS:bus=Session,service=org.forest,path=/org/forest/showdesktop,method=toggle");
     }
     settings->endGroup();
 }

@@ -79,3 +79,10 @@ endfunction()
 function(forest_link_fileops target)
     target_link_libraries(${target} PRIVATE fileops)
 endfunction()
+
+# forest_link_toplevels(target)
+# Links the toplevels static library (foreign-toplevel + ext-workspace
+# clients and ToplevelTracker)
+function(forest_link_toplevels target)
+    target_link_libraries(${target} PRIVATE toplevels)
+endfunction()

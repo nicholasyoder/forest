@@ -14,5 +14,6 @@ target_link_libraries(deskswitch PRIVATE
 )
 forest_link_panel_library(deskswitch)
 forest_link_miscutills(deskswitch)
+forest_link_toplevels(deskswitch)
 
 install(TARGETS deskswitch LIBRARY DESTINATION lib/forest/panel)
