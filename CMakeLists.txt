@@ -56,16 +56,15 @@ add_subdirectory(system)
 add_subdirectory(greeter)
 add_subdirectory(locker)
 
-# Before the /etc installs: staging (non-root) aborts at those
-install(PROGRAMS usr/bin/forest-screenshot DESTINATION bin)
-
 # Install config and data files
+install(PROGRAMS usr/bin/forest-screenshot DESTINATION bin)
+install(DIRECTORY usr/share/wayland-sessions/ DESTINATION share/wayland-sessions)
+install(DIRECTORY usr/share/applications/ DESTINATION share/applications)
+install(DIRECTORY usr/share/forest/ DESTINATION share/forest USE_SOURCE_PERMISSIONS)
+install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION share/wallpapers/forest)
+install(DIRECTORY usr/share/themes/ DESTINATION share/themes)
+install(DIRECTORY usr/lib/systemd/system/ DESTINATION lib/systemd/system COMPONENT greeter)
+# Last: non-root staging installs abort here, skipping any rule after.
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
 install(FILES etc/pam.d/forest-locker DESTINATION /etc/pam.d)
-install(DIRECTORY usr/share/wayland-sessions/ DESTINATION /usr/share/wayland-sessions)
-install(DIRECTORY usr/share/applications/ DESTINATION /usr/share/applications)
-install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest USE_SOURCE_PERMISSIONS)
-install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION /usr/share/wallpapers/forest)
-install(DIRECTORY usr/share/themes/ DESTINATION /usr/share/themes)
-install(DIRECTORY usr/lib/systemd/system/ DESTINATION /usr/lib/systemd/system COMPONENT greeter)
