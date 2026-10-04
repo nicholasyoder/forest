@@ -37,23 +37,39 @@ void edithotkeywidget::set_hotkeys_paused(bool pause){
                                 : "forest/hotkeys/resumeHotkeys");
 }
 
+static bool is_meta_key(int key){
+    return key == Qt::Key_Meta || key == Qt::Key_Super_L || key == Qt::Key_Super_R;
+}
+
 void edithotkeywidget::keyPressEvent(QKeyEvent *event){
     if (waitingforkeys == true){
+        if (event->isAutoRepeat()) return;
         if (event->key()==Qt::Key_AltGr||event->key()==Qt::Key_Print||event->key()==Qt::Key_CapsLock||event->key()==Qt::Key_NumLock||
                 event->key()==Qt::Key_Return||event->key()==Qt::Key_Enter) { return; }
         else if (event->key()==Qt::Key_Control){ keys = keys + "Ctrl+"; return; }
         else if (event->key()==Qt::Key_Shift){ keys = keys + "Shift+"; return; }
         else if (event->key()==Qt::Key_Alt) { keys = keys + "Alt+"; return; }
-        else if (event->key()==Qt::Key_Meta || event->key() == 16777299){ keys = keys + "Meta+"; return; }
+        else if (is_meta_key(event->key())){ keys = keys + "Meta+"; return; }
 
         QKeySequence key = event->key();
         keys = keys + key.toString();
-
-        waitingforkeys = false;
-        set_hotkeys_paused(false);
-        ui->shortcutbt->setText(keys);
-        keys = "";
+        finish_capture();
     }
+}
+
+// A lone Meta tap: "Meta" is the value foresthotkeys maps to a bare LOGO trigger.
+void edithotkeywidget::keyReleaseEvent(QKeyEvent *event){
+    if (waitingforkeys && !event->isAutoRepeat() && is_meta_key(event->key()) && keys == "Meta+"){
+        keys = "Meta";
+        finish_capture();
+    }
+}
+
+void edithotkeywidget::finish_capture(){
+    waitingforkeys = false;
+    set_hotkeys_paused(false);
+    ui->shortcutbt->setText(keys);
+    keys = "";
 }
 
 void edithotkeywidget::closeEvent(QCloseEvent *event){

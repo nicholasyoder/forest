@@ -56,6 +56,7 @@ signals:
     void data_updated(const HotkeyData& data);
 protected:
     void keyPressEvent(QKeyEvent *event);
+    void keyReleaseEvent(QKeyEvent *event);
     void closeEvent(QCloseEvent *event);
 private slots:
     void on_okbt_clicked();
@@ -70,6 +71,7 @@ private:
     bool hotkeys_paused = false;
     QString keys;
     void set_hotkeys_paused(bool pause);
+    void finish_capture();
 };
 
 #endif // EDITHOTKEYWIDGET_H
