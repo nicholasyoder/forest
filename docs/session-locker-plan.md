@@ -56,7 +56,8 @@ Long-running daemon with no windows (apart from the dim overlay), started by
 `forest-session` next to `forest`.
 
 - **Idle** — one `ext_idle_notification_v1` per threshold: dim warning,
-  lock, display off, and a shorter display-off delay while locked. At
+  display off (and lock, if enabled), and a shorter display-off delay while
+  locked. At
   `resumed`, power every output on and drop the dim overlay.
 - **Output power** — `zwlr_output_power_v1` per screen; get each `wl_output`
   from its `QScreen` through the native interface.
@@ -78,7 +79,7 @@ Long-running daemon with no windows (apart from the dim overlay), started by
   idle thresholds.
 - **Dim warning** — `layeroverlay::showOnAllScreens` with a translucent
   black overlay and its own namespace (`forest-locker-dim`) a few seconds
-  before the lock (or before display-off if lock-on-idle is off). Give it an
+  before display-off. Give it an
   empty input region so the waking click goes through. It fades only once
   Biome's fade config lists that namespace (the shipped-config blocker on
   the roadmap); otherwise it appears abruptly.
@@ -101,11 +102,16 @@ categories is a separate, later job). Needs a `plug-0005` `name=locker`,
 `settings-only=true` entry in `etc/forest/Forest.conf`, also appended by
 `upgrade_0_9_0()`.
 
-- Turn displays off after N minutes (default 10, matching the old stopgap).
-- Lock after N minutes (off, or tied to display-off).
-- Dim before lock or display-off (on/off).
-- Lock on suspend (default on).
-- Displays off after N seconds idle while locked (default 30–60s).
+- Turn displays off after N minutes (`display_off_minutes`, default 10,
+  matching the old stopgap; 0 = never).
+- Lock when the displays turn off (`lock_on_display_off`, default on).
+- Dim before display-off (on/off).
+- Lock on suspend (`lock_on_suspend`, default on).
+- Displays off after N minutes idle while locked
+  (`locked_display_off_minutes`, default 1; 0 = never) — for manual locks,
+  so a locked screen doesn't stay lit for the full display-off delay.
+
+The daemon reads minutes as doubles, so fractional values work for testing.
 
 ## Shared UI with the greeter
 
