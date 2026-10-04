@@ -6,6 +6,21 @@
 #include <QProcess>
 #include <QDebug>
 
+// Next free "<prefix>NNNN" key in group, or "" if some entry already has key == value.
+static QString next_free_key(QSettings *settings, const QString &group, const QString &prefix,
+                             const QString &key, const QString &value){
+    settings->beginGroup(group);
+    int last = -1;
+    bool exists = false;
+    foreach (QString child, settings->childGroups()){
+        if (settings->value(child + "/" + key).toString() == value) exists = true;
+        if (child.startsWith(prefix)) last = qMax(last, child.mid(prefix.length()).toInt());
+    }
+    settings->endGroup();
+    if (exists) return "";
+    return group + "/" + prefix + QString("%1").arg(last + 1, 4, 10, QChar('0'));
+}
+
 SettingsUpgradeManager::SettingsUpgradeManager(QObject *parent) : QObject{parent}{
     settings = new QSettings("Forest","Forest");
 }
@@ -27,6 +42,7 @@ void SettingsUpgradeManager::perform_upgrades(){
     // Register upgrade functions here
     QMap<QVector<int>, std::function<void()>> upgrade_map = {
         {{0,7,9}, [this](){ this->upgrade_0_7_9(); }},
+        {{0,9,0}, [this](){ this->upgrade_0_9_0(); }},
     };
 
     // Get version of existing settings
@@ -78,4 +94,19 @@ void SettingsUpgradeManager::load_defaults(){
 
 void SettingsUpgradeManager::upgrade_0_7_9(){
     settings->remove("needDefaults"); // Using version key now
+}
+
+void SettingsUpgradeManager::upgrade_0_9_0(){
+    QString hotkey = next_free_key(settings, "hotkeys", "item-", "keysequence", "Meta+L");
+    if (!hotkey.isEmpty()){
+        settings->setValue(hotkey + "/action", "loginctl lock-session");
+        settings->setValue(hotkey + "/description", "Lock screen");
+        settings->setValue(hotkey + "/keysequence", "Meta+L");
+    }
+    QString plugin = next_free_key(settings, "plugins", "plug-", "name", "locker");
+    if (!plugin.isEmpty()){
+        settings->setValue(plugin + "/enabled", true);
+        settings->setValue(plugin + "/name", "locker");
+        settings->setValue(plugin + "/settings-only", true);
+    }
 }

@@ -12,7 +12,7 @@
 #include "iconbutton.h"
 #include "layeroverlay.h"
 
-enum class ActionType {SHUTDOWN, REBOOT, LOGOUT, SUSPEND, HIBERNATE};
+enum class ActionType {LOCK, SHUTDOWN, REBOOT, LOGOUT, SUSPEND, HIBERNATE};
 
 class logoutmanager : public QWidget{
     Q_OBJECT

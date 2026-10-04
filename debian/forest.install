@@ -2,11 +2,14 @@ usr/bin/forest
 usr/bin/forest-session
 usr/bin/forest-logout
 usr/bin/forest-settings
+usr/bin/forest-locker
+usr/bin/forest-lockscreen
 usr/lib/forest
 usr/lib/*.a
 etc/forest/Forest.conf
 etc/forest/Panel.conf
 etc/forest/Quicklaunch.conf
+etc/pam.d/forest-locker
 usr/share/wayland-sessions
 usr/share/applications
 usr/share/forest/pics
@@ -14,6 +17,7 @@ usr/share/forest/power-manager.desktop
 usr/share/forest/qtct.conf
 usr/share/forest/startforest-wayland
 usr/share/forest/themes/*/forest.css
+usr/share/forest/themes/*/greeter.css
 usr/share/forest/themes/*/logout.css
 usr/share/forest/themes/*/settings.css
 usr/share/forest/themes/*/theme.conf

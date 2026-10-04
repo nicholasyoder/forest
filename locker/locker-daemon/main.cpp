@@ -21,7 +21,7 @@ int main(int argc, char *argv[])
     sigaddset(&quitMask, SIGINT);
     pthread_sigmask(SIG_BLOCK, &quitMask, nullptr);
 
-    // QApplication rather than QGuiApplication: the dim overlay will be a QWidget.
+    // QApplication rather than QGuiApplication: the dim overlay is a QWidget.
     QApplication app(argc, argv);
     app.setApplicationName("forest-locker");
     app.setQuitOnLastWindowClosed(false);

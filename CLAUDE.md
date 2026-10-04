@@ -39,6 +39,7 @@ The desktop session runs as several independent processes:
 - **`forest`** — the main process. Loads app plugins at startup, registers `org.forest` on DBus, and applies the global stylesheet.
 - **`forest-session`** — session manager. Launches autostart entries and the `forest` main process. Forked by the Biome compositor (its `-s` flag) once Biome's Wayland socket is ready — Biome is the top-level process, exec'd by `startforest-wayland`, the wayland-sessions entry point.
 - **`forest-logout`** — standalone fullscreen dialog for power actions.
+- **`forest-locker`** — idle/lock daemon started by `forest-session`: dim, display power, logind lock/sleep, `org.freedesktop.ScreenSaver`. Runs **`forest-lockscreen`** (`ext-session-lock-v1` + PAM) to lock. See `docs/session-locker-plan.md`.
 - **`forest-settings`** — standalone settings app. Loads settings plugins for its sidebar panels.
 
 There is a **two-tier plugin system** used by both `forest` and the panel.

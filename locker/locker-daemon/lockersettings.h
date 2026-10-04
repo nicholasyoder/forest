@@ -9,6 +9,7 @@
 // Timeouts in ms; 0 = never.
 struct LockerConfig {
     int displayOffMs = 0;
+    bool dimBeforeDisplayOff = false;
     bool lockOnDisplayOff = false;
     bool lockOnSuspend = false;
     int lockedDisplayOffMs = 0;

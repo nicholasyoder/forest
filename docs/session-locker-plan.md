@@ -105,7 +105,8 @@ categories is a separate, later job). Needs a `plug-0005` `name=locker`,
 - Turn displays off after N minutes (`display_off_minutes`, default 10,
   matching the old stopgap; 0 = never).
 - Lock when the displays turn off (`lock_on_display_off`, default on).
-- Dim before display-off (on/off).
+- Dim 10 s before display-off (`dim_before_display_off`, default on;
+  skipped when display-off is 10 s or less).
 - Lock on suspend (`lock_on_suspend`, default on).
 - Displays off after N minutes idle while locked
   (`locked_display_off_minutes`, default 1; 0 = never) — for manual locks,

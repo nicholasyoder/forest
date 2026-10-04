@@ -2,6 +2,7 @@
 
 #include "locker.h"
 
+#include "layeroverlay.h"
 #include "logind.h"
 
 Locker::Locker(bool useLogind, QObject *parent)
@@ -19,6 +20,8 @@ Locker::Locker(bool useLogind, QObject *parent)
     connect(&m_idle, &IdleWatcher::resumed, this, &Locker::resumed);
     connect(&m_supervisor, &LockSupervisor::stateChanged, this, &Locker::lockStateChanged);
     connect(&m_supervisor, &LockSupervisor::lockFailed, this, &Locker::finishSleepLock);
+    connect(&m_screenSaver, &ScreenSaver::lockRequested, &m_supervisor, &LockSupervisor::lock);
+    connect(&m_screenSaver, &ScreenSaver::inhibitedChanged, &m_idle, &IdleWatcher::setInhibited);
 }
 
 void Locker::start()
@@ -36,7 +39,7 @@ void Locker::start()
 void Locker::applySettings()
 {
     const LockerConfig &config = m_settings.config();
-    m_idle.configure(config, isLocked());
+    m_idle.configure(config);
     if (!m_logind)
         return;
     if (config.lockOnSuspend)
@@ -49,6 +52,10 @@ void Locker::idled(IdleWatcher::Threshold threshold)
 {
     if (m_logind)
         m_logind->setIdleHint(true);
+    if (threshold == IdleWatcher::Dim) {
+        showDim();
+        return;
+    }
     if (threshold == IdleWatcher::DisplayOff && m_settings.config().lockOnDisplayOff)
         m_supervisor.lock();
     m_power.setAll(false);
@@ -57,6 +64,7 @@ void Locker::idled(IdleWatcher::Threshold threshold)
 void Locker::resumed()
 {
     m_power.setAll(true);
+    hideDim();
     if (m_logind)
         m_logind->setIdleHint(false);
 }
@@ -64,6 +72,7 @@ void Locker::resumed()
 void Locker::lockStateChanged(LockSupervisor::State state)
 {
     m_idle.setLocked(state != LockSupervisor::Unlocked);
+    m_screenSaver.setActive(state == LockSupervisor::Locked);
     if (m_logind)
         m_logind->setLockedHint(state == LockSupervisor::Locked);
     if (state != LockSupervisor::Locking)
@@ -91,4 +100,20 @@ void Locker::finishSleepLock()
         return;
     m_sleepLockPending = false;
     m_logind->releaseSleepInhibitor();
+}
+
+void Locker::showDim()
+{
+    if (!m_dim.isEmpty())
+        return;
+    // Fades only if Biome's config lists this namespace.
+    m_dim = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 160), LayerShellQt::Window::LayerOverlay,
+                                           "forest-locker-dim", true);
+}
+
+void Locker::hideDim()
+{
+    for (layeroverlay *overlay : std::as_const(m_dim))
+        overlay->close();
+    m_dim.clear();
 }

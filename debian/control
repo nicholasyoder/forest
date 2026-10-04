@@ -10,6 +10,8 @@ Rules-Requires-Root: no
 Package: forest
 Architecture: amd64
 Depends: ${shlibs:Depends}, ${misc:Depends}, biome, qt6-wayland, xdg-desktop-portal, gtk2-engines-murrine, qt6ct, papirus-icon-theme, brightnessctl, gnome-screenshot, libglib2.0-bin, lxterminal, pcmanfm-qt, polkitd
+Replaces: forest-greeter (<< 0.9.0)
+Breaks: forest-greeter (<< 0.9.0)
 Description: lightweight Qt-based desktop environment
  Forest is a desktop environment built using Qt.
  It is still very much a work in progress so expect
