@@ -17,10 +17,12 @@ LockScreen::LockScreen(QObject *parent)
     , m_card(new PasswordCard)
 {
     auto *lock = sessionlock::Lock::instance();
-    connect(lock, &sessionlock::Lock::locked, this, [] {
+    connect(lock, &sessionlock::Lock::locked, this, [this] {
         // Readiness for forest-locker: the screens are actually covered now.
         fputs("locked\n", stdout);
         fflush(stdout);
+        if (m_unlockRequested)
+            unlockAndQuit();
     });
     connect(lock, &sessionlock::Lock::finished, this, [] {
         qWarning() << "Session lock refused or revoked by the compositor";
@@ -39,6 +41,8 @@ LockScreen::LockScreen(QObject *parent)
     connect(qGuiApp, &QGuiApplication::screenAdded, this, &LockScreen::addScreen);
     connect(qGuiApp, &QGuiApplication::screenRemoved, this, &LockScreen::removeScreen);
     connect(&m_tracker, &ScreenTracker::screens_replaced, this, &LockScreen::placeCard);
+    // The compositor picks which lock surface gets the keyboard; put the card there.
+    connect(qGuiApp, &QGuiApplication::focusWindowChanged, this, &LockScreen::placeCard);
 }
 
 LockScreen::~LockScreen()
@@ -53,7 +57,7 @@ bool LockScreen::start()
     if (!sessionlock::Lock::instance()->lock())
         return false;
 
-    // Primary first: Biome gives keyboard focus to the first lock surface.
+    // Primary first: compositors tend to focus the first lock surface.
     QScreen *primary = ScreenTracker::primary();
     addScreen(primary);
     for (QScreen *screen : QGuiApplication::screens())
@@ -65,6 +69,12 @@ bool LockScreen::start()
 
 void LockScreen::unlockAndQuit()
 {
+    // Before `locked`, unlock() would only drop our lock request, leaving a crashed
+    // predecessor's lock in place.
+    if (!sessionlock::Lock::instance()->isLocked()) {
+        m_unlockRequested = true;
+        return;
+    }
     sessionlock::Lock::instance()->unlock();
     QCoreApplication::exit(0);
 }
@@ -93,13 +103,24 @@ void LockScreen::removeScreen(QScreen *screen)
 
 void LockScreen::placeCard()
 {
-    LockWindow *host = m_windows.value(ScreenTracker::primary());
+    // The focused window, else wherever the card already is, else primary, else any.
+    LockWindow *host = nullptr;
+    for (LockWindow *window : std::as_const(m_windows)) {
+        if (window->windowHandle() == QGuiApplication::focusWindow())
+            host = window;
+        else if (!host && window->card())
+            host = window;
+    }
+    if (!host)
+        host = m_windows.value(ScreenTracker::primary());
     if (!host && !m_windows.isEmpty())
         host = *m_windows.cbegin();
+    if (!host || host->card() == m_card)
+        return;
     for (LockWindow *window : std::as_const(m_windows)) {
-        if (window != host && window->card())
+        if (window->card())
             window->setCard(nullptr);
     }
-    if (host)
-        host->setCard(m_card);
+    host->setCard(m_card);
+    m_card->focusInput();
 }

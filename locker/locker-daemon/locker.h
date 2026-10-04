@@ -9,16 +9,16 @@
 #include "idlewatcher.h"
 #include "lockersettings.h"
 #include "locksupervisor.h"
+#include "logind.h"
 #include "screensaver.h"
 
-class Logind;
 class layeroverlay;
 
 // Ties idle thresholds, display power, the lockscreen, logind and the ScreenSaver service together.
 class Locker : public QObject {
     Q_OBJECT
 public:
-    explicit Locker(bool useLogind, QObject *parent = nullptr);
+    explicit Locker(QObject *parent = nullptr);
 
     void start();
     bool isLocked() const { return m_supervisor.state() != LockSupervisor::Unlocked; }
@@ -38,7 +38,7 @@ private:
     DisplayPower m_power;
     LockSupervisor m_supervisor;
     ScreenSaver m_screenSaver;
-    Logind *m_logind = nullptr;
+    Logind m_logind;
     QList<layeroverlay *> m_dim;
     bool m_sleepLockPending = false;
 };

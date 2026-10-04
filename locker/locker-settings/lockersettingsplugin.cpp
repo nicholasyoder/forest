@@ -2,8 +2,7 @@
 
 #include "lockersettingsplugin.h"
 
-#include <QSettings>
-
+#include "lockerconfig.h"
 #include "miscutills.h"
 
 namespace {
@@ -52,31 +51,25 @@ QList<settings_item*> LockerSettingsPlugin::get_settings_items()
     return {category};
 }
 
-// Keys and defaults must match forest-locker's LockerSettings.
 void LockerSettingsPlugin::load_settings()
 {
     loading = true;
-    QSettings settings("Forest", "Locker");
-    display_off_spin->setValue(qRound(settings.value("display_off_minutes", 10).toDouble()));
-    dim_check->setChecked(settings.value("dim_before_display_off", true).toBool());
-    lock_on_display_off_check->setChecked(settings.value("lock_on_display_off", true).toBool());
-    lock_on_suspend_check->setChecked(settings.value("lock_on_suspend", true).toBool());
-    locked_display_off_spin->setValue(qRound(settings.value("locked_display_off_minutes", 1).toDouble()));
+    const LockerConfig config = LockerConfig::load();
+    display_off_spin->setValue(config.displayOffMinutes);
+    dim_check->setChecked(config.dimBeforeDisplayOff);
+    lock_on_display_off_check->setChecked(config.lockOnDisplayOff);
+    lock_on_suspend_check->setChecked(config.lockOnSuspend);
+    locked_display_off_spin->setValue(config.lockedDisplayOffMinutes);
     loading = false;
 }
 
 void LockerSettingsPlugin::save_settings()
 {
-    QSettings settings("Forest", "Locker");
-    // Leave hand-written fractional minutes (for testing) alone unless the value actually changed.
-    auto setMinutes = [&settings](const char *key, double fallback, int value) {
-        if (qRound(settings.value(key, fallback).toDouble()) != value)
-            settings.setValue(key, value);
-    };
-    setMinutes("display_off_minutes", 10, display_off_spin->value());
-    setMinutes("locked_display_off_minutes", 1, locked_display_off_spin->value());
-    settings.setValue("dim_before_display_off", dim_check->isChecked());
-    settings.setValue("lock_on_display_off", lock_on_display_off_check->isChecked());
-    settings.setValue("lock_on_suspend", lock_on_suspend_check->isChecked());
-    settings.sync();
+    LockerConfig config;
+    config.displayOffMinutes = display_off_spin->value();
+    config.dimBeforeDisplayOff = dim_check->isChecked();
+    config.lockOnDisplayOff = lock_on_display_off_check->isChecked();
+    config.lockOnSuspend = lock_on_suspend_check->isChecked();
+    config.lockedDisplayOffMinutes = locked_display_off_spin->value();
+    config.save();
 }

@@ -92,18 +92,26 @@ void IdleWatcher::setInhibited(bool inhibited)
     sync();
 }
 
+void IdleWatcher::rearm()
+{
+    // remove() emits resumed() once the last idle notification goes.
+    while (!m_notifications.isEmpty())
+        remove(m_notifications.last());
+    sync();
+}
+
 int IdleWatcher::timeoutFor(Threshold threshold) const
 {
     switch (threshold) {
     case Dim:
-        if (m_locked || m_inhibited || !m_config.dimBeforeDisplayOff || m_config.displayOffMs <= DimLeadMs)
+        if (m_locked || m_inhibited || !m_config.dimBeforeDisplayOff || m_config.displayOffMs() <= DimLeadMs)
             return 0;
-        return m_config.displayOffMs - DimLeadMs;
+        return m_config.displayOffMs() - DimLeadMs;
     case DisplayOff:
         // Bus inhibitors can't tell whether their window is visible, so the lock overrides them.
-        return !m_inhibited || m_locked ? m_config.displayOffMs : 0;
+        return !m_inhibited || m_locked ? m_config.displayOffMs() : 0;
     case LockedDisplayOff:
-        return m_locked ? m_config.lockedDisplayOffMs : 0;
+        return m_locked ? m_config.lockedDisplayOffMs() : 0;
     }
     return 0;
 }

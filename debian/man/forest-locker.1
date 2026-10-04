@@ -3,7 +3,6 @@
 forest-locker \- Forest idle and session lock daemon
 .SH SYNOPSIS
 .B forest-locker
-.RB [ \-\-no\-logind ]
 .SH DESCRIPTION
 .B forest-locker
 dims the screen, turns displays off and locks the session after the idle
@@ -25,10 +24,18 @@ service so applications can inhibit idle or request a lock.
 .PP
 It is started by
 .BR forest-session (1).
-.SH OPTIONS
-.TP
-.B \-\-no\-logind
-Don't talk to logind: no lock or sleep signals, and no locked/idle hints.
+.SH NOTES
+As with other screen lockers, any process running as the user can unlock
+without a password, through logind
+.RB ( "loginctl unlock-session" )
+or by sending
+.B SIGUSR1
+to
+.BR forest-lockscreen .
+.PP
+While locked it keeps a marker at
+.IR $XDG_RUNTIME_DIR/forest-locker.locked ,
+so that if it is restarted after a crash it locks again.
 .SH SEE ALSO
 .BR forest-lockscreen (1),
 .BR forest-session (1)

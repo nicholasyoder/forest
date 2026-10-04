@@ -6,19 +6,9 @@
 #include <QFileSystemWatcher>
 #include <QObject>
 
-// Timeouts in ms; 0 = never.
-struct LockerConfig {
-    int displayOffMs = 0;
-    bool dimBeforeDisplayOff = false;
-    bool lockOnDisplayOff = false;
-    bool lockOnSuspend = false;
-    int lockedDisplayOffMs = 0;
+#include "lockerconfig.h"
 
-    bool operator==(const LockerConfig &other) const;
-    bool operator!=(const LockerConfig &other) const { return !(*this == other); }
-};
-
-// QSettings("Forest", "Locker"), reloaded whenever the file changes.
+// LockerConfig, reloaded whenever Locker.conf changes.
 class LockerSettings : public QObject {
     Q_OBJECT
 public:
@@ -30,6 +20,7 @@ signals:
     void changed();
 
 private:
+    void watch();
     void reload();
 
     QFileSystemWatcher m_watcher;

@@ -9,11 +9,33 @@
 #include <QPushButton>
 #include <QStyle>
 #include <QVBoxLayout>
+#include <QWindow>
+
+#include <QtWaylandClient/private/qwaylanddisplay_p.h>
+#include <QtWaylandClient/private/qwaylandinputdevice_p.h>
+#include <QtWaylandClient/private/qwaylandwindow_p.h>
 
 #include <pwd.h>
 #include <unistd.h>
 
 #include "loginui.h"
+
+namespace {
+
+// xkb's Lock modifier is always bit 1.
+constexpr uint32_t CapsLockMask = 0x2;
+
+// Qt has no public Caps Lock query; QtWayland tracks wl_keyboard.modifiers, sent with every enter.
+bool capsLockOn(QWidget *widget)
+{
+    QWindow *window = widget->window()->windowHandle();
+    auto *waylandWindow = window ? dynamic_cast<QtWaylandClient::QWaylandWindow *>(window->handle()) : nullptr;
+    auto *device = waylandWindow ? waylandWindow->display()->defaultInputDevice() : nullptr;
+    auto *keyboard = device ? device->keyboard() : nullptr;
+    return keyboard && (keyboard->mNativeModifiers & CapsLockMask);
+}
+
+} // namespace
 
 PasswordCard::PasswordCard(QWidget *parent)
     : QFrame(parent)
@@ -91,6 +113,12 @@ void PasswordCard::setPrompt(const QString &prompt, bool secret)
     m_input->setFocus();
 }
 
+void PasswordCard::focusInput()
+{
+    if (m_input->isEnabled())
+        m_input->setFocus();
+}
+
 void PasswordCard::setBusy()
 {
     m_input->setEnabled(false);
@@ -112,13 +140,17 @@ void PasswordCard::setStatus(const QString &text, bool error)
 
 bool PasswordCard::eventFilter(QObject *watched, QEvent *event)
 {
-    // QtWayland's nativeModifiers include locked mods; xkb's Lock is always bit 1.
-    // Caps Lock's own press/release carry the pre-toggle state (unlock lands after release),
-    // so predict the toggle from its press and ignore its release.
+    if (event->type() == QEvent::FocusIn) {
+        m_capsLockLabel->setVisible(capsLockOn(m_input));
+        return QFrame::eventFilter(watched, event);
+    }
+    // QtWayland's nativeModifiers include locked mods. Caps Lock's own press/release carry the
+    // pre-toggle state (unlock lands after release), so predict the toggle from its press and
+    // ignore its release.
     if (event->type() != QEvent::KeyPress && event->type() != QEvent::KeyRelease)
         return QFrame::eventFilter(watched, event);
     auto *key = static_cast<QKeyEvent *>(event);
-    const bool locked = key->nativeModifiers() & 0x2;
+    const bool locked = key->nativeModifiers() & CapsLockMask;
     if (key->key() != Qt::Key_CapsLock)
         m_capsLockLabel->setVisible(locked);
     else if (event->type() == QEvent::KeyPress && !key->isAutoRepeat())

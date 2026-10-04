@@ -26,5 +26,6 @@ forest_generate_wayland_protocol_client(forest-locker
 target_link_libraries(forest-locker PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus Qt6::WaylandClientPrivate)
 forest_link_flogger(forest-locker)
 forest_link_layeroverlay(forest-locker)
+target_link_libraries(forest-locker PRIVATE lockerconfig)
 
 install(TARGETS forest-locker RUNTIME DESTINATION bin)

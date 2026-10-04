@@ -51,8 +51,9 @@ void LockSupervisor::unlock()
 {
     if (m_state == Unlocked)
         return;
-    // Before `locked` the lockscreen can't unlock cleanly; signal it once it reports locked.
-    if (m_state == Locked && m_process && m_process->state() == QProcess::Running)
+    // Only this process's own `locked` counts: a respawned one may not hold the lock yet,
+    // and SIGUSR1 would kill it before main() blocks the signal.
+    if (m_processLocked && m_process && m_process->state() == QProcess::Running)
         kill(m_process->processId(), SIGUSR1);
     else
         m_unlockPending = true;
@@ -60,6 +61,7 @@ void LockSupervisor::unlock()
 
 void LockSupervisor::spawn()
 {
+    m_processLocked = false;
     m_process = new QProcess(this);
     m_process->setProcessChannelMode(QProcess::ForwardedErrorChannel);
     m_process->setChildProcessModifier([] {
@@ -87,6 +89,7 @@ void LockSupervisor::readOutput()
     while (m_process->canReadLine()) {
         if (m_process->readLine().trimmed() != "locked")
             continue;
+        m_processLocked = true;
         setState(Locked);
         if (m_unlockPending) {
             m_unlockPending = false;
@@ -112,7 +115,15 @@ void LockSupervisor::finished(int exitCode, QProcess::ExitStatus status)
         return;
     }
 
-    int delay = kRespawnDelaysMs[qMin(m_crashes, int(std::size(kRespawnDelaysMs)) - 1)];
+    // Never locked: the session is still open, so give up rather than retry forever.
+    // Once locked, keep trying: the compositor holds the abandoned lock until a lockscreen unlocks it.
+    const int attempts = int(std::size(kRespawnDelaysMs));
+    if (m_state == Locking && m_crashes >= attempts) {
+        qWarning() << "forest-lockscreen died" << attempts + 1 << "times without locking, giving up";
+        fail();
+        return;
+    }
+    int delay = kRespawnDelaysMs[qMin(m_crashes, attempts - 1)];
     ++m_crashes;
     qWarning() << "forest-lockscreen died (status" << status << "code" << exitCode << "), respawning in" << delay << "ms";
     m_respawnTimer.start(delay);
@@ -120,6 +131,7 @@ void LockSupervisor::finished(int exitCode, QProcess::ExitStatus status)
 
 void LockSupervisor::fail()
 {
+    m_crashes = 0;
     m_unlockPending = false;
     setState(Unlocked);
     emit lockFailed();

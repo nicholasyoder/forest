@@ -33,6 +33,7 @@ private:
     PasswordCard *m_card;
     PamAuth m_pam;
     ScreenTracker m_tracker;
+    bool m_unlockRequested = false;
 };
 
 #endif // LOCKSCREEN_H

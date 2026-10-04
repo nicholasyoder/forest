@@ -3,17 +3,13 @@
 #include "locker.h"
 
 #include "layeroverlay.h"
-#include "logind.h"
 
-Locker::Locker(bool useLogind, QObject *parent)
+Locker::Locker(QObject *parent)
     : QObject(parent)
 {
-    if (useLogind) {
-        m_logind = new Logind(this);
-        connect(m_logind, &Logind::lockRequested, &m_supervisor, &LockSupervisor::lock);
-        connect(m_logind, &Logind::unlockRequested, &m_supervisor, &LockSupervisor::unlock);
-        connect(m_logind, &Logind::prepareForSleep, this, &Locker::prepareForSleep);
-    }
+    connect(&m_logind, &Logind::lockRequested, &m_supervisor, &LockSupervisor::lock);
+    connect(&m_logind, &Logind::unlockRequested, &m_supervisor, &LockSupervisor::unlock);
+    connect(&m_logind, &Logind::prepareForSleep, this, &Locker::prepareForSleep);
 
     connect(&m_settings, &LockerSettings::changed, this, &Locker::applySettings);
     connect(&m_idle, &IdleWatcher::idled, this, &Locker::idled);
@@ -22,16 +18,15 @@ Locker::Locker(bool useLogind, QObject *parent)
     connect(&m_supervisor, &LockSupervisor::lockFailed, this, &Locker::finishSleepLock);
     connect(&m_screenSaver, &ScreenSaver::lockRequested, &m_supervisor, &LockSupervisor::lock);
     connect(&m_screenSaver, &ScreenSaver::inhibitedChanged, &m_idle, &IdleWatcher::setInhibited);
+    connect(&m_screenSaver, &ScreenSaver::activitySimulated, &m_idle, &IdleWatcher::rearm);
 }
 
 void Locker::start()
 {
     // Biome doesn't wake outputs on input: undo whatever a crashed predecessor left off.
     m_power.setAll(true);
-    if (m_logind) {
-        m_logind->setIdleHint(false);
-        m_logind->setLockedHint(false);
-    }
+    m_logind.setIdleHint(false);
+    m_logind.setLockedHint(false);
     applySettings();
     m_supervisor.restore();
 }
@@ -40,18 +35,15 @@ void Locker::applySettings()
 {
     const LockerConfig &config = m_settings.config();
     m_idle.configure(config);
-    if (!m_logind)
-        return;
     if (config.lockOnSuspend)
-        m_logind->takeSleepInhibitor();
+        m_logind.takeSleepInhibitor();
     else
-        m_logind->releaseSleepInhibitor();
+        m_logind.releaseSleepInhibitor();
 }
 
 void Locker::idled(IdleWatcher::Threshold threshold)
 {
-    if (m_logind)
-        m_logind->setIdleHint(true);
+    m_logind.setIdleHint(true);
     if (threshold == IdleWatcher::Dim) {
         showDim();
         return;
@@ -65,16 +57,14 @@ void Locker::resumed()
 {
     m_power.setAll(true);
     hideDim();
-    if (m_logind)
-        m_logind->setIdleHint(false);
+    m_logind.setIdleHint(false);
 }
 
 void Locker::lockStateChanged(LockSupervisor::State state)
 {
     m_idle.setLocked(state != LockSupervisor::Unlocked);
     m_screenSaver.setActive(state == LockSupervisor::Locked);
-    if (m_logind)
-        m_logind->setLockedHint(state == LockSupervisor::Locked);
+    m_logind.setLockedHint(state == LockSupervisor::Locked);
     if (state != LockSupervisor::Locking)
         finishSleepLock();
 }
@@ -83,11 +73,11 @@ void Locker::prepareForSleep(bool start)
 {
     if (!start) {
         if (m_settings.config().lockOnSuspend)
-            m_logind->takeSleepInhibitor();
+            m_logind.takeSleepInhibitor();
         return;
     }
     if (!m_settings.config().lockOnSuspend || m_supervisor.state() == LockSupervisor::Locked) {
-        m_logind->releaseSleepInhibitor();
+        m_logind.releaseSleepInhibitor();
         return;
     }
     m_sleepLockPending = true;
@@ -99,7 +89,7 @@ void Locker::finishSleepLock()
     if (!m_sleepLockPending)
         return;
     m_sleepLockPending = false;
-    m_logind->releaseSleepInhibitor();
+    m_logind.releaseSleepInhibitor();
 }
 
 void Locker::showDim()
