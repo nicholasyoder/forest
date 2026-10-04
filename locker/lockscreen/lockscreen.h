@@ -13,7 +13,8 @@ class LockWindow;
 class PasswordCard;
 class QScreen;
 
-// Locks, covers every screen, authenticates, unlocks. Exit code: 0 unlocked, 1 lock refused.
+// Locks, covers every screen, authenticates, unlocks. Exit code: 0 unlocked, 1 lock refused
+// (forest-locker respawns on anything else). SIGUSR1 unlocks without authenticating.
 class LockScreen : public QObject {
     Q_OBJECT
 public:
