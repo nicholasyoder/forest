@@ -137,6 +137,10 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   Ctrl-click multi-select only work because Biome grants focus to any clicked
   surface regardless. Switch the primary-screen (icons) surface to
   `OnDemand`.
+- **Logout dialog relies on Biome's map-time focus.** `logout.cpp` requests
+  `OnDemand`; its arrow/Enter/Escape handling works only because Biome
+  focuses any non-`None` layer surface on map. Switch to `Exclusive` (a
+  modal overlay is the intended use).
 - **Panel popups rely on a Biome-only focus exception** (needs research).
   `popup.h` popups (main-menu launcher, volume, calendar, battery, sensors,
   nmcontrol, windowlist thumbnails) are non-grabbing `Qt::ToolTip` xdg_popups.
