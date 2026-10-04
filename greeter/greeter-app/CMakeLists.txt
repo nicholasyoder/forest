@@ -20,5 +20,6 @@ add_executable(forest-greeter
 target_link_libraries(forest-greeter PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::Network)
 forest_link_flogger(forest-greeter)
 forest_link_miscutills(forest-greeter)
+forest_link_loginui(forest-greeter)
 
 install(TARGETS forest-greeter RUNTIME DESTINATION bin COMPONENT greeter)

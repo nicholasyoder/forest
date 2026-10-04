@@ -4,10 +4,8 @@
 #define GREETERWINDOW_H
 
 #include <QWidget>
-#include <QTimer>
 #include <QLabel>
 #include <QStackedWidget>
-#include <QImage>
 
 #include "greetdclient.h"
 #include "userlistmodel.h"
@@ -15,12 +13,12 @@
 #include "userselectview.h"
 #include "passwordview.h"
 #include "sessionselectview.h"
+#include "loginui.h"
 
 class GreeterWindow : public QWidget {
     Q_OBJECT
 public:
     explicit GreeterWindow(QWidget *parent = nullptr);
-    ~GreeterWindow();
 
 protected:
     void paintEvent(QPaintEvent *event) override;
@@ -33,13 +31,11 @@ private slots:
     void onOtherUserRequested();
     void onLoginAttempted(const QString &username, const QString &password);
     void onBackClicked();
-    void onClockTick();
     void onSessionButtonClicked();
     void onSessionSelected(int index);
 
 private:
     void setupUi();
-    void loadWallpaper();
     void initStartupView();
     void restoreLastSession();
     void showUserSelectView();
@@ -55,9 +51,7 @@ private:
     UserSelectView *m_userSelectView;
     PasswordView *m_passwordView;
     SessionSelectView *m_sessionSelectView;
-    QLabel *m_clockLabel;
-    QTimer *m_clockTimer;
-    QImage *m_wallpaper = nullptr;
+    loginui::Wallpaper m_wallpaper;
 
     bool m_sessionActive = false;
     bool m_isManualEntry = false;

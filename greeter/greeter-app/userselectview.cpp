@@ -8,41 +8,9 @@
 #include <QLabel>
 #include <QFrame>
 #include <QStyle>
-#include <QPainter>
-#include <QPainterPath>
 #include <QMouseEvent>
 
-static QPixmap makeCircularPixmap(const QString &path, int size, const QString &fallback)
-{
-    QPixmap result(size, size);
-    result.fill(Qt::transparent);
-    QPainter p(&result);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QPixmap src;
-    if (!path.isEmpty())
-        src.load(path);
-
-    if (!src.isNull()) {
-        src = src.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-        QPainterPath clip;
-        clip.addEllipse(0, 0, size, size);
-        p.setClipPath(clip);
-        p.drawPixmap((size - src.width()) / 2, (size - src.height()) / 2, src);
-    } else {
-        p.setBrush(QColor(90, 90, 90));
-        p.setPen(Qt::NoPen);
-        p.drawEllipse(0, 0, size, size);
-        p.setPen(Qt::white);
-        QFont f;
-        f.setPixelSize(size / 2);
-        f.setBold(true);
-        p.setFont(f);
-        QString ch = fallback.isEmpty() ? "?" : fallback.left(1).toUpper();
-        p.drawText(QRect(0, 0, size, size), Qt::AlignCenter, ch);
-    }
-    return result;
-}
+#include "loginui.h"
 
 class UserTile : public QFrame {
     Q_OBJECT
@@ -60,7 +28,7 @@ public:
 
         auto *avatar = new QLabel;
         avatar->setObjectName("greeter_UserTileAvatar");
-        avatar->setPixmap(makeCircularPixmap(iconPath, 48, isOther ? "?" : name));
+        avatar->setPixmap(loginui::circularAvatar(iconPath, 48, isOther ? "?" : name));
         avatar->setFixedSize(48, 48);
         lay->addWidget(avatar);
 
