@@ -57,7 +57,7 @@ signals:
 public slots:
     void clear();
     void additem(QUuid id, QString text, QIcon icon, bool has_subitems = false);
-    void addseperator(QString text);
+    void addseparator(QString text);
     void setcurrentitem(QString itemtext){handleitemclicked(QUuid::fromString(itemtext));}
     QList<catlistitem*> items(){ return item_list; }
 
@@ -67,7 +67,7 @@ private slots:
 private:
     QVBoxLayout *basevlayout = new QVBoxLayout(this);
     QList<catlistitem*> item_list;
-    QList<QLabel*> seperator_list;
+    QList<QLabel*> separator_list;
 };
 
 #endif // CATLISTWIDGET_H

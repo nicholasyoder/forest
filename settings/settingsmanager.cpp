@@ -108,7 +108,7 @@ void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> 
         bcw->set_level2_text("");
     else if(item_hash.contains(parent_id))
         bcw->set_level2_text(item_hash[parent_id]->name());
-    //    listw->addseperator(item_hash[parent_id]->name());
+    //    listw->addseparator(item_hash[parent_id]->name());
 
     if(show_back_button)
         listw->additem(home_id, "Back", QIcon::fromTheme("go-previous"));

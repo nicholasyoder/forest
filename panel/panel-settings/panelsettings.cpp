@@ -97,7 +97,7 @@ void PanelSettings::load_applets(){
     foreach(QString key, settings.childGroups()){
         QString path = settings.value(key+"/path").toString();
         bool enabled = settings.value(key+"/enabled", false).toBool();
-        if (path == "seperator"){
+        if (path == "separator"){
             QListWidgetItem *item = new QListWidgetItem("Separator");
             item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
             item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
