@@ -26,15 +26,22 @@ public:
 
 signals:
     void shortcutActivated(QString id);
+    // The portal closed our session or went away; in-flight requests fail first.
+    void sessionLost();
+    void portalAvailable();
 
 private slots:
     void handleActivated(const QDBusObjectPath &session_handle, const QString &shortcut_id,
         qulonglong timestamp, const QVariantMap &options);
+    void handleClosed(const QVariantMap &details);
 
 private:
     // Subscribes to the Request's Response *before* sending `call`: the
     // Response can otherwise arrive before the match rule exists.
     void sendRequest(const QDBusMessage &call, const QString &handleToken, std::function<void(bool ok)> then);
+
+    // Also moves the Session::Closed subscription to the new handle.
+    void setSessionHandle(const QDBusObjectPath &handle);
 
     QDBusObjectPath m_sessionHandle;
 };

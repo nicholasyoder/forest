@@ -7,11 +7,13 @@
 #include <QDebug>
 #include <QAbstractEventDispatcher>
 #include <QLayout>
+#include <QSet>
+#include <QTimer>
 
 #include "hotkey.h"
 #include "globalshortcutsportal.h"
 
-class foresthotkeys : public QObject
+class foresthotkeys : public QObject, protected QDBusContext
 {
     Q_OBJECT
 
@@ -34,12 +36,18 @@ private:
     void loadhotkeys();
     // Drives the portal session towards the wanted state, one async step at a time.
     void reconcile();
+    void scheduleRetry();
+    void retryNow();
 
     GlobalShortcutsPortal *portal = nullptr;
     QList<globalhotkey*> hotkeylist;
+    QTimer retryTimer;
+    int retryDelayMs = 0;
+    // Watches pausers so a crash mid-capture doesn't leave hotkeys off.
+    QDBusServiceWatcher *pauserWatcher = nullptr;
 
     // Wanted state
-    bool paused = false;
+    QSet<QString> pausers; // bus names of pauseHotkeys() callers
     bool configChanged = true;
     // Actual state
     bool sessionOpen = false;

@@ -95,6 +95,35 @@ GlobalShortcutsPortal::GlobalShortcutsPortal(QObject *parent) : QObject(parent) 
         qWarning() << "GlobalShortcutsPortal: failed to connect to Activated signal:"
                    << QDBusConnection::sessionBus().lastError().message();
     }
+
+    auto *watcher = new QDBusServiceWatcher(QString(kBusService), QDBusConnection::sessionBus(),
+        QDBusServiceWatcher::WatchForOwnerChange, this);
+    connect(watcher, &QDBusServiceWatcher::serviceOwnerChanged, this,
+            [this](const QString &, const QString &oldOwner, const QString &newOwner) {
+        // Ignore "" -> owner: our own CreateSession may be what activated it.
+        if (!oldOwner.isEmpty()) {
+            qWarning() << "GlobalShortcutsPortal: portal went away";
+            setSessionHandle(QDBusObjectPath());
+            // Their Responses will never arrive.
+            for (PortalRequest *request : findChildren<PortalRequest *>(Qt::FindDirectChildrenOnly))
+                request->finish(false);
+            emit sessionLost();
+        }
+        if (!newOwner.isEmpty()) emit portalAvailable();
+    });
+}
+
+void GlobalShortcutsPortal::setSessionHandle(const QDBusObjectPath &handle) {
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    if (!m_sessionHandle.path().isEmpty()) {
+        bus.disconnect(QString(kBusService), m_sessionHandle.path(), QString(kSessionIface),
+            QStringLiteral("Closed"), this, SLOT(handleClosed(QVariantMap)));
+    }
+    m_sessionHandle = handle;
+    if (!handle.path().isEmpty() && !bus.connect(QString(kBusService), handle.path(), QString(kSessionIface),
+            QStringLiteral("Closed"), this, SLOT(handleClosed(QVariantMap)))) {
+        qWarning() << "GlobalShortcutsPortal: failed to connect to Session::Closed at" << handle.path();
+    }
 }
 
 void GlobalShortcutsPortal::sendRequest(const QDBusMessage &call, const QString &handleToken,
@@ -134,13 +163,13 @@ void GlobalShortcutsPortal::createSession(std::function<void(bool ok)> onReady) 
     options.insert(QStringLiteral("session_handle_token"), sessionToken);
 
     // Derived from our sender + token; it's not returned in the Response.
-    m_sessionHandle = QDBusObjectPath(
-        QStringLiteral("/org/freedesktop/portal/desktop/session/%1/%2").arg(escapedSender(), sessionToken));
+    setSessionHandle(QDBusObjectPath(
+        QStringLiteral("/org/freedesktop/portal/desktop/session/%1/%2").arg(escapedSender(), sessionToken)));
 
     QDBusMessage call = portalCall(QStringLiteral("CreateSession"));
     call << options;
     sendRequest(call, handleToken, [this, onReady](bool ok) {
-        if (!ok) m_sessionHandle = QDBusObjectPath();
+        if (!ok) setSessionHandle(QDBusObjectPath());
         onReady(ok);
     });
 }
@@ -177,7 +206,7 @@ void GlobalShortcutsPortal::closeSession(std::function<void()> onClosed) {
 
     const QDBusMessage call = QDBusMessage::createMethodCall(
         kBusService, m_sessionHandle.path(), kSessionIface, QStringLiteral("Close"));
-    m_sessionHandle = QDBusObjectPath();
+    setSessionHandle(QDBusObjectPath());
 
     auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(call), this);
     connect(watcher, &QDBusPendingCallWatcher::finished, this, [onClosed](QDBusPendingCallWatcher *w) {
@@ -197,6 +226,13 @@ void GlobalShortcutsPortal::handleActivated(const QDBusObjectPath &session_handl
         return; // stale signal from a session we've already torn down
     }
     emit shortcutActivated(shortcut_id);
+}
+
+void GlobalShortcutsPortal::handleClosed(const QVariantMap &details) {
+    Q_UNUSED(details);
+    qWarning() << "GlobalShortcutsPortal: portal closed our session";
+    setSessionHandle(QDBusObjectPath());
+    emit sessionLost();
 }
 
 #include "globalshortcutsportal.moc"
