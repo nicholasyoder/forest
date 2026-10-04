@@ -83,5 +83,11 @@ fi
 
 dbus-update-activation-environment --systemd --all
 
+# Biome and everything it forks inherit this stderr; keep the previous session's log.
+# Same dir and .1 rotation as FLogger.
+LOG_DIR="$XDG_DATA_HOME/forest/logs"
+mkdir -p "$LOG_DIR"
+[ -f "$LOG_DIR/biome.log" ] && mv -f "$LOG_DIR/biome.log" "$LOG_DIR/biome.log.1"
+
 # Biome forks forest-session (-s) once its Wayland socket is live.
-exec /usr/bin/biome -s /usr/bin/forest-session
+exec /usr/bin/biome -s /usr/bin/forest-session >"$LOG_DIR/biome.log" 2>&1
