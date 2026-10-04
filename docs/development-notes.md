@@ -40,6 +40,12 @@ dpkg-buildpackage -Tclean
 
 `reprepro includedeb forest /path/to/forest_0.7.8-1_amd64.deb`
 
+## Recovering from a stuck lock
+
+If `forest-lockscreen` hangs while testing, switch to another VT and run
+`swaylock` against Biome's `WAYLAND_DISPLAY`; Biome lets it take over the
+lock, then unlock with it. Debug builds also take `--unlock-after <sec>`.
+
 ## Debugging Wayland/Qt protocol issues (window roles, popups, layer-shell)
 
 Static reasoning about Qt/QtWaylandClient/LayerShellQt internals is
