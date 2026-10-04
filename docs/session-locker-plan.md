@@ -154,9 +154,9 @@ shows the user's own wallpaper.
    Meta+L default, Lock button in the logout dialog, `upgrade_0_9_0()`
    entries, packaging (`debian/control`, `forest.install`), and updates to
    both roadmaps (Biome's "swayidle + wlopm stand in" line goes away).
-4. **Polish** (optional for 0.9.0) — caps-lock indicator, volume and
-   brightness keys handled inside the lock UI (Biome hotkeys are off while
-   locked).
+4. **Polish** (optional for 0.9.0) — caps-lock indicator. Volume and
+   brightness keys while locked moved to the roadmap ("Hotkeys on the lock
+   screen"): they need a per-hotkey opt-in, not hardcoded actions.
 
 Live logind calls (`Inhibit`, `SetLockedHint`, `Session.Lock`) in phases 2–3
 must be confirmed with the user before running them, because one such call

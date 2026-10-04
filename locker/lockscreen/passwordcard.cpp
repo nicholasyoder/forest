@@ -3,6 +3,7 @@
 #include "passwordcard.h"
 
 #include <QHBoxLayout>
+#include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
@@ -48,7 +49,14 @@ PasswordCard::PasswordCard(QWidget *parent)
     m_input->setPlaceholderText("Password");
     // A lock surface can't parent popups.
     m_input->setContextMenuPolicy(Qt::NoContextMenu);
+    m_input->installEventFilter(this);
     layout->addWidget(m_input);
+
+    m_capsLockLabel = new QLabel("Caps Lock is on");
+    m_capsLockLabel->setObjectName("greeter_CapsLockLabel");
+    m_capsLockLabel->setAlignment(Qt::AlignCenter);
+    m_capsLockLabel->hide();
+    layout->addWidget(m_capsLockLabel);
 
     auto *btnRow = new QHBoxLayout;
     btnRow->addStretch();
@@ -100,6 +108,22 @@ void PasswordCard::setStatus(const QString &text, bool error)
     m_statusLabel->style()->unpolish(m_statusLabel);
     m_statusLabel->style()->polish(m_statusLabel);
     m_statusLabel->show();
+}
+
+bool PasswordCard::eventFilter(QObject *watched, QEvent *event)
+{
+    // QtWayland's nativeModifiers include locked mods; xkb's Lock is always bit 1.
+    // Caps Lock's own press/release carry the pre-toggle state (unlock lands after release),
+    // so predict the toggle from its press and ignore its release.
+    if (event->type() != QEvent::KeyPress && event->type() != QEvent::KeyRelease)
+        return QFrame::eventFilter(watched, event);
+    auto *key = static_cast<QKeyEvent *>(event);
+    const bool locked = key->nativeModifiers() & 0x2;
+    if (key->key() != Qt::Key_CapsLock)
+        m_capsLockLabel->setVisible(locked);
+    else if (event->type() == QEvent::KeyPress && !key->isAutoRepeat())
+        m_capsLockLabel->setVisible(!locked);
+    return QFrame::eventFilter(watched, event);
 }
 
 void PasswordCard::submit()

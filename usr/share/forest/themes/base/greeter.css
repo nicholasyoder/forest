@@ -74,6 +74,10 @@
     color: red;
 }
 
+#greeter_CapsLockLabel {
+    padding: 2px;
+}
+
 #greeter_PowerButton {
     margin-top: 8px;
     padding: 2px 10px;

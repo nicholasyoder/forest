@@ -22,11 +22,15 @@ public:
 signals:
     void submitted(const QString &response);
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 private:
     void submit();
 
     QLineEdit *m_input;
     QPushButton *m_unlockButton;
+    QLabel *m_capsLockLabel;
     QLabel *m_statusLabel;
 };
 

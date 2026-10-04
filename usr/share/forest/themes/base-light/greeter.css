@@ -54,6 +54,7 @@
     color: #cc0000;
 }
 
-#greeter_StatusLabel[error="false"] {
+#greeter_StatusLabel[error="false"],
+#greeter_CapsLockLabel {
     color: #444444;
 }

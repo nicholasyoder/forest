@@ -204,6 +204,12 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   logout. No standard Wayland protocol for this yet (session-management is
   still experimental), so the fallback is relaunching `.desktop` entries
   matched from foreign-toplevel `app_id`s, without window positions or app state.
+- **Hotkeys on the lock screen.** Biome hotkeys are off while locked, so
+  volume/brightness keys do nothing there. Add a per-hotkey
+  `allow_on_lockscreen` flag (visible in hotkey settings, default on for the
+  shipped volume/brightness entries) and have `forest-lockscreen` run only
+  flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
+  commands unauthenticated. Share the action parsing with `foresthotkeys`.
 - **Theme editor.** Customize accent/highlight colours on top of a theme,
   up to a full theme editor.
 - **Workspaces beyond Biome's model** (decoupling). deskswitch/windowlist
