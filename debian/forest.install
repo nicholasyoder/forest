@@ -4,6 +4,7 @@ usr/bin/forest-logout
 usr/bin/forest-settings
 usr/bin/forest-locker
 usr/bin/forest-lockscreen
+usr/bin/forest-screenshot
 usr/lib/forest
 usr/lib/*.a
 etc/forest/Forest.conf

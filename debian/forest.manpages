@@ -4,3 +4,4 @@ debian/man/forest-logout.1
 debian/man/forest-settings.1
 debian/man/forest-locker.1
 debian/man/forest-lockscreen.1
+debian/man/forest-screenshot.1

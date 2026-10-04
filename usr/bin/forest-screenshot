@@ -1,0 +1,45 @@
+#!/bin/sh
+# Screenshot to ~/Pictures/Screenshots + clipboard, via grim/slurp.
+# Stopgap until the native client (docs/roadmap.md); keep the CLI stable.
+
+usage() {
+	echo "usage: forest-screenshot [--region]" >&2
+	exit 2
+}
+
+case "$1" in
+	"") region= ;;
+	--region) region=1 ;;
+	*) usage ;;
+esac
+[ $# -le 1 ] || usage
+
+if [ -n "$region" ]; then
+	geom=$(slurp) || exit 0 # cancelled
+fi
+
+# xdg-user-dir prints $HOME when PICTURES is unset.
+pictures=$(xdg-user-dir PICTURES 2>/dev/null)
+[ -n "$pictures" ] && [ "$pictures" != "$HOME" ] || pictures="$HOME/Pictures"
+dir="$pictures/Screenshots"
+mkdir -p "$dir" || exit 1
+
+base="$dir/Screenshot_$(date +%Y-%m-%d_%H-%M-%S)"
+file="$base.png"
+n=2
+while [ -e "$file" ]; do
+	file="${base}_$n.png"
+	n=$((n + 1))
+done
+
+if [ -n "$region" ]; then
+	grim -g "$geom" "$file"
+else
+	grim "$file"
+fi || {
+	notify-send -a Screenshot -u critical -i dialog-error "Screenshot failed" "grim could not capture the screen"
+	exit 1
+}
+
+wl-copy --type image/png < "$file"
+notify-send -a Screenshot -i camera-photo "Screenshot saved" "$file"
