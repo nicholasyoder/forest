@@ -5,12 +5,20 @@
 #include <QDebug>
 #include <QGuiApplication>
 #include <QScreen>
+#include <QTimer>
 
 #include <cstdio>
+#include <unistd.h>
 
 #include "lockwindow.h"
 #include "passwordcard.h"
 #include "sessionlock.h"
+
+namespace {
+
+constexpr int NoPromptRetryMs = 2000;
+
+} // namespace
 
 LockScreen::LockScreen(QObject *parent)
     : QObject(parent)
@@ -34,7 +42,11 @@ LockScreen::LockScreen(QObject *parent)
     connect(&m_pam, &PamAuth::succeeded, this, &LockScreen::unlockAndQuit);
     connect(&m_pam, &PamAuth::failed, this, [this](const QString &reason) {
         m_card->setStatus(reason.isEmpty() ? "Authentication failed" : reason, true);
-        m_pam.start();
+        // A round that fails without prompting would otherwise retry in a tight loop.
+        if (m_pam.prompted())
+            m_pam.start();
+        else
+            QTimer::singleShot(NoPromptRetryMs, &m_pam, &PamAuth::start);
     });
     connect(m_card, &PasswordCard::submitted, &m_pam, &PamAuth::respond);
 
@@ -76,7 +88,10 @@ void LockScreen::unlockAndQuit()
         return;
     }
     sessionlock::Lock::instance()->unlock();
-    QCoreApplication::exit(0);
+    // Not a normal exit: ~PamAuth would wait on a module blocked outside the conversation
+    // (e.g. fprintd), keeping forest-locker in its locked state.
+    fflush(nullptr);
+    _exit(0);
 }
 
 void LockScreen::addScreen(QScreen *screen)

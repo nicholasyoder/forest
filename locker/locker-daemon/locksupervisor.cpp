@@ -32,10 +32,16 @@ LockSupervisor::LockSupervisor(QObject *parent)
 
 void LockSupervisor::restore()
 {
-    if (QFile::exists(markerPath())) {
-        qInfo() << "Previous forest-locker exited while locked: relocking";
-        lock();
+    QFile marker(markerPath());
+    if (!marker.open(QIODevice::ReadOnly))
+        return;
+    // The runtime dir can outlive a session (lingering, another login): only relock our own.
+    if (marker.readAll() != qgetenv("XDG_SESSION_ID")) {
+        marker.remove();
+        return;
     }
+    qInfo() << "Previous forest-locker exited while locked: relocking";
+    lock();
 }
 
 void LockSupervisor::lock()
@@ -146,7 +152,8 @@ void LockSupervisor::setState(State state)
         QFile::remove(markerPath());
     } else {
         QFile marker(markerPath());
-        marker.open(QIODevice::WriteOnly);
+        if (marker.open(QIODevice::WriteOnly))
+            marker.write(qgetenv("XDG_SESSION_ID"));
     }
     emit stateChanged(state);
 }

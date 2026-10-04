@@ -31,7 +31,8 @@ void PamAuth::start()
         return;
     delete m_thread;
     m_responseReady.acquire(m_responseReady.available());
-    m_thread = QThread::create([this] { run(); });
+    m_prompted = false;
+    m_thread =QThread::create([this] { run(); });
     // Emit from here, not the worker, so a retry in the handler sees the thread stopped.
     connect(m_thread, &QThread::finished, this, &PamAuth::finish);
     m_thread->start();
@@ -95,6 +96,7 @@ int PamAuth::converse(int count, const pam_message **msgs, pam_response **resps,
         case PAM_PROMPT_ECHO_OFF:
         case PAM_PROMPT_ECHO_ON: {
             self->m_awaitingResponse = true;
+            self->m_prompted = true;
             emit self->prompt(text, msgs[i]->msg_style == PAM_PROMPT_ECHO_OFF);
             self->m_responseReady.acquire();
             QMutexLocker locker(&self->m_mutex);
