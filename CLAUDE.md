@@ -21,7 +21,9 @@ Use it (run from `build/`, after a full build) to stage changes for testing
 rather than copying files into `/opt/forest-build` by hand. It always ends with
 a `file INSTALL cannot set permissions on "/etc/forest"` error: that step needs
 root and runs last, so it's expected and harmless unless something under
-`etc/forest/` actually changed (then the user has to install that part manually).
+`etc/forest/` or `etc/pam.d/` actually changed (then the user has to install
+that part manually). Keep new `install()` rules above the `/etc` ones in the
+top-level `CMakeLists.txt`, with prefix-relative destinations.
 
 There are no tests. Build a single target with:
 ```sh
