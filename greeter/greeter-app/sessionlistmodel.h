@@ -12,6 +12,8 @@ struct SessionInfo {
     QString name;
     QString exec;
     SessionType type;
+    QString desktopId;    // .desktop basename, for XDG_SESSION_DESKTOP
+    QString desktopNames; // DesktopNames, colon-joined for XDG_CURRENT_DESKTOP
 };
 
 class SessionListModel {

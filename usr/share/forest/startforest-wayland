@@ -61,13 +61,10 @@ EOF
 fi
 
 #export XDG_MENU_PREFIX="forest-"
-# "biome" is included here (not just "Forest") so xdg-desktop-portal's
-# desktop-specific config lookup (see portals.conf(5)) finds
-# biome-portals.conf, which is what tells the portal frontend to route
-# org.freedesktop.impl.portal.GlobalShortcuts to Biome's own backend -
-# without it, foresthotkeys' portal session creation silently has no
-# backend to bind to and hotkeys don't fire.
-export XDG_CURRENT_DESKTOP="Forest:biome"
+# Display managers set this from Forest.desktop's DesktopNames; fallback for
+# TTY launches. "biome" makes xdg-desktop-portal load biome-portals.conf,
+# without which hotkeys get no GlobalShortcuts backend.
+export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Forest:biome}"
 export QT_QPA_PLATFORMTHEME="qt6ct"
 export XDG_SESSION_TYPE="wayland"
 

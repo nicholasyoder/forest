@@ -16,7 +16,7 @@ public:
 public slots:
     void createSession(const QString &username);
     void postAuthResponse(const QString &response);
-    void startSession(const QStringList &cmd);
+    void startSession(const QStringList &cmd, const QStringList &env);
     void cancelSession();
 
 signals:
