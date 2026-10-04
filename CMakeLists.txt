@@ -33,6 +33,14 @@ if(NOT SENSORS_INCLUDE_DIR OR NOT SENSORS_LIBRARY)
     message(FATAL_ERROR "libsensors not found. Install libsensors-dev.")
 endif()
 
+# Not pkg-config: pam.pc drags in libaudit-dev via Requires.private.
+find_path(PAM_INCLUDE_DIR security/pam_appl.h)
+find_library(PAM_LIBRARY NAMES pam)
+
+if(NOT PAM_INCLUDE_DIR OR NOT PAM_LIBRARY)
+    message(FATAL_ERROR "libpam not found. Install libpam0g-dev.")
+endif()
+
 # Build library subdirectories first (static libs)
 add_subdirectory(library)
 
@@ -46,10 +54,12 @@ add_subdirectory(settings)
 add_subdirectory(logout)
 add_subdirectory(system)
 add_subdirectory(greeter)
+add_subdirectory(locker)
 
 # Install config and data files
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
+install(FILES etc/pam.d/forest-locker DESTINATION /etc/pam.d)
 install(DIRECTORY usr/share/wayland-sessions/ DESTINATION /usr/share/wayland-sessions)
 install(DIRECTORY usr/share/applications/ DESTINATION /usr/share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION /usr/share/forest USE_SOURCE_PERMISSIONS)

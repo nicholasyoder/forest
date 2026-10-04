@@ -2,7 +2,7 @@ Source: forest
 Section: x11
 Priority: optional
 Maintainer: Nicholas Yoder <nicholasyoder@proton.me>
-Build-Depends: debhelper-compat (= 13), cmake, pkgconf, qt6-base-dev, libqt6dbus6, libxcursor-dev, libasound2-dev, libsensors-dev, libpolkit-qt6-1-dev, libqt6xdg-dev, liblayershellqtinterface-dev, libdbusmenu-lxqt-dev, libxkbcommon-dev, qt6-wayland-dev, qt6-wayland-dev-tools, wayland-protocols (>= 1.40)
+Build-Depends: debhelper-compat (= 13), cmake, pkgconf, qt6-base-dev, libqt6dbus6, libxcursor-dev, libasound2-dev, libsensors-dev, libpolkit-qt6-1-dev, libqt6xdg-dev, liblayershellqtinterface-dev, libdbusmenu-lxqt-dev, libxkbcommon-dev, qt6-wayland-dev, qt6-wayland-dev-tools, wayland-protocols (>= 1.40), qt6-wayland-private-dev, libpam0g-dev
 Standards-Version: 4.5.1
 Homepage: https://github.com/nicholasyoder/forest
 Rules-Requires-Root: no
