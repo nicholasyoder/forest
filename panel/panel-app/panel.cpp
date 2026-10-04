@@ -60,15 +60,15 @@ void panel::loadsettings(){
 }
 
 void panel::loadplugins(){
-    int sindex = 1;//for styling individual seperators
+    int sindex = 1;//for styling individual separators
     settings->beginGroup("plugins");
     foreach(QString key, settings->childGroups()){
         if (settings->value(key+"/enabled", false).toBool()){
             QString path = settings->value(key+"/path").toString();
-            if (path == "seperator"){
+            if (path == "separator"){
                 QFrame *sepframe = new QFrame;
                 sepframe->setObjectName("panelSeparator");
-                sepframe->setProperty("SeperatorIndex", sindex);
+                sepframe->setProperty("SeparatorIndex", sindex);
                 wlayout->addWidget(sepframe);
                 sindex++;
                 pluglist.append(nullptr);

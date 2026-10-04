@@ -124,4 +124,11 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
             settings->setValue(child + "/action", "DBUS:bus=Session,service=org.forest,path=/org/forest/showdesktop,method=toggle");
     }
     settings->endGroup();
+
+    QSettings panel_settings("Forest", "Panel");
+    panel_settings.beginGroup("plugins");
+    foreach (QString child, panel_settings.childGroups())
+        if (panel_settings.value(child + "/path").toString() == "seperator")
+            panel_settings.setValue(child + "/path", "separator");
+    panel_settings.endGroup();
 }

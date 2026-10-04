@@ -18,7 +18,6 @@ void settingswidget::loadsettings(){
 
     ui->preview_cbox->setChecked(settings.value("showthumbnails", true).toBool());
     ui->maxsizesbox->setValue(settings.value("maxbuttonsize", 170).toInt());
-    QString seps = settings.value("seperators", "None").toString();
 }
 
 void settingswidget::on_applybt_clicked(){

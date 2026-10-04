@@ -17,14 +17,6 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 
 ### Blockers
 
-- **Settings upgrade for 0.9.0.** `version` is bumped to `0.9.0` and
-  `upgrade_0_9_0()` (`forest/settings_upgrade_manager.cpp`) adds the session
-  locker's Meta+L hotkey and settings plugin, and rewrites the
-  `gnome-screenshot` hotkeys to `forest-screenshot` and the 0.8.0 show-desktop
-  hotkey to `/org/forest/showdesktop`. Still to add: rename
-  `plug-NNNN/path=seperator` to `separator` in `~/.config/Forest/Panel.conf`
-  (see Cleanups). Keep each step idempotent: testers re-run it by resetting
-  `version`.
 - **Ship a Biome config with the Forest package.** Forest's layer-shell
   surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-locker-dim,forest-startup`
   (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
@@ -37,14 +29,6 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 ### Bugs
 
 - **Battery monitor doesn't refresh on panel plugin reload** (#38).
-
-### Cleanups
-
-- **Rename the panel `seperator` config value to `separator`.** The display
-  string is fixed, but `plug-NNNN/path=seperator` is still what
-  `Panel.conf` stores (`panel.cpp`, `panelsettings.cpp`,
-  `etc/forest/Panel.conf`). Rename all three together; the existing-user
-  rewrite goes in `upgrade_0_9_0()` above.
 
 ### Release checklist
 

@@ -17,11 +17,11 @@ void catlistwidget::clear(){
     }
     item_list.clear();
 
-    foreach (QLabel *item, seperator_list) {
+    foreach (QLabel *item, separator_list) {
         basevlayout->removeWidget(item);
         delete item;
     }
-    seperator_list.clear();
+    separator_list.clear();
 }
 
 void catlistwidget::additem(QUuid id, QString text, QIcon icon, bool has_subitems){
@@ -35,14 +35,14 @@ void catlistwidget::additem(QUuid id, QString text, QIcon icon, bool has_subitem
     item_list.append(item);
 }
 
-void catlistwidget::addseperator(QString text){
+void catlistwidget::addseparator(QString text){
     QLabel *textlabel = new QLabel(text);
     textlabel->setObjectName("CategoryDivider");
     if (basevlayout->count() < 2)
         basevlayout->insertWidget(0, textlabel);
     else
         basevlayout->insertWidget(basevlayout->count()-1, textlabel);
-    seperator_list.append(textlabel);
+    separator_list.append(textlabel);
 }
 
 void catlistwidget::handleitemclicked(QUuid id){
