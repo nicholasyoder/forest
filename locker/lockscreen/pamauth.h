@@ -25,6 +25,8 @@ public:
     void start();
     void respond(const QString &response);
     bool isRunning() const { return m_thread && m_thread->isRunning(); }
+    // Whether the current or last round asked for input.
+    bool prompted() const { return m_prompted; }
 
 signals:
     void prompt(const QString &message, bool secret);
@@ -43,6 +45,7 @@ private:
     QByteArray m_response;
     std::atomic<bool> m_cancelled{false};
     std::atomic<bool> m_awaitingResponse{false};
+    std::atomic<bool> m_prompted{false};
     int m_result = 0;
     QString m_reason;
 };

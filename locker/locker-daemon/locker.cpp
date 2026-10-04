@@ -72,6 +72,9 @@ void Locker::lockStateChanged(LockSupervisor::State state)
 void Locker::prepareForSleep(bool start)
 {
     if (!start) {
+        // logind gave up waiting: keep the inhibitor for the next suspend instead of
+        // letting the late lock release it.
+        m_sleepLockPending = false;
         if (m_settings.config().lockOnSuspend)
             m_logind.takeSleepInhibitor();
         return;
