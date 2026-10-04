@@ -326,7 +326,15 @@ void GreeterWindow::onAuthSucceeded()
     QStringList cmd = QProcess::splitCommand(session.exec);
     if (session.type == SessionType::X11)
         cmd.prepend("/usr/share/forest/forest-greeter-xsession");
-    m_client->startSession(cmd);
+
+    // What other display managers derive from the .desktop file; greetd also
+    // hands XDG_SESSION_TYPE to logind.
+    QStringList env;
+    env << QStringLiteral("XDG_SESSION_TYPE=%1").arg(session.type == SessionType::X11 ? "x11" : "wayland");
+    env << QStringLiteral("XDG_SESSION_DESKTOP=%1").arg(session.desktopId);
+    if (!session.desktopNames.isEmpty())
+        env << QStringLiteral("XDG_CURRENT_DESKTOP=%1").arg(session.desktopNames);
+    m_client->startSession(cmd, env);
 }
 
 void GreeterWindow::onAuthFailed(const QString &description)

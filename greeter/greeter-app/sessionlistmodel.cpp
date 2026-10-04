@@ -4,6 +4,7 @@
 
 #include <QDir>
 #include <QFile>
+#include <QFileInfo>
 #include <QTextStream>
 #include <QDebug>
 
@@ -22,7 +23,7 @@ void SessionListModel::loadDir(const QString &path, SessionType type) {
         if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
             continue;
 
-        QString name, exec;
+        QString name, exec, desktopNames;
         bool inDesktopEntry = false;
         QTextStream in(&file);
         while (!in.atEnd()) {
@@ -41,10 +42,12 @@ void SessionListModel::loadDir(const QString &path, SessionType type) {
                 name = line.mid(5);
             else if (line.startsWith("Exec="))
                 exec = line.mid(5);
+            else if (line.startsWith("DesktopNames="))
+                desktopNames = line.mid(13).split(';', Qt::SkipEmptyParts).join(':');
         }
 
         if (!name.isEmpty() && !exec.isEmpty())
-            m_sessions.append({name, exec, type});
+            m_sessions.append({name, exec, type, QFileInfo(filename).completeBaseName(), desktopNames});
     }
 }
 
