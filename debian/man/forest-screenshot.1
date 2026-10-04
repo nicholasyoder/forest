@@ -1,0 +1,23 @@
+.TH FOREST-SCREENSHOT 1 "October 2026" "forest" "Forest desktop environment"
+.SH NAME
+forest-screenshot \- take a screenshot in the Forest desktop
+.SH SYNOPSIS
+.B forest-screenshot
+.RB [ \-\-region ]
+.SH DESCRIPTION
+.B forest-screenshot
+captures all outputs, or with
+.B \-\-region
+an area selected with
+.BR slurp (1),
+using
+.BR grim (1).
+The image is saved to
+.I Screenshots
+under the XDG pictures directory, copied to the clipboard, and announced
+with a desktop notification. It is bound to Meta+S and Ctrl+Meta+S by
+default.
+.SH SEE ALSO
+.BR forest (1),
+.BR grim (1),
+.BR slurp (1)

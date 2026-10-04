@@ -28,29 +28,11 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
   `x-special/gnome-copied-files`. Keep the API backend-neutral so a GIO
   backend could slot in if a file manager ever happens (GLib is already
   linked via QtCore; libfm-qt/KIO rejected).
-- **Screenshots via grim + slurp.** The default Meta+S / Ctrl+Meta+S hotkeys
-  and `debian/control` use `gnome-screenshot`, which can't capture under
-  Biome. Stopgap on Biome 0.1.0's `wlr-screencopy-unstable-v1` until the
-  native client (Later):
-  - New `usr/bin/forest-screenshot` shell script: full screen by default,
-    `--region` via `slurp` (cancel exits quietly). Saves
-    `$(xdg-user-dir PICTURES)/Screenshots/Screenshot_<timestamp>.png`, copies
-    it with `wl-copy`, and confirms with `notify-send`. A script rather than
-    raw `grim` in the hotkey because hotkey actions run without a shell
-    (`QProcess::splitCommand`), and the native client can later take over
-    the name with no settings migration.
-  - `etc/forest/Forest.conf`: Meta+S → `forest-screenshot`; Ctrl+Meta+S →
-    `forest-screenshot --region` ("screenshot region"). Active-window
-    capture has no standard path on wlroots 0.18, so it's dropped for now.
-  - `debian/control`: replace `gnome-screenshot` with `grim`, `slurp`,
-    `wl-clipboard`, `libnotify-bin`, `xdg-user-dirs`.
-  - Existing users: rewrite in `upgrade_0_9_0()` (below).
 - **Settings upgrade for 0.9.0.** `version` is bumped to `0.9.0` and
   `upgrade_0_9_0()` (`forest/settings_upgrade_manager.cpp`) adds the session
-  locker's Meta+L hotkey and settings plugin. Still to add: drop the dead
-  show-desktop `item-0003` hotkey, rewrite hotkeys whose action is exactly
-  `gnome-screenshot` / `gnome-screenshot -w` to the `forest-screenshot`
-  defaults (leave customized ones alone), and rename `plug-NNNN/path=seperator` to
+  locker's Meta+L hotkey and settings plugin, and rewrites the
+  `gnome-screenshot` hotkeys to `forest-screenshot`. Still to add: drop the dead
+  show-desktop `item-0003` hotkey, and rename `plug-NNNN/path=seperator` to
   `separator` in `~/.config/Forest/Panel.conf` (see Cleanups). Keep each step
   idempotent: testers re-run it by resetting `version`.
 - **Ship a Biome config with the Forest package.** Forest's layer-shell

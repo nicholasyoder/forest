@@ -109,4 +109,16 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
         settings->setValue(plugin + "/name", "locker");
         settings->setValue(plugin + "/settings-only", true);
     }
+    // gnome-screenshot can't capture under Biome; customized actions are left alone.
+    settings->beginGroup("hotkeys");
+    foreach (QString child, settings->childGroups()){
+        QString action = settings->value(child + "/action").toString();
+        if (action == "gnome-screenshot")
+            settings->setValue(child + "/action", "forest-screenshot");
+        else if (action == "gnome-screenshot -w"){
+            settings->setValue(child + "/action", "forest-screenshot --region");
+            settings->setValue(child + "/description", "screenshot region");
+        }
+    }
+    settings->endGroup();
 }
