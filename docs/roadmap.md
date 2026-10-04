@@ -204,6 +204,13 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   logout. No standard Wayland protocol for this yet (session-management is
   still experimental), so the fallback is relaunching `.desktop` entries
   matched from foreign-toplevel `app_id`s, without window positions or app state.
+- **Greeter on Biome, shared with the lockscreen.** Move the greeter from
+  cage to Biome with one window per output on `loginui`'s per-screen
+  background; split `PasswordView` into a card shared with
+  `forest-lockscreen`'s `PasswordCard`; maybe rename `greeter.css` (and the
+  `greeter_*` object names) to a shared login component. Then let the
+  password card follow the pointer between screens in both, rather than
+  staying on the primary screen.
 - **Hotkeys on the lock screen.** Biome hotkeys are off while locked, so
   volume/brightness keys do nothing there. Add a per-hotkey
   `allow_on_lockscreen` flag (visible in hotkey settings, default on for the
