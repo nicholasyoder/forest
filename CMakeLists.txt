@@ -68,3 +68,4 @@ install(DIRECTORY usr/lib/systemd/system/ DESTINATION lib/systemd/system COMPONE
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
 install(FILES etc/pam.d/forest-locker DESTINATION /etc/pam.d)
+install(FILES etc/biome/conf.d/50-forest.conf DESTINATION /etc/biome/conf.d)

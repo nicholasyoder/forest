@@ -11,6 +11,7 @@ etc/forest/Forest.conf
 etc/forest/Panel.conf
 etc/forest/Quicklaunch.conf
 etc/pam.d/forest-locker
+etc/biome/conf.d/50-forest.conf
 usr/share/wayland-sessions
 usr/share/applications
 usr/share/forest/pics

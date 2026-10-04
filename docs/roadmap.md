@@ -15,17 +15,6 @@ it here ahead of time. Small fixes don't need a plan doc.
 
 Ships with Biome 0.1.0. Everything here is required before tagging.
 
-### Blockers
-
-- **Ship a Biome config with the Forest package.** Forest's layer-shell
-  surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-locker-dim,forest-startup`
-  (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
-  all; neither repo ships a default today, so a fresh install gets no fades.
-  Since these are Forest app namespaces, the Forest package should install
-  the config rather than Biome hardcoding them. Undecided how: a system-wide
-  `/etc` file Biome reads, a drop-in directory, or a compiled-in default.
-  Needs Biome's config lookup order checked first (`biome/core/fade_config.cpp`).
-
 ### Bugs
 
 - **Battery monitor doesn't refresh on panel plugin reload** (#38).
