@@ -271,11 +271,13 @@ QStringList desktop::selectedpaths(){
 }
 
 void desktop::cutselected(){
-    fileops::setClipboard(selectedpaths(), true);
+    if (!iwidget->selectedicons().isEmpty())
+        fileops::setClipboard(selectedpaths(), true);
 }
 
 void desktop::copyselected(){
-    fileops::setClipboard(selectedpaths(), false);
+    if (!iwidget->selectedicons().isEmpty())
+        fileops::setClipboard(selectedpaths(), false);
 }
 
 void desktop::copypathofselected(){
@@ -313,7 +315,10 @@ void desktop::createfolder(){
         dirname = sdir;
     }
 
-    dir.mkdir(dirname);
+    if (!dir.mkdir(dirname)){
+        fileops::showErrors("Couldn't create a new folder.", {dirname});
+        return;
+    }
     updateicons();
     updatepaused = true;//keep filesystemwatcher from updating after icon is in edit mode
     iwidget->seticonintexteditmode(dirname);

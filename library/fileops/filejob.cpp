@@ -19,6 +19,7 @@
 #include <cstring>
 #include <fcntl.h>
 #include <optional>
+#include <sys/stat.h>
 
 namespace fileops {
 namespace {
@@ -29,12 +30,34 @@ constexpr QDir::Filters AllEntries = QDir::AllEntries | QDir::Hidden | QDir::Sys
 bool isRealDir(const QFileInfo &fi) { return fi.isDir() && !fi.isSymLink(); }
 bool entryExists(const QFileInfo &fi) { return fi.exists() || fi.isSymLink(); }
 
+// Resolves symlinks in the parent only, so a symlink entry stays itself.
+QString canonicalEntry(const QString &path)
+{
+    const QFileInfo fi(path);
+    const QString parent = QFileInfo(fi.absolutePath()).canonicalFilePath();
+    return parent.isEmpty() ? QDir::cleanPath(fi.absoluteFilePath()) : QDir(parent).filePath(fi.fileName());
+}
+
 // True if path is root itself or anything beneath it.
 bool isInside(const QString &path, const QString &root)
 {
-    const QString p = QDir::cleanPath(QFileInfo(path).absoluteFilePath());
-    const QString r = QDir::cleanPath(QFileInfo(root).absoluteFilePath());
+    const QString p = canonicalEntry(path), r = canonicalEntry(root);
     return p == r || p.startsWith(r + QLatin1Char('/'));
+}
+
+// Same directory by inode, so symlinked and bind-mounted paths match too.
+bool sameDir(const QString &a, const QString &b)
+{
+    struct stat sa, sb;
+    return ::stat(QFile::encodeName(a).constData(), &sa) == 0
+        && ::stat(QFile::encodeName(b).constData(), &sb) == 0
+        && sa.st_dev == sb.st_dev && sa.st_ino == sb.st_ino;
+}
+
+// Same directory entry (not merely a hardlink to the same file).
+bool sameEntry(const QFileInfo &a, const QFileInfo &b)
+{
+    return a.fileName() == b.fileName() && sameDir(a.absolutePath(), b.absolutePath());
 }
 
 class QtFileJob : public FileJob
@@ -62,11 +85,11 @@ public:
         m_thread->start();
     }
 
+    // Always releases: a spare count is harmless since ask() returns Cancel from now on.
     void cancel() override
     {
         m_cancel.storeRelaxed(1);
-        if (m_waiting.loadAcquire())
-            m_reply.release();
+        m_reply.release();
     }
 
     void resolveConflict(Resolution resolution, bool applyToAll) override
@@ -78,7 +101,7 @@ public:
 
 private:
     enum Result { Ok, Partial, Failed }; // ordered by severity; Partial = skipped or cancelled
-    enum class Plan { Write, Merge, Skip, Fail };
+    enum class Plan { Write, Merge, Skip, Fail, Done };
 
     void run()
     {
@@ -145,10 +168,10 @@ private:
     {
         if (m_remembered)
             return *m_remembered;
-        m_waiting.storeRelease(1);
+        if (cancelled())
+            return Resolution::Cancel;
         emit conflict(src, dst);
         m_reply.acquire();
-        m_waiting.storeRelease(0);
         if (cancelled())
             return Resolution::Cancel;
         if (m_applyToAll)
@@ -162,6 +185,13 @@ private:
         const QFileInfo d(dst);
         if (!entryExists(d))
             return Plan::Write;
+        // dst is src under another path: Overwrite would delete the source.
+        if (sameEntry(QFileInfo(src), d)) {
+            if (op() == Op::Move)
+                return Plan::Done;
+            dst = uniquePath(d.absolutePath(), d.fileName(), QStringLiteral("copy"));
+            return Plan::Write;
+        }
         if (isInside(src, dst)) {
             fail(src, QStringLiteral("would replace a folder containing it"));
             return Plan::Fail;
@@ -190,7 +220,7 @@ private:
         Result r;
         if (!entryExists(fi))
             r = fail(src, QStringLiteral("no longer exists"));
-        else if (QDir::cleanPath(fi.absolutePath()) == m_destDir)
+        else if (sameDir(fi.absolutePath(), m_destDir))
             r = copyEntry(src, uniquePath(m_destDir, fi.fileName(), QStringLiteral("copy")));
         else if (isRealDir(fi) && isInside(m_destDir, src))
             r = fail(src, QStringLiteral("can't copy a folder into itself"));
@@ -208,6 +238,7 @@ private:
         switch (prepareDest(src, dst, isRealDir(fi))) {
         case Plan::Skip: return Partial;
         case Plan::Fail: return Failed;
+        case Plan::Done: return Ok;
         case Plan::Write: case Plan::Merge: break;
         }
 
@@ -278,7 +309,7 @@ private:
         Result r;
         if (!entryExists(fi))
             r = fail(src, QStringLiteral("no longer exists"));
-        else if (QDir::cleanPath(fi.absolutePath()) == m_destDir)
+        else if (sameDir(fi.absolutePath(), m_destDir))
             return; // already there
         else if (isRealDir(fi) && isInside(m_destDir, src))
             r = fail(src, QStringLiteral("can't move a folder into itself"));
@@ -296,6 +327,7 @@ private:
         switch (prepareDest(src, dst, isRealDir(fi))) {
         case Plan::Skip: return Partial;
         case Plan::Fail: return Failed;
+        case Plan::Done: return Ok;
         case Plan::Write: break;
         case Plan::Merge: {
             Result r = Ok;
@@ -325,7 +357,9 @@ private:
         const Result r = copyEntry(src, dst);
         if (r != Ok)
             return r;
-        return removeEntry(src, false) ? Ok : Failed;
+        if (removeEntry(src, false))
+            return Ok;
+        return cancelled() ? Partial : Failed;
     }
 
     // Recursive delete without following symlinks; reports its own errors.
@@ -377,7 +411,7 @@ private:
     QElapsedTimer m_tick;
     std::optional<Resolution> m_remembered;
 
-    QAtomicInt m_cancel, m_waiting;
+    QAtomicInt m_cancel;
     QSemaphore m_reply;
     Resolution m_answer = Resolution::Cancel; // handed over via m_reply
     bool m_applyToAll = false;

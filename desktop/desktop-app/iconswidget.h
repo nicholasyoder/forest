@@ -64,7 +64,6 @@ private slots:
     void moveicon(desktopicon *icon, QPoint newgridpos);
     void resizedragbox(QPoint cursorpos);
     void selecticonsinbox();
-    bool acceptdrop(QDropEvent *event);
 
     int row2y(int row){return usablespace.y() + row*gridsize;}
     int column2x(int column){return usablespace.x() + column*gridsize;}
@@ -77,6 +76,8 @@ private slots:
     bool hasiconat(int column, int row){return iconXYposhash.value(point2string(QPoint(column2x(column), row2y(row))));}
 
 private:
+    bool acceptdrop(QDropEvent *event);
+
     int spacing = 8;
     int gridsize = 100;
     QSize screensize;

@@ -36,7 +36,7 @@ QString itemsText(const QStringList &paths)
                              : QStringLiteral("%1 items").arg(paths.size());
 }
 
-void askConflict(FileJob *job, const QString &src, const QString &dst)
+QMessageBox *askConflict(FileJob *job, const QString &src, const QString &dst)
 {
     const QFileInfo s(src), d(dst);
     const bool merge = s.isDir() && !s.isSymLink() && d.isDir() && !d.isSymLink();
@@ -69,11 +69,12 @@ void askConflict(FileJob *job, const QString &src, const QString &dst)
         guard->resolveConflict(r, box->checkBox()->isChecked());
     });
     box->open();
+    return box;
 }
 
-// Progress window appears only for jobs still running after 500 ms.
+// Progress window appears only after 500 ms of work, not counting time spent in conflict prompts.
 void run(FileJob *job, const QString &title, const QString &errorText,
-         std::function<void(const QStringList &)> onFailed = {})
+         std::function<void(const QStringList &failed, bool cancelled)> onFinished = {})
 {
     auto *dlg = new QDialog;
     job->setParent(dlg);
@@ -99,20 +100,43 @@ void run(FileJob *job, const QString &title, const QString &errorText,
             bar->setValue(int(std::min(done, total) * 1000 / total));
         }
     });
-    QObject::connect(job, &FileJob::conflict, dlg, [job](const QString &src, const QString &dst){
-        askConflict(job, src, dst);
+    auto *showTimer = new QTimer(dlg);
+    showTimer->setSingleShot(true);
+    showTimer->setInterval(500);
+    QObject::connect(showTimer, &QTimer::timeout, dlg, &QWidget::show);
+
+    QObject::connect(job, &FileJob::conflict, dlg, [job, showTimer](const QString &src, const QString &dst){
+        QMessageBox *box = askConflict(job, src, dst);
+        if (showTimer->isActive()) {
+            showTimer->stop();
+            QObject::connect(box, &QDialog::finished, showTimer, qOverload<>(&QTimer::start));
+        }
     });
     QObject::connect(job, &FileJob::finished, dlg,
-                     [dlg, errorText, onFailed](const QStringList &failed, const QStringList &errors, bool cancelled){
+                     [dlg, errorText, onFinished](const QStringList &failed, const QStringList &errors, bool cancelled){
         dlg->hide();
         dlg->deleteLater();
         if (!errors.isEmpty())
             showErrors(errorText, errors);
-        if (onFailed && !failed.isEmpty() && !cancelled)
-            onFailed(failed);
+        if (onFinished)
+            onFinished(failed, cancelled);
     });
-    QTimer::singleShot(500, dlg, &QWidget::show);
+    showTimer->start();
     job->start();
+}
+
+void startMove(const QStringList &sources, const QString &destDir,
+               std::function<void(const QStringList &, bool)> onFinished = {})
+{
+    run(FileJob::create(Op::Move, sources, destDir), QStringLiteral("Moving files"),
+        QStringLiteral("Some items couldn't be moved."), std::move(onFinished));
+}
+
+// Identifies a clipboard selection, to tell whether it was replaced meanwhile.
+QByteArray clipboardStamp()
+{
+    const QMimeData *data = QGuiApplication::clipboard()->mimeData();
+    return data ? data->data(GnomeFormat) + '\0' + data->data(QStringLiteral("text/uri-list")) : QByteArray();
 }
 
 void startDelete(const QStringList &paths)
@@ -146,15 +170,15 @@ void copy(const QStringList &sources, const QString &destDir)
 
 void move(const QStringList &sources, const QString &destDir)
 {
-    run(FileJob::create(Op::Move, sources, destDir), QStringLiteral("Moving files"),
-        QStringLiteral("Some items couldn't be moved."));
+    startMove(sources, destDir);
 }
 
 void trash(const QStringList &paths)
 {
     run(FileJob::create(Op::Trash, paths), QStringLiteral("Moving to trash"),
-        QStringLiteral("Some items couldn't be moved to the trash."), [](const QStringList &failed){
-        confirmDelete(failed, QStringLiteral("%1 can't be moved to the trash. Delete permanently?").arg(itemsText(failed)));
+        QStringLiteral("Some items couldn't be moved to the trash."), [](const QStringList &failed, bool cancelled){
+        if (!failed.isEmpty() && !cancelled)
+            confirmDelete(failed, QStringLiteral("%1 can't be moved to the trash. Delete permanently?").arg(itemsText(failed)));
     });
 }
 
@@ -205,8 +229,11 @@ void paste(const QString &destDir)
         return;
 
     if (cut) {
-        move(paths, destDir);
-        clipboard->clear();
+        // Keep the cut selection if anything failed, so the paste can be retried.
+        startMove(paths, destDir, [stamp = clipboardStamp()](const QStringList &failed, bool cancelled){
+            if (failed.isEmpty() && !cancelled && clipboardStamp() == stamp)
+                QGuiApplication::clipboard()->clear();
+        });
     } else {
         copy(paths, destDir);
     }
