@@ -31,6 +31,10 @@ void ForeignToplevelHandle::setMinimized(){
     QtWayland::zwlr_foreign_toplevel_handle_v1::set_minimized();
 }
 
+void ForeignToplevelHandle::unsetMinimized(){
+    QtWayland::zwlr_foreign_toplevel_handle_v1::unset_minimized();
+}
+
 void ForeignToplevelHandle::requestClose(){
     QtWayland::zwlr_foreign_toplevel_handle_v1::close();
 }

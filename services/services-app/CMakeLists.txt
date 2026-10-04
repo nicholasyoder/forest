@@ -8,6 +8,7 @@ add_library(services-app MODULE
     notifications/notifypopup.cpp
     polkit/polkitagent.cpp
     polkit/polkitdialog.cpp
+    showdesktop/showdesktop.cpp
     systemtray/statusnotifierwatcher.cpp
     services.h
     hotkeys/foresthotkeys.h
@@ -20,6 +21,7 @@ add_library(services-app MODULE
     polkit/polkitagent.h
     polkit/polkitdialog.h
     polkit/polkitdialog.ui
+    showdesktop/showdesktop.h
     systemtray/statusnotifierwatcher.h
 )
 
@@ -38,5 +40,6 @@ target_link_libraries(services-app PRIVATE
 
 forest_link_miscutills(services-app)
 forest_link_layershellqt(services-app)
+forest_link_toplevels(services-app)
 
 install(TARGETS services-app LIBRARY DESTINATION lib/forest)

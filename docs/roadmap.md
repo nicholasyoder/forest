@@ -20,10 +20,11 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 - **Settings upgrade for 0.9.0.** `version` is bumped to `0.9.0` and
   `upgrade_0_9_0()` (`forest/settings_upgrade_manager.cpp`) adds the session
   locker's Meta+L hotkey and settings plugin, and rewrites the
-  `gnome-screenshot` hotkeys to `forest-screenshot`. Still to add: drop the dead
-  show-desktop `item-0003` hotkey, and rename `plug-NNNN/path=seperator` to
-  `separator` in `~/.config/Forest/Panel.conf` (see Cleanups). Keep each step
-  idempotent: testers re-run it by resetting `version`.
+  `gnome-screenshot` hotkeys to `forest-screenshot` and the 0.8.0 show-desktop
+  hotkey to `/org/forest/showdesktop`. Still to add: rename
+  `plug-NNNN/path=seperator` to `separator` in `~/.config/Forest/Panel.conf`
+  (see Cleanups). Keep each step idempotent: testers re-run it by resetting
+  `version`.
 - **Ship a Biome config with the Forest package.** Forest's layer-shell
   surfaces need `[LayerShell]/scanoutFadingNamespaces=forest-logout-dim,forest-locker-dim,forest-startup`
   (and `fadingNamespaces` for `forest-logout`) in Biome's config to fade at
@@ -35,11 +36,6 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 
 ### Bugs
 
-- **Show desktop hotkey** (regression from 0.8.0). The X11 `showdesktop` slot
-  and its Meta+D default were dropped. No standard protocol exists; the
-  decoupled route is `set_minimized` on every wlr-foreign-toplevel handle, so
-  it belongs next to windowlist's handles in the panel. Re-add the default in
-  `etc/forest/Forest.conf` (the 0.9.0 upgrade removes the dead old entry).
 - **Battery monitor doesn't refresh on panel plugin reload** (#38).
 
 ### Cleanups
@@ -175,9 +171,9 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   full/region (region picker on a frozen capture via `layeroverlay`); window
   capture via `ext-image-copy-capture-v1` +
   `ext-foreign-toplevel-image-capture-source-v1`, finding the active window
-  with windowlist's wlr↔ext handle pairing (move it to a library, or route
-  the hotkey through the panel). On Wayland the clipboard empties when its
-  owner exits, so copy via a forked owner as `wl-copy` does.
+  with `ToplevelTracker`'s wlr↔ext handle pairing (`library/toplevels`). On
+  Wayland the clipboard empties when its owner exits, so copy via a forked
+  owner as `wl-copy` does.
 - **Desktop widgets** (#54). Windows 7-style gadgets (analog clock, resource
   monitor, weather) on a layer-shell surface, with a panel button to
   show/hide them.
