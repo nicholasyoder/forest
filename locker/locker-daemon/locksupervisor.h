@@ -8,7 +8,8 @@
 #include <QTimer>
 
 // Runs forest-lockscreen and respawns it if it crashes while the session should be locked
-// (Biome keeps the session locked and lets the replacement take over).
+// (the compositor keeps the session locked and lets the replacement take over). Gives up
+// if it keeps crashing before it ever locks.
 class LockSupervisor : public QObject {
     Q_OBJECT
 public:
@@ -39,6 +40,7 @@ private:
     QProcess *m_process = nullptr;
     QTimer m_respawnTimer;
     int m_crashes = 0;
+    bool m_processLocked = false;
     bool m_unlockPending = false;
 };
 

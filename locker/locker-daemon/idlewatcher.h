@@ -27,6 +27,8 @@ public:
     void setLocked(bool locked);
     // org.freedesktop.ScreenSaver inhibitors: suspend the unlocked thresholds.
     void setInhibited(bool inhibited);
+    // Restarts every threshold's timer, as if the user had just been active.
+    void rearm();
 
 signals:
     void idled(IdleWatcher::Threshold threshold);

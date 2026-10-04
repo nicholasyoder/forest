@@ -1,9 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include <QApplication>
-#include <QCommandLineParser>
 #include <QSocketNotifier>
-#include <QTimer>
 
 #include <csignal>
 #include <sys/signalfd.h>
@@ -26,14 +24,6 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     FLogger::install("lockscreen");
 
-    QCommandLineParser parser;
-    parser.addHelpOption();
-#ifdef FOREST_LOCKSCREEN_DEBUG
-    QCommandLineOption unlockAfter("unlock-after", "Debug: unlock after <sec> seconds.", "sec");
-    parser.addOption(unlockAfter);
-#endif
-    parser.process(app);
-
     app.setStyleSheet(fstyleloader::loadstyle("greeter"));
 
     LockScreen lockScreen;
@@ -47,13 +37,6 @@ int main(int argc, char *argv[])
         while (read(unlockFd, &info, sizeof info) == sizeof info) {}
         lockScreen.unlockAndQuit();
     });
-
-#ifdef FOREST_LOCKSCREEN_DEBUG
-    if (parser.isSet(unlockAfter)) {
-        int secs = parser.value(unlockAfter).toInt();
-        QTimer::singleShot(secs * 1000, &lockScreen, &LockScreen::unlockAndQuit);
-    }
-#endif
 
     return app.exec();
 }

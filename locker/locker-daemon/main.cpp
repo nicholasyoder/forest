@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include <QApplication>
-#include <QCommandLineParser>
 #include <QSocketNotifier>
 
 #include <csignal>
@@ -27,12 +26,6 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     FLogger::install("locker");
 
-    QCommandLineParser parser;
-    parser.addHelpOption();
-    QCommandLineOption noLogind("no-logind", "Don't talk to logind (no lock/sleep signals or hints).");
-    parser.addOption(noLogind);
-    parser.process(app);
-
     int quitFd = signalfd(-1, &quitMask, SFD_NONBLOCK | SFD_CLOEXEC);
     QSocketNotifier quitNotifier(quitFd, QSocketNotifier::Read);
     QObject::connect(&quitNotifier, &QSocketNotifier::activated, &app, [quitFd] {
@@ -41,7 +34,7 @@ int main(int argc, char *argv[])
         QCoreApplication::quit();
     });
 
-    Locker locker(!parser.isSet(noLogind));
+    Locker locker;
     locker.start();
     app.exec();
     // Quitting kills the lockscreen; a restarted forest-locker relocks.

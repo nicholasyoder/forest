@@ -17,6 +17,7 @@ public:
 
     void setPrompt(const QString &prompt, bool secret);
     void setBusy();
+    void focusInput();
     void setStatus(const QString &text, bool error);
 
 signals:

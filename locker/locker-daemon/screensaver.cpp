@@ -33,6 +33,8 @@ void ScreenSaver::setActive(bool active)
     if (active == m_active)
         return;
     m_active = active;
+    if (active)
+        m_activeTimer.start();
     emit ActiveChanged(active);
 }
 
@@ -62,6 +64,23 @@ void ScreenSaver::UnInhibit(uint cookie)
 void ScreenSaver::Lock()
 {
     emit lockRequested();
+}
+
+void ScreenSaver::SimulateUserActivity()
+{
+    emit activitySimulated();
+}
+
+bool ScreenSaver::SetActive(bool active)
+{
+    if (active)
+        emit lockRequested();
+    return active;
+}
+
+uint ScreenSaver::GetActiveTime() const
+{
+    return m_active ? uint(m_activeTimer.elapsed() / 1000) : 0;
 }
 
 void ScreenSaver::ownerVanished(const QString &owner)

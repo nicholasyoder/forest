@@ -208,9 +208,11 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   cage to Biome with one window per output on `loginui`'s per-screen
   background; split `PasswordView` into a card shared with
   `forest-lockscreen`'s `PasswordCard`; maybe rename `greeter.css` (and the
-  `greeter_*` object names) to a shared login component. Then let the
-  password card follow the pointer between screens in both, rather than
-  staying on the primary screen.
+  `greeter_*` object names) to a shared login component. The lockscreen's
+  card already follows keyboard focus between screens; do the same in the
+  greeter. Also give the greeter and lockscreen their own wallpaper setting
+  instead of reusing the desktop wallpaper (`loginui::Wallpaper` reads
+  `desktop/wallpaper`).
 - **Hotkeys on the lock screen.** Biome hotkeys are off while locked, so
   volume/brightness keys do nothing there. Add a per-hotkey
   `allow_on_lockscreen` flag (visible in hotkey settings, default on for the

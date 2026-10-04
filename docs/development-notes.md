@@ -44,7 +44,7 @@ dpkg-buildpackage -Tclean
 
 If `forest-lockscreen` hangs while testing, switch to another VT and run
 `swaylock` against Biome's `WAYLAND_DISPLAY`; Biome lets it take over the
-lock, then unlock with it. Debug builds also take `--unlock-after <sec>`.
+lock, then unlock with it.
 
 ## Debugging Wayland/Qt protocol issues (window roles, popups, layer-shell)
 

@@ -8,7 +8,7 @@
 
 #include "settings_plugin_interface.h"
 
-// "Lock Screen" panel for forest-locker's QSettings("Forest", "Locker").
+// "Lock Screen" panel for forest-locker's LockerConfig.
 class LockerSettingsPlugin : public QObject, settings_plugin_infterace
 {
     Q_OBJECT
