@@ -35,25 +35,11 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 
 ### Bugs
 
-- **`DesktopNames` mismatch.** `wayland-sessions/Forest.desktop` has
-  `DesktopNames=Forest`, but `startforest-wayland` exports
-  `XDG_CURRENT_DESKTOP=Forest:biome` (needed for `biome-portals.conf`).
-  Make them agree (likely `DesktopNames=Forest;biome`).
-- **Hotkeys don't recover from portal failures.** A failed `createSession`
-  is terminal (no retry), and a portal restart or `Session::Closed` leaves
-  `sessionOpen` true with hotkeys dead until relog. Watch the
-  `org.freedesktop.portal.Desktop` owner and `Session::Closed`, and retry.
-- **Hotkeys stay paused if settings dies mid-capture.** `pauseHotkeys` has no
-  owner; watch the caller's bus name (`QDBusServiceWatcher`) and resume when
-  it vanishes.
 - **Show desktop hotkey** (regression from 0.8.0). The X11 `showdesktop` slot
   and its Meta+D default were dropped. No standard protocol exists; the
   decoupled route is `set_minimized` on every wlr-foreign-toplevel handle, so
   it belongs next to windowlist's handles in the panel. Re-add the default in
   `etc/forest/Forest.conf` (the 0.9.0 upgrade removes the dead old entry).
-- **Hotkey capture can't record a bare Meta tap.** `edithotkeywidget::keyPressEvent`
-  appends `Meta+` and waits for a non-modifier key; with no `keyReleaseEvent`
-  it never produces the `Meta` value `foresthotkeys` understands. Pre-existing.
 - **Battery monitor doesn't refresh on panel plugin reload** (#38).
 
 ### Cleanups
