@@ -17,22 +17,6 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 
 ### Blockers
 
-- **Desktop file operations are broken.** Copy/cut/paste/delete and "New
-  file" on the desktop do nothing (confirmed): `fmutils.h` and `desktop.cpp`
-  call `QProcess::start("rm -r \"...\"")`, and since Qt6 a single string is
-  the program name, not a command line. Fix by replacing `fmutils` with
-  `library/fileops`, pure Qt: `QFile::moveToTrash` (per-drive trash, replaces
-  the hand-rolled home-only trash), threaded copy/move/delete jobs with
-  progress, cancel, conflict prompts (overwrite/skip/rename/apply-to-all),
-  cross-device moves, and an error report; cut/paste interop via
-  `x-special/gnome-copied-files`. Keep the API backend-neutral so a GIO
-  backend could slot in if a file manager ever happens (GLib is already
-  linked via QtCore; libfm-qt/KIO rejected). Decided: drops move on the same
-  drive and copy across drives (Ctrl forces copy, Shift forces move);
-  Shift+Delete confirms first; pasting a copy into its own folder
-  auto-renames ("name (copy)") instead of prompting; clipboard URIs via
-  `QUrl::fromLocalFile` (current code doesn't percent-encode). Work on
-  `fix/desktop-fileops`.
 - **Settings upgrade for 0.9.0.** `version` is bumped to `0.9.0` and
   `upgrade_0_9_0()` (`forest/settings_upgrade_manager.cpp`) adds the session
   locker's Meta+L hotkey and settings plugin, and rewrites the

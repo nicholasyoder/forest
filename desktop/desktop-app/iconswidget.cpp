@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "iconswidget.h"
+#include "fileops.h"
 
 iconswidget::iconswidget(QSize size, QRect usable)
 {
@@ -124,21 +125,35 @@ void iconswidget::keyReleaseEvent(QKeyEvent *event)
     emit keyreleased(event);
 }
 
-//this makes your cursor change when drag entering to show this widget can take the drop
-void iconswidget::dragEnterEvent(QDragEnterEvent *event)
+// Re-evaluated on every move: the drag source sees the action and modifiers can change mid-drag.
+bool iconswidget::acceptdrop(QDropEvent *event)
 {
-    if (event->mimeData()->hasUrls())
-        event->acceptProposedAction();
+    const QStringList paths = fileops::localPaths(event->mimeData()->urls());
+    const Qt::DropAction action = paths.isEmpty() ? Qt::IgnoreAction
+        : fileops::dropAction(paths, dropdir, event->modifiers(), event->possibleActions());
+    if (action == Qt::IgnoreAction) {
+        event->ignore();
+        return false;
+    }
+    event->setDropAction(action);
+    event->accept();
+    return true;
 }
 
-//handle files being dropped
+void iconswidget::dragEnterEvent(QDragEnterEvent *event)
+{
+    acceptdrop(event);
+}
+
+void iconswidget::dragMoveEvent(QDragMoveEvent *event)
+{
+    acceptdrop(event);
+}
+
 void iconswidget::dropEvent(QDropEvent *event)
 {
-    if (event->mimeData()->hasUrls())
-    {
-        emit filesdropped(event->mimeData()->urls());
-        event->acceptProposedAction();
-    }
+    if (acceptdrop(event))
+        emit filesdropped(fileops::localPaths(event->mimeData()->urls()), event->dropAction());
 }
 
 void iconswidget::handleiconselected(QString iconID)

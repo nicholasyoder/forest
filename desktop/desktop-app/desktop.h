@@ -14,6 +14,10 @@
 #include <QListWidget>
 #include <QVBoxLayout>
 #include <QMenu>
+#include <QDir>
+#include <QProcess>
+#include <QMimeDatabase>
+#include <QFileSystemWatcher>
 #include <qt6xdg/XdgDesktopFile>
 #include <qt6xdg/XdgMimeType>
 #include <qt6xdg/XdgDirs>
@@ -24,7 +28,7 @@
 #include "global_settings.h"
 
 #include "../../library/pluginutills/app_plugin_interface.h"
-#include "../../library/fmutils/fmutils.h"
+#include "fileops.h"
 
 class desktop : public QObject, app_plugin_interface
 {
@@ -54,13 +58,13 @@ private slots:
     QRect getusabledesktopspace(QScreen *screen);
     void handleScreenChange();
 
-    void handleiconactivated(QString iconID){fmutils::openfile(iconID);}
-    void paste2desktop(){fmutils::pastefromclipboard(QDir::homePath() + "/Desktop");}
-    void opendesktopfolder(){fmutils::openfile(QDir::homePath() + "/Desktop");}
+    void handleiconactivated(QString iconID){openfile(iconID);}
+    void paste2desktop(){fileops::paste(desktopdir());}
+    void opendesktopfolder(){openfile(desktopdir());}
 
     void handlekeypressed(QKeyEvent *event);
     void handlekeyreleased(QKeyEvent *event);
-    void handlefilesdropped(QList<QUrl> urls);
+    void handlefilesdropped(QStringList paths, Qt::DropAction action);
     void handleicontextchanged(QString ID, QString newtext);
 
     void openselected();
@@ -75,6 +79,10 @@ private slots:
     void createfile();
 
 private:
+    static QString desktopdir(){ return XdgDirs::userDir(XdgDirs::Desktop); }
+    static void openfile(const QString &file);
+    QStringList selectedpaths();
+
     bool ctrldown = false;
     bool shiftdown = false;
     bool updatepaused = false;

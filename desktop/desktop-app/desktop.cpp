@@ -19,7 +19,7 @@ void desktop::setupPlug(){
 
     //monitor desktop dir for changes
     QFileSystemWatcher *watcher = new QFileSystemWatcher;
-    watcher->addPath(QDir::homePath() + "/Desktop");
+    watcher->addPath(desktopdir());
     connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(updateicons()));
 
     updateicons();
@@ -53,6 +53,7 @@ void desktop::loadwallpaperwidgets(){
             vlayout->addWidget(iwidget);
             connect(iwidget, &iconswidget::iconposchange, this, &desktop::saveiconlocations);
             connect(iwidget, &iconswidget::icontextchanged, this, &desktop::handleicontextchanged);
+            iwidget->setdropdir(desktopdir());
             connect(iwidget, &iconswidget::filesdropped, this, &desktop::handlefilesdropped);
             connect(iwidget, &iconswidget::keypressed, this, &desktop::handlekeypressed);
             connect(iwidget, &iconswidget::keyreleased, this, &desktop::handlekeyreleased);
@@ -145,13 +146,9 @@ void desktop::updateicons(){
 
     iwidget->removeall();
 
-    QDir dir(XdgDirs::userDir(XdgDirs::Desktop));
-    QStringList files(dir.entryList());
-    files.removeAt(0);
-    files.removeAt(0);//for some reason the QDir::NoDotAndDotDot doesn't work - so we have to do this :(
-
-    foreach (QString file, files)
-        loadicon(XdgDirs::userDir(XdgDirs::Desktop) + "/" + file);
+    const QString dir = desktopdir();
+    foreach (QString file, QDir(dir).entryList(QDir::AllEntries | QDir::NoDotAndDotDot))
+        loadicon(dir + "/" + file);
 }
 
 void desktop::loadicon(QString file){
@@ -232,29 +229,32 @@ void desktop::handlekeyreleased(QKeyEvent *event){
     }
 }
 
-void desktop::handlefilesdropped(QList<QUrl> urls){
-    foreach (QUrl url, urls){
-        QString filepath = url.toString();
-        if (filepath.contains("file://")){
-            filepath.remove("file://");
-
-            QStringList pathlist = filepath.split("/");
-
-            QProcess cp;
-            cp.start("cp -r " + filepath + " " + QDir::homePath() + "/Desktop/" + pathlist.last());
-            cp.waitForFinished();
-        }
-    }
+void desktop::handlefilesdropped(QStringList paths, Qt::DropAction action){
+    if (action == Qt::MoveAction)
+        fileops::move(paths, desktopdir());
+    else
+        fileops::copy(paths, desktopdir());
 }
 
+// Runs inside the icon's editingFinished emission: don't delete icons (updateicons) here.
 void desktop::handleicontextchanged(QString ID, QString newtext){
+    QFileInfo old(ID);
+    if (newtext.isEmpty() || newtext == old.fileName() || newtext.contains('/'))
+        return;
+
+    QString newid = old.absolutePath() + "/" + newtext;
+    if (QFileInfo(newid).exists() || QFileInfo(newid).isSymLink()){
+        fileops::showErrors("Couldn't rename “" + old.fileName() + "”.", {"“" + newtext + "” already exists."});
+        return;
+    }
+    if (!QDir().rename(ID, newid)){
+        fileops::showErrors("Couldn't rename “" + old.fileName() + "”.", {});
+        return;
+    }
+
     settings->beginGroup("desktopicons");
-    QString pos = settings->value(ID).toString();
+    settings->setValue(newid, settings->value(ID));
     settings->remove(ID);
-    QString newid = ID;
-    newid = newid.remove(newid.split("/").last()) + newtext;
-    settings->setValue(newid, pos);
-    fmutils::renamefile(ID, newtext);
     settings->endGroup();
 }
 
@@ -263,20 +263,19 @@ void desktop::openselected(){
         handleiconactivated(icon->getID());
 }
 
-void desktop::cutselected(){
-    QStringList files;
+QStringList desktop::selectedpaths(){
+    QStringList paths;
     foreach (desktopicon *icon, iwidget->selectedicons())
-        files.append(icon->getID());
+        paths.append(icon->getID());
+    return paths;
+}
 
-    fmutils::cuttoclipboard(files);
+void desktop::cutselected(){
+    fileops::setClipboard(selectedpaths(), true);
 }
 
 void desktop::copyselected(){
-    QStringList files;
-    foreach (desktopicon *icon, iwidget->selectedicons())
-        files.append(icon->getID());
-
-    fmutils::copytoclipboard(files);
+    fileops::setClipboard(selectedpaths(), false);
 }
 
 void desktop::copypathofselected(){
@@ -291,18 +290,17 @@ void desktop::renameselected(){
 }
 
 void desktop::trashselected(){
-    foreach (desktopicon *icon, iwidget->selectedicons())
-        fmutils::movefiletotrash(icon->getID());
+    if (!iwidget->selectedicons().isEmpty())
+        fileops::trash(selectedpaths());
 }
 
 void desktop::deleteselected(){
-    foreach (desktopicon *icon, iwidget->selectedicons())
-        fmutils::deletefile(icon->getID());
+    fileops::remove(selectedpaths());
 }
 
 void desktop::createfolder(){
     QString dirname;
-    QString sdir = QDir::homePath() + "/Desktop/newfolder";
+    QString sdir = desktopdir() + "/newfolder";
     QDir dir;
     if (dir.exists(sdir)){
         int c = 1;
@@ -323,7 +321,7 @@ void desktop::createfolder(){
 
 void desktop::createfile(){
     QString filename;
-    QString sfile = QDir::homePath() + "/Desktop/newfile";
+    QString sfile = desktopdir() + "/newfile";
     QDir dir;
     if (dir.exists(sfile)){
         int c = 1;
@@ -336,11 +334,27 @@ void desktop::createfile(){
         filename = sfile;
     }
 
-    QProcess p;
-    p.start("touch \"" + filename + "\"");
-    p.waitForFinished();
+    QFile f(filename);
+    if (!f.open(QIODevice::WriteOnly | QIODevice::NewOnly)){
+        fileops::showErrors("Couldn't create a new file.", {filename + ": " + f.errorString()});
+        return;
+    }
+    f.close();
 
     updateicons();
     updatepaused = true;//keep filesystemwatcher from updating after icon is in edit mode
     iwidget->seticonintexteditmode(filename);
+}
+
+void desktop::openfile(const QString &file){
+    QMimeDatabase db;
+    XdgMimeType mime = db.mimeTypeForFile(file);
+    XdgDesktopFile dfile;
+
+    if (QFileInfo(file).isDir())
+        QProcess::startDetached("pcmanfm-qt", {"-n", file}, QDir::homePath());
+    else if (mime.inherits("application/x-desktop") && dfile.load(file))
+        dfile.startDetached();
+    else
+        QProcess::startDetached("xdg-open", {file}, QDir::homePath());
 }

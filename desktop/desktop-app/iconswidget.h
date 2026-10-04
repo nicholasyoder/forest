@@ -28,7 +28,7 @@ signals:
     void iconposchange(QHash<QString, QString> poshash);
     void icontextchanged(QString ID, QString newtext);
     void refreshrequest();
-    void filesdropped(QList<QUrl> urls);
+    void filesdropped(QStringList paths, Qt::DropAction action);
     void keypressed(QKeyEvent *event);
     void keyreleased(QKeyEvent *event);
 
@@ -41,6 +41,7 @@ public slots:
     void setscreensize(QSize size){screensize = size;}
     void setusabledesktopspace(QRect usable){usablespace = usable;}
     void setinmultiselectmode(bool inmode){inmultiselectmode = inmode;}
+    void setdropdir(QString dir){dropdir = dir;}
     QList<desktopicon*> selectedicons();
 
 protected:
@@ -50,6 +51,7 @@ protected:
     void keyPressEvent(QKeyEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
+    void dragMoveEvent(QDragMoveEvent *event);
     void dropEvent(QDropEvent *event);
 
 private slots:
@@ -62,6 +64,7 @@ private slots:
     void moveicon(desktopicon *icon, QPoint newgridpos);
     void resizedragbox(QPoint cursorpos);
     void selecticonsinbox();
+    bool acceptdrop(QDropEvent *event);
 
     int row2y(int row){return usablespace.y() + row*gridsize;}
     int column2x(int column){return usablespace.x() + column*gridsize;}
@@ -86,5 +89,6 @@ private:
     dragbox *dbox = new dragbox;
 
     bool inmultiselectmode = false;
+    QString dropdir;
 };
 #endif // ICONSWIDGET_H
