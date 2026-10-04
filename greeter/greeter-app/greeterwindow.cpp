@@ -8,18 +8,14 @@
 #include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QFrame>
-#include <QDateTime>
 #include <QProcess>
 #include <QSettings>
 #include <QPushButton>
 #include <QDebug>
 
-#include "miscutills.h"
-
 GreeterWindow::GreeterWindow(QWidget *parent)
     : QWidget(parent)
     , m_client(new GreetdClient(this))
-    , m_clockTimer(new QTimer(this))
 {
     setWindowFlags(Qt::FramelessWindowHint);
 
@@ -37,17 +33,8 @@ GreeterWindow::GreeterWindow(QWidget *parent)
         QApplication::quit();
     });
 
-    connect(m_clockTimer, &QTimer::timeout, this, &GreeterWindow::onClockTick);
-    m_clockTimer->start(1000);
-
     setupUi();
-    loadWallpaper();
     initStartupView();
-}
-
-GreeterWindow::~GreeterWindow()
-{
-    delete m_wallpaper;
 }
 
 void GreeterWindow::setupUi()
@@ -99,12 +86,8 @@ void GreeterWindow::setupUi()
     centerRow->addStretch(1);
 
     auto *clock_layout = new QVBoxLayout;
-    m_clockLabel = new QLabel;
-    m_clockLabel->setObjectName("greeter_Clock");
-    m_clockLabel->setAlignment(Qt::AlignCenter);
-    onClockTick();
     clock_layout->addStretch(1);
-    clock_layout->addWidget(m_clockLabel);
+    clock_layout->addWidget(new loginui::Clock);
     clock_layout->addStretch(1);
 
     centerRow->addLayout(clock_layout);
@@ -135,16 +118,6 @@ void GreeterWindow::setupUi()
     connect(rebootBtn, &QPushButton::clicked, this, []() {
         QProcess::startDetached("systemctl", {"reboot"});
     });
-}
-
-void GreeterWindow::loadWallpaper()
-{
-    QSettings settings("Forest", "Forest");
-    QString wallpaperFile = settings.value("wallpaper/file", "/usr/share/wallpapers/forest/forest.jpg").toString();
-    if (wallpaperFile.isEmpty())
-        return;
-    QSize screenSize = QGuiApplication::primaryScreen()->geometry().size();
-    m_wallpaper = miscutills::get_wallpaper_scaled(wallpaperFile, Fill, screenSize);
 }
 
 void GreeterWindow::restoreLastSession()
@@ -203,16 +176,12 @@ void GreeterWindow::paintEvent(QPaintEvent *)
     QPoint origin = QGuiApplication::primaryScreen()->virtualGeometry().topLeft();
     for (QScreen *screen : QGuiApplication::screens()) {
         QRect r = screen->geometry().translated(-origin);
-        if (m_wallpaper && !m_wallpaper->isNull())
-            painter.drawImage(r, *m_wallpaper, m_wallpaper->rect());
+        QImage img = m_wallpaper.scaled(r.size());
+        if (!img.isNull())
+            painter.drawImage(r, img);
         else
             painter.fillRect(r, QColor(30, 30, 30));
     }
-}
-
-void GreeterWindow::onClockTick()
-{
-    m_clockLabel->setText(QDateTime::currentDateTime().toString("hh:mm"));
 }
 
 void GreeterWindow::showUserSelectView()

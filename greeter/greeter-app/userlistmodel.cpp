@@ -4,9 +4,9 @@
 
 #include <QFile>
 #include <QTextStream>
-#include <QFileInfo>
-#include <QSettings>
 #include <QDebug>
+
+#include "loginui.h"
 
 UserListModel::UserListModel() {
     load();
@@ -49,25 +49,8 @@ void UserListModel::load() {
         if (displayName.isEmpty())
             displayName = username;
 
-        QString faceIconPath;
-        QString facePath = homeDir + "/.face";
-        if (QFileInfo::exists(facePath)) {
-            faceIconPath = facePath;
-        } else {
-            QFile accountsFile("/var/lib/AccountsService/users/" + username);
-            if (accountsFile.open(QIODevice::ReadOnly | QIODevice::Text)) {
-                QTextStream as(&accountsFile);
-                while (!as.atEnd()) {
-                    QString l = as.readLine();
-                    if (l.startsWith("Icon=")) {
-                        faceIconPath = l.mid(5).trimmed();
-                        break;
-                    }
-                }
-            }
-        }
-
-        m_users.append({username, displayName, homeDir, faceIconPath});
+        m_users.append({username, displayName, homeDir,
+                        loginui::faceIconPath(username, homeDir)});
     }
 
     if (m_users.isEmpty())

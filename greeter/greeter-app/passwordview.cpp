@@ -8,41 +8,9 @@
 #include <QLineEdit>
 #include <QPushButton>
 #include <QStackedWidget>
-#include <QPainter>
-#include <QPainterPath>
 #include <QStyle>
 
-static QPixmap makeCircularPixmap(const QString &path, int size, const QString &fallback)
-{
-    QPixmap result(size, size);
-    result.fill(Qt::transparent);
-    QPainter p(&result);
-    p.setRenderHint(QPainter::Antialiasing);
-
-    QPixmap src;
-    if (!path.isEmpty())
-        src.load(path);
-
-    if (!src.isNull()) {
-        src = src.scaled(size, size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-        QPainterPath clip;
-        clip.addEllipse(0, 0, size, size);
-        p.setClipPath(clip);
-        p.drawPixmap((size - src.width()) / 2, (size - src.height()) / 2, src);
-    } else {
-        p.setBrush(QColor(90, 90, 90));
-        p.setPen(Qt::NoPen);
-        p.drawEllipse(0, 0, size, size);
-        p.setPen(Qt::white);
-        QFont f;
-        f.setPixelSize(size / 2);
-        f.setBold(true);
-        p.setFont(f);
-        QString ch = fallback.isEmpty() ? "?" : fallback.left(1).toUpper();
-        p.drawText(QRect(0, 0, size, size), Qt::AlignCenter, ch);
-    }
-    return result;
-}
+#include "loginui.h"
 
 PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     : QWidget(parent)
@@ -78,7 +46,7 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     manualLay->setAlignment(Qt::AlignHCenter);
     m_genericAvatarLabel = new QLabel;
     m_genericAvatarLabel->setObjectName("greeter_PasswordAvatar");
-    m_genericAvatarLabel->setPixmap(makeCircularPixmap({}, 96, "?"));
+    m_genericAvatarLabel->setPixmap(loginui::circularAvatar({}, 96, "?"));
     m_genericAvatarLabel->setAlignment(Qt::AlignCenter);
     manualLay->addWidget(m_genericAvatarLabel, 0, Qt::AlignHCenter);
     m_usernameEdit = new QLineEdit;
@@ -139,7 +107,7 @@ void PasswordView::setUser(const UserInfo &user)
 {
     m_isManualMode = false;
     m_knownUsername = user.username;
-    m_avatarLabel->setPixmap(makeCircularPixmap(user.faceIconPath, 96, user.displayName));
+    m_avatarLabel->setPixmap(loginui::circularAvatar(user.faceIconPath, 96, user.displayName));
     m_displayNameLabel->setText(user.displayName);
     m_headerStack->setCurrentIndex(0);
 }
