@@ -28,18 +28,29 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
   `x-special/gnome-copied-files`. Keep the API backend-neutral so a GIO
   backend could slot in if a file manager ever happens (GLib is already
   linked via QtCore; libfm-qt/KIO rejected).
-- **Screenshots.** The default Meta+S / Ctrl+Meta+S hotkeys and
-  `debian/control` use `gnome-screenshot`, which can't capture under Biome.
-  Biome 0.1.0 adds `wlr-screencopy-unstable-v1`; on top of it either depend on
-  `grim` (+ `slurp` for regions) or write a native Forest screenshot client.
-  Decide when picked up. Active-window capture has no standard path on
-  wlroots 0.18 (per-toplevel capture needs 0.19), so that hotkey may become
-  region capture instead.
+- **Screenshots via grim + slurp.** The default Meta+S / Ctrl+Meta+S hotkeys
+  and `debian/control` use `gnome-screenshot`, which can't capture under
+  Biome. Stopgap on Biome 0.1.0's `wlr-screencopy-unstable-v1` until the
+  native client (Later):
+  - New `usr/bin/forest-screenshot` shell script: full screen by default,
+    `--region` via `slurp` (cancel exits quietly). Saves
+    `$(xdg-user-dir PICTURES)/Screenshots/Screenshot_<timestamp>.png`, copies
+    it with `wl-copy`, and confirms with `notify-send`. A script rather than
+    raw `grim` in the hotkey because hotkey actions run without a shell
+    (`QProcess::splitCommand`), and the native client can later take over
+    the name with no settings migration.
+  - `etc/forest/Forest.conf`: Meta+S → `forest-screenshot`; Ctrl+Meta+S →
+    `forest-screenshot --region` ("screenshot region"). Active-window
+    capture has no standard path on wlroots 0.18, so it's dropped for now.
+  - `debian/control`: replace `gnome-screenshot` with `grim`, `slurp`,
+    `wl-clipboard`, `libnotify-bin`, `xdg-user-dirs`.
+  - Existing users: rewrite in `upgrade_0_9_0()` (below).
 - **Settings upgrade for 0.9.0.** `version` is bumped to `0.9.0` and
   `upgrade_0_9_0()` (`forest/settings_upgrade_manager.cpp`) adds the session
   locker's Meta+L hotkey and settings plugin. Still to add: drop the dead
-  show-desktop `item-0003` hotkey, rewrite the `gnome-screenshot` hotkeys to
-  whatever replaces them, and rename `plug-NNNN/path=seperator` to
+  show-desktop `item-0003` hotkey, rewrite hotkeys whose action is exactly
+  `gnome-screenshot` / `gnome-screenshot -w` to the `forest-screenshot`
+  defaults (leave customized ones alone), and rename `plug-NNNN/path=seperator` to
   `separator` in `~/.config/Forest/Panel.conf` (see Cleanups). Keep each step
   idempotent: testers re-run it by resetting `version`.
 - **Ship a Biome config with the Forest package.** Forest's layer-shell
@@ -201,6 +212,15 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   thumbnails. Needs per-toplevel capture (`ext-image-copy-capture-v1` with a
   foreign-toplevel capture source), which needs Biome's wlroots bump past
   0.18 (Biome roadmap, Later). Windowlist hover previews would come back with it.
+- **Native screenshot client.** Replaces the grim + slurp script under the
+  same `forest-screenshot` name, held until Biome's wlroots bump so it ships
+  with window capture rather than as a partial version. Screencopy for
+  full/region (region picker on a frozen capture via `layeroverlay`); window
+  capture via `ext-image-copy-capture-v1` +
+  `ext-foreign-toplevel-image-capture-source-v1`, finding the active window
+  with windowlist's wlr↔ext handle pairing (move it to a library, or route
+  the hotkey through the panel). On Wayland the clipboard empties when its
+  owner exits, so copy via a forked owner as `wl-copy` does.
 - **Desktop widgets** (#54). Windows 7-style gadgets (analog clock, resource
   monitor, weather) on a layer-shell surface, with a panel button to
   show/hide them.
