@@ -19,13 +19,13 @@ there's no `dh_make` scaffolding step; that's only for a package that has no
 
 ### Build the package
 
-Note: replace `0.8.0` with the correct version number of the release.
+Note: replace `0.9.0` with the correct version number of the release.
 
 1. Modify `debian/changelog`
 2. From `forest/`: `dpkg-buildpackage -us -uc -b` (or `debuild -us -uc` to
    also run `lintian` on the result automatically)
 
-This produces `../forest_0.8.0_amd64.deb`, `../forest-greeter_0.8.0_amd64.deb`,
+This produces `../forest_0.9.0_amd64.deb`, `../forest-greeter_0.9.0_amd64.deb`,
 and `-dbgsym` packages for each, in the parent directory. It does not install
 anything locally.
 
