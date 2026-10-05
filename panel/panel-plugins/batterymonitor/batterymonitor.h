@@ -3,13 +3,13 @@
 #ifndef BATTERYMONITOR_H
 #define BATTERYMONITOR_H
 
-//#define PATH_TO_PS_DIR "/home/nicholas/sys/class/power_supply/"
 #define PATH_TO_PS_DIR "/sys/class/power_supply/"
 
 #include <QWidget>
 #include <QTimer>
 #include <QDir>
 #include <QHBoxLayout>
+#include <QLabel>
 
 #include "panelpluginterface.h"
 #include "battery.h"
@@ -37,13 +37,9 @@ private slots:
     void showpopup();
 
 private:
-    bool nobattery = false;
     QHBoxLayout *basehlayout = new QHBoxLayout;
-    int currentcapacity = 0;
-    int totalcapacity = 0;
-    qreal percentfull = 0;
     QList<battery*> batterylist;
-    QTimer *updatetimer = new QTimer;
+    QTimer *updatetimer = new QTimer(this);
     popup *pbox;
     QLabel *popuplabel = new QLabel;
 };
