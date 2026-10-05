@@ -15,10 +15,6 @@ it here ahead of time. Small fixes don't need a plan doc.
 
 Ships with Biome 0.1.0. Everything here is required before tagging.
 
-### Bugs
-
-- **Battery monitor doesn't refresh on panel plugin reload** (#38).
-
 ### Release checklist
 
 - `CMakeLists.txt` `project(... VERSION 1.0.0)` → `0.9.0`.

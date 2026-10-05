@@ -4,33 +4,30 @@
 #define BATTERY_H
 
 #include <QWidget>
-#include <QLabel>
-#include <QDir>
-#include <QDebug>
-#include <QPainter>
-#include <QtDBus>
-#include <QPainterPath>
 
-
-class battery : public QLabel
+class battery : public QWidget
 {
     Q_OBJECT
 
 public:
     battery(QString path);
 
-signals:
+    // Re-reads sysfs and schedules a repaint.
+    void refresh();
+    qreal getpercentfull() const { return percentfull; }
+    QString getstatus() const { return status; }
+    QSize sizeHint() const override;
 
-public slots:
-    void updatedata();
-    qreal getpercentfull();
-    QString getstatus();
-    void trynotifylow();
-    void notifylow();
+protected:
+    void paintEvent(QPaintEvent *) override;
 
 private:
+    void notifylow();
+
     bool sentnotification = false;
     QString pathtobatdir;
+    qreal percentfull = 0;
+    QString status;
 };
 
 #endif // BATTERY_H

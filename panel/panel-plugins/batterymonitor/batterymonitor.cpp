@@ -31,6 +31,7 @@ void batterymonitor::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
         if (sdir.startsWith("bat", Qt::CaseInsensitive))
         {
             battery *bat = new battery(PATH_TO_PS_DIR + sdir);
+            bat->refresh();
             batterylist.append(bat);
             basehlayout->addWidget(bat);
         }
@@ -38,13 +39,11 @@ void batterymonitor::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 
     if (batterylist.count() == 0)
     {
-        battery *bat = new battery("");
-        basehlayout->addWidget(bat);
-        bat->updatedata();
+        basehlayout->addWidget(new battery(""));
     }
     else
     {
-        connect(updatetimer, SIGNAL(timeout()), this, SLOT(updatedata()));
+        connect(updatetimer, &QTimer::timeout, this, &batterymonitor::updatedata);
         updatetimer->start(3000);
     }
 
@@ -66,7 +65,7 @@ void batterymonitor::updatedata()
 {
     foreach (battery *bat, batterylist)
     {
-        bat->updatedata();
+        bat->refresh();
     }
 }
 
