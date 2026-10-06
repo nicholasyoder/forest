@@ -303,19 +303,30 @@ before the page exists.
 
 - [ ] **`library/outputs` additions:**
   - `effectiveSize(const OutputConfig &)`: transformed size / scale,
-    **truncated** like `wlr_output_effective_resolution` (int `/=` double).
-  - `isConnected(layout)` (mirror Biome's `layout_is_connected()`: touching
-    or overlapping counts) and `normalized(layout)` (top-left to (0,0)).
+    **truncated** like Biome's `head_layout_box` (scale quantized to
+    wl_fixed 1/256, divided as `float`; a double can be 1 px off for custom
+    scales and turn a "connected" layout into a rejected gap).
+  - `isConnected(layout)` (mirror Biome's `connected()` in
+    `output_arrange.cpp`: a shared edge of positive length or overlap
+    counts, **corner-only contact doesn't**) and `normalized(layout)`
+    (top-left to (0,0)).
   - `layoutToJson` / `layoutFromJson` for the D-Bus payload (the
     `OutputConfig` fields, mode as `modeToString`).
   - `needsConfirm(before, after)`: true when any output's enabled, mode,
     scale or transform differs.
 - [ ] **Daemon `applyLayout(QString json)`:**
   - Refuse (log, return false) if it's unparsable, mentions an unknown
-    connector, disables every output, or isn't connected.
+    connector, disables every output, or isn't connected. Identity keys
+    come from the live state, never from the caller's JSON.
   - Snapshot `currentLayout()` as the revert target, then apply. If
     `needsConfirm` is false, save at once. Otherwise show the confirm card
     and save only on Keep.
+  - The 15 s revert timer lives in the daemon and starts when the apply
+    succeeds, so a card that never shows still reverts. Exported
+    `keepLayout()` / `revertLayout()` slots (the card calls the same code)
+    make the flow `busctl`-testable before the card exists.
+  - A revert that fails or is cancelled (hotplug) is logged and left to
+    auto-pick.
   - Save = overwrite the active profile's outputs if the active profile
     matches the connected set, else create one with `defaultName()`. Keep
     the profile's `primary` (phase 3 edits it).
@@ -332,11 +343,12 @@ before the page exists.
       `LayerShellQt` overlay-layer `QWidget` per enabled screen. Title,
       "Reverting in N s" countdown (15 s), [Revert] [Keep]. The card on
       `ScreenTracker::primary()` gets `KeyboardInteractivityExclusive`
-      (Escape = revert, Enter = keep). Create the cards only after the apply
-      callback succeeds *and* Qt's screen list has caught up (connect to
-      `ScreenTracker`'s change signal, don't build from a stale
-      `QGuiApplication::screens()`). Styled in `base/forest.css` by object
-      name.
+      (Escape = revert, Enter = keep). Create the cards once every enabled
+      connector has a `QScreen` of that name: check right after the apply
+      succeeds and on `screenAdded`/`screenRemoved`, with a fallback timer.
+      Not via `ScreenTracker`: it only watches geometry (2 s debounce), so
+      refresh-only and 180°/flip changes never fire it. Styled in
+      `base/forest.css` by object name.
 - [ ] **Displays page** (`system/system-settings/displays/`), a top-level
       "Displays" sidebar item (`preferences-desktop-display`) after About:
   - Owns its own `OutputManager` for live state and `test`. The page's
