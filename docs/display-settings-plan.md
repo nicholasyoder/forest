@@ -261,6 +261,7 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 | `renameProfile(id, name)`, `deleteProfile(id)` | also update/remove the profile's hotkeys |
 | `saveCurrentAsProfile(QString name) → id` | snapshot the live layout (phase 1's no-UI path) |
 | `profilesChanged`, `activeProfileChanged(id)`, `primaryChanged(name)` | signals for the editor and `ScreenTracker` |
+| `confirmPending`, `layoutKept`, `layoutReverted` | confirm-card lifecycle, for the editor |
 
 ## UI: System settings → Displays
 
@@ -287,26 +288,91 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 Each phase ends in something the user can manually test (keyboard/visual
 testing is the user's, per the usual workflow).
 
-### Phase 1 — backend, no UI
-
-Outcome: the user's `wlr-randr` scripts can be retired.
-
-- [ ] **Biome (separate PR, can land first):** persist successful applies to
-      `Biome.conf` (see "Biome remembers the last applied layout"). Update
-      Biome `architecture-notes.md` "Live output management", which currently
-      says applies are never persisted.
-- [ ] Test: lay out with `wlr-randr`, `saveCurrentAsProfile` via `busctl`,
-      rebind Meta+2/Meta+3 to `applyProfile`. Unplug/replug. Relog: Biome
-      should come up in the last layout with no second modeset.
+Phase 1 (backend, no UI: `library/outputs`, the `displays` service,
+`DBUS:` `arg=`, Biome persisting applies) is done.
 
 ### Phase 2 — Displays page and safe apply
 
-- [ ] Displays page: canvas, per-output controls, `test`-as-you-edit,
-      Apply/Revert. Single profile only (the active or auto-created one).
-- [ ] Daemon `applyLayout` with the confirm/revert card.
-- [ ] Biome: fix the stale fractional-scale bug (Biome roadmap, `wp-fractional-
-      scale` not re-sent on a live scale change). A GUI makes live rescale an
-      everyday action, so land it in the same release.
+Outcome: everything in the old `wlr-randr` workflow can be done from
+System settings, and a bad mode/scale can't strand the user. Single profile
+only: Apply edits the active profile, or auto-creates one ("Unsaved setup").
+Two PRs: the Biome fix (independent, can land first) and one Forest branch.
+Within the Forest branch, build the daemon side first. It's testable with
+`busctl` + hand-written JSON before the page exists.
+
+- [ ] **Biome:** fix the stale fractional-scale bug (Biome roadmap: after a
+      live scale change, `wp-fractional-scale` / `preferred_buffer_scale` aren't
+      re-sent to surfaces already on that output). Force a per-surface
+      update for every surface on an output whose scale changed. A GUI makes
+      live rescale an everyday action. Test: rescale with `wlr-randr` and
+      check Qt apps re-render sharp without a remap.
+- [ ] **`library/outputs` additions:**
+  - `effectiveSize(const OutputConfig &)`: transformed size / scale,
+    **truncated** like `wlr_output_effective_resolution` (int `/=` double).
+  - `isConnected(layout)` (mirror Biome's `layout_is_connected()`: touching
+    or overlapping counts) and `normalized(layout)` (top-left to (0,0)).
+  - `layoutToJson` / `layoutFromJson` for the D-Bus payload (the
+    `OutputConfig` fields, mode as `modeToString`).
+  - `needsConfirm(before, after)`: true when any output's enabled, mode,
+    scale or transform differs.
+- [ ] **Daemon `applyLayout(QString json)`:**
+  - Refuse (log, return false) if it's unparsable, mentions an unknown
+    connector, disables every output, or isn't connected.
+  - Snapshot `currentLayout()` as the revert target, then apply. If
+    `needsConfirm` is false, save at once. Otherwise show the confirm card
+    and save only on Keep.
+  - Save = overwrite the active profile's outputs if the active profile
+    matches the connected set, else create one with `defaultName()`. Keep
+    the profile's `primary` (phase 3 edits it).
+  - A second `applyLayout` while a confirm is pending keeps the *original*
+    revert snapshot and restarts the countdown.
+  - Hotplug while pending: dismiss the card, save nothing, let auto-pick
+    run. (Full handling stays in phase 4.)
+  - Crash/relog while pending is already safe: Biome restores the
+    unconfirmed layout, but it differs from the saved profile, so the login
+    auto-pick re-applies the confirmed one.
+  - New signals `confirmPending()`, `layoutKept()`, `layoutReverted()` so the
+    page can disable Apply and reload afterwards.
+- [ ] **Confirm card** (`services-app/displays/confirmcard.*`): one
+      `LayerShellQt` overlay-layer `QWidget` per enabled screen. Title,
+      "Reverting in N s" countdown (15 s), [Revert] [Keep]. The card on
+      `ScreenTracker::primary()` gets `KeyboardInteractivityExclusive`
+      (Escape = revert, Enter = keep). Create the cards only after the apply
+      callback succeeds *and* Qt's screen list has caught up (connect to
+      `ScreenTracker`'s change signal, don't build from a stale
+      `QGuiApplication::screens()`). Styled in `base/forest.css` by object
+      name.
+- [ ] **Displays page** (`system/system-settings/displays/`), a top-level
+      "Displays" sidebar item (`preferences-desktop-display`) after About:
+  - Owns its own `OutputManager` for live state and `test`. The page's
+    model is a working `OutputLayout` copied from the live state.
+  - Header: active profile name read from `Displays.conf` (fresh
+    `QSettings` on each daemon signal), or "Unsaved setup" when nothing
+    matches.
+  - `ArrangementCanvas` (custom-painted): enabled outputs as rects sized by
+    `effectiveSize`, scaled to fit, labelled name + model. Drag to move,
+    snap to the edges/centres of the others. On release, if the output is
+    disconnected, snap it to the nearest edge of the nearest output, then
+    `normalized()`. Disabled outputs go in a strip below. Click selects.
+  - Selected-output controls: Enabled, Resolution, Refresh (filtered by
+    resolution), Scale (editable combo, 100–300 % in 25 % steps), Orientation
+    (8 transforms). Enabling a disabled output places it right of the
+    rightmost output with its preferred mode.
+  - Every edit triggers a debounced `test`. A `Failed` result shows an
+    inline error and disables Apply. Apply is also disabled when there are
+    no edits or a confirm is pending.
+  - Apply → async D-Bus `applyLayout`. Revert → reload the working layout
+    from live state.
+  - On `stateChanged` (or `layoutKept` / `layoutReverted` /
+    `activeProfileChanged`): reload if there are no edits. If the connected
+    set changed, drop the edits anyway.
+  - Object names in `settings.css`.
+- [ ] Test (user): change resolution/scale/rotation and Keep; again and
+      let it time out; Escape on the card; drag monitors around
+      (position-only, no card); disable an output; try to make a gap
+      (impossible); Meta+2/3 hotkey while the page is open (page follows);
+      relog (comes back in the kept layout); check the profile in
+      `Displays.conf`.
 
 ### Phase 3 — profiles, primary, hotkey UX
 
