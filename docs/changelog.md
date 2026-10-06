@@ -4,29 +4,22 @@ Changelog
 
 * Release 0.9.0 - 2026-10-05
   - Move to Wayland: Forest now runs on the Biome compositor instead of X11 and xfwm4
-  - Rework the window list and desktop switcher for Wayland
-  - Global hotkeys through the GlobalShortcuts portal, recovering from portal failures
+  - Global hotkeys through the GlobalShortcuts portal
   - Allow recording a bare Meta key tap as a hotkey
-  - Restore show desktop (Meta+D)
-  - Add a screen locker (forest-locker and forest-lockscreen) with idle dimming, display-off, a caps lock indicator and Lock Screen settings
+  - Add a screen locker (forest-locker and forest-lockscreen)
   - Add a Lock button to the logout dialog and a Meta+L hotkey
   - Implement org.freedesktop.ScreenSaver so apps can inhibit idle and lock the screen
   - Take screenshots with grim and slurp (forest-screenshot)
-  - Replace the system tray with a StatusNotifierItem (SNI) tray and improve tray menu positioning
+  - Replace the system tray with a StatusNotifierItem (SNI) tray
   - Fix late-registered tray icons collapsing to zero width
-  - Convert panel menus to native menus styled to match the theme, with real submenus
-  - Fix desktop copy, cut, paste, delete, drag and drop and new file, with progress, cancel, conflict prompts and trash support
-  - Fix the auto-hide panel under Wayland
-  - Fix suspend and hibernate from the logout dialog leaving a black screen, and grey out unavailable actions
+  - Convert panel menus to QMenus styled to match the theme, with real submenus
+  - Fix desktop file operations with progress, cancel, conflict prompts and trash support
+  - Grey out unavailable actions on the logout dialog
   - End the session properly on logout
   - Fix the panel disappearing during screen changes and improve wallpaper screen change tracking
-  - Close panel popups when they lose keyboard focus
   - Fix panel plugin reload ignoring changes and tidy plugin display names
   - Fix the battery monitor not refreshing after a panel plugin reload
-  - Cursor theme settings now work under Wayland
   - Greeter passes session environment from .desktop files to greetd
-  - Ship Biome fade settings as a drop-in so fades work on a fresh install
-  - Log Biome's session output to ~/.local/share/forest/logs/biome.log
   - Rename the panel separator config value, upgrading existing configs
 
 * Release 0.8.0 - 2026-07-21
