@@ -16,11 +16,9 @@ it here ahead of time. Small fixes don't need a plan doc.
 - **Display settings plugin.** New `system-settings` plugin for multi-monitor
   configuration (mode/scale/position/rotation). Biome implements
   `wlr-output-management-unstable-v1` (`wlr-randr` works today; Biome rejects
-  layouts with gaps between outputs). Biome's own roadmap notes reusing
-  `libkscreen`'s existing backend for that protocol rather than hand-binding
-  it — worth checking whether Forest should bind `libkscreen` directly too,
-  or go through a different Qt-native path, when this is actually designed.
-  Ideas to fold in:
+  layouts with gaps between outputs). Planned in `docs/display-settings-plan.md`
+  (hand-bound protocol: libkscreen has no wlroots backend), including
+  profile-switching hotkeys. Ideas to fold in:
   - **Primary screen setting.** `ScreenTracker::primary()` (miscutills) already
     reads `display/primary_screen` (output name) from `Forest.conf`, falling
     back to the top-left screen; panel, desktop icons and logout use it. Only
