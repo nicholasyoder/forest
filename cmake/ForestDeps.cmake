@@ -86,3 +86,10 @@ endfunction()
 function(forest_link_toplevels target)
     target_link_libraries(${target} PRIVATE toplevels)
 endfunction()
+
+# forest_link_outputs(target)
+# Links the outputs static library (wlr-output-management client and
+# display profiles)
+function(forest_link_outputs target)
+    target_link_libraries(${target} PRIVATE outputs)
+endfunction()

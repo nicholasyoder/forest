@@ -10,6 +10,7 @@ add_library(services-app MODULE
     polkit/polkitdialog.cpp
     showdesktop/showdesktop.cpp
     systemtray/statusnotifierwatcher.cpp
+    displays/displays.cpp
     services.h
     hotkeys/foresthotkeys.h
     hotkeys/hotkey.h
@@ -23,6 +24,7 @@ add_library(services-app MODULE
     polkit/polkitdialog.ui
     showdesktop/showdesktop.h
     systemtray/statusnotifierwatcher.h
+    displays/displays.h
 )
 
 target_compile_definitions(services-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
@@ -41,5 +43,6 @@ target_link_libraries(services-app PRIVATE
 forest_link_miscutills(services-app)
 forest_link_layershellqt(services-app)
 forest_link_toplevels(services-app)
+forest_link_outputs(services-app)
 
 install(TARGETS services-app LIBRARY DESTINATION lib/forest)

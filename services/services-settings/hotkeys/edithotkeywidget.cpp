@@ -26,6 +26,7 @@ void edithotkeywidget::set_data(const HotkeyData& data){
         ui->pathTbox->setText(dbusAction->path);
         ui->interfaceTbox->setText(dbusAction->interface);
         ui->methodTbox->setText(dbusAction->method);
+        ui->argTbox->setText(dbusAction->arg);
         ui->busCbox->setCurrentIndex(dbusAction->isSystemBus ? 1 : 0);
     }
 }
@@ -91,7 +92,8 @@ void edithotkeywidget::on_okbt_clicked(){
             ui->pathTbox->text(),
             ui->interfaceTbox->text(),
             ui->methodTbox->text(),
-            ui->busCbox->currentText() == "system"
+            ui->argTbox->text(),
+            ui->busCbox->currentIndex() == 1
         ));
     }
 

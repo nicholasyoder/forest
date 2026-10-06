@@ -101,6 +101,7 @@ void HotkeySettingItem::edit(){
             dbus_options["path"],
             dbus_options["interface"],
             dbus_options["method"],
+            dbus_options["arg"],
             dbus_options["bus"] == "System"
         ));
     }
@@ -161,6 +162,7 @@ void HotkeySettingItem::save(const HotkeyData &data){
         dbus_options["path"] = dbus_action->path;
         dbus_options["interface"] = dbus_action->interface;
         dbus_options["method"] = dbus_action->method;
+        if (!dbus_action->arg.isEmpty()) dbus_options["arg"] = dbus_action->arg;
         foreach(QString key, dbus_options.keys()){
             action.append(key + "=" + dbus_options[key] + ",");
         }

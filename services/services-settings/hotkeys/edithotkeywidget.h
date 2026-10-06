@@ -28,13 +28,14 @@ public:
 class CustomDBusAction : public HotkeyAction{
     Q_OBJECT
 public:
-    CustomDBusAction(const QString& svc, const QString& p, const QString& iface, const QString& m, bool isSystem)
-        : service(svc), path(p), interface(iface), method(m), isSystemBus(isSystem) {}
+    CustomDBusAction(const QString& svc, const QString& p, const QString& iface, const QString& m, const QString& a, bool isSystem)
+        : service(svc), path(p), interface(iface), method(m), arg(a), isSystemBus(isSystem) {}
     QString type() const override { return "dbus"; }
     QString service;
     QString path;
     QString interface;
     QString method;
+    QString arg; // optional single string argument
     bool isSystemBus;
 };
 
