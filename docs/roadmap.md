@@ -17,14 +17,9 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
 
 ### Release checklist
 
-- `CMakeLists.txt` `project(... VERSION 1.0.0)` → `0.9.0`.
-- `docs/changelog.md` and `debian/changelog` entries covering everything
-  since v0.8.0 (Wayland/Biome cutover, QMenu migration, autohide and logout
-  fixes, plus the items above).
 - Fresh-install test in a VM: `biome` + `forest` + `forest-greeter` `.deb`s,
   log in through greetd, check fades, hotkeys, screenshots, lock/blank.
 - Merge `develop` → `master`, tag `v0.9.0`, push.
-- Delete the merged `wayland` and `qmenu-styling` branches (local and origin).
 
 ## 0.10.0 — displays & desktop
 
@@ -44,6 +39,14 @@ Ships with Biome 0.1.0. Everything here is required before tagging.
     position, and the primary screen) stored in Forest's settings and applied
     through the output-management protocol, replacing hand-rolled
     `wlr-randr` scripts and the swap-`Biome.conf`-and-relog workflow.
+- **Custom-painted panel plugins at fractional scale.** `graphwidget`
+  (cpu/memory monitors), `deskbutton`, `battery` and `sensorwidget` paint
+  in integer logical pixels. At 1.5x each logical pixel is 1.5 device
+  pixels, so 1px lines/columns come out 1 or 2px and bar widths/gaps vary,
+  depending on the widget's position. Fix: shared panel-library helper
+  that sets the painter to device-pixel units with the origin snapped to a
+  device pixel, then lay out each painter in device pixels (constants
+  × dpr, rounded). Graph history also has to be per device column.
 - **Desktop icons settings page.** Desktop → Icons is a placeholder button.
   Icon size, grid spacing, sort/arrange, which default icons show, etc.
 - **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
