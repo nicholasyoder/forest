@@ -30,6 +30,14 @@ There are no tests. Build a single target with:
 cmake --build build/Desktop-Debug --target forest-logout   # or any other target name
 ```
 
+## Git Workflow
+
+Same model in `forest` and `biome`:
+
+- **Major changes:** branch off an up-to-date `develop`, implement and test there, push, and open a PR into `develop` (`gh pr create --base develop`). The user merges PRs and pulls `develop` locally — don't do either.
+- **Small tweaks** (roadmap/doc edits, other small standalone doc changes, a code change of a couple of lines): commit straight to `develop` and push — unless a PR is about to be opened, in which case put it on that branch instead.
+- `master` only changes at a release (`develop` merged in and tagged by the user). Never commit to or PR against it.
+
 ## Architecture
 
 Forest is a Qt6/C++ desktop environment for Linux (targets Debian Trixie). All UI is styled via QSS (Qt Style Sheets) — there is no QML anywhere in the project.

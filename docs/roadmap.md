@@ -11,16 +11,6 @@ up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`,
 following the existing `docs/greeter-plan.md` pattern), rather than designing
 it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.9.0 — first Wayland release
-
-Ships with Biome 0.1.0. Everything here is required before tagging.
-
-### Release checklist
-
-- Fresh-install test in a VM: `biome` + `forest` + `forest-greeter` `.deb`s,
-  log in through greetd, check fades, hotkeys, screenshots, lock/blank.
-- Merge `develop` → `master`, tag `v0.9.0`, push.
-
 ## 0.10.0 — displays & desktop
 
 - **Display settings plugin.** New `system-settings` plugin for multi-monitor
