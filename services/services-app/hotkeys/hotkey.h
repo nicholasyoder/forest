@@ -29,7 +29,7 @@ public:
     QString triggerString() const;
 
 public slots:
-    void setDbusInfo(QString service, QString path, QString interface, QString method, QString bus);
+    void setDbusInfo(QString service, QString path, QString interface, QString method, QString bus, QString arg);
     void setExecCommand(const QString &command){shcommand=command;}
 
     void exec();
@@ -45,6 +45,7 @@ private:
     QString dbusinterface;
     QString dbusmethod;
     QString dbusbus;
+    QString dbusarg; // optional single string argument
 };
 
 #endif // HOTKEY_H

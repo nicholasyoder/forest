@@ -247,9 +247,10 @@ active=3f2c…            ; profile id last applied and confirmed
 
 ## D-Bus: `org.forest` `/org/forest/displays`
 
-Registered with `ExportAllSlots` like `/org/forest/hotkeys`. Lower-case slot
-names to match. Payloads are JSON strings (simple, and this is a
-Forest-internal interface).
+Registered with `ExportAllSlots | ExportAllSignals`, interface
+`org.forest.displays` (`Q_CLASSINFO`, so `busctl`/`gdbus` calls don't need
+Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
+(simple, and this is a Forest-internal interface).
 
 | Slot / signal | Purpose |
 |---|---|
@@ -294,17 +295,6 @@ Outcome: the user's `wlr-randr` scripts can be retired.
       `Biome.conf` (see "Biome remembers the last applied layout"). Update
       Biome `architecture-notes.md` "Live output management", which currently
       says applies are never persisted.
-- [ ] `protocol/wlr-output-management-unstable-v1.xml`. `library/outputs`:
-      manager/head/mode wrappers, `OutputState` snapshot after `done`,
-      async `test`/`apply` (result callback, `cancelled` → retry once).
-- [ ] Profile model and `Displays.conf` load/save, identity keys, matching,
-      mode resolution.
-- [ ] `services-app` `displays` service: register `/org/forest/displays`.
-      Apply the matching profile at startup (skip if equal) and on hotplug
-      (debounced). `applyProfile`, `nextProfile`, `saveCurrentAsProfile`,
-      writing `display/primary_screen`.
-- [ ] `arg=` support in `DBUS:` hotkey actions (`foresthotkeys`/`globalhotkey`,
-      plus the custom-D-Bus fields in the hotkey editor).
 - [ ] Test: lay out with `wlr-randr`, `saveCurrentAsProfile` via `busctl`,
       rebind Meta+2/Meta+3 to `applyProfile`. Unplug/replug. Relog: Biome
       should come up in the last layout with no second modeset.

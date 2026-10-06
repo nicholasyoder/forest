@@ -155,7 +155,7 @@ void foresthotkeys::loadhotkeys(){
             }
 
             globalhotkey *item = new globalhotkey(hotkey, description, kseq, Type_Dbus);
-            item->setDbusInfo(dbushash["service"], dbushash["path"], dbushash["interface"], dbushash["method"], dbushash["bus"]);
+            item->setDbusInfo(dbushash["service"], dbushash["path"], dbushash["interface"], dbushash["method"], dbushash["bus"], dbushash["arg"]);
             hotkeylist.append(item);
         }
         else{

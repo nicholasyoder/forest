@@ -20,4 +20,7 @@ void services::setupPlug(){
 
     fsystemtray = new StatusNotifierWatcher;
     fsystemtray->setup();
+
+    fdisplays = new Displays;
+    fdisplays->setup();
 }

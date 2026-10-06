@@ -13,6 +13,7 @@
 #include "polkit/polkitagent.h"
 #include "showdesktop/showdesktop.h"
 #include "systemtray/statusnotifierwatcher.h"
+#include "displays/displays.h"
 
 class services : public QObject, app_plugin_interface
 {
@@ -33,6 +34,7 @@ private:
     polkitagent *fpolkit;
     ShowDesktop *fshowdesktop;
     StatusNotifierWatcher *fsystemtray;
+    Displays *fdisplays;
 };
 
 #endif // SERVICES_H

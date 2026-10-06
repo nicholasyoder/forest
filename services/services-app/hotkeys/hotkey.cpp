@@ -10,12 +10,13 @@ globalhotkey::globalhotkey(const QString &id, const QString &description, const 
     qDebug() << "Add Global Hotkey:" << id << sequence.toString();
 }
 
-void globalhotkey::setDbusInfo(QString service, QString path,QString interface, QString method, QString bus){
+void globalhotkey::setDbusInfo(QString service, QString path,QString interface, QString method, QString bus, QString arg){
     dbusservice = service;
     dbuspath = path;
     dbusinterface = interface;
     dbusmethod = method;
     dbusbus = bus;
+    dbusarg = arg;
 }
 
 void globalhotkey::exec(){
@@ -29,7 +30,8 @@ void globalhotkey::exec(){
     else{
         QDBusConnection bus = (dbusbus.isEmpty() || dbusbus == "Session")
             ? QDBusConnection::sessionBus() : QDBusConnection::systemBus();
-        const QDBusMessage call = QDBusMessage::createMethodCall(dbusservice, dbuspath, dbusinterface, dbusmethod);
+        QDBusMessage call = QDBusMessage::createMethodCall(dbusservice, dbuspath, dbusinterface, dbusmethod);
+        if (!dbusarg.isEmpty()) call << dbusarg;
         auto *watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), this);
         connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *w) {
             if (w->isError()) qWarning() << "globalhotkey:" << hotkey_id << "D-Bus call failed:" << w->error().message();
