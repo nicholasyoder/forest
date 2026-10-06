@@ -38,3 +38,24 @@ cmake -B build
 cmake --build build
 sudo cmake --install build
 ```
+
+## Packaging
+
+Debian packages can be built from `debian/` with:
+
+```sh
+sudo apt build-dep .            # once: installs debian/control's Build-Depends
+dpkg-buildpackage -us -uc -b    # or `debuild -us -uc` (devscripts) to also run lintian
+```
+
+This produces `../forest_<version>_amd64.deb` and `../forest-greeter_<version>_amd64.deb` (plus a `-dbgsym` package for each); it doesn't install anything locally. The version comes from the top entry of `debian/changelog`. For cutting a release, see [docs/development-notes.md](docs/development-notes.md#release-packaging).
+
+It builds the working tree as-is, uncommitted changes included.
+
+`forest` depends on `biome`, so on a fresh system install the [Biome](https://github.com/nicholasyoder/biome) `.deb` first or in the same command.
+
+It leaves build byproducts in the tree (`obj-*-linux-gnu/`, `debian/forest/`, `debian/forest-greeter/`, etc., all gitignored). Remove them with:
+
+```sh
+dpkg-buildpackage -Tclean
+```

@@ -1,40 +1,16 @@
 # Development Notes
 
-## Build deb package
+## Release packaging
 
-`debian/` is already set up (native source format, no upstream tarball) —
-there's no `dh_make` scaffolding step; that's only for a package that has no
-`debian/` directory yet.
+Building the `.deb`s is covered in the README's Packaging section. For a
+release:
 
-### Install dependencies
-
-1. `sudo apt build-dep .` — installs everything listed in `debian/control`'s
-   `Build-Depends`
-2. `sudo apt install devscripts` — only needed if using `debuild` below;
-   `dpkg-buildpackage` alone doesn't require it
-
-### Generate the debian changelog
-
-1. `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`
-
-### Build the package
-
-Note: replace `0.9.0` with the correct version number of the release.
-
-1. Modify `debian/changelog`
-2. From `forest/`: `dpkg-buildpackage -us -uc -b` (or `debuild -us -uc` to
-   also run `lintian` on the result automatically)
-
-This produces `../forest_0.9.0_amd64.deb`, `../forest-greeter_0.9.0_amd64.deb`,
-and `-dbgsym` packages for each, in the parent directory. It does not install
-anything locally.
-
-It leaves build byproducts in the tree (`obj-*-linux-gnu/`, `debian/forest/`,
-`debian/forest-greeter/`, etc. — all gitignored). Remove them with:
-
-```
-dpkg-buildpackage -Tclean
-```
+1. Add a `* Release X.Y.Z - YYYY-MM-DD` entry to `docs/changelog.md` and bump
+   `project(... VERSION ...)` in `CMakeLists.txt`.
+2. Regenerate `debian/changelog` from it (don't edit it by hand):
+   `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`
+3. Build with `debuild -us -uc`, which runs lintian (it flags changelog lines
+   over 80 columns).
 
 ## Include deb in repo
 
