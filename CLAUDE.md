@@ -37,6 +37,7 @@ Same model in `forest` and `biome`:
 - **Major changes:** branch off an up-to-date `develop`, implement and test there, push, and open a PR into `develop` (`gh pr create --base develop`). The user merges PRs and pulls `develop` locally — don't do either.
 - **Small tweaks** (roadmap/doc edits, other small standalone doc changes, a code change of a couple of lines): commit straight to `develop` and push — unless a PR is about to be opened, in which case put it on that branch instead.
 - `master` only changes at a release (`develop` merged in and tagged by the user). Never commit to or PR against it.
+- **Commit once a change is settled, not on every edit.** If you've asked the user to verify something or answer a question that could change the edit, leave it uncommitted until they reply. Then fold the follow-up into the same commit.
 
 ## Architecture
 

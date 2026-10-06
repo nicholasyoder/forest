@@ -14,6 +14,12 @@ Download the latest `.deb` package from the [releases page](https://github.com/n
 sudo apt install ./forest_*.deb
 ```
 
+By default apt also installs recommended packages, and some of Forest's dependencies recommend parts of LXQt. Most notably, `pcmanfm-qt` pulls in `lxqt-session`, which adds an LXQt entry to the login screen. To install only what Forest needs, add `--no-install-recommends`:
+
+```sh
+sudo apt install --no-install-recommends ./biome_*.deb ./forest_*.deb ./forest-greeter_*.deb
+```
+
 ### Greeter (login screen)
 
 The `forest-greeter` package installs `greetd` and a config pointing it at Forest's

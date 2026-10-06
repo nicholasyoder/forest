@@ -81,6 +81,15 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   grabbing xdg_popup whose parent is the non-grabbing launcher popup.
   xdg-shell says that's an `invalid_grab` error; wlroots doesn't check, but
   stricter compositors may. A grabbing launcher popup fixes this too.
+- **Greeter on Biome, shared with the lockscreen.** Move the greeter from
+  cage to Biome with one window per output on `loginui`'s per-screen
+  background; split `PasswordView` into a card shared with
+  `forest-lockscreen`'s `PasswordCard`; maybe rename `greeter.css` (and the
+  `greeter_*` object names) to a shared login component. The lockscreen's
+  card already follows keyboard focus between screens; do the same in the
+  greeter. Also give the greeter and lockscreen their own wallpaper setting
+  instead of reusing the desktop wallpaper (`loginui::Wallpaper` reads
+  `desktop/wallpaper`).
 
 ## 0.11.0 — hardware & system
 
@@ -143,15 +152,6 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   logout. No standard Wayland protocol for this yet (session-management is
   still experimental), so the fallback is relaunching `.desktop` entries
   matched from foreign-toplevel `app_id`s, without window positions or app state.
-- **Greeter on Biome, shared with the lockscreen.** Move the greeter from
-  cage to Biome with one window per output on `loginui`'s per-screen
-  background; split `PasswordView` into a card shared with
-  `forest-lockscreen`'s `PasswordCard`; maybe rename `greeter.css` (and the
-  `greeter_*` object names) to a shared login component. The lockscreen's
-  card already follows keyboard focus between screens; do the same in the
-  greeter. Also give the greeter and lockscreen their own wallpaper setting
-  instead of reusing the desktop wallpaper (`loginui::Wallpaper` reads
-  `desktop/wallpaper`).
 - **Hotkeys on the lock screen.** Biome hotkeys are off while locked, so
   volume/brightness keys do nothing there. Add a per-hotkey
   `allow_on_lockscreen` flag (visible in hotkey settings, default on for the
