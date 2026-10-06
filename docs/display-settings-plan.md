@@ -29,7 +29,7 @@ But it has **no wlroots backend**. The installed backends are `KSC_KWayland`
 (KWin's private `kde_output_device_v2` / `kde_output_configuration_v2`
 only), `KSC_XRandR`, `KSC_QScreen` (read-only) and `KSC_Fake`. The "reuse
 libkscreen's wlr-output-management backend" note in `biome/docs/history.md`
-is wrong. KScreen on wlroots compositors was never merged upstream (lxqt
+was wrong (now corrected there). KScreen on wlroots compositors was never merged upstream (lxqt
 uses kanshi/wlr-randr there instead).
 
 So Forest binds the protocol itself with
@@ -296,16 +296,11 @@ Phase 1 (backend, no UI: `library/outputs`, the `displays` service,
 Outcome: everything in the old `wlr-randr` workflow can be done from
 System settings, and a bad mode/scale can't strand the user. Single profile
 only: Apply edits the active profile, or auto-creates one ("Unsaved setup").
-Two PRs: the Biome fix (independent, can land first) and one Forest branch.
-Within the Forest branch, build the daemon side first. It's testable with
-`busctl` + hand-written JSON before the page exists.
+Forest-only: the suspected Biome stale-fractional-scale bug doesn't exist
+(checked 2026-10-06, see the Biome commit removing it from its roadmap).
+Build the daemon side first. It's testable with `busctl` + hand-written JSON
+before the page exists.
 
-- [ ] **Biome:** fix the stale fractional-scale bug (Biome roadmap: after a
-      live scale change, `wp-fractional-scale` / `preferred_buffer_scale` aren't
-      re-sent to surfaces already on that output). Force a per-surface
-      update for every surface on an output whose scale changed. A GUI makes
-      live rescale an everyday action. Test: rescale with `wlr-randr` and
-      check Qt apps re-render sharp without a remap.
 - [ ] **`library/outputs` additions:**
   - `effectiveSize(const OutputConfig &)`: transformed size / scale,
     **truncated** like `wlr_output_effective_resolution` (int `/=` double).
@@ -397,9 +392,16 @@ Within the Forest branch, build the daemon side first. It's testable with
 - **Lid switch / laptop panel.** Out of scope until there's a laptop target.
   The matching model handles docking, but "lid closed ⇒ disable eDP" needs
   logind lid events.
-- **Dev testing without three physical monitors.** wlroots' headless or
-  nested Wayland backends (`WLR_HEADLESS_OUTPUTS`, `WLR_WL_OUTPUTS`) give
-  fake heads with custom modes only. Fine for canvas/matching logic, not
-  for mode lists. Check whether Biome runs nested before relying on this.
-- **Correct `biome/docs/history.md`'s libkscreen note** (see Decisions) when
-  Biome's docs are next touched.
+
+## Dev testing without extra monitors
+
+Headless Biome works (fake heads, one custom mode each: fine for canvas,
+matching and confirm logic, not mode lists). Override `XDG_CONFIG_HOME`, or
+its applies overwrite the real `Biome.conf`:
+
+```sh
+XDG_CONFIG_HOME=/tmp/biome-cfg WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS=2 \
+  WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1 biome -s <client>
+```
+
+It logs its `WAYLAND_DISPLAY`; point `wlr-randr` at that.
