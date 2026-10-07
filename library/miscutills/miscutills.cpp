@@ -163,6 +163,24 @@ ScreenTracker::ScreenTracker(QObject *parent) : QObject(parent){
     });
     connect(qApp, &QGuiApplication::screenRemoved, &runner, &RunOnce::try_activate);
     connect(&runner, &RunOnce::activated, this, &ScreenTracker::handle_change);
+
+    last_primary = primary_name();
+    QDBusConnection::sessionBus().connect("org.forest", "/org/forest/displays", "org.forest.displays",
+                                          "primaryChanged", this, SLOT(handle_primary_setting()));
+}
+
+QString ScreenTracker::primary_name() const{
+    QScreen *screen = primary();
+    return screen ? screen->name() : QString();
+}
+
+// Not debounced: a primary-only change has no screen change behind it.
+void ScreenTracker::handle_primary_setting(){
+    if (runner.is_pending()) return; // handle_change will pick it up
+    const QString name = primary_name();
+    if (name == last_primary) return;
+    last_primary = name;
+    emit primary_changed();
 }
 
 QScreen* ScreenTracker::primary(){
@@ -184,6 +202,7 @@ void ScreenTracker::watch(QScreen *screen){
 }
 
 void ScreenTracker::handle_change(){
+    last_primary = primary_name();
     QList<QScreen*> screens = qApp->screens();
     bool replaced = screens.length() != tracked_screens.length();
     foreach (const QPointer<QScreen> &screen, tracked_screens){

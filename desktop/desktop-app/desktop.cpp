@@ -29,6 +29,7 @@ void desktop::setupPlug(){
     ScreenTracker *tracker = new ScreenTracker(this);
     connect(tracker, &ScreenTracker::screens_replaced, this, &desktop::handleScreenChange);
     connect(tracker, &ScreenTracker::geometry_changed, this, &desktop::handleScreenChange);
+    connect(tracker, &ScreenTracker::primary_changed, this, &desktop::handleScreenChange);
 }
 
 //called by dbus to load new wallpaper

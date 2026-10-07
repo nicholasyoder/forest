@@ -43,6 +43,7 @@ class RunOnce: public QObject {
     Q_OBJECT
 public:
     RunOnce(int delay = 200);
+    bool is_pending() const{return timer.isActive();}
 signals:
     void activated();
 public slots:
@@ -65,12 +66,18 @@ public:
 signals:
     void screens_replaced(); // added/removed/recreated - surfaces on old screens are gone
     void geometry_changed(); // same screens, new geometry
+    void primary_changed(); // same screens, display/primary_screen now names another
+
+private slots:
+    void handle_primary_setting();
 
 private:
     void watch(QScreen *screen);
     void handle_change();
+    QString primary_name() const;
 
     QList<QPointer<QScreen>> tracked_screens;
+    QString last_primary;
     RunOnce runner{2000};
 };
 

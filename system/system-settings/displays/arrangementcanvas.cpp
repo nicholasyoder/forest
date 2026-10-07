@@ -3,6 +3,7 @@
 #include "arrangementcanvas.h"
 
 #include <QMouseEvent>
+#include <QStyle>
 
 #include <algorithm>
 #include <cmath>
@@ -18,6 +19,13 @@ OutputBox::OutputBox(QWidget *parent) : QPushButton(parent){
     setCheckable(true);
 }
 
+void OutputBox::setConnected(bool connected){
+    if (property("connected").isValid() && property("connected").toBool() == connected) return;
+    setProperty("connected", connected);
+    style()->unpolish(this);
+    style()->polish(this);
+}
+
 ArrangementCanvas::ArrangementCanvas(QWidget *parent) : QFrame(parent){
     setObjectName("DisplaysCanvas");
     QSizePolicy policy(QSizePolicy::Preferred, QSizePolicy::Preferred);
@@ -25,7 +33,8 @@ ArrangementCanvas::ArrangementCanvas(QWidget *parent) : QFrame(parent){
     setSizePolicy(policy);
 }
 
-void ArrangementCanvas::setOutputs(const OutputLayout &layout, const QHash<QString, QString> &labels){
+void ArrangementCanvas::setOutputs(const OutputLayout &layout, const QHash<QString, QString> &labels,
+                                   const QSet<QString> &disconnected){
     m_layout = layout;
     m_drag = -1;
 
@@ -43,6 +52,7 @@ void ArrangementCanvas::setOutputs(const OutputLayout &layout, const QHash<QStri
         if (!labels.value(config.connector).isEmpty()) text += "\n" + labels.value(config.connector);
         box->setText(text);
         box->setToolTip(text);
+        box->setConnected(!disconnected.contains(config.connector));
         boxes[config.connector] = box;
     }
     for (OutputBox *box : std::as_const(m_boxes)){
@@ -213,12 +223,13 @@ DisabledOutputs::DisabledOutputs(QWidget *parent) : QFrame(parent){
     m_row->addStretch(1);
 }
 
-void DisabledOutputs::setOutputs(const QStringList &connectors){
+void DisabledOutputs::setOutputs(const QStringList &connectors, const QSet<QString> &disconnected){
     qDeleteAll(m_boxes);
     m_boxes.clear();
     for (const QString &connector : connectors){
         OutputBox *box = new OutputBox;
         box->setText(connector);
+        box->setConnected(!disconnected.contains(connector));
         connect(box, &OutputBox::pressed, this, [this, connector]{ emit selected(connector); });
         m_row->insertWidget(m_boxes.size(), box);
         m_boxes << box;

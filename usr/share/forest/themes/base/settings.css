@@ -281,17 +281,38 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     color: #777;
 }
 
+#DisplaysOutput[connected="false"] {
+    background: transparent;
+    border: 1px dashed rgba(0,0,0, 50%);
+}
+
 #DisplaysDisabledList #DisplaysOutput {
     min-width: 110px;
     min-height: 25px;
 }
 
+#DisplaysStatusState {
+    font-weight: bold;
+}
+
+#DisplaysStatusState[status="active"] {
+    color: #27ae60;
+}
+
+#DisplaysStatusState[status="unsaved"] {
+    color: #e67e22;
+}
+
+#DisplaysStatusState[status="viewonly"] {
+    color: #c0392b;
+}
+
+#DisplaysStatusState[status="inactive"], #DisplaysStatusState[status="waiting"], #DisplaysStatusDetail {
+    color: #777;
+}
+
 #DisplaysErrorLabel {
     color: #c0392b;
     margin-bottom: 5px;
-    max-width: 700px;
-}
-
-#DisplaysButtonRow {
     max-width: 700px;
 }

@@ -54,7 +54,7 @@ QMenu::item {
     margin-left: 8px;
 }
 
-#notifyPopup, #displayConfirmCard {
+#notifyPopup, #displayConfirmCard, #displayIdentifyCard {
     border: 1px solid lightgrey;
     border-radius: 6px;
     padding: 0px;
