@@ -3,10 +3,16 @@ add_library(system-settings MODULE
     cursorthemesettings.cpp
     forestthemesettings.cpp
     systemsettings.cpp
+    displays/arrangementcanvas.cpp
+    displays/displayspage.cpp
+    displays/layoutedit.cpp
     aboutpage.h
     cursorthemesettings.h
     forestthemesettings.h
     systemsettings.h
+    displays/arrangementcanvas.h
+    displays/displayspage.h
+    displays/layoutedit.h
 )
 
 target_compile_definitions(system-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
@@ -18,5 +24,6 @@ target_link_libraries(system-settings PRIVATE
 forest_link_pluginutills(system-settings)
 forest_link_settings_widgets(system-settings)
 forest_link_miscutills(system-settings)
+forest_link_outputs(system-settings)
 
 install(TARGETS system-settings LIBRARY DESTINATION lib/forest)

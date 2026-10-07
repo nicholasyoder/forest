@@ -6,6 +6,7 @@
 #include <QHash>
 #include <QList>
 #include <QPoint>
+#include <QRect>
 #include <QSize>
 #include <QString>
 
@@ -72,6 +73,23 @@ OutputLayout currentLayout(const OutputState &state);
 
 // True when applying `layout` wouldn't change anything.
 bool layoutMatchesState(const OutputLayout &layout, const OutputState &state);
+
+// Logical size, truncated exactly like the compositor (wl_fixed scale, float division).
+QSize effectiveSize(const OutputConfig &config);
+QRect layoutRect(const OutputConfig &config);
+
+// The enabled outputs form one group, sharing edges or overlapping. Corner-only
+// contact doesn't count (Biome rejects such layouts).
+bool isConnected(const OutputLayout &layout);
+// Shifts the layout so the enabled outputs' top-left is (0,0).
+OutputLayout normalized(OutputLayout layout);
+
+// Changes that can leave a screen dark: enabled, mode, scale or transform.
+bool needsConfirm(const OutputLayout &before, const OutputLayout &after);
+
+// D-Bus payload. Identity keys aren't included.
+QString layoutToJson(const OutputLayout &layout);
+bool layoutFromJson(const QString &json, OutputLayout *layout);
 
 }
 

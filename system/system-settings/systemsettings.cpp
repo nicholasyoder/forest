@@ -12,6 +12,10 @@ QList<settings_item*> SystemSettings::get_settings_items(){
     about_page = new AboutPage;
     items.append(about_page->get_settings_item());
 
+    // Displays
+    displays_page = new DisplaysPage;
+    items.append(displays_page->get_settings_item());
+
     // Themes
     settings_category *themes_cat = new settings_category("Themes", "", "preferences-desktop-theme");
     items.append(themes_cat);
@@ -39,6 +43,7 @@ SystemSettings::~SystemSettings(){
     delete about_page;
     delete forest_theme_settings;
     delete cursor_theme_settings;
+    delete displays_page;
 }
 
 

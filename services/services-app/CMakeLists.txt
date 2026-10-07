@@ -11,6 +11,7 @@ add_library(services-app MODULE
     showdesktop/showdesktop.cpp
     systemtray/statusnotifierwatcher.cpp
     displays/displays.cpp
+    displays/confirmcards.cpp
     services.h
     hotkeys/foresthotkeys.h
     hotkeys/hotkey.h
@@ -25,6 +26,7 @@ add_library(services-app MODULE
     showdesktop/showdesktop.h
     systemtray/statusnotifierwatcher.h
     displays/displays.h
+    displays/confirmcards.h
 )
 
 target_compile_definitions(services-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
