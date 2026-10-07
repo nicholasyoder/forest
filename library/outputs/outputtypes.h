@@ -83,13 +83,15 @@ QRect layoutRect(const OutputConfig &config);
 bool isConnected(const OutputLayout &layout);
 // Shifts the layout so the enabled outputs' top-left is (0,0).
 OutputLayout normalized(OutputLayout layout);
+// Connector of the top-left enabled output, or empty.
+QString topLeft(const OutputLayout &layout);
 
 // Changes that can leave a screen dark: enabled, mode, scale or transform.
 bool needsConfirm(const OutputLayout &before, const OutputLayout &after);
 
-// D-Bus payload. Identity keys aren't included.
-QString layoutToJson(const OutputLayout &layout);
-bool layoutFromJson(const QString &json, OutputLayout *layout);
+// D-Bus payload: {"outputs":[…],"primary":"DP-1"}. Identity keys aren't included.
+QString layoutToJson(const OutputLayout &layout, const QString &primary);
+bool layoutFromJson(const QString &json, OutputLayout *layout, QString *primary);
 
 }
 

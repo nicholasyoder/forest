@@ -159,6 +159,17 @@ OutputLayout normalized(OutputLayout layout){
     return layout;
 }
 
+QString topLeft(const OutputLayout &layout){
+    const OutputConfig *best = nullptr;
+    for (const OutputConfig &config : layout){
+        if (!config.enabled) continue;
+        if (!best || config.pos.x() < best->pos.x()
+            || (config.pos.x() == best->pos.x() && config.pos.y() < best->pos.y()))
+            best = &config;
+    }
+    return best ? best->connector : QString();
+}
+
 bool needsConfirm(const OutputLayout &before, const OutputLayout &after){
     for (const OutputConfig &a : after){
         auto b = std::find_if(before.begin(), before.end(),
@@ -172,7 +183,7 @@ bool needsConfirm(const OutputLayout &before, const OutputLayout &after){
     return false;
 }
 
-QString layoutToJson(const OutputLayout &layout){
+QString layoutToJson(const OutputLayout &layout, const QString &primary){
     QJsonArray array;
     for (const OutputConfig &config : layout){
         array.append(QJsonObject{
@@ -186,14 +197,15 @@ QString layoutToJson(const OutputLayout &layout){
             {"adaptive_sync", config.adaptiveSync},
         });
     }
-    return QString::fromUtf8(QJsonDocument(array).toJson(QJsonDocument::Compact));
+    const QJsonObject object{{"outputs", array}, {"primary", primary}};
+    return QString::fromUtf8(QJsonDocument(object).toJson(QJsonDocument::Compact));
 }
 
-bool layoutFromJson(const QString &json, OutputLayout *layout){
+bool layoutFromJson(const QString &json, OutputLayout *layout, QString *primary){
     const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
-    if (!doc.isArray()) return false;
+    if (!doc.isObject()) return false;
     OutputLayout result;
-    for (const QJsonValue &value : doc.array()){
+    for (const QJsonValue &value : doc.object()["outputs"].toArray()){
         const QJsonObject object = value.toObject();
         OutputConfig config;
         config.connector = object["connector"].toString();
@@ -208,6 +220,7 @@ bool layoutFromJson(const QString &json, OutputLayout *layout){
         result << config;
     }
     *layout = result;
+    *primary = doc.object()["primary"].toString();
     return true;
 }
 

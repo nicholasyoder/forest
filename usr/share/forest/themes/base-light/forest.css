@@ -106,13 +106,13 @@ QMenu::separator {
     border-color: rgb(200,200,200);
 }
 
-#notifyPopup, #displayConfirmCard {
+#notifyPopup, #displayConfirmCard, #displayIdentifyCard {
     background: rgba(235,235,235, 98%);
     border-color: rgba(255,255,255, 90%);
     color: white;
 }
 
-#notifyPopup QLabel, #displayConfirmCard QLabel{
+#notifyPopup QLabel, #displayConfirmCard QLabel, #displayIdentifyCard QLabel{
     color: black;
 }
 

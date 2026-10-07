@@ -5,6 +5,7 @@
 
 #include <QDeadlineTimer>
 #include <QFrame>
+#include <QHash>
 #include <QLabel>
 #include <QPointer>
 #include <QTimer>
@@ -58,6 +59,23 @@ private:
     QList<QPointer<ConfirmCard>> cards;
     QList<QMetaObject::Connection> watches;
     QTimer fallback;
+};
+
+// Connector + model on every enabled screen, ignoring input, for a few seconds.
+class IdentifyCards : public QObject
+{
+    Q_OBJECT
+
+public:
+    explicit IdentifyCards(QObject *parent = nullptr);
+
+    // `labels`: connector -> model. Showing again restarts the timer.
+    void show(const QHash<QString, QString> &labels);
+    void hide();
+
+private:
+    QList<QPointer<QWidget>> cards;
+    QTimer timer;
 };
 
 #endif // CONFIRMCARDS_H

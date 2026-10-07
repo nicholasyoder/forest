@@ -131,3 +131,58 @@ void ConfirmCards::tryBuild(bool force){
         cards << card;
     }
 }
+
+IdentifyCards::IdentifyCards(QObject *parent) : QObject(parent){
+    timer.setSingleShot(true);
+    timer.setInterval(3000);
+    connect(&timer, &QTimer::timeout, this, &IdentifyCards::hide);
+}
+
+void IdentifyCards::show(const QHash<QString, QString> &labels){
+    hide();
+    for (QScreen *screen : QGuiApplication::screens()){
+        if (!labels.contains(screen->name())) continue;
+
+        QWidget *card = new QWidget;
+        card->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowTransparentForInput | Qt::WindowDoesNotAcceptFocus);
+        card->setAttribute(Qt::WA_TranslucentBackground);
+        card->setAttribute(Qt::WA_DeleteOnClose);
+
+        QFrame *frame = new QFrame;
+        frame->setObjectName("displayIdentifyCard");
+        QVBoxLayout *outer = new QVBoxLayout(card);
+        outer->setContentsMargins(QMargins(0,0,0,0));
+        outer->addWidget(frame);
+
+        QLabel *name = new QLabel(screen->name());
+        name->setObjectName("titleLabel");
+        name->setAlignment(Qt::AlignCenter);
+        QVBoxLayout *layout = new QVBoxLayout(frame);
+        layout->addWidget(name);
+        if (!labels[screen->name()].isEmpty()){
+            QLabel *model = new QLabel(labels[screen->name()]);
+            model->setObjectName("modelLabel");
+            model->setAlignment(Qt::AlignCenter);
+            layout->addWidget(model);
+        }
+
+        card->winId(); // force native window creation so windowHandle() is valid
+        card->windowHandle()->setScreen(screen);
+        LayerShellQt::Window *layer = LayerShellQt::Window::get(card->windowHandle());
+        layer->setLayer(LayerShellQt::Window::LayerOverlay);
+        layer->setAnchors({}); // centred
+        layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
+        layer->setScope("forest-display-identify");
+        connect(screen, &QObject::destroyed, card, &QWidget::close);
+        card->show();
+        cards << card;
+    }
+    timer.start();
+}
+
+void IdentifyCards::hide(){
+    timer.stop();
+    for (const QPointer<QWidget> &card : std::as_const(cards))
+        if (card) card->close();
+    cards.clear();
+}

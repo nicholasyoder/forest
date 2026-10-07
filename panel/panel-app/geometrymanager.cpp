@@ -16,6 +16,7 @@ GeometryManager::GeometryManager(QWidget *panel) : panel_widget(panel) {
     ScreenTracker *tracker = new ScreenTracker(this);
     connect(tracker, &ScreenTracker::screens_replaced, this, &GeometryManager::rebuild_shell);
     connect(tracker, &ScreenTracker::geometry_changed, this, &GeometryManager::handle_geometry_change);
+    connect(tracker, &ScreenTracker::primary_changed, this, &GeometryManager::handle_geometry_change);
 }
 
 // panel_widget is never the top-level itself: LayerShellQt only attaches the

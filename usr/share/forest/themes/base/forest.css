@@ -123,7 +123,7 @@ QMenu::separator {
     min-width: 600px;
 }
 
-#notifyPopup, #displayConfirmCard {
+#notifyPopup, #displayConfirmCard, #displayIdentifyCard {
     background: grey;
     margin: 4px;
     padding: 4px;
@@ -176,6 +176,20 @@ QMenu::separator {
 #displayConfirmCard #titleLabel {
     font-weight: bold;
     font-size: 12pt;
+}
+
+#displayIdentifyCard {
+    min-width: 200px;
+}
+
+#displayIdentifyCard #titleLabel {
+    font-weight: bold;
+    font-size: 28pt;
+    padding: 10px 20px 0px 20px;
+}
+
+#displayIdentifyCard #modelLabel {
+    padding: 0px 20px 10px 20px;
 }
 
 QScrollArea {

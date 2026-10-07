@@ -99,6 +99,11 @@ void DisplayProfiles::add(const DisplayProfile &profile){
     m_profiles << profile;
 }
 
+void DisplayProfiles::remove(const QString &id){
+    m_profiles.removeIf([&](const DisplayProfile &profile){ return profile.id == id; });
+    if (m_active == id) m_active.clear();
+}
+
 QList<DisplayProfile> DisplayProfiles::matching(const OutputState &state) const{
     QList<DisplayProfile> result;
     for (const DisplayProfile &profile : m_profiles)
@@ -142,7 +147,23 @@ OutputLayout DisplayProfiles::resolve(const DisplayProfile &profile, const Outpu
         }
         layout << output;
     }
+
+    const OutputLayout live = outputs::currentLayout(state);
+    for (OutputConfig config : live){
+        if (std::any_of(layout.begin(), layout.end(), [&](const OutputConfig &c){ return c.connector == config.connector; }))
+            continue;
+        config.enabled = false;
+        layout << config;
+    }
     return layout;
+}
+
+OutputLayout DisplayProfiles::disconnected(const DisplayProfile &profile, const OutputState &state){
+    const QList<QString> keys = outputs::identityKeys(state).values();
+    OutputLayout result;
+    for (const OutputConfig &output : profile.outputs)
+        if (!keys.contains(output.key)) result << output;
+    return result;
 }
 
 QString DisplayProfiles::resolvePrimary(const DisplayProfile &profile, const OutputState &state){
@@ -155,10 +176,10 @@ QString DisplayProfiles::resolvePrimary(const DisplayProfile &profile, const Out
     return QString();
 }
 
-QString DisplayProfiles::defaultName(const OutputState &state){
+QString DisplayProfiles::defaultName(const OutputLayout &layout){
     QStringList names;
-    for (const OutputHeadInfo &head : state.heads)
-        if (head.enabled) names << head.name;
+    for (const OutputConfig &config : layout)
+        if (config.enabled) names << config.connector;
     names.sort();
     return names.join(" + ");
 }

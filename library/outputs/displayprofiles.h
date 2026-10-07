@@ -28,6 +28,8 @@ public:
     const DisplayProfile *find(const QString &id) const;
     DisplayProfile *find(const QString &id);
     void add(const DisplayProfile &profile);
+    // Clears active if it was the active one.
+    void remove(const QString &id);
 
     QString active() const{return m_active;}
     void setActive(const QString &id){m_active = id;}
@@ -38,13 +40,16 @@ public:
     static bool matches(const DisplayProfile &profile, const OutputState &state);
 
     // Maps the profile onto the live heads by identity key and picks the closest
-    // available mode. Assumes matches().
+    // available mode. Its disconnected outputs are dropped; live heads it doesn't
+    // mention are added disabled.
     static OutputLayout resolve(const DisplayProfile &profile, const OutputState &state);
+    // Profile outputs with no live head.
+    static OutputLayout disconnected(const DisplayProfile &profile, const OutputState &state);
     // Live connector of the profile's primary output, or empty.
     static QString resolvePrimary(const DisplayProfile &profile, const OutputState &state);
 
     // Default profile name from the enabled outputs, e.g. "DP-2 + HDMI-A-1".
-    static QString defaultName(const OutputState &state);
+    static QString defaultName(const OutputLayout &layout);
 
 private:
     QList<DisplayProfile> m_profiles;

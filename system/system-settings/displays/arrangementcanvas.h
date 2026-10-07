@@ -6,17 +6,20 @@
 #include <QFrame>
 #include <QHBoxLayout>
 #include <QHash>
+#include <QSet>
 #include <QPushButton>
 #include <QWidget>
 
 #include "outputtypes.h"
 
-// One output, styled as `#DisplaysOutput` (`:checked` = selected). Only
-// setChecked() changes the check state, so clicking never deselects.
+// One output, styled as `#DisplaysOutput` (`:checked` = selected,
+// `[connected="false"]` = in a profile but not plugged in). Only setChecked()
+// changes the check state, so clicking never deselects.
 class OutputBox : public QPushButton
 {
 public:
     explicit OutputBox(QWidget *parent = nullptr);
+    void setConnected(bool connected);
 
 protected:
     void nextCheckState() override{}
@@ -32,7 +35,8 @@ public:
     explicit ArrangementCanvas(QWidget *parent = nullptr);
 
     // `labels`: connector -> second line (model). Disabled outputs are ignored.
-    void setOutputs(const OutputLayout &layout, const QHash<QString, QString> &labels);
+    void setOutputs(const OutputLayout &layout, const QHash<QString, QString> &labels,
+                    const QSet<QString> &disconnected);
     void setSelected(const QString &connector);
 
     bool hasHeightForWidth() const override{return true;}
@@ -80,7 +84,7 @@ class DisabledOutputs : public QFrame
 public:
     explicit DisabledOutputs(QWidget *parent = nullptr);
 
-    void setOutputs(const QStringList &connectors);
+    void setOutputs(const QStringList &connectors, const QSet<QString> &disconnected);
     void setSelected(const QString &connector);
 
 signals:
