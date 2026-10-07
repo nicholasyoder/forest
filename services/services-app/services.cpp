@@ -23,4 +23,5 @@ void services::setupPlug(){
 
     fdisplays = new Displays;
     fdisplays->setup();
+    connect(fdisplays, &Displays::hotkeysChanged, fhotkeys, &foresthotkeys::reloadhotkeys);
 }

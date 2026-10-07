@@ -3,6 +3,7 @@
 #include "displays.h"
 
 #include "confirmcards.h"
+#include "hotkeyconfig.h"
 
 #include <QDBusConnection>
 #include <QDBusError>
@@ -349,9 +350,11 @@ bool Displays::renameProfile(const QString &id, const QString &name){
         qWarning() << "Displays: renameProfile: no profile" << id << "or empty name";
         return false;
     }
+    const QString oldName = profile->name;
     profile->name = name.trimmed();
     profiles.save();
     emit profilesChanged();
+    updateProfileHotkeys(id, oldName, profile->name);
     return true;
 }
 
@@ -361,12 +364,35 @@ void Displays::deleteProfile(const QString &id){
         return;
     }
     const bool wasActive = profiles.active() == id;
-    qInfo() << "Displays: deleting profile" << profiles.find(id)->name;
+    const QString name = profiles.find(id)->name;
+    qInfo() << "Displays: deleting profile" << name;
     profiles.remove(id);
     profiles.save();
     emit profilesChanged();
+    updateProfileHotkeys(id, name);
     if (wasActive) emit activeProfileChanged(QString());
     syncActive(); // an identical profile may now be the active one
+}
+
+void Displays::updateProfileHotkeys(const QString &id, const QString &oldName, const QString &newName){
+    const DBusHotkeyAction target = hotkeyconfig::displayProfileAction(id);
+    QSettings settings("Forest", "Forest");
+    settings.beginGroup("hotkeys");
+    bool changed = false;
+    for (const QString &item : settings.childGroups()){
+        const auto action = hotkeyconfig::parseDBusAction(settings.value(item + "/action").toString());
+        if (!action || !action->sameTarget(target)) continue;
+        if (newName.isEmpty()){
+            settings.remove(item);
+            changed = true;
+        }
+        else if (settings.value(item + "/description").toString() == hotkeyconfig::displayProfileDescription(oldName)){
+            settings.setValue(item + "/description", hotkeyconfig::displayProfileDescription(newName));
+            changed = true;
+        }
+    }
+    settings.sync();
+    if (changed) emit hotkeysChanged();
 }
 
 void Displays::identify(){

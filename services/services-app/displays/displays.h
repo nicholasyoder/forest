@@ -53,6 +53,8 @@ signals:
     void layoutKept();
     void layoutReverted();
     void applyFailed();
+    // Forest.conf [hotkeys] changed (profile renamed or deleted).
+    void hotkeysChanged();
 
 private:
     void onStateChanged();
@@ -65,6 +67,9 @@ private:
     // Completes a D-Bus layout against the live heads. False if unusable.
     bool parseLayout(const QString &json, const char *caller, OutputLayout *layout, QString *primary) const;
     void setPrimary(const QString &name);
+    // Removes the [hotkeys] entries that apply profile `id`, or renames them
+    // when `newName` is set (only descriptions still at the default).
+    void updateProfileHotkeys(const QString &id, const QString &oldName, const QString &newName = QString());
     void startConfirm(const OutputLayout &revertTo, const QString &revertPrimary, const OutputLayout &applied);
     // Clears a pending confirmation without reverting.
     void endConfirm();

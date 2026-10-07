@@ -3,6 +3,16 @@
 #include "edithotkeywidget.h"
 #include "ui_edithotkeywidget.h"
 
+#include "displayprofiles.h"
+#include "hotkeyconfig.h"
+
+#include <algorithm>
+
+namespace {
+constexpr int kActionRole = Qt::UserRole;
+constexpr int kDescriptionRole = Qt::UserRole + 1;
+}
+
 edithotkeywidget::edithotkeywidget(QWidget *parent) : QWidget(parent), ui(new Ui::edithotkeywidget){
     ui->setupUi(this);
     ui->commandRbt->setChecked(true);
@@ -15,20 +25,66 @@ edithotkeywidget::~edithotkeywidget(){
 void edithotkeywidget::set_data(const HotkeyData& data){
     ui->shortcutbt->setText(data.shortcut);
     ui->descriptionTbox->setText(data.description);
+    load_builtins();
 
-    if (auto commandAction = data.action.dynamicCast<CommandAction>()) {
+    const auto dbusAction = hotkeyconfig::parseDBusAction(data.action);
+    if (!dbusAction) {
         ui->commandRbt->setChecked(true);
-        ui->commandTbox->setText(commandAction->command);
+        ui->commandTbox->setText(data.action);
     }
-    else if (auto dbusAction = data.action.dynamicCast<CustomDBusAction>()) {
+    else if (QListWidgetItem *builtin = find_builtin(data.action)) {
+        ui->builtindbusRbt->setChecked(true);
+        const QSignalBlocker blocker(ui->builtindbusLwidget); // keep the description as saved
+        ui->builtindbusLwidget->setCurrentItem(builtin);
+    }
+    else {
         ui->customdbusRbt->setChecked(true);
         ui->serviceTbox->setText(dbusAction->service);
         ui->pathTbox->setText(dbusAction->path);
         ui->interfaceTbox->setText(dbusAction->interface);
         ui->methodTbox->setText(dbusAction->method);
         ui->argTbox->setText(dbusAction->arg);
-        ui->busCbox->setCurrentIndex(dbusAction->isSystemBus ? 1 : 0);
+        ui->busCbox->setCurrentIndex(dbusAction->systemBus ? 1 : 0);
     }
+}
+
+void edithotkeywidget::load_builtins(){
+    const QSignalBlocker blocker(ui->builtindbusLwidget);
+    ui->builtindbusLwidget->clear();
+    auto add = [this](const QString &description, const DBusHotkeyAction &action){
+        auto *item = new QListWidgetItem(description, ui->builtindbusLwidget);
+        item->setData(kActionRole, hotkeyconfig::formatDBusAction(action));
+        item->setData(kDescriptionRole, description);
+    };
+
+    add("Next display profile", hotkeyconfig::nextDisplayProfileAction());
+    DisplayProfiles displayProfiles;
+    displayProfiles.load();
+    QList<DisplayProfile> profiles = displayProfiles.profiles();
+    std::sort(profiles.begin(), profiles.end(), [](const DisplayProfile &a, const DisplayProfile &b){
+        return QString::localeAwareCompare(a.name, b.name) < 0;
+    });
+    for (const DisplayProfile &profile : profiles)
+        add(hotkeyconfig::displayProfileDescription(profile.name), hotkeyconfig::displayProfileAction(profile.id));
+}
+
+// Compares parsed fields: older entries were written in QHash key order.
+QListWidgetItem *edithotkeywidget::find_builtin(const QString &action) const{
+    const auto parsed = hotkeyconfig::parseDBusAction(action);
+    if (!parsed) return nullptr;
+    for (int i = 0; i < ui->builtindbusLwidget->count(); i++){
+        QListWidgetItem *item = ui->builtindbusLwidget->item(i);
+        if (hotkeyconfig::parseDBusAction(item->data(kActionRole).toString())->sameTarget(*parsed))
+            return item;
+    }
+    return nullptr;
+}
+
+// Follows the selection unless the user wrote their own description.
+void edithotkeywidget::on_builtindbusLwidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous){
+    const QString description = ui->descriptionTbox->text();
+    if (current && (description.isEmpty() || (previous && description == previous->data(kDescriptionRole).toString())))
+        ui->descriptionTbox->setText(current->data(kDescriptionRole).toString());
 }
 
 void edithotkeywidget::set_hotkeys_paused(bool pause){
@@ -84,17 +140,23 @@ void edithotkeywidget::on_okbt_clicked(){
     data.description = ui->descriptionTbox->text();
 
     if (ui->commandRbt->isChecked()){
-        data.action = QSharedPointer<HotkeyAction>(new CommandAction(ui->commandTbox->text()));
+        data.action = ui->commandTbox->text();
     }
-    else{
-        data.action = QSharedPointer<HotkeyAction>(new CustomDBusAction(
-            ui->serviceTbox->text(),
-            ui->pathTbox->text(),
-            ui->interfaceTbox->text(),
-            ui->methodTbox->text(),
-            ui->argTbox->text(),
-            ui->busCbox->currentIndex() == 1
-        ));
+    else if (ui->customdbusRbt->isChecked()){
+        DBusHotkeyAction action;
+        action.service = ui->serviceTbox->text();
+        action.path = ui->pathTbox->text();
+        action.interface = ui->interfaceTbox->text();
+        action.method = ui->methodTbox->text();
+        action.arg = ui->argTbox->text();
+        action.systemBus = ui->busCbox->currentIndex() == 1;
+        data.action = hotkeyconfig::formatDBusAction(action);
+    }
+    else if (QListWidgetItem *builtin = ui->builtindbusLwidget->currentItem()){
+        data.action = builtin->data(kActionRole).toString();
+    }
+    else {
+        return; // built-in type with nothing picked
     }
 
     emit data_updated(data);

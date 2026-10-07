@@ -6,6 +6,8 @@
 #include <QtDBus>
 #include <QKeySequence>
 
+#include "hotkeyconfig.h"
+
 enum HK_Type
 {
     Type_Exec,
@@ -29,7 +31,7 @@ public:
     QString triggerString() const;
 
 public slots:
-    void setDbusInfo(QString service, QString path, QString interface, QString method, QString bus, QString arg);
+    void setDbusAction(const DBusHotkeyAction &action){dbusaction = action;}
     void setExecCommand(const QString &command){shcommand=command;}
 
     void exec();
@@ -40,12 +42,7 @@ private:
     QKeySequence keyseq;
     HK_Type hotkey_type;
     QString shcommand;
-    QString dbusservice;
-    QString dbuspath;
-    QString dbusinterface;
-    QString dbusmethod;
-    QString dbusbus;
-    QString dbusarg; // optional single string argument
+    DBusHotkeyAction dbusaction;
 };
 
 #endif // HOTKEY_H

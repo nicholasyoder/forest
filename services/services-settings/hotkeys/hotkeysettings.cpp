@@ -12,7 +12,7 @@
 
 HotkeySettings::HotkeySettings(){
     settings_item = new settings_category("Hotkeys", "", "preferences-desktop-keyboard");
-    connect(settings_item, &settings_category::opened, this, &HotkeySettings::load_hotkeys);
+    connect(settings_item, &settings_category::opened, this, &HotkeySettings::refresh);
 }
 
 void HotkeySettings::load_hotkeys(){
@@ -56,10 +56,17 @@ void HotkeySettings::load_hotkeys(){
     hotkey_widget_group->add_child(hotkey_item);
 }
 
-void HotkeySettings::reload_hotkeys(){
+void HotkeySettings::refresh(){
     settings_item->clear();
+    // Later: the sender may be one of them, mid-emit.
+    for (HotkeySettingItem *item : std::as_const(item_list)) item->deleteLater();
+    item_list.clear();
     load_hotkeys();
     settings_item->notify_updated();
+}
+
+void HotkeySettings::reload_hotkeys(){
+    refresh();
     miscutills::call_dbus("forest/hotkeys/reloadhotkeys");
 }
 
@@ -67,8 +74,8 @@ void HotkeySettings::add_item(){
     QSettings settings("Forest", "Forest");
     settings.beginGroup("hotkeys");
 
-    QString last_item = settings.childGroups().last();
-    int item_numer = last_item.split("-").last().toInt();
+    const QStringList items = settings.childGroups();
+    int item_numer = items.isEmpty() ? 0 : items.last().split("-").last().toInt();
     QString new_number = miscutills::pad_with_zeros(item_numer + 1);
 
     HotkeySettingItem* item = new HotkeySettingItem("item-" + new_number);
@@ -88,26 +95,7 @@ void HotkeySettingItem::edit(){
     HotkeyData data;
     data.shortcut = settings.value("keysequence", "").toString();
     data.description = settings.value("description", "").toString();
-    QString action = settings.value("action", "").toString();
-    if(action.startsWith("DBUS:")){
-        action.remove("DBUS:");
-        QHash<QString, QString> dbus_options;
-        foreach (QString s, action.split(",")){
-            QStringList keyvalue = s.split("=");
-            if (keyvalue.length() == 2) dbus_options[keyvalue.first()] = keyvalue.last();
-        }
-        data.action = QSharedPointer<HotkeyAction>(new CustomDBusAction(
-            dbus_options["service"],
-            dbus_options["path"],
-            dbus_options["interface"],
-            dbus_options["method"],
-            dbus_options["arg"],
-            dbus_options["bus"] == "System"
-        ));
-    }
-    else {
-        data.action = QSharedPointer<HotkeyAction>(new CommandAction(action));
-    }
+    data.action = settings.value("action", "").toString();
 
     edit_widget->set_data(data);
     edit_widget->show();
@@ -150,25 +138,7 @@ void HotkeySettingItem::save(const HotkeyData &data){
     settings.beginGroup("hotkeys/" + item_id);
     settings.setValue("description", data.description);
     settings.setValue("keysequence", data.shortcut);
-    QString action;
-    if (auto command_action = data.action.dynamicCast<CommandAction>()) {
-        action = command_action->command;
-    }
-    else if (auto dbus_action = data.action.dynamicCast<CustomDBusAction>()) {
-        action.append("DBUS:");
-        QHash<QString, QString>dbus_options;
-        dbus_options["bus"] = dbus_action->isSystemBus ? "System" : "Session";
-        dbus_options["service"] = dbus_action->service;
-        dbus_options["path"] = dbus_action->path;
-        dbus_options["interface"] = dbus_action->interface;
-        dbus_options["method"] = dbus_action->method;
-        if (!dbus_action->arg.isEmpty()) dbus_options["arg"] = dbus_action->arg;
-        foreach(QString key, dbus_options.keys()){
-            action.append(key + "=" + dbus_options[key] + ",");
-        }
-        action.chop(1); // remove trailing comma
-    }
-    settings.setValue("action", action);
+    settings.setValue("action", data.action);
     settings.sync();
     emit item_changed();
 }

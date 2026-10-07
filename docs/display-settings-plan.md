@@ -14,8 +14,8 @@ into `development-notes.md`) once the feature ships.
   `wlr-output-management-unstable-v1`. They replace hand-written `wlr-randr`
   scripts (`~/.screenlayout/two.sh`/`three.sh` bound to Meta+2/Meta+3) and the
   swap-`Biome.conf`-and-relog workflow.
-- **Profile hotkeys** that work through the normal hotkey system and are
-  intuitive to set up from either the display page or the hotkeys page.
+- **Profile hotkeys** that work through the normal hotkey system, set up from
+  the Hotkeys page.
 - Compositor-agnostic: only the standard protocol plus Forest's own D-Bus.
   Works on Biome, sway, Hyprland, etc.
 
@@ -139,22 +139,29 @@ live state already equals the profile. Biome's restored layout is normally
 Forest's last apply, so there's no second modeset unless the monitor set
 changed while logged out.
 
-### Hotkeys: both entry points, one storage
+### Hotkeys: set up on the Hotkeys page only
 
-Decided: profiles get shortcuts from both the Displays page and the Hotkeys
-page.
+Decided 2026-10-07 (replaces "both entry points"): profiles get shortcuts
+only from the Hotkeys page's built-in action list. A shortcut button on the
+Displays page would have meant sharing the key-capture widget and hotkey
+writing across two settings plugins, plus a conflict check, for one button.
+The Displays page gets a plain text note pointing to Services → Hotkeys
+instead. A clickable link would need cross-plugin navigation in the settings
+shell (Hotkeys is nested under Services), which doesn't exist yet.
 
 - Storage is unchanged: a normal `[hotkeys]` entry in `Forest.conf`. That
-  keeps one source of truth, one conflict check and one portal binding path.
+  keeps one source of truth and one portal binding path.
 - **New: a string argument on D-Bus actions.** Add `arg=<value>` to the
   `DBUS:` action format. `globalhotkey` passes it as a single string
   argument. Profile ids are `[a-z0-9-]` (uuid without braces), so the
   existing comma/`=` parsing is safe.
-  - Switch: `DBUS:bus=Session,service=org.forest,path=/org/forest/displays,method=applyProfile,arg=<id>`
+  - Switch: `DBUS:bus=Session,service=org.forest,path=/org/forest/displays,interface=org.forest.displays,method=applyProfile,arg=<id>`
   - Cycle: `…,method=nextProfile`
 - Actions reference the **profile id, not its name**, so renames don't break
   them. On rename the daemon also rewrites the hotkey `description`
-  ("Display profile: <name>"). Deleting a profile removes its hotkeys.
+  ("Display profile: <name>") if it's still the default for the old name, so
+  a description the user wrote is kept. Deleting a profile removes its
+  hotkeys.
 - **Hotkeys page:** fill in the currently empty "Built-in" action list
   (`builtindbusLwidget` in `edithotkeywidget.ui`). Entries are one "Display
   profile: <name>" per profile (via `DisplayProfiles::load()`, linking
@@ -162,28 +169,26 @@ page.
   already exists and it's one fixed list entry. A built-in compiles down to
   the `DBUS:` string above. When loading an entry, a `DBUS:` action that
   matches a known built-in shows as that built-in, not as raw custom D-Bus
-  fields. Compare parsed fields, not strings: the writer emits keys in
-  `QHash` order. This is generic, so other built-ins (show menu, show
+  fields. Compare parsed fields, not strings: older entries were written in
+  `QHash` key order, and an empty interface matches any. This is generic, so other built-ins (show menu, show
   desktop, lock) can move here later.
-- **Displays page:** a "Shortcut: [Meta+3]" button for the selected saved
-  profile (disabled on the unsaved entries),
-  using the same key-capture widget (pause/resume hotkeys while capturing).
-  It writes and updates the `[hotkeys]` entry whose action targets that
-  profile id, then calls `reloadhotkeys`.
-- Extract the hotkey config read/write (`HotkeyData` ⇄ `Forest.conf`, the
-  `DBUS:` parsing) into a small shared library (`library/hotkeyconfig`).
-  Today the format is parsed in `foresthotkeys::loadhotkeys()` and written in
-  `services-settings/hotkeys`. Both the Displays page and those two need it,
-  and so does the daemon (rename/delete). The roadmap's "Hotkeys on the lock
-  screen" item wants the same sharing. It also holds the next-free
-  `item-NNNN` id (`HotkeySettings::add_item` crashes on an empty
-  `[hotkeys]` today), lookup by key sequence for the conflict warning, and
-  the key-capture button (moved out of `edithotkeywidget`).
+- **Displays page:** a plain text note at the bottom: profiles can be given
+  shortcuts under Services → Hotkeys.
+- Share only the `DBUS:` action parse/format (a plain struct ⇄ string), in a
+  small `library/hotkeyconfig`. Today it's parsed in
+  `foresthotkeys::loadhotkeys()` and `HotkeySettingItem::edit()`, written in
+  `HotkeySettingItem::save()`, and the daemon (rename/delete) would make a
+  third copy. The format writer emits keys in a fixed order. No key-capture
+  widget or `HotkeyData` UI types move. The roadmap's "Hotkeys on the lock
+  screen" item can grow it later.
+- Fix `HotkeySettings::add_item` crashing on an empty `[hotkeys]` (it takes
+  `childGroups().last()`) in place.
 - The daemon and `foresthotkeys` share `services-app`: wire a
   `Displays::hotkeysChanged` signal to `reloadhotkeys` in `services.cpp`
-  rather than a D-Bus call to itself.
-- Capturing a shortcut that's already bound warns and offers to reassign it
-  (needed anyway once two pages write hotkeys).
+  rather than a D-Bus call to itself. Deleting entries doesn't renumber:
+  `foresthotkeys` ignores ids and `add_item` copes with gaps.
+- No conflict warning for now. Only the Hotkeys page writes key sequences,
+  and it has never had one.
 
 ### Confirm/revert, owned by the daemon
 
@@ -339,7 +344,6 @@ buttons under it. The per-output controls are a second group below.
   It needs a passing `test` when there are edits.
 - **Rename** (inline: the combo swaps for a line edit; Enter commits, Escape
   cancels), **Delete** (asks first). Both act on the selected saved profile.
-  Shortcut button (3b): also on the selected saved profile.
 - **Primary display:** a combo box of the working layout's enabled outputs,
   page-level rather than a per-output checkbox (which couldn't be
   unchecked). Changing it is an edit, but needs no `test`.
@@ -368,18 +372,9 @@ testing is the user's, per the usual workflow).
 
 Phase 1 (backend, no UI: `library/outputs`, the `displays` service,
 `DBUS:` `arg=`, Biome persisting applies), phase 2 (Displays page,
-confirm/revert apply) and phase 3a (Apply/Save split, profile editing,
-primary display, identify) are done.
-
-### Phase 3b — hotkeys
-
-Builds on 3a's rename/delete. No Biome changes needed.
-
-- [ ] `library/hotkeyconfig` extraction, used by `foresthotkeys`, the
-      Hotkeys page and the daemon.
-- [ ] Built-in action list on the Hotkeys page.
-- [ ] Shortcut button on the Displays page, with conflict warning.
-- [ ] Daemon keeps profile hotkeys in step on rename/delete.
+confirm/revert apply), phase 3a (Apply/Save split, profile editing,
+primary display, identify) and phase 3b (profile hotkeys on the Hotkeys
+page, `library/hotkeyconfig`) are done.
 
 ### Phase 4 — hardening and wrap-up
 
