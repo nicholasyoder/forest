@@ -5,14 +5,12 @@ add_library(system-settings MODULE
     systemsettings.cpp
     displays/arrangementcanvas.cpp
     displays/displayspage.cpp
-    displays/layoutedit.cpp
     aboutpage.h
     cursorthemesettings.h
     forestthemesettings.h
     systemsettings.h
     displays/arrangementcanvas.h
     displays/displayspage.h
-    displays/layoutedit.h
 )
 
 target_compile_definitions(system-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)

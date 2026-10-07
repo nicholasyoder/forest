@@ -20,8 +20,8 @@ std::optional<DBusHotkeyAction> parseDBusAction(const QString &action){
 
     QHash<QString, QString> options;
     for (const QString &s : action.mid(kPrefix.size()).split(',')){
-        const QStringList keyvalue = s.split('=');
-        if (keyvalue.size() == 2) options[keyvalue.first()] = keyvalue.last();
+        const int eq = s.indexOf('='); // the first: an arg may contain '='
+        if (eq > 0) options[s.left(eq)] = s.mid(eq + 1);
     }
 
     DBusHotkeyAction a;

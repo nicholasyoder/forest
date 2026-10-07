@@ -61,6 +61,7 @@ private:
     QSize areaInLayout(const View &view) const; // the drawable area in layout units
     void relayout();
     void dragTo(const QPoint &globalPos);
+    void selectBelow(const QString &current, const QPoint &pos);
     QPoint snapped(const OutputLayout &layout, int index, QPoint pos) const;
     int indexOf(const QString &connector) const;
 
@@ -73,6 +74,7 @@ private:
     OutputLayout m_dragStart;
     QPoint m_dragPos; // last accepted position, in m_dragStart's coordinates
     bool m_dragMoved = false;
+    bool m_cycle = false; // the press was on the already-selected output
     View m_dragView; // frozen so the scale doesn't change under the cursor
 };
 

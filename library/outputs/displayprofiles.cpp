@@ -19,6 +19,7 @@ void DisplayProfiles::load(){
     m_profiles.clear();
     QSettings settings("Forest", "Displays");
     m_active = settings.value("active").toString();
+    m_pendingRevert = settings.value("pending_revert").toString();
 
     settings.beginGroup("profiles");
     for (const QString &id : settings.childGroups()){
@@ -54,6 +55,8 @@ void DisplayProfiles::load(){
 void DisplayProfiles::save() const{
     QSettings settings("Forest", "Displays");
     settings.setValue("active", m_active);
+    if (m_pendingRevert.isEmpty()) settings.remove("pending_revert");
+    else settings.setValue("pending_revert", m_pendingRevert);
     settings.remove("profiles");
 
     settings.beginGroup("profiles");
@@ -137,6 +140,7 @@ OutputLayout DisplayProfiles::resolve(const DisplayProfile &profile, const Outpu
         if (!best){
             for (const OutputModeInfo &mode : head->modes)
                 if (mode.preferred) best = &mode;
+            if (!best && !head->modes.isEmpty()) best = &head->modes.first();
         }
         if (best && (best->size != output.size || best->refresh != output.refresh)){
             qInfo() << "DisplayProfiles:" << output.connector << "has no mode"
@@ -150,8 +154,7 @@ OutputLayout DisplayProfiles::resolve(const DisplayProfile &profile, const Outpu
 
     const OutputLayout live = outputs::currentLayout(state);
     for (OutputConfig config : live){
-        if (std::any_of(layout.begin(), layout.end(), [&](const OutputConfig &c){ return c.connector == config.connector; }))
-            continue;
+        if (outputs::find(layout, config.connector)) continue;
         config.enabled = false;
         layout << config;
     }
@@ -166,14 +169,19 @@ OutputLayout DisplayProfiles::disconnected(const DisplayProfile &profile, const 
     return result;
 }
 
-QString DisplayProfiles::resolvePrimary(const DisplayProfile &profile, const OutputState &state){
-    for (const OutputConfig &output : profile.outputs){
-        if (output.connector != profile.primary) continue;
-        const QHash<QString, QString> keys = outputs::identityKeys(state);
-        for (auto it = keys.begin(); it != keys.end(); ++it)
-            if (it.value() == output.key) return it.key();
-    }
+QString DisplayProfiles::resolvePrimary(const DisplayProfile &profile, const OutputLayout &layout){
+    const OutputConfig *primary = outputs::find(profile.outputs, profile.primary);
+    if (!primary) return QString();
+    for (const OutputConfig &config : layout)
+        if (config.key == primary->key) return config.connector;
     return QString();
+}
+
+QList<DisplayProfile> DisplayProfiles::sortedByName(QList<DisplayProfile> profiles){
+    std::sort(profiles.begin(), profiles.end(), [](const DisplayProfile &a, const DisplayProfile &b){
+        return QString::localeAwareCompare(a.name, b.name) < 0;
+    });
+    return profiles;
 }
 
 QString DisplayProfiles::defaultName(const OutputLayout &layout){

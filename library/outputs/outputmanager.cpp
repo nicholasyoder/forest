@@ -161,9 +161,8 @@ void OutputManager::submit(const Request &request){
 
     auto *config = new OutputConfiguration(create_configuration(m_serial), m_serial);
     for (OutputHead *head : std::as_const(m_heads)){
-        auto it = std::find_if(request.layout.begin(), request.layout.end(),
-                               [&](const OutputConfig &c){ return c.connector == head->name(); });
-        if (it == request.layout.end() || !it->enabled){
+        const OutputConfig *it = outputs::find(request.layout, head->name());
+        if (!it || !it->enabled){
             config->disable_head(head->object());
             continue;
         }
@@ -233,6 +232,9 @@ void OutputManager::zwlr_output_manager_v1_finished(){
     m_heads.clear();
     m_ready = false;
     wl_proxy_destroy(reinterpret_cast<wl_proxy *>(object()));
+    // No `done` will come for these.
+    for (const Request &request : std::exchange(m_waitingForDone, {}))
+        if (request.callback) request.callback(Failed);
 }
 
 #include "outputmanager.moc"

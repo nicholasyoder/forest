@@ -50,6 +50,12 @@ void ArrangementCanvas::setOutputs(const OutputLayout &layout, const QHash<QStri
         }
         QString text = config.connector;
         if (!labels.value(config.connector).isEmpty()) text += "\n" + labels.value(config.connector);
+        // Exact overlaps hide each other.
+        QStringList mirrors;
+        for (const OutputConfig &other : std::as_const(m_layout))
+            if (other.enabled && other.connector != config.connector && outputs::layoutRect(other) == outputs::layoutRect(config))
+                mirrors << other.connector;
+        if (!mirrors.isEmpty()) text += "\n" + tr("Mirrors %1").arg(mirrors.join(", "));
         box->setText(text);
         box->setToolTip(text);
         box->setConnected(!disconnected.contains(config.connector));
@@ -146,6 +152,7 @@ bool ArrangementCanvas::eventFilter(QObject *watched, QEvent *event){
     if (event->type() == QEvent::MouseButtonPress){
         QMouseEvent *mouse = static_cast<QMouseEvent *>(event);
         if (mouse->button() != Qt::LeftButton) return false;
+        m_cycle = connector == m_selected;
         m_drag = indexOf(connector);
         m_dragMouse = mouse->globalPosition().toPoint();
         m_dragStart = m_layout;
@@ -164,8 +171,21 @@ bool ArrangementCanvas::eventFilter(QObject *watched, QEvent *event){
             relayout();
             emit moved(m_layout);
         }
+        else if (m_cycle){
+            selectBelow(connector, mapFromGlobal(static_cast<QMouseEvent *>(event)->globalPosition().toPoint()));
+        }
     }
     return false;
+}
+
+// Clicking the selected output again selects the next one under the cursor.
+void ArrangementCanvas::selectBelow(const QString &current, const QPoint &pos){
+    QStringList under;
+    for (const OutputConfig &config : std::as_const(m_layout))
+        if (OutputBox *box = m_boxes.value(config.connector); box && box->geometry().contains(pos))
+            under << config.connector;
+    if (under.size() > 1)
+        emit selected(under[(under.indexOf(current) + 1) % under.size()]);
 }
 
 void ArrangementCanvas::dragTo(const QPoint &globalPos){

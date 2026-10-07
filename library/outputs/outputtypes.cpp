@@ -26,6 +26,27 @@ bool sameScale(double a, double b){
 
 namespace outputs {
 
+const OutputConfig *find(const OutputLayout &layout, const QString &connector){
+    for (const OutputConfig &config : layout)
+        if (config.connector == connector) return &config;
+    return nullptr;
+}
+
+OutputConfig *find(OutputLayout &layout, const QString &connector){
+    for (OutputConfig &config : layout)
+        if (config.connector == connector) return &config;
+    return nullptr;
+}
+
+bool isEnabled(const OutputLayout &layout, const QString &connector){
+    const OutputConfig *config = find(layout, connector);
+    return config && config->enabled;
+}
+
+QString headLabel(const OutputHeadInfo &head){
+    return !head.model.isEmpty() ? head.model : head.make;
+}
+
 QString modeToString(QSize size, int refresh){
     return QString("%1x%2@%3").arg(size.width()).arg(size.height()).arg(refresh);
 }
@@ -93,9 +114,8 @@ OutputLayout currentLayout(const OutputState &state){
 bool layoutMatchesState(const OutputLayout &layout, const OutputState &state){
     if (layout.size() != state.heads.size()) return false;
     for (const OutputHeadInfo &head : state.heads){
-        auto it = std::find_if(layout.begin(), layout.end(),
-                               [&](const OutputConfig &c){ return c.connector == head.name; });
-        if (it == layout.end() || it->enabled != head.enabled) return false;
+        const OutputConfig *it = find(layout, head.name);
+        if (!it || it->enabled != head.enabled) return false;
         if (!head.enabled) continue;
         const OutputModeInfo *mode = head.current();
         if (!mode || mode->size != it->size || mode->refresh != it->refresh) return false;
@@ -172,9 +192,8 @@ QString topLeft(const OutputLayout &layout){
 
 bool needsConfirm(const OutputLayout &before, const OutputLayout &after){
     for (const OutputConfig &a : after){
-        auto b = std::find_if(before.begin(), before.end(),
-                              [&](const OutputConfig &c){ return c.connector == a.connector; });
-        if (b == before.end() || a.enabled != b->enabled) return true;
+        const OutputConfig *b = find(before, a.connector);
+        if (!b || a.enabled != b->enabled) return true;
         if (!a.enabled) continue;
         if (a.size != b->size || a.refresh != b->refresh || a.transform != b->transform
             || !sameScale(a.scale, b->scale))

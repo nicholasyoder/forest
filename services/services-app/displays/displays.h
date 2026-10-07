@@ -70,6 +70,8 @@ private:
     // Removes the [hotkeys] entries that apply profile `id`, or renames them
     // when `newName` is set (only descriptions still at the default).
     void updateProfileHotkeys(const QString &id, const QString &oldName, const QString &newName = QString());
+    // Applies `target` (connectors may have changed since) and `primary`; emits layoutReverted.
+    void restore(const OutputLayout &target, const QString &primary);
     void startConfirm(const OutputLayout &revertTo, const QString &revertPrimary, const OutputLayout &applied);
     // Clears a pending confirmation without reverting.
     void endConfirm();

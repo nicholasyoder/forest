@@ -2,9 +2,11 @@ add_library(outputs STATIC
     outputtypes.cpp
     outputmanager.cpp
     displayprofiles.cpp
+    layoutedit.cpp
     outputtypes.h
     outputmanager.h
     displayprofiles.h
+    layoutedit.h
 )
 
 set_target_properties(outputs PROPERTIES POSITION_INDEPENDENT_CODE ON)
