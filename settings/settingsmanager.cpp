@@ -140,19 +140,13 @@ void SettingsManager::display_categories(QUuid parent_id, QList<settings_item*> 
 }
 
 void SettingsManager::update_widgets(QUuid parent_id, QList<settings_item*> items){
-    if(stack_hash.contains(parent_id)){
-        QLayoutItem *layout_item = stacked_layout->itemAt(stack_hash[parent_id]);
-        if(layout_item){
-            delete layout_item->widget();
-        }
-        stack_hash.remove(parent_id);
-    }
+    delete stack_hash.take(parent_id);
     display_widgets(parent_id, items);
 }
 
 void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> items){
     if(stack_hash.contains(parent_id)){
-        stacked_layout->setCurrentIndex(stack_hash[parent_id]);
+        stacked_layout->setCurrentWidget(stack_hash[parent_id]);
     }
     else{
 
@@ -203,9 +197,8 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
 
 
         stacked_layout->addWidget(controls_area);
-        int index = stacked_layout->indexOf(controls_area);
-        stack_hash[parent_id] = index;
-        stacked_layout->setCurrentIndex(index);
+        stack_hash[parent_id] = controls_area;
+        stacked_layout->setCurrentWidget(controls_area);
     }
 }
 
@@ -250,7 +243,8 @@ void SettingsManager::open_item(QUuid id){
             }
             else {
                 // Handle other item
-                connect(cat_item, &settings_category::updated, this, &SettingsManager::update_widgets);
+                // Once only: a second run would rebuild from widgets the first one's page owns.
+                connect(cat_item, &settings_category::updated, this, &SettingsManager::update_widgets, Qt::UniqueConnection);
                 display_widgets(cat_item->id(), cat_item->child_items());
             }
         }
