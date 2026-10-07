@@ -47,7 +47,7 @@ private:
     QHash<QUuid, settings_item*> item_hash;
     QList<settings_item*> top_level_items;
     QUuid home_id = QUuid::createUuid();
-    QHash<QUuid, int> stack_hash;
+    QHash<QUuid, QWidget*> stack_hash; // pages; layout indices shift when one is replaced
     QString initial_page;
 };
 #endif // SETTINGSMANAGER_H
