@@ -2,10 +2,16 @@
 
 #include "outputtypes.h"
 
+#include <QJsonArray>
+#include <QJsonDocument>
+#include <QJsonObject>
 #include <QRegularExpression>
 #include <QStringList>
 
+#include <wayland-util.h>
+
 #include <algorithm>
+#include <climits>
 #include <cmath>
 
 namespace {
@@ -97,6 +103,111 @@ bool layoutMatchesState(const OutputLayout &layout, const OutputState &state){
             return false;
         if (state.adaptiveSyncSupported && head.adaptiveSync != it->adaptiveSync) return false;
     }
+    return true;
+}
+
+QSize effectiveSize(const OutputConfig &config){
+    QSize size = config.transform & 1 ? config.size.transposed() : config.size;
+    float scale = wl_fixed_to_double(wl_fixed_from_double(config.scale));
+    if (scale <= 0) scale = 1;
+    return QSize(int(size.width() / scale), int(size.height() / scale));
+}
+
+QRect layoutRect(const OutputConfig &config){
+    return QRect(config.pos, effectiveSize(config));
+}
+
+bool isConnected(const OutputLayout &layout){
+    QList<QRect> rects;
+    for (const OutputConfig &config : layout)
+        if (config.enabled) rects << layoutRect(config);
+    if (rects.isEmpty()) return false;
+
+    // Same predicate as Biome's output_arrange.cpp: positive overlap on one axis,
+    // at least touching on the other.
+    auto touches = [](const QRect &a, const QRect &b){
+        const int ow = std::min(a.x() + a.width(), b.x() + b.width()) - std::max(a.x(), b.x());
+        const int oh = std::min(a.y() + a.height(), b.y() + b.height()) - std::max(a.y(), b.y());
+        return (ow > 0 && oh >= 0) || (oh > 0 && ow >= 0);
+    };
+
+    QList<bool> reached(rects.size(), false);
+    QList<int> pending = {0};
+    reached[0] = true;
+    while (!pending.isEmpty()){
+        const QRect a = rects[pending.takeLast()];
+        for (int i = 0; i < rects.size(); i++){
+            if (!reached[i] && touches(a, rects[i])){
+                reached[i] = true;
+                pending << i;
+            }
+        }
+    }
+    return !reached.contains(false);
+}
+
+OutputLayout normalized(OutputLayout layout){
+    int minX = INT_MAX, minY = INT_MAX;
+    for (const OutputConfig &config : layout){
+        if (!config.enabled) continue;
+        minX = std::min(minX, config.pos.x());
+        minY = std::min(minY, config.pos.y());
+    }
+    if (minX == INT_MAX) return layout;
+    for (OutputConfig &config : layout)
+        if (config.enabled) config.pos -= QPoint(minX, minY);
+    return layout;
+}
+
+bool needsConfirm(const OutputLayout &before, const OutputLayout &after){
+    for (const OutputConfig &a : after){
+        auto b = std::find_if(before.begin(), before.end(),
+                              [&](const OutputConfig &c){ return c.connector == a.connector; });
+        if (b == before.end() || a.enabled != b->enabled) return true;
+        if (!a.enabled) continue;
+        if (a.size != b->size || a.refresh != b->refresh || a.transform != b->transform
+            || !sameScale(a.scale, b->scale))
+            return true;
+    }
+    return false;
+}
+
+QString layoutToJson(const OutputLayout &layout){
+    QJsonArray array;
+    for (const OutputConfig &config : layout){
+        array.append(QJsonObject{
+            {"connector", config.connector},
+            {"enabled", config.enabled},
+            {"mode", modeToString(config.size, config.refresh)},
+            {"scale", config.scale},
+            {"x", config.pos.x()},
+            {"y", config.pos.y()},
+            {"transform", transformToString(config.transform)},
+            {"adaptive_sync", config.adaptiveSync},
+        });
+    }
+    return QString::fromUtf8(QJsonDocument(array).toJson(QJsonDocument::Compact));
+}
+
+bool layoutFromJson(const QString &json, OutputLayout *layout){
+    const QJsonDocument doc = QJsonDocument::fromJson(json.toUtf8());
+    if (!doc.isArray()) return false;
+    OutputLayout result;
+    for (const QJsonValue &value : doc.array()){
+        const QJsonObject object = value.toObject();
+        OutputConfig config;
+        config.connector = object["connector"].toString();
+        if (config.connector.isEmpty()) return false;
+        config.enabled = object["enabled"].toBool(true);
+        if (!modeFromString(object["mode"].toString(), &config.size, &config.refresh)) return false;
+        config.scale = object["scale"].toDouble(1.0);
+        if (config.scale <= 0) return false;
+        config.pos = QPoint(object["x"].toInt(), object["y"].toInt());
+        config.transform = transformFromString(object["transform"].toString());
+        config.adaptiveSync = object["adaptive_sync"].toBool();
+        result << config;
+    }
+    *layout = result;
     return true;
 }
 

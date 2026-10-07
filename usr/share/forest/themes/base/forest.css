@@ -123,7 +123,7 @@ QMenu::separator {
     min-width: 600px;
 }
 
-#notifyPopup {
+#notifyPopup, #displayConfirmCard {
     background: grey;
     margin: 4px;
     padding: 4px;
@@ -167,6 +167,15 @@ QMenu::separator {
 
 #notifyPopup #NonSegmentedProgressBar #ProgressIndicator {
     background: lightgrey;
+}
+
+#displayConfirmCard {
+    min-width: 320px;
+}
+
+#displayConfirmCard #titleLabel {
+    font-weight: bold;
+    font-size: 12pt;
 }
 
 QScrollArea {

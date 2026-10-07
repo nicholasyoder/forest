@@ -241,3 +241,57 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     color: #777;
     font-style: italic;
 }
+
+#SettingsPaneTitle {
+    margin-bottom: 8px;
+}
+
+#DisplaysCanvas, #DisplaysDisabledList {
+    background: rgba(0,0,0, 10%);
+    border: 1px solid rgba(0,0,0, 30%);
+    border-radius: 3px;
+    padding: 1px;
+}
+
+#DisplaysCanvas {
+    min-height: 120px;
+    max-height: 400px;
+}
+
+#DisplaysOutput {
+    background: #fdfdfd;
+    border: 1px solid rgba(0,0,0, 20%);
+    border-radius: 4px;
+    margin: 1px;
+    padding: 4px;
+    color: black;
+}
+
+#DisplaysOutput:hover {
+    border-color: palette(highlight);
+}
+
+#DisplaysOutput:checked {
+    background: palette(highlight);
+    border-color: rgba(0,0,0, 30%);
+    color: palette(highlighted-text);
+}
+
+#DisplaysOutput:disabled {
+    color: #777;
+}
+
+#DisplaysDisabledList #DisplaysOutput {
+    min-width: 110px;
+    min-height: 25px;
+}
+
+#DisplaysErrorLabel {
+    color: #c0392b;
+    margin-bottom: 5px;
+    max-width: 700px;
+}
+
+#DisplaysButtonRow {
+    max-width: 700px;
+}

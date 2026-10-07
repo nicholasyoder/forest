@@ -2,6 +2,8 @@
 
 #include "displays.h"
 
+#include "confirmcards.h"
+
 #include <QDBusConnection>
 #include <QDBusError>
 #include <QDebug>
@@ -22,6 +24,12 @@ void Displays::setup(){
     connect(manager, &OutputManager::stateChanged, this, &Displays::onStateChanged);
     connect(&hotplugDebounce, &RunOnce::activated, this, &Displays::autoPick);
 
+    revertTimer.setSingleShot(true);
+    connect(&revertTimer, &QTimer::timeout, this, &Displays::revertLayout);
+    cards = new ConfirmCards(this);
+    connect(cards, &ConfirmCards::keep, this, &Displays::keepLayout);
+    connect(cards, &ConfirmCards::revert, this, &Displays::revertLayout);
+
     QTimer::singleShot(5000, this, [this](){
         if (!manager->isReady())
             qWarning() << "Displays: compositor doesn't support wlr-output-management, display profiles disabled";
@@ -34,6 +42,12 @@ void Displays::onStateChanged(){
     // Our own applies also end in `done`; only a changed output set is a hotplug.
     if (started && connected == connectedKeys) return;
     connectedKeys = connected;
+
+    if (pending){
+        qInfo() << "Displays: outputs changed during a pending confirmation, dropping it";
+        endConfirm();
+        emit layoutReverted();
+    }
 
     if (!started){
         started = true;
@@ -54,6 +68,12 @@ void Displays::autoPick(){
 }
 
 void Displays::apply(const DisplayProfile &profile){
+    // A saved profile replaces an unconfirmed edit; nothing to revert to.
+    if (pending){
+        endConfirm();
+        emit layoutReverted();
+    }
+
     const OutputLayout layout = DisplayProfiles::resolve(profile, manager->state());
     if (outputs::layoutMatchesState(layout, manager->state())){
         qInfo() << "Displays: profile" << profile.name << "is already the live layout";
@@ -128,25 +148,145 @@ QString Displays::saveCurrentAsProfile(const QString &name){
     profile.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
     profile.name = name.isEmpty() ? DisplayProfiles::defaultName(state) : name;
     profile.outputs = outputs::currentLayout(state);
-
-    // Keep the current primary if it's enabled, else the top-left output.
-    const QString current = QSettings("Forest", "Forest").value("display/primary_screen").toString();
-    const OutputHeadInfo *topLeft = nullptr;
-    for (const OutputHeadInfo &head : state.heads){
-        if (!head.enabled) continue;
-        if (head.name == current){
-            profile.primary = current;
-            break;
-        }
-        if (!topLeft || head.pos.x() < topLeft->pos.x()
-            || (head.pos.x() == topLeft->pos.x() && head.pos.y() < topLeft->pos.y()))
-            topLeft = &head;
-    }
-    if (profile.primary.isEmpty() && topLeft) profile.primary = topLeft->name;
+    profile.primary = defaultPrimary(profile.outputs);
 
     profiles.add(profile);
     qInfo() << "Displays: saved profile" << profile.name << profile.id;
     markActive(profile.id);
     emit profilesChanged();
     return profile.id;
+}
+
+bool Displays::applyLayout(const QString &json){
+    if (!manager->isReady()){
+        qWarning() << "Displays: applyLayout: no output state";
+        return false;
+    }
+    const OutputState &state = manager->state();
+
+    OutputLayout requested;
+    if (!outputs::layoutFromJson(json, &requested)){
+        qWarning() << "Displays: applyLayout: unparsable layout" << json;
+        return false;
+    }
+
+    // Complete it: every connected head, keys from the live state, unmentioned heads disabled.
+    const QHash<QString, QString> keys = outputs::identityKeys(state);
+    for (const OutputConfig &config : std::as_const(requested)){
+        if (!keys.contains(config.connector)){
+            qWarning() << "Displays: applyLayout: unknown connector" << config.connector;
+            return false;
+        }
+    }
+    OutputLayout layout;
+    for (OutputConfig config : outputs::currentLayout(state)){
+        auto it = std::find_if(requested.begin(), requested.end(),
+                               [&](const OutputConfig &c){ return c.connector == config.connector; });
+        if (it != requested.end()) config = *it;
+        else config.enabled = false;
+        config.key = keys[config.connector];
+        layout << config;
+    }
+
+    if (!outputs::isConnected(layout)){
+        qWarning() << "Displays: applyLayout: no enabled output, or a gap between outputs";
+        return false;
+    }
+
+    // Against the original layout, so a follow-up edit can't skip confirming the first.
+    const OutputLayout before = pending ? revertTarget : outputs::currentLayout(state);
+    qInfo() << "Displays: applying edited layout";
+    manager->apply(layout, [this, before, layout](OutputManager::Result result){
+        if (result != OutputManager::Succeeded){
+            emit applyFailed();
+            return;
+        }
+        if (outputs::needsConfirm(before, layout)){
+            startConfirm(before, layout);
+        }
+        else {
+            if (pending) endConfirm();
+            saveActiveLayout(layout);
+            emit layoutKept();
+        }
+    });
+    return true;
+}
+
+void Displays::startConfirm(const OutputLayout &revertTo, const OutputLayout &applied){
+    revertTarget = revertTo;
+    pendingLayout = applied;
+    pending = true;
+    revertTimer.start(kConfirmSeconds * 1000);
+    revertDeadline = QDeadlineTimer(kConfirmSeconds * 1000);
+
+    QStringList enabled;
+    for (const OutputConfig &config : applied)
+        if (config.enabled) enabled << config.connector;
+    cards->show(enabled, revertDeadline);
+    emit confirmPending();
+}
+
+void Displays::endConfirm(){
+    pending = false;
+    revertTimer.stop();
+    cards->hide();
+}
+
+void Displays::keepLayout(){
+    if (!pending) return;
+    endConfirm();
+    saveActiveLayout(pendingLayout);
+    qInfo() << "Displays: kept the new layout";
+    emit layoutKept();
+}
+
+void Displays::revertLayout(){
+    if (!pending) return;
+    endConfirm();
+    qInfo() << "Displays: reverting to the previous layout";
+    manager->apply(revertTarget, [this](OutputManager::Result result){
+        // Failure here (e.g. cancelled by a hotplug) is left to auto-pick.
+        if (result != OutputManager::Succeeded) qWarning() << "Displays: revert failed";
+        emit layoutReverted();
+    });
+}
+
+void Displays::saveActiveLayout(const OutputLayout &layout){
+    const OutputState &state = manager->state();
+    DisplayProfile *profile = profiles.find(profiles.active());
+    if (profile && DisplayProfiles::matches(*profile, state)){
+        profile->outputs = layout;
+        if (std::none_of(layout.begin(), layout.end(), [&](const OutputConfig &c){
+                return c.enabled && c.connector == profile->primary; }))
+            profile->primary = defaultPrimary(layout);
+        qInfo() << "Displays: updated profile" << profile->name;
+        markActive(profile->id);
+        emit profilesChanged();
+        return;
+    }
+
+    DisplayProfile created;
+    created.id = QUuid::createUuid().toString(QUuid::WithoutBraces);
+    created.name = DisplayProfiles::defaultName(state);
+    created.outputs = layout;
+    created.primary = defaultPrimary(layout);
+    profiles.add(created);
+    qInfo() << "Displays: created profile" << created.name << created.id;
+    markActive(created.id);
+    emit profilesChanged();
+}
+
+QString Displays::defaultPrimary(const OutputLayout &layout){
+    // The current primary if it's enabled, else the top-left output.
+    const QString current = QSettings("Forest", "Forest").value("display/primary_screen").toString();
+    const OutputConfig *topLeft = nullptr;
+    for (const OutputConfig &config : layout){
+        if (!config.enabled) continue;
+        if (config.connector == current) return current;
+        if (!topLeft || config.pos.x() < topLeft->pos.x()
+            || (config.pos.x() == topLeft->pos.x() && config.pos.y() < topLeft->pos.y()))
+            topLeft = &config;
+    }
+    return topLeft ? topLeft->connector : QString();
 }

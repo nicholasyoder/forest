@@ -86,7 +86,7 @@ QMenu::icon, QMenu::indicator {
     margin-left: 5px;
 }
 
-#notifyPopup {
+#notifyPopup, #displayConfirmCard {
     border: 1px solid lightgrey;
     border-radius: 20px;
     margin: 5px;
