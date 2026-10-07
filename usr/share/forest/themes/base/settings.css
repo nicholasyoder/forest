@@ -246,11 +246,20 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     margin-bottom: 8px;
 }
 
-#DisplaysCanvas, #DisplaysDisabledList {
+#DisplaysArea {
     background: rgba(0,0,0, 10%);
     border: 1px solid rgba(0,0,0, 30%);
     border-radius: 3px;
+}
+
+#DisplaysCanvas, #DisplaysDisabledList {
     padding: 1px;
+}
+
+#DisplaysSeparator {
+    background: rgba(0,0,0, 15%);
+    min-height: 1px;
+    max-height: 1px;
 }
 
 #DisplaysCanvas {
@@ -281,14 +290,25 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     color: #777;
 }
 
-#DisplaysOutput[connected="false"] {
+#DisplaysDisabledList #DisplaysOutput {
+    min-width: 110px;
+    min-height: 25px;
     background: transparent;
     border: 1px dashed rgba(0,0,0, 50%);
 }
 
-#DisplaysDisabledList #DisplaysOutput {
-    min-width: 110px;
-    min-height: 25px;
+#DisplaysDisabledList #DisplaysOutput:hover {
+    border-color: palette(highlight);
+}
+
+#DisplaysDisabledList #DisplaysOutput:checked {
+    background: palette(highlight);
+    color: palette(highlighted-text);
+}
+
+#DisplaysOutput[connected="false"], #DisplaysDisabledList #DisplaysOutput[connected="false"] {
+    background: rgba(192,57,43, 15%);
+    border: 1px dashed rgba(192,57,43, 80%);
 }
 
 #DisplaysStatusState {

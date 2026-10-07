@@ -229,6 +229,8 @@ void DisabledOutputs::setOutputs(const QStringList &connectors, const QSet<QStri
     for (const QString &connector : connectors){
         OutputBox *box = new OutputBox;
         box->setText(connector);
+        box->setToolTip(disconnected.contains(connector) ? tr("%1 (disabled, not connected)").arg(connector)
+                                                         : tr("%1 (disabled)").arg(connector));
         box->setConnected(!disconnected.contains(connector));
         connect(box, &OutputBox::pressed, this, [this, connector]{ emit selected(connector); });
         m_row->insertWidget(m_boxes.size(), box);

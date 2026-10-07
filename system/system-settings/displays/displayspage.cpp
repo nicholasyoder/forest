@@ -4,7 +4,6 @@
 
 #include <QDBusConnection>
 #include <QDBusPendingCallWatcher>
-#include <QDBusPendingReply>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -43,19 +42,17 @@ QWidget *centered(QWidget *widget){
     return wrapper;
 }
 
-// A row of a hand-built #WidgetGroup, styled like SettingsManager::create_control's rows.
-QWidget *groupRow(QWidget *content, const QString &position, const QString &title = QString()){
+// A row of a hand-built #WidgetGroup, styled like SettingsManager::create_control's
+// rows: `name` on the left, `content` on the right (or full width without a name).
+QWidget *groupRow(QWidget *content, const QString &position, const QString &name = QString()){
     QFrame *control = new QFrame;
     control->setObjectName("ControlWidget");
     control->setProperty("groupposition", position);
-    QVBoxLayout *layout = new QVBoxLayout(control);
+    QHBoxLayout *layout = new QHBoxLayout(control);
     layout->setContentsMargins(QMargins(0,0,0,0));
-    if (!title.isEmpty()){
-        QLabel *label = new QLabel(title);
-        label->setObjectName("SettingsPaneTitle");
-        layout->addWidget(label);
-    }
-    layout->addWidget(content);
+    layout->setSpacing(0);
+    if (!name.isEmpty()) layout->addWidget(new QLabel(name), 1);
+    layout->addWidget(content, name.isEmpty() ? 1 : 0);
     return centered(control);
 }
 
@@ -89,7 +86,7 @@ QList<DisplayProfile> sortedByName(QList<DisplayProfile> list){
 }
 
 DisplaysPage::DisplaysPage(){
-    settings_item = new settings_category("Displays", "monitor screen resolution refresh scale rotation profile",
+    settings_item = new settings_category("Displays", "monitor screen resolution refresh scale rotation profile primary identify",
                                           "preferences-desktop-display");
 
     profileCombo = new QComboBox;
@@ -127,19 +124,24 @@ DisplaysPage::DisplaysPage(){
     primaryCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
     connect(primaryCombo, &QComboBox::activated, this, &DisplaysPage::setPrimary);
 
-    settings_widget_group *profile_group = new settings_widget_group;
-    settings_item->add_child(profile_group);
-    profile_group->add_child(new settings_widget("Profile", "", profileRow));
-    profile_group->add_child(new settings_widget("Status", "", statusRow));
-    profile_group->add_child(new settings_widget("Primary display", "main panel", primaryCombo));
-
-    // Built by hand (not a settings_widget_group) so the disabled row can be hidden:
-    // showing a widget before it has a parent would open it as a window.
+    // One box: the arrangement on top, disabled outputs in a strip below it.
     canvas = new ArrangementCanvas;
     connect(canvas, &ArrangementCanvas::selected, this, &DisplaysPage::select);
     connect(canvas, &ArrangementCanvas::moved, this, &DisplaysPage::edit);
+    disabledSeparator = new QFrame;
+    disabledSeparator->setObjectName("DisplaysSeparator");
+    disabledSeparator->hide();
     disabledList = new DisabledOutputs;
     connect(disabledList, &DisabledOutputs::selected, this, &DisplaysPage::select);
+    disabledList->hide();
+    QFrame *area = new QFrame;
+    area->setObjectName("DisplaysArea");
+    QVBoxLayout *areaLayout = new QVBoxLayout(area);
+    areaLayout->setContentsMargins(QMargins(0,0,0,0));
+    areaLayout->setSpacing(0);
+    areaLayout->addWidget(canvas);
+    areaLayout->addWidget(disabledSeparator);
+    areaLayout->addWidget(disabledList);
 
     QWidget *buttons = new QWidget;
     QHBoxLayout *buttonLayout = new QHBoxLayout(buttons);
@@ -158,17 +160,23 @@ DisplaysPage::DisplaysPage(){
     connect(saveButton, &QPushButton::clicked, this, &DisplaysPage::save);
     connect(applyButton, &QPushButton::clicked, this, &DisplaysPage::apply);
 
-    QFrame *outputGroup = new QFrame;
-    outputGroup->setObjectName("WidgetGroup");
-    QVBoxLayout *outputLayout = new QVBoxLayout(outputGroup);
-    outputLayout->setContentsMargins(QMargins(0,0,0,0));
-    outputLayout->setSpacing(0);
-    outputLayout->addWidget(groupRow(canvas, "first", tr("Active")));
-    disabledRow = groupRow(disabledList, "middle", tr("Disabled"));
-    disabledRow->hide();
-    outputLayout->addWidget(disabledRow);
-    outputLayout->addWidget(groupRow(buttons, "last"));
-    settings_item->add_child(new settings_widget("", "", outputGroup, true));
+    QWidget *arrangement = new QWidget;
+    QVBoxLayout *arrangementLayout = new QVBoxLayout(arrangement);
+    arrangementLayout->setContentsMargins(QMargins(0,0,0,0));
+    arrangementLayout->addWidget(area);
+    arrangementLayout->addWidget(buttons);
+
+    // Built by hand: settings_widget_group doesn't frame custom (full-width) rows.
+    QFrame *group = new QFrame;
+    group->setObjectName("WidgetGroup");
+    QVBoxLayout *groupLayout = new QVBoxLayout(group);
+    groupLayout->setContentsMargins(QMargins(0,0,0,0));
+    groupLayout->setSpacing(0);
+    groupLayout->addWidget(groupRow(profileRow, "first", tr("Profile")));
+    groupLayout->addWidget(groupRow(primaryCombo, "middle", tr("Primary display")));
+    groupLayout->addWidget(groupRow(statusRow, "middle", tr("Status")));
+    groupLayout->addWidget(groupRow(arrangement, "last"));
+    settings_item->add_child(new settings_widget("", "", group, true));
 
     errorLabel = new QLabel;
     errorLabel->setObjectName("DisplaysErrorLabel");
@@ -320,10 +328,15 @@ void DisplaysPage::onStateChanged(){
     else updateAll();
 }
 
-void DisplaysPage::showOutputs(){
+QHash<QString, QString> DisplaysPage::liveLabels() const{
     QHash<QString, QString> labels;
     if (manager->isReady())
         for (const OutputHeadInfo &head : manager->state().heads) labels[head.name] = outputLabel(head);
+    return labels;
+}
+
+void DisplaysPage::showOutputs(){
+    QHash<QString, QString> labels = liveLabels();
     for (const QString &connector : std::as_const(disconnected))
         labels[connector] = tr("Not connected");
     canvas->setOutputs(working, labels, disconnected);
@@ -332,7 +345,8 @@ void DisplaysPage::showOutputs(){
     for (const OutputConfig &config : std::as_const(working))
         if (!config.enabled) disabled << config.connector;
     disabledList->setOutputs(disabled, disconnected);
-    disabledRow->setVisible(!disabled.isEmpty());
+    disabledSeparator->setVisible(!disabled.isEmpty());
+    disabledList->setVisible(!disabled.isEmpty());
 }
 
 void DisplaysPage::select(const QString &connector){
@@ -431,9 +445,7 @@ void DisplaysPage::updateStatus(){
 void DisplaysPage::updatePrimary(){
     const QSignalBlocker blocker(primaryCombo);
     primaryCombo->clear();
-    QHash<QString, QString> labels;
-    if (manager->isReady())
-        for (const OutputHeadInfo &head : manager->state().heads) labels[head.name] = outputLabel(head);
+    const QHash<QString, QString> labels = liveLabels();
     for (const OutputConfig &config : std::as_const(working)){
         if (!config.enabled) continue;
         QString text = config.connector;

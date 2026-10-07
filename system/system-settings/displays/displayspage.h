@@ -6,6 +6,7 @@
 #include <QCheckBox>
 #include <QComboBox>
 #include <QDBusMessage>
+#include <QFrame>
 #include <QKeyEvent>
 #include <QLabel>
 #include <QLineEdit>
@@ -112,6 +113,8 @@ private:
 
     QString activeId() const;
     QString profileName(const QString &id) const;
+    // Live connector -> model, for output labels.
+    QHash<QString, QString> liveLabels() const;
     bool isProfile(const QString &id) const{return profiles.find(id);}
     const OutputHeadInfo *selectedHead() const;
     OutputConfig *selectedConfig();
@@ -154,7 +157,7 @@ private:
     QLabel *statusDetail = nullptr;
     ArrangementCanvas *canvas = nullptr;
     DisabledOutputs *disabledList = nullptr;
-    QWidget *disabledRow = nullptr;
+    QFrame *disabledSeparator = nullptr;
     QComboBox *primaryCombo = nullptr;
     ElidingLabel *selectedLabel = nullptr;
     QCheckBox *enabledCheck = nullptr;
