@@ -27,6 +27,14 @@ it here ahead of time. Small fixes don't need a plan doc.
     position, and the primary screen) stored in Forest's settings and applied
     through the output-management protocol, replacing hand-rolled
     `wlr-randr` scripts and the swap-`Biome.conf`-and-relog workflow.
+- **Built-in hotkey actions for Forest's D-Bus calls.** The Hotkeys page's
+  Built-in list only has display profiles. Add the other user-facing calls
+  (main menu `togglemenu`, show desktop, volume, …) so they don't need custom
+  D-Bus fields, and so the shipped defaults show up as built-ins.
+- **Hotkeys on punctuation keys don't bind** (e.g. Alt+`). The log shows
+  `globalhotkey: could not resolve a keysym for "Alt+`"`: `triggerString()`
+  looks up `QKeySequence(key).toString()` ("`") with `xkb_keysym_from_name`,
+  which wants keysym names ("grave"). Probably affects most punctuation keys.
 - **Custom-painted panel plugins at fractional scale.** `graphwidget`
   (cpu/memory monitors), `deskbutton`, `battery` and `sensorwidget` paint
   in integer logical pixels. At 1.5x each logical pixel is 1.5 device
@@ -155,7 +163,7 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   `allow_on_lockscreen` flag (visible in hotkey settings, default on for the
   shipped volume/brightness entries) and have `forest-lockscreen` run only
   flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
-  commands unauthenticated. Share the action parsing with `foresthotkeys`.
+  commands unauthenticated. Parse actions with `library/hotkeyconfig`.
 - **Theme editor.** Customize accent/highlight colours on top of a theme,
   up to a full theme editor.
 - **Workspaces beyond Biome's model** (decoupling). deskswitch/windowlist
