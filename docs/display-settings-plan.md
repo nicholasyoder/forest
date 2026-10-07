@@ -64,19 +64,29 @@ system-settings plugin (forest-settings)        services-app (forest process)
   even if the settings app crashed or was closed during the confirm
   countdown.
 
-### Profile model: there is always an active profile
+### Profile model: Apply applies, Save saves
 
-Decided: no separate "current layout" concept. Every applied layout belongs to
-a profile.
+Decided 2026-10-07 (replaces "there is always an active profile"). Applying
+and saving are separate actions:
 
-- First Apply on a monitor set with no matching profile auto-creates one,
-  named from its outputs (e.g. "DP-2 + HDMI-A-1"; the user can rename it).
-- Apply in the editor updates the active profile. "Save as new profile…"
-  forks it.
-- Users who never think about profiles still get their settings kept across
-  logins, because Biome never persists applied changes (`Biome.conf` is
-  startup-only, see Biome `architecture-notes.md` "Live output
-  management").
+- **Apply never writes a profile.** An edited layout is applied (with
+  confirm/revert) and becomes an unsaved layout. This allows one-off setups
+  (e.g. a projector) without touching the profile you started from.
+- **Save** writes the editor's layout either over an existing profile (keeping
+  its id, name and hotkeys) or as a new profile. It never applies anything.
+  To change a profile, the user edits, applies, checks the result, and then
+  saves over the original.
+- **Active profile** = the profile whose saved layout equals the live one.
+  After an applied edit is kept, the daemon checks the matching profiles. If
+  one equals the applied layout, it becomes active. Otherwise none is active.
+  Saving a layout that equals the live one also makes that profile active.
+- Unsaved layouts survive relogin because Biome remembers the last applied
+  layout (below), not because of profiles. Auto-pick still switches a
+  monitor set that has a profile back to that profile on hotplug or login. So
+  an unsaved tweak to a profiled monitor set is temporary, but a layout for
+  a monitor set with no profile is left alone.
+- Saving over a profile with a different output set is allowed. The profile
+  then matches the new set.
 
 ### Matching (kanshi-style auto-pick)
 
@@ -88,8 +98,8 @@ Decided: auto-pick on hotplug and at login.
   Among matches, the most recently used (`last_used`) wins. That's why
   "two" and "three" (same three monitors connected, DP-1 off in "two") don't
   fight: the last one you picked sticks.
-- No match → leave the compositor's layout alone. The page then shows
-  "Unsaved setup", and the first Apply creates a profile.
+- No match → leave the compositor's layout alone. The page then shows the
+  unsaved "Current layout".
 - **Output identity key:** `make|model|serial` when the head has a non-empty
   serial that is unique among connected heads. Otherwise fall back to the
   connector `name` (identical monitors without serials, some laptop
@@ -155,7 +165,8 @@ page.
   fields. Compare parsed fields, not strings: the writer emits keys in
   `QHash` order. This is generic, so other built-ins (show menu, show
   desktop, lock) can move here later.
-- **Displays page:** a "Shortcut: [Meta+3]" button on the active profile,
+- **Displays page:** a "Shortcut: [Meta+3]" button for the selected saved
+  profile (disabled on the unsaved entries),
   using the same key-capture widget (pause/resume hotkeys while capturing).
   It writes and updates the `[hotkeys]` entry whose action targets that
   profile id, then calls `reloadhotkeys`.
@@ -182,19 +193,21 @@ page.
   shell, overlay layer, `KeyboardInteractivityExclusive` on the primary
   screen's card; Escape = revert, Enter = keep). It doesn't depend on the
   settings app's window, which may be on a screen that just went dark.
-- Revert happens on timeout, button, Escape, or a daemon restart: the
-  profile isn't written until Keep, so startup re-applies the last confirmed
-  one.
+- Revert happens on timeout, button or Escape. A daemon restart mid-confirm
+  is weaker now: Biome has already persisted the unconfirmed layout, so only
+  auto-pick (when a profile matches) restores a known-good layout. This is a
+  phase 4 edge case.
 - No confirmation for position-only or primary-only edits, or for applying
-  a saved profile (hotkey, profile selector, auto-pick). Saved profiles were
-  confirmed when they were saved.
+  a saved profile unedited (hotkey, Apply on a selected profile, auto-pick).
+- A primary-only edit skips the modeset: the daemon writes the primary
+  without calling `apply` when the layout already matches the live state.
 
 ### Primary screen
 
-- Part of the profile. On apply, the daemon writes `display/primary_screen`
-  in `Forest.conf`. That's the value `ScreenTracker::primary()` already
-  reads, so consumers don't change.
-- Edited through `applyLayout`, whose JSON becomes
+- Part of the layout and the profile. On every apply (saved or not) the
+  daemon writes `display/primary_screen` in `Forest.conf`. That's the value
+  `ScreenTracker::primary()` already reads, so consumers don't change.
+- The layout JSON (`applyLayout`, `saveProfile*`) becomes
   `{"outputs":[…],"primary":"DP-1"}`. A primary-only change needs no confirm
   (`needsConfirm` ignores it).
 - Live switching needs one addition. Today a primary change with no geometry
@@ -205,9 +218,10 @@ page.
   difference, and skips the 2 s screen debounce when the screens themselves
   aren't changing, so the panel doesn't lag behind Apply.
 - Consumers: panel → `handle_geometry_change` (already rebuilds on a primary
-  mismatch), desktop → `handleScreenChange`, lockscreen → `placeCard`.
-  Logout doesn't follow live: it's a short-lived dialog that picks the
-  primary when it opens.
+  mismatch), desktop → `handleScreenChange`. The lock screen and logout
+  don't follow live. The lock card follows keyboard focus rather than the
+  primary, and the primary can't change while locked. Logout is a
+  short-lived dialog that picks the primary when it opens.
 
 ## Protocol notes (`wlr-output-management-unstable-v1`)
 
@@ -244,7 +258,7 @@ into `forest/protocol/`. Wayland-protocols doesn't ship wlr protocols.
 
 ```ini
 [General]
-active=3f2c…            ; profile id last applied and confirmed
+active=3f2c…            ; profile equal to the live layout, empty if none
 
 [profiles]
 3f2c…\name=Three monitors
@@ -273,10 +287,10 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 |---|---|
 | `applyProfile(QString id)` | apply a saved profile, no confirm; ignored (logged) if it doesn't match the connected set |
 | `nextProfile()` | cycle matching profiles |
-| `applyLayout(QString json)` | apply an edited layout + primary for the active profile (or a new one), with confirm/revert |
-| `saveProfileAs(QString name, QString json) → id` | fork: an edited layout is applied with confirm/revert and becomes the new profile on Keep; an unedited one is snapshotted |
-| `renameProfile(id, name)`, `deleteProfile(id)` | also update/remove the profile's hotkeys; deleting the active one clears `active` |
-| `saveCurrentAsProfile(QString name) → id` | snapshot the live layout (phase 1's no-UI path) |
+| `applyLayout(QString json)` | apply a layout + primary with confirm/revert; saves nothing. After Keep, the matching profile equal to it (if any) becomes active |
+| `saveProfile(QString id, QString json)` | overwrite a profile's layout + primary; doesn't apply |
+| `saveProfileAs(QString name, QString json) → id` | save as a new profile; doesn't apply |
+| `renameProfile(id, name)`, `deleteProfile(id)` | also update/remove the profile's hotkeys (3b); deleting the active one clears `active` |
 | `identify()` | show the identify overlay |
 | `profilesChanged`, `activeProfileChanged(id)`, `primaryChanged(name)` | signals for the editor and `ScreenTracker` |
 | `keepLayout()`, `revertLayout()` | answer a pending confirmation (the card calls the same code) |
@@ -284,15 +298,49 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 
 ## UI: System settings → Displays
 
-- **Profile bar** (replaces the header label): active profile selector, with
-  entries that match the connected monitors on top; the rest under "Other
-  setups" (not applicable; rename/delete only). Picking a matching profile
-  discards unsaved edits and calls `applyProfile` (no confirm). Rename
-  (inline), Delete (asks first), "Save as new profile…" (no separate New:
-  there's always an active profile, so they'd be the same), and the
-  Shortcut button.
-- **Primary display:** a combo box of the enabled outputs, page-level rather
-  than a per-output checkbox (which couldn't be unchecked).
+The page edits a **working layout** loaded from the combo's selection.
+Selecting something never applies it.
+
+- **Profile combo** (replaces the header label). Unsaved entries come first,
+  in italics: "Current layout" when the live layout equals no saved profile,
+  and "Unsaved changes" while there are edits. Then every saved profile,
+  with the ones matching the connected monitors first and a separator
+  before the rest. On open (and on outside changes while there are no
+  edits), the page selects the active profile, or "Current layout".
+  Switching away from unsaved edits asks "Discard changes?" first.
+- **Loading a profile:** `resolve()` maps it onto the live heads.
+  - **View-only** if any of its outputs isn't connected. The canvas shows
+    the missing outputs as dashed "Not connected" tiles, and every control
+    except Rename and Delete is disabled. Every editable output is
+    therefore a live head with a mode list, and `test` always works.
+  - Connected monitors the profile leaves out are added as disabled outputs
+    (in the Disabled pane, so they can be enabled). That counts as an edit
+    straight away ("Changed from Desk: HDMI-A-1 added").
+- **Status line** under the combo, showing what's selected and what Apply
+  would do:
+
+  | Selection | Status | Enabled |
+  |---|---|---|
+  | active profile, no edits | **Active** | Save, Rename, Delete |
+  | matching profile, not live | **Not applied** | Apply, Save, Rename, Delete |
+  | "Current layout" | **Applied, not saved** | Save |
+  | edits | **Changed from <name>, not applied** (or **Changed, not applied**) | Apply, Save, Revert |
+  | profile with a disconnected output | **View only: HDMI-A-1 isn't connected** | Rename, Delete |
+
+  Apply is disabled rather than failing. The status line gives the reason.
+- **Apply:** a matching profile with no edits → `applyProfile` (no
+  confirm). Anything else → `applyLayout` (confirm when `needsConfirm`).
+  Neither saves.
+- **Save…:** a dialog with "Overwrite: [profile ▾]" (preselected to the
+  profile the edits started from) or "New profile: [name]" (default
+  `defaultName`). It calls `saveProfile` / `saveProfileAs` and doesn't apply.
+  It needs a passing `test` when there are edits.
+- **Rename** (inline: the combo swaps for a line edit; Enter commits, Escape
+  cancels), **Delete** (asks first). Both act on the selected saved profile.
+  Shortcut button (3b): also on the selected saved profile.
+- **Primary display:** a combo box of the working layout's enabled outputs,
+  page-level rather than a per-output checkbox (which couldn't be
+  unchecked). Changing it is an edit, but needs no `test`.
 - **Arrangement canvas** (`QWidget` with one `#DisplaysOutput` button per
   enabled output): sized by effective size and scaled to fit, labelled with
   name + model. Drag to move. Snap to the edges/centres of the others. On
@@ -301,11 +349,12 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 - **Selected output:** Enabled, Resolution, Refresh rate, Scale (presets
   100–300 % in 25 % steps plus custom), Orientation (Normal / 90 / 180 / 270,
   plus Flipped variants).
-- **Buttons:** Identify (connector + model on each screen for ~3 s: a
-  pass-through overlay card from the daemon, next to `ConfirmCard`), Revert
-  (discard edits), Apply.
-- The page refreshes from the protocol on `done` and from daemon signals, so
-  a hotkey switch while the page is open shows up straight away.
+- **Buttons:** Identify (connector + model on each connected screen for ~3 s:
+  a pass-through overlay card from the daemon, next to `ConfirmCard`), then
+  Revert (discard edits), Save…, Apply.
+- The page refreshes from the protocol on `done` and from daemon signals.
+  Without edits, it follows a hotkey switch straight away. With edits, it
+  keeps them and only updates the status line.
 - Styling via `settings.css` object names, like the other system-settings
   pages.
 
@@ -323,12 +372,18 @@ needs Biome changes.
 
 ### Phase 3a — profiles, primary, identify
 
-- [ ] Daemon: `renameProfile`, `deleteProfile`, `saveProfileAs`,
-      `identify`, `primaryChanged`; `applyLayout` JSON carries `primary`.
-- [ ] Profile bar: selector with "Other setups", rename, delete, "Save as
-      new profile…".
+- [ ] Daemon: Apply/Save split. `applyLayout` stops saving and marks an
+      equal matching profile active. Add `saveProfile`, `saveProfileAs`,
+      `renameProfile`, `deleteProfile`, `identify`, `primaryChanged`. Drop
+      `saveCurrentAsProfile`. Layout JSON carries `primary`. A primary-only
+      apply skips the modeset.
+- [ ] `DisplayProfiles`: `remove`, `rename`. `resolve()` handles profiles
+      that leave out connected heads (adds them as disabled).
+- [ ] Page: profile combo with unsaved entries, status line, view-only
+      profiles (dashed "Not connected" tiles), discard prompt, Save dialog,
+      inline rename, delete.
 - [ ] Primary display combo; `ScreenTracker::primary_changed()`;
-      panel/desktop/lockscreen follow it live.
+      panel/desktop follow it live.
 - [ ] Identify overlay.
 
 ### Phase 3b — hotkeys
@@ -342,8 +397,10 @@ needs Biome changes.
 ### Phase 4 — hardening and wrap-up
 
 - [ ] Edge cases: identical monitors without serials, an output unplugged
-      mid-confirm, saved mode no longer offered, all outputs disabled
-      (refuse), mirroring (overlap) shown sensibly on the canvas.
+      mid-confirm, a daemon restart mid-confirm with no matching profile
+      (Biome has already persisted the unconfirmed layout), saved mode no
+      longer offered, all outputs disabled (refuse), mirroring (overlap)
+      shown sensibly on the canvas.
 - [ ] Try on another wlroots compositor (sway) to check decoupling.
 - [ ] Changelog entry, remove the roadmap item, fold durable notes into
       `development-notes.md`, drop or trim this plan.
