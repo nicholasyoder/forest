@@ -146,12 +146,15 @@ page.
   them. On rename the daemon also rewrites the hotkey `description`
   ("Display profile: <name>"). Deleting a profile removes its hotkeys.
 - **Hotkeys page:** fill in the currently empty "Built-in" action list
-  (`builtindbusLwidget` in `edithotkeywidget.ui`). Entries are "Next display
-  profile" plus one "Display profile: <name>" per profile, read from
-  `Displays.conf`. A built-in compiles down to the `DBUS:` string above.
-  When loading an entry, a `DBUS:` string that matches a known built-in
-  shows as that built-in, not as raw custom D-Bus fields. This is generic,
-  so other built-ins (show menu, show desktop, lock) can move here later.
+  (`builtindbusLwidget` in `edithotkeywidget.ui`). Entries are one "Display
+  profile: <name>" per profile (via `DisplayProfiles::load()`, linking
+  `library/outputs`), plus "Next display profile" since `nextProfile()`
+  already exists and it's one fixed list entry. A built-in compiles down to
+  the `DBUS:` string above. When loading an entry, a `DBUS:` action that
+  matches a known built-in shows as that built-in, not as raw custom D-Bus
+  fields. Compare parsed fields, not strings: the writer emits keys in
+  `QHash` order. This is generic, so other built-ins (show menu, show
+  desktop, lock) can move here later.
 - **Displays page:** a "Shortcut: [Meta+3]" button on the active profile,
   using the same key-capture widget (pause/resume hotkeys while capturing).
   It writes and updates the `[hotkeys]` entry whose action targets that
@@ -159,8 +162,15 @@ page.
 - Extract the hotkey config read/write (`HotkeyData` ⇄ `Forest.conf`, the
   `DBUS:` parsing) into a small shared library (`library/hotkeyconfig`).
   Today the format is parsed in `foresthotkeys::loadhotkeys()` and written in
-  `services-settings/hotkeys`. Both the Displays page and those two need it.
-  The roadmap's "Hotkeys on the lock screen" item wants the same sharing.
+  `services-settings/hotkeys`. Both the Displays page and those two need it,
+  and so does the daemon (rename/delete). The roadmap's "Hotkeys on the lock
+  screen" item wants the same sharing. It also holds the next-free
+  `item-NNNN` id (`HotkeySettings::add_item` crashes on an empty
+  `[hotkeys]` today), lookup by key sequence for the conflict warning, and
+  the key-capture button (moved out of `edithotkeywidget`).
+- The daemon and `foresthotkeys` share `services-app`: wire a
+  `Displays::hotkeysChanged` signal to `reloadhotkeys` in `services.cpp`
+  rather than a D-Bus call to itself.
 - Capturing a shortcut that's already bound warns and offers to reassign it
   (needed anyway once two pages write hotkeys).
 
@@ -184,13 +194,20 @@ page.
 - Part of the profile. On apply, the daemon writes `display/primary_screen`
   in `Forest.conf`. That's the value `ScreenTracker::primary()` already
   reads, so consumers don't change.
+- Edited through `applyLayout`, whose JSON becomes
+  `{"outputs":[…],"primary":"DP-1"}`. A primary-only change needs no confirm
+  (`needsConfirm` ignores it).
 - Live switching needs one addition. Today a primary change with no geometry
   change isn't noticed (`GeometryManager::handle_geometry_change` only runs
-  on screen changes). The daemon emits D-Bus `primaryChanged`, and
-  `ScreenTracker` forwards it as `primary_changed()`. Panel, desktop icons
-  and logout rebuild on it.
-- Port `notifypopup.cpp` to `ScreenTracker::primary()` while there (roadmap
-  review 6.2).
+  on screen changes). The daemon emits D-Bus `primaryChanged` when
+  `display/primary_screen` actually changes, and `ScreenTracker` forwards it
+  as `primary_changed()`: it remembers the last primary and emits only on a
+  difference, and skips the 2 s screen debounce when the screens themselves
+  aren't changing, so the panel doesn't lag behind Apply.
+- Consumers: panel → `handle_geometry_change` (already rebuilds on a primary
+  mismatch), desktop → `handleScreenChange`, lockscreen → `placeCard`.
+  Logout doesn't follow live: it's a short-lived dialog that picks the
+  primary when it opens.
 
 ## Protocol notes (`wlr-output-management-unstable-v1`)
 
@@ -256,19 +273,26 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 |---|---|
 | `applyProfile(QString id)` | apply a saved profile, no confirm; ignored (logged) if it doesn't match the connected set |
 | `nextProfile()` | cycle matching profiles |
-| `applyLayout(QString json)` | apply an edited layout for the active profile (or a new one), with confirm/revert |
-| `saveProfileAs(QString name, QString json) → id` | fork |
-| `renameProfile(id, name)`, `deleteProfile(id)` | also update/remove the profile's hotkeys |
+| `applyLayout(QString json)` | apply an edited layout + primary for the active profile (or a new one), with confirm/revert |
+| `saveProfileAs(QString name, QString json) → id` | fork: an edited layout is applied with confirm/revert and becomes the new profile on Keep; an unedited one is snapshotted |
+| `renameProfile(id, name)`, `deleteProfile(id)` | also update/remove the profile's hotkeys; deleting the active one clears `active` |
 | `saveCurrentAsProfile(QString name) → id` | snapshot the live layout (phase 1's no-UI path) |
+| `identify()` | show the identify overlay |
 | `profilesChanged`, `activeProfileChanged(id)`, `primaryChanged(name)` | signals for the editor and `ScreenTracker` |
 | `keepLayout()`, `revertLayout()` | answer a pending confirmation (the card calls the same code) |
 | `confirmPending`, `layoutKept`, `layoutReverted`, `applyFailed` | confirm-card lifecycle, for the editor |
 
 ## UI: System settings → Displays
 
-- **Profile bar:** active profile selector, with entries that match the
-  connected monitors on top; the rest under "Other setups" (not applicable;
-  rename/delete only). New, Rename, Delete, and the Shortcut button.
+- **Profile bar** (replaces the header label): active profile selector, with
+  entries that match the connected monitors on top; the rest under "Other
+  setups" (not applicable; rename/delete only). Picking a matching profile
+  discards unsaved edits and calls `applyProfile` (no confirm). Rename
+  (inline), Delete (asks first), "Save as new profile…" (no separate New:
+  there's always an active profile, so they'd be the same), and the
+  Shortcut button.
+- **Primary display:** a combo box of the enabled outputs, page-level rather
+  than a per-output checkbox (which couldn't be unchecked).
 - **Arrangement canvas** (`QWidget` with one `#DisplaysOutput` button per
   enabled output): sized by effective size and scaled to fit, labelled with
   name + model. Drag to move. Snap to the edges/centres of the others. On
@@ -276,9 +300,10 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
   outputs sit in a strip below the canvas. Click to select.
 - **Selected output:** Enabled, Resolution, Refresh rate, Scale (presets
   100–300 % in 25 % steps plus custom), Orientation (Normal / 90 / 180 / 270,
-  plus Flipped variants), "Primary display".
-- **Buttons:** Identify (a big name label on each screen for ~3 s, from the
-  daemon), Revert (discard edits), Apply.
+  plus Flipped variants).
+- **Buttons:** Identify (connector + model on each screen for ~3 s: a
+  pass-through overlay card from the daemon, next to `ConfirmCard`), Revert
+  (discard edits), Apply.
 - The page refreshes from the protocol on `done` and from daemon signals, so
   a hotkey switch while the page is open shows up straight away.
 - Styling via `settings.css` object names, like the other system-settings
@@ -293,14 +318,26 @@ Phase 1 (backend, no UI: `library/outputs`, the `displays` service,
 `DBUS:` `arg=`, Biome persisting applies) and phase 2 (Displays page,
 confirm/revert apply) are done.
 
-### Phase 3 — profiles, primary, hotkey UX
+Phase 3 is split into two PRs; 3b builds on 3a's rename/delete. Neither
+needs Biome changes.
 
-- [ ] Profile bar: new / rename / delete / "Other setups".
-- [ ] Primary display control; `primaryChanged` → `ScreenTracker::primary_changed()`;
-      panel/desktop/logout follow it live; port `notifypopup.cpp`.
-- [ ] `library/hotkeyconfig` extraction. Built-in action list on the Hotkeys
-      page. Shortcut button on the Displays page, with conflict warning.
+### Phase 3a — profiles, primary, identify
+
+- [ ] Daemon: `renameProfile`, `deleteProfile`, `saveProfileAs`,
+      `identify`, `primaryChanged`; `applyLayout` JSON carries `primary`.
+- [ ] Profile bar: selector with "Other setups", rename, delete, "Save as
+      new profile…".
+- [ ] Primary display combo; `ScreenTracker::primary_changed()`;
+      panel/desktop/lockscreen follow it live.
 - [ ] Identify overlay.
+
+### Phase 3b — hotkeys
+
+- [ ] `library/hotkeyconfig` extraction, used by `foresthotkeys`, the
+      Hotkeys page and the daemon.
+- [ ] Built-in action list on the Hotkeys page.
+- [ ] Shortcut button on the Displays page, with conflict warning.
+- [ ] Daemon keeps profile hotkeys in step on rename/delete.
 
 ### Phase 4 — hardening and wrap-up
 
