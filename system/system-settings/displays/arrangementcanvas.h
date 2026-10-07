@@ -76,7 +76,7 @@ private:
     View m_dragView; // frozen so the scale doesn't change under the cursor
 };
 
-// Disabled outputs as a row of boxes; click selects.
+// Disabled outputs as a row of boxes (styled `#DisplaysDisabledList #DisplaysOutput`); click selects.
 class DisabledOutputs : public QFrame
 {
     Q_OBJECT

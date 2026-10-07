@@ -299,9 +299,11 @@ Qt's `local.Displays`). Lower-case slot names. Payloads are JSON strings
 ## UI: System settings → Displays
 
 The page edits a **working layout** loaded from the combo's selection.
-Selecting something never applies it.
+Selecting something never applies it. The top of the page is one control
+group: Profile, Primary display, Status, then the arrangement box with the
+buttons under it. The per-output controls are a second group below.
 
-- **Profile combo** (replaces the header label). Unsaved entries come first,
+- **Profile combo.** Unsaved entries come first,
   in italics: "Current layout" when the live layout equals no saved profile,
   and "Unsaved changes" while there are edits. Then every saved profile,
   with the ones matching the connected monitors first and a separator
@@ -310,14 +312,14 @@ Selecting something never applies it.
   Switching away from unsaved edits asks "Discard changes?" first.
 - **Loading a profile:** `resolve()` maps it onto the live heads.
   - **View-only** if any of its outputs isn't connected. The canvas shows
-    the missing outputs as dashed "Not connected" tiles, and every control
+    the missing outputs as red-tinted, dashed "Not connected" tiles, and every control
     except Rename and Delete is disabled. Every editable output is
     therefore a live head with a mode list, and `test` always works.
   - Connected monitors the profile leaves out are added as disabled outputs
-    (in the Disabled pane, so they can be enabled). That counts as an edit
+    (in the disabled strip, so they can be enabled). That counts as an edit
     straight away ("Changed from Desk: HDMI-A-1 added").
-- **Status line** under the combo, showing what's selected and what Apply
-  would do:
+- **Status row**, showing what's selected and what Apply would do. The
+  state word is colour-coded through a `status` QSS property:
 
   | Selection | Status | Enabled |
   |---|---|---|
@@ -327,11 +329,11 @@ Selecting something never applies it.
   | edits | **Changed from <name>, not applied** (or **Changed, not applied**) | Apply, Save, Revert |
   | profile with a disconnected output | **View only: HDMI-A-1 isn't connected** | Rename, Delete |
 
-  Apply is disabled rather than failing. The status line gives the reason.
+  Apply is disabled rather than failing. The status row gives the reason.
 - **Apply:** a matching profile with no edits → `applyProfile` (no
   confirm). Anything else → `applyLayout` (confirm when `needsConfirm`).
   Neither saves.
-- **Save…:** a dialog with "Overwrite: [profile ▾]" (preselected to the
+- **Save…:** a dialog with "Replace: [profile ▾]" (preselected to the
   profile the edits started from) or "New profile: [name]" (default
   `defaultName`). It calls `saveProfile` / `saveProfileAs` and doesn't apply.
   It needs a passing `test` when there are edits.
@@ -345,7 +347,8 @@ Selecting something never applies it.
   enabled output): sized by effective size and scaled to fit, labelled with
   name + model. Drag to move. Snap to the edges/centres of the others. On
   release, normalize the top-left to (0,0) and enforce connectivity. Disabled
-  outputs sit in a strip below the canvas. Click to select.
+  outputs sit in a strip below the canvas, in the same box, as dashed tiles.
+  Click to select.
 - **Selected output:** Enabled, Resolution, Refresh rate, Scale (presets
   100–300 % in 25 % steps plus custom), Orientation (Normal / 90 / 180 / 270,
   plus Flipped variants).
@@ -354,7 +357,7 @@ Selecting something never applies it.
   Revert (discard edits), Save…, Apply.
 - The page refreshes from the protocol on `done` and from daemon signals.
   Without edits, it follows a hotkey switch straight away. With edits, it
-  keeps them and only updates the status line.
+  keeps them and only updates the status row.
 - Styling via `settings.css` object names, like the other system-settings
   pages.
 
@@ -364,29 +367,13 @@ Each phase ends in something the user can manually test (keyboard/visual
 testing is the user's, per the usual workflow).
 
 Phase 1 (backend, no UI: `library/outputs`, the `displays` service,
-`DBUS:` `arg=`, Biome persisting applies) and phase 2 (Displays page,
-confirm/revert apply) are done.
-
-Phase 3 is split into two PRs; 3b builds on 3a's rename/delete. Neither
-needs Biome changes.
-
-### Phase 3a — profiles, primary, identify
-
-- [ ] Daemon: Apply/Save split. `applyLayout` stops saving and marks an
-      equal matching profile active. Add `saveProfile`, `saveProfileAs`,
-      `renameProfile`, `deleteProfile`, `identify`, `primaryChanged`. Drop
-      `saveCurrentAsProfile`. Layout JSON carries `primary`. A primary-only
-      apply skips the modeset.
-- [ ] `DisplayProfiles`: `remove`, `rename`. `resolve()` handles profiles
-      that leave out connected heads (adds them as disabled).
-- [ ] Page: profile combo with unsaved entries, status line, view-only
-      profiles (dashed "Not connected" tiles), discard prompt, Save dialog,
-      inline rename, delete.
-- [ ] Primary display combo; `ScreenTracker::primary_changed()`;
-      panel/desktop follow it live.
-- [ ] Identify overlay.
+`DBUS:` `arg=`, Biome persisting applies), phase 2 (Displays page,
+confirm/revert apply) and phase 3a (Apply/Save split, profile editing,
+primary display, identify) are done.
 
 ### Phase 3b — hotkeys
+
+Builds on 3a's rename/delete. No Biome changes needed.
 
 - [ ] `library/hotkeyconfig` extraction, used by `foresthotkeys`, the
       Hotkeys page and the daemon.
