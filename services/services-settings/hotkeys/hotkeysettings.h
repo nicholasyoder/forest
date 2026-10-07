@@ -14,6 +14,7 @@ class HotkeySettingItem : public QObject{
 
 public:
     HotkeySettingItem(QString id) : item_id(id) {}
+    ~HotkeySettingItem(){ delete edit_widget; }
 
 signals:
     void item_changed();
@@ -42,6 +43,8 @@ signals:
 
 private slots:
     void load_hotkeys();
+    // Rebuilds the page from Forest.conf (it may have changed while closed).
+    void refresh();
     void reload_hotkeys();
     void add_item();
 

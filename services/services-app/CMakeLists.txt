@@ -46,5 +46,6 @@ forest_link_miscutills(services-app)
 forest_link_layershellqt(services-app)
 forest_link_toplevels(services-app)
 forest_link_outputs(services-app)
+forest_link_hotkeyconfig(services-app)
 
 install(TARGETS services-app LIBRARY DESTINATION lib/forest)

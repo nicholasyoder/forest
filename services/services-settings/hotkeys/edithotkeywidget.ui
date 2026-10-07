@@ -26,7 +26,7 @@
      <item row="2" column="4">
       <widget class="QRadioButton" name="builtindbusRbt">
        <property name="text">
-        <string>Built in Dbus</string>
+        <string>Built-in</string>
        </property>
       </widget>
      </item>

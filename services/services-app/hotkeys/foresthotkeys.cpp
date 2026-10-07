@@ -145,17 +145,10 @@ void foresthotkeys::loadhotkeys(){
 
         QString description = settings.value("description").toString();
 
-        QString action = settings.value("action").toString();
-        if (action.startsWith("DBUS:")){
-            action.remove("DBUS:");
-            QHash<QString, QString> dbushash;
-            foreach (QString s, action.split(",")){
-                QStringList keyvalue = s.split("=");
-                if (keyvalue.length() == 2) dbushash[keyvalue.first()] = keyvalue.last();
-            }
-
+        const QString action = settings.value("action").toString();
+        if (const auto dbusAction = hotkeyconfig::parseDBusAction(action)){
             globalhotkey *item = new globalhotkey(hotkey, description, kseq, Type_Dbus);
-            item->setDbusInfo(dbushash["service"], dbushash["path"], dbushash["interface"], dbushash["method"], dbushash["bus"], dbushash["arg"]);
+            item->setDbusAction(*dbusAction);
             hotkeylist.append(item);
         }
         else{

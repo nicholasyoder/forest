@@ -218,6 +218,11 @@ DisplaysPage::DisplaysPage(){
     output_group->add_child(new settings_widget("Scale", "", scaleCombo));
     output_group->add_child(new settings_widget("Orientation", "rotation rotate", transformCombo));
 
+    QLabel *hotkeyNote = new QLabel(tr("Saved profiles can be given keyboard shortcuts under Services → Hotkeys."));
+    hotkeyNote->setObjectName("SettingsNoteLabel");
+    hotkeyNote->setWordWrap(true);
+    settings_item->add_child(new settings_widget("", "", centered(hotkeyNote), true));
+
     testDebounce.setSingleShot(true);
     testDebounce.setInterval(300);
     connect(&testDebounce, &QTimer::timeout, this, &DisplaysPage::runTest);

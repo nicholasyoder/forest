@@ -4,46 +4,17 @@
 #define EDITHOTKEYWIDGET_H
 
 #include <QWidget>
+#include <QListWidgetItem>
 #include <QKeyEvent>
 #include <QCloseEvent>
 #include <QDebug>
-#include <QSharedPointer>
 #include "miscutills.h"
-
-class HotkeyAction : public QObject{
-    Q_OBJECT
-public:
-    virtual ~HotkeyAction() = default;
-    virtual QString type() const = 0;
-};
-
-class CommandAction : public HotkeyAction{
-    Q_OBJECT
-public:
-    CommandAction(const QString& cmd) : command(cmd) {}
-    QString type() const override { return "exec"; }
-    QString command;
-};
-
-class CustomDBusAction : public HotkeyAction{
-    Q_OBJECT
-public:
-    CustomDBusAction(const QString& svc, const QString& p, const QString& iface, const QString& m, const QString& a, bool isSystem)
-        : service(svc), path(p), interface(iface), method(m), arg(a), isSystemBus(isSystem) {}
-    QString type() const override { return "dbus"; }
-    QString service;
-    QString path;
-    QString interface;
-    QString method;
-    QString arg; // optional single string argument
-    bool isSystemBus;
-};
 
 class HotkeyData{
 public:
     QString shortcut;
     QString description;
-    QSharedPointer<HotkeyAction> action;
+    QString action; // Forest.conf form: a command or a DBUS: action
 };
 
 namespace Ui { class edithotkeywidget; }
@@ -66,6 +37,7 @@ private slots:
     void on_customdbusRbt_toggled(bool checked);
     void on_builtindbusRbt_toggled(bool checked);
     void on_shortcutbt_clicked();
+    void on_builtindbusLwidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous);
 private:
     Ui::edithotkeywidget *ui;
     bool waitingforkeys = false;
@@ -73,6 +45,8 @@ private:
     QString keys;
     void set_hotkeys_paused(bool pause);
     void finish_capture();
+    void load_builtins();
+    QListWidgetItem *find_builtin(const QString &action) const;
 };
 
 #endif // EDITHOTKEYWIDGET_H
