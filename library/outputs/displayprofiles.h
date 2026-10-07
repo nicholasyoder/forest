@@ -34,6 +34,10 @@ public:
     QString active() const{return m_active;}
     void setActive(const QString &id){m_active = id;}
 
+    // Layout JSON to restore if the daemon stops mid-confirm; empty otherwise.
+    QString pendingRevert() const{return m_pendingRevert;}
+    void setPendingRevert(const QString &json){m_pendingRevert = json;}
+
     // Profiles whose output set equals the connected set, most recently used first.
     QList<DisplayProfile> matching(const OutputState &state) const;
 
@@ -45,8 +49,10 @@ public:
     static OutputLayout resolve(const DisplayProfile &profile, const OutputState &state);
     // Profile outputs with no live head.
     static OutputLayout disconnected(const DisplayProfile &profile, const OutputState &state);
-    // Live connector of the profile's primary output, or empty.
-    static QString resolvePrimary(const DisplayProfile &profile, const OutputState &state);
+    // The profile's primary as a connector of `layout` (matched by identity key), or empty.
+    static QString resolvePrimary(const DisplayProfile &profile, const OutputLayout &layout);
+
+    static QList<DisplayProfile> sortedByName(QList<DisplayProfile> profiles);
 
     // Default profile name from the enabled outputs, e.g. "DP-2 + HDMI-A-1".
     static QString defaultName(const OutputLayout &layout);
@@ -54,6 +60,7 @@ public:
 private:
     QList<DisplayProfile> m_profiles;
     QString m_active;
+    QString m_pendingRevert;
 };
 
 #endif // DISPLAYPROFILES_H

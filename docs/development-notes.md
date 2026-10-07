@@ -22,6 +22,64 @@ If `forest-lockscreen` hangs while testing, switch to another VT and run
 `swaylock` against Biome's `WAYLAND_DISPLAY`; Biome lets it take over the
 lock, then unlock with it.
 
+## Display settings
+
+Three parts, all on `wlr-output-management-unstable-v1` plus Forest's own
+D-Bus, so they work on any wlroots compositor (checked on Biome and sway):
+
+- **`library/outputs`**: hand-bound protocol client (`OutputManager`;
+  libkscreen has no wlroots backend), the profile model (`DisplayProfiles`)
+  and layout fixups (`layoutedit`).
+- **`displays` service in `services-app`** (`org.forest`
+  `/org/forest/displays`, interface `org.forest.displays`). It is the only
+  writer of `~/.config/Forest/Displays.conf`. It auto-picks a profile at
+  login and on hotplug, applies layouts and profiles, draws the
+  keep-or-revert and identify cards, and writes `display/primary_screen`
+  (emitting `primaryChanged`, which `ScreenTracker::primary_changed`
+  forwards).
+- **System settings → Displays**: an editor. It reads heads directly and
+  `test`s edits, but every apply and save goes through the service.
+
+Behaviour worth knowing:
+
+- **Matching.** An output's identity key is `make|model|serial` when the
+  serial is non-empty and unique among connected heads, else the connector.
+  A profile matches when its key set equals the connected set; the most
+  recently used match wins. Identical monitors without serials are keyed by
+  connector, so swapping their cables swaps their settings.
+- **Apply and Save are separate.** Applying never writes a profile. The
+  active profile is whichever saved one equals the live layout (and
+  primary), if any.
+- **Confirm/revert** covers changes to enabled, mode, scale or transform,
+  not position or primary. The revert target is kept in `Displays.conf`
+  (`pending_revert`) until Keep/Revert, so a service restart mid-confirm
+  still reverts. Biome has already persisted the unconfirmed layout by then.
+  A hotplug mid-confirm switches to a matching profile, or else reverts onto
+  the heads that are still connected.
+- **Biome persists every successful protocol apply** (from any client) to
+  `[Outputs]` in `~/.config/Biome/Biome.conf` and restores it at startup.
+  Forest never writes `Biome.conf`.
+- **Profile hotkeys** are ordinary `[hotkeys]` entries with
+  `DBUS:…,method=applyProfile,arg=<profile id>` (or `nextProfile`),
+  parsed/formatted by `library/hotkeyconfig`. Renaming a profile updates
+  default descriptions, and deleting one removes its hotkeys.
+
+Testing without extra monitors: headless Biome (fake heads, one custom mode
+each). Override `XDG_CONFIG_HOME`, or its applies overwrite the real
+`Biome.conf`:
+
+```sh
+XDG_CONFIG_HOME=/tmp/biome-cfg WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS=2 \
+  WLR_RENDERER=pixman WLR_LIBINPUT_NO_DEVICES=1 biome -s <client>
+```
+
+Headless sway takes the same `WLR_*` variables, and `swaymsg create_output`
+hotplugs another head. Plugin paths are hardcoded to `/usr/lib/forest`, so
+to test a fresh `libservices-app.so` without staging it, load it from a
+throwaway `QPluginLoader` program (register `org.forest` first, disable
+quit-on-last-window-closed) under `dbus-run-session`, and drive it with
+`gdbus call` and `wlr-randr`.
+
 ## Debugging Wayland/Qt protocol issues (window roles, popups, layer-shell)
 
 Static reasoning about Qt/QtWaylandClient/LayerShellQt internals is

@@ -4,6 +4,7 @@
 
 #include "confirmcards.h"
 #include "hotkeyconfig.h"
+#include "layoutedit.h"
 
 #include <QDBusConnection>
 #include <QDBusError>
@@ -48,12 +49,6 @@ void Displays::onStateChanged(){
     }
     connectedKeys = connected;
 
-    if (pending){
-        qInfo() << "Displays: outputs changed during a pending confirmation, dropping it";
-        endConfirm();
-        emit layoutReverted();
-    }
-
     if (!started){
         started = true;
         autoPick();
@@ -64,13 +59,31 @@ void Displays::onStateChanged(){
 }
 
 void Displays::autoPick(){
+    // Left by a daemon that stopped mid-confirm; Biome has persisted the unconfirmed layout.
+    const QString leftover = pending ? QString() : profiles.pendingRevert();
+    if (!leftover.isEmpty()){
+        profiles.setPendingRevert(QString());
+        profiles.save();
+    }
+
     const QList<DisplayProfile> matches = profiles.matching(manager->state());
-    if (matches.isEmpty()){
+    OutputLayout layout;
+    QString primary;
+    if (!matches.isEmpty()){
+        apply(matches.first());
+    }
+    else if (pending){
+        qInfo() << "Displays: outputs changed during a pending confirmation, reverting";
+        revertLayout();
+    }
+    else if (outputs::layoutFromJson(leftover, &layout, &primary)){
+        qInfo() << "Displays: restoring the layout from before an unconfirmed change";
+        restore(layout, primary);
+    }
+    else {
         qInfo() << "Displays: no profile matches the connected outputs, leaving the layout alone";
         syncActive();
-        return;
     }
-    apply(matches.first());
 }
 
 void Displays::apply(const DisplayProfile &profile){
@@ -105,9 +118,9 @@ void Displays::markActive(const QString &id){
     profiles.setActive(id);
     profiles.save();
 
-    QString primary = DisplayProfiles::resolvePrimary(*profile, manager->state());
-    if (primary.isEmpty()) primary = outputs::topLeft(DisplayProfiles::resolve(*profile, manager->state()));
-    setPrimary(primary);
+    const OutputLayout resolved = DisplayProfiles::resolve(*profile, manager->state());
+    const QString primary = DisplayProfiles::resolvePrimary(*profile, resolved);
+    setPrimary(!primary.isEmpty() ? primary : outputs::topLeft(resolved));
 
     if (changed) emit activeProfileChanged(id);
 }
@@ -133,8 +146,9 @@ void Displays::syncActive(){
 bool Displays::isLive(const DisplayProfile &profile) const{
     const OutputState &state = manager->state();
     if (!DisplayProfiles::matches(profile, state)) return false;
-    if (!outputs::layoutMatchesState(DisplayProfiles::resolve(profile, state), state)) return false;
-    return profile.primary.isEmpty() || DisplayProfiles::resolvePrimary(profile, state) == currentPrimary();
+    const OutputLayout resolved = DisplayProfiles::resolve(profile, state);
+    if (!outputs::layoutMatchesState(resolved, state)) return false;
+    return profile.primary.isEmpty() || DisplayProfiles::resolvePrimary(profile, resolved) == currentPrimary();
 }
 
 void Displays::setPrimary(const QString &name){
@@ -164,14 +178,11 @@ void Displays::applyProfile(const QString &id){
 
 void Displays::nextProfile(){
     if (!manager->isReady()) return;
-    QList<DisplayProfile> matches = profiles.matching(manager->state());
+    const QList<DisplayProfile> matches = DisplayProfiles::sortedByName(profiles.matching(manager->state()));
     if (matches.isEmpty()){
         qInfo() << "Displays: nextProfile: no profile matches the connected outputs";
         return;
     }
-    std::sort(matches.begin(), matches.end(), [](const DisplayProfile &a, const DisplayProfile &b){
-        return QString::localeAwareCompare(a.name, b.name) < 0;
-    });
 
     int index = 0;
     for (int i = 0; i < matches.size(); i++){
@@ -206,9 +217,7 @@ bool Displays::parseLayout(const QString &json, const char *caller, OutputLayout
     }
     layout->clear();
     for (OutputConfig config : outputs::currentLayout(state)){
-        auto it = std::find_if(requested.begin(), requested.end(),
-                               [&](const OutputConfig &c){ return c.connector == config.connector; });
-        if (it != requested.end()) config = *it;
+        if (const OutputConfig *it = outputs::find(requested, config.connector)) config = *it;
         else config.enabled = false;
         config.key = keys[config.connector];
         *layout << config;
@@ -219,12 +228,8 @@ bool Displays::parseLayout(const QString &json, const char *caller, OutputLayout
         return false;
     }
 
-    auto enabled = [&](const QString &connector){
-        return std::any_of(layout->begin(), layout->end(), [&](const OutputConfig &c){
-            return c.enabled && c.connector == connector; });
-    };
-    if (!enabled(*primary))
-        *primary = enabled(currentPrimary()) ? currentPrimary() : outputs::topLeft(*layout);
+    if (!outputs::isEnabled(*layout, *primary))
+        *primary = outputs::isEnabled(*layout, currentPrimary()) ? currentPrimary() : outputs::topLeft(*layout);
     return true;
 }
 
@@ -274,6 +279,8 @@ void Displays::startConfirm(const OutputLayout &revertTo, const QString &revertP
     pending = true;
     revertTimer.start(kConfirmSeconds * 1000);
     revertDeadline = QDeadlineTimer(kConfirmSeconds * 1000);
+    profiles.setPendingRevert(outputs::layoutToJson(revertTo, revertPrimary));
+    profiles.save();
 
     QStringList enabled;
     for (const OutputConfig &config : applied)
@@ -286,6 +293,8 @@ void Displays::endConfirm(){
     pending = false;
     revertTimer.stop();
     cards->hide();
+    profiles.setPendingRevert(QString());
+    profiles.save();
 }
 
 void Displays::keepLayout(){
@@ -300,11 +309,21 @@ void Displays::revertLayout(){
     if (!pending) return;
     endConfirm();
     qInfo() << "Displays: reverting to the previous layout";
+    restore(revertTarget, revertPrimary);
+}
+
+void Displays::restore(const OutputLayout &target, const QString &primary){
+    // Mapped onto the live heads: outputs may have come or gone since `target`.
+    OutputLayout layout = outputs::currentLayout(manager->state());
+    for (OutputConfig &config : layout)
+        if (const OutputConfig *saved = outputs::find(target, config.connector)) config = *saved;
+    if (!outputs::isConnected(layout)) layout = layoutedit::attach(layout, primary);
+
     applying++;
-    manager->apply(revertTarget, [this](OutputManager::Result result){
+    manager->apply(layout, [this, primary](OutputManager::Result result){
         applying--;
         // Failure here (e.g. cancelled by a hotplug) is left to auto-pick.
-        if (result == OutputManager::Succeeded) setPrimary(revertPrimary);
+        if (result == OutputManager::Succeeded) setPrimary(primary);
         else qWarning() << "Displays: revert failed";
         syncActive();
         emit layoutReverted();
@@ -400,7 +419,7 @@ void Displays::identify(){
     QHash<QString, QString> labels;
     for (const OutputHeadInfo &head : manager->state().heads){
         if (!head.enabled) continue;
-        labels[head.name] = !head.model.isEmpty() ? head.model : head.make;
+        labels[head.name] = outputs::headLabel(head);
     }
     identifyCards->show(labels);
 }

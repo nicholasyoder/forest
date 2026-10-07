@@ -56,6 +56,14 @@ using OutputLayout = QList<OutputConfig>;
 
 namespace outputs {
 
+// The layout's entry for `connector`, or nullptr.
+const OutputConfig *find(const OutputLayout &layout, const QString &connector);
+OutputConfig *find(OutputLayout &layout, const QString &connector);
+bool isEnabled(const OutputLayout &layout, const QString &connector);
+
+// Short label for a head: its model, else its make.
+QString headLabel(const OutputHeadInfo &head);
+
 // "3840x2160@60000" (refresh in mHz).
 QString modeToString(QSize size, int refresh);
 bool modeFromString(const QString &str, QSize *size, int *refresh);

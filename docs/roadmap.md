@@ -13,20 +13,6 @@ it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & desktop
 
-- **Display settings plugin.** New `system-settings` plugin for multi-monitor
-  configuration (mode/scale/position/rotation). Biome implements
-  `wlr-output-management-unstable-v1` (`wlr-randr` works today; Biome rejects
-  layouts with gaps between outputs). Planned in `docs/display-settings-plan.md`
-  (hand-bound protocol: libkscreen has no wlroots backend), including
-  profile-switching hotkeys. Ideas to fold in:
-  - **Primary screen setting.** `ScreenTracker::primary()` (miscutills) already
-    reads `display/primary_screen` (output name) from `Forest.conf`, falling
-    back to the top-left screen; panel, desktop icons and logout use it. Only
-    the UI is missing. `notifypopup.cpp` should use it when ported (review 6.2).
-  - **Display profiles.** Named layouts (which outputs are on, mode/scale/
-    position, and the primary screen) stored in Forest's settings and applied
-    through the output-management protocol, replacing hand-rolled
-    `wlr-randr` scripts and the swap-`Biome.conf`-and-relog workflow.
 - **Built-in hotkey actions for Forest's D-Bus calls.** The Hotkeys page's
   Built-in list only has display profiles. Add the other user-facing calls
   (main menu `togglemenu`, show desktop, volume, …) so they don't need custom
@@ -164,6 +150,9 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   shipped volume/brightness entries) and have `forest-lockscreen` run only
   flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
   commands unauthenticated. Parse actions with `library/hotkeyconfig`.
+- **Laptop lid switch.** Display profiles handle docking, but "lid closed ⇒
+  disable the internal panel" needs logind lid events (`LidClosed`) feeding
+  the displays service. Wait for a laptop target.
 - **Theme editor.** Customize accent/highlight colours on top of a theme,
   up to a full theme editor.
 - **Workspaces beyond Biome's model** (decoupling). deskswitch/windowlist

@@ -6,8 +6,6 @@
 #include "displayprofiles.h"
 #include "hotkeyconfig.h"
 
-#include <algorithm>
-
 namespace {
 constexpr int kActionRole = Qt::UserRole;
 constexpr int kDescriptionRole = Qt::UserRole + 1;
@@ -58,13 +56,9 @@ void edithotkeywidget::load_builtins(){
     };
 
     add("Next display profile", hotkeyconfig::nextDisplayProfileAction());
-    DisplayProfiles displayProfiles;
-    displayProfiles.load();
-    QList<DisplayProfile> profiles = displayProfiles.profiles();
-    std::sort(profiles.begin(), profiles.end(), [](const DisplayProfile &a, const DisplayProfile &b){
-        return QString::localeAwareCompare(a.name, b.name) < 0;
-    });
-    for (const DisplayProfile &profile : profiles)
+    DisplayProfiles profiles;
+    profiles.load();
+    for (const DisplayProfile &profile : DisplayProfiles::sortedByName(profiles.profiles()))
         add(hotkeyconfig::displayProfileDescription(profile.name), hotkeyconfig::displayProfileAction(profile.id));
 }
 

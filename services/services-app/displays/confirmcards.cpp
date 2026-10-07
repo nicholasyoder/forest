@@ -15,17 +15,37 @@
 
 #include "miscutills/miscutills.h"
 
+namespace {
+
+// Makes `card` a centred overlay-layer surface on `screen`; returns its content frame.
+QFrame *setupCard(QWidget *card, QScreen *screen, const QString &frameName, bool keyboard, const QString &scope){
+    card->setAttribute(Qt::WA_TranslucentBackground);
+    card->setAttribute(Qt::WA_DeleteOnClose);
+    QFrame *frame = new QFrame;
+    frame->setObjectName(frameName);
+    QVBoxLayout *outer = new QVBoxLayout(card);
+    outer->setContentsMargins(QMargins(0,0,0,0));
+    outer->addWidget(frame);
+
+    card->winId(); // force native window creation so windowHandle() is valid
+    card->windowHandle()->setScreen(screen);
+    LayerShellQt::Window *layer = LayerShellQt::Window::get(card->windowHandle());
+    layer->setLayer(LayerShellQt::Window::LayerOverlay);
+    layer->setAnchors({}); // centred
+    layer->setKeyboardInteractivity(keyboard ? LayerShellQt::Window::KeyboardInteractivityExclusive
+                                             : LayerShellQt::Window::KeyboardInteractivityNone);
+    layer->setScope(scope);
+    // The compositor drops a layer surface whose output goes away.
+    QObject::connect(screen, &QObject::destroyed, card, &QWidget::close);
+    return frame;
+}
+
+}
+
 ConfirmCard::ConfirmCard(QScreen *screen, bool keyboard, QDeadlineTimer deadline)
     : deadline(deadline){
     setWindowFlags(Qt::FramelessWindowHint);
-    setAttribute(Qt::WA_TranslucentBackground);
-    setAttribute(Qt::WA_DeleteOnClose);
-
-    QFrame *frame = new QFrame;
-    frame->setObjectName("displayConfirmCard");
-    QVBoxLayout *outer = new QVBoxLayout(this);
-    outer->setContentsMargins(QMargins(0,0,0,0));
-    outer->addWidget(frame);
+    QFrame *frame = setupCard(this, screen, "displayConfirmCard", keyboard, "forest-display-confirm");
 
     QLabel *title = new QLabel(tr("Keep these display settings?"));
     title->setObjectName("titleLabel");
@@ -50,15 +70,6 @@ ConfirmCard::ConfirmCard(QScreen *screen, bool keyboard, QDeadlineTimer deadline
     updateCountdown();
     connect(&ticker, &QTimer::timeout, this, &ConfirmCard::updateCountdown);
     ticker.start(250);
-
-    winId(); // force native window creation so windowHandle() is valid
-    windowHandle()->setScreen(screen);
-    LayerShellQt::Window *layer = LayerShellQt::Window::get(windowHandle());
-    layer->setLayer(LayerShellQt::Window::LayerOverlay);
-    layer->setAnchors({}); // centred
-    layer->setKeyboardInteractivity(keyboard ? LayerShellQt::Window::KeyboardInteractivityExclusive
-                                             : LayerShellQt::Window::KeyboardInteractivityNone);
-    layer->setScope("forest-display-confirm");
 }
 
 void ConfirmCard::keyPressEvent(QKeyEvent *event){
@@ -125,8 +136,6 @@ void ConfirmCards::tryBuild(bool force){
         ConfirmCard *card = new ConfirmCard(screen, screen == primary, deadline);
         connect(card, &ConfirmCard::keep, this, &ConfirmCards::keep);
         connect(card, &ConfirmCard::revert, this, &ConfirmCards::revert);
-        // The compositor drops a layer surface whose output goes away.
-        connect(screen, &QObject::destroyed, card, &QWidget::close);
         card->show();
         cards << card;
     }
@@ -145,14 +154,7 @@ void IdentifyCards::show(const QHash<QString, QString> &labels){
 
         QWidget *card = new QWidget;
         card->setWindowFlags(Qt::FramelessWindowHint | Qt::WindowTransparentForInput | Qt::WindowDoesNotAcceptFocus);
-        card->setAttribute(Qt::WA_TranslucentBackground);
-        card->setAttribute(Qt::WA_DeleteOnClose);
-
-        QFrame *frame = new QFrame;
-        frame->setObjectName("displayIdentifyCard");
-        QVBoxLayout *outer = new QVBoxLayout(card);
-        outer->setContentsMargins(QMargins(0,0,0,0));
-        outer->addWidget(frame);
+        QFrame *frame = setupCard(card, screen, "displayIdentifyCard", false, "forest-display-identify");
 
         QLabel *name = new QLabel(screen->name());
         name->setObjectName("titleLabel");
@@ -165,15 +167,6 @@ void IdentifyCards::show(const QHash<QString, QString> &labels){
             model->setAlignment(Qt::AlignCenter);
             layout->addWidget(model);
         }
-
-        card->winId(); // force native window creation so windowHandle() is valid
-        card->windowHandle()->setScreen(screen);
-        LayerShellQt::Window *layer = LayerShellQt::Window::get(card->windowHandle());
-        layer->setLayer(LayerShellQt::Window::LayerOverlay);
-        layer->setAnchors({}); // centred
-        layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
-        layer->setScope("forest-display-identify");
-        connect(screen, &QObject::destroyed, card, &QWidget::close);
         card->show();
         cards << card;
     }

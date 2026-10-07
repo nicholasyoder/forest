@@ -56,33 +56,6 @@ QWidget *groupRow(QWidget *content, const QString &position, const QString &name
     return centered(control);
 }
 
-QString outputLabel(const OutputHeadInfo &head){
-    if (!head.model.isEmpty()) return head.model;
-    return head.make;
-}
-
-bool isEnabled(const OutputLayout &layout, const QString &connector){
-    return std::any_of(layout.begin(), layout.end(), [&](const OutputConfig &c){
-        return c.enabled && c.connector == connector; });
-}
-
-// The profile's primary, as a connector of `layout` (matched by identity key).
-QString profilePrimary(const DisplayProfile &profile, const OutputLayout &layout){
-    for (const OutputConfig &output : profile.outputs){
-        if (output.connector != profile.primary) continue;
-        for (const OutputConfig &config : layout)
-            if (config.key == output.key) return config.connector;
-    }
-    return QString();
-}
-
-QList<DisplayProfile> sortedByName(QList<DisplayProfile> list){
-    std::sort(list.begin(), list.end(), [](const DisplayProfile &a, const DisplayProfile &b){
-        return QString::localeAwareCompare(a.name, b.name) < 0;
-    });
-    return list;
-}
-
 }
 
 DisplaysPage::DisplaysPage(){
@@ -307,12 +280,12 @@ void DisplaysPage::loadSelection(){
                 for (const OutputConfig &config : resolved)
                     if (!keys.contains(config.key)) added << config.connector;
             }
-            workingPrimary = profilePrimary(*profile, working);
+            workingPrimary = DisplayProfiles::resolvePrimary(*profile, working);
         }
-        if (!isEnabled(working, workingPrimary)) workingPrimary = outputs::topLeft(working);
+        if (!outputs::isEnabled(working, workingPrimary)) workingPrimary = outputs::topLeft(working);
     }
 
-    if (std::none_of(working.begin(), working.end(), [&](const OutputConfig &c){ return c.connector == selected; }))
+    if (!outputs::find(working, selected))
         selected = outputs::topLeft(working);
 
     showOutputs();
@@ -336,7 +309,7 @@ void DisplaysPage::onStateChanged(){
 QHash<QString, QString> DisplaysPage::liveLabels() const{
     QHash<QString, QString> labels;
     if (manager->isReady())
-        for (const OutputHeadInfo &head : manager->state().heads) labels[head.name] = outputLabel(head);
+        for (const OutputHeadInfo &head : manager->state().heads) labels[head.name] = outputs::headLabel(head);
     return labels;
 }
 
@@ -369,9 +342,7 @@ const OutputHeadInfo *DisplaysPage::selectedHead() const{
 }
 
 OutputConfig *DisplaysPage::selectedConfig(){
-    for (OutputConfig &config : working)
-        if (config.connector == selected) return &config;
-    return nullptr;
+    return outputs::find(working, selected);
 }
 
 void DisplaysPage::updateAll(){
@@ -399,10 +370,10 @@ void DisplaysPage::updateCombo(){
         if (manager->isReady() && DisplayProfiles::matches(profile, manager->state())) matching << profile;
         else other << profile;
     }
-    for (const DisplayProfile &profile : sortedByName(matching))
+    for (const DisplayProfile &profile : DisplayProfiles::sortedByName(matching))
         profileCombo->addItem(profile.name, profile.id);
     if (!other.isEmpty() && profileCombo->count() > 0) profileCombo->insertSeparator(profileCombo->count());
-    for (const DisplayProfile &profile : sortedByName(other))
+    for (const DisplayProfile &profile : DisplayProfiles::sortedByName(other))
         profileCombo->addItem(profile.name, profile.id);
 
     profileCombo->setCurrentIndex(profileCombo->findData(edited ? kEdited : selection));
@@ -534,7 +505,7 @@ void DisplaysPage::updateButtons(){
 
 void DisplaysPage::edit(const OutputLayout &layout){
     working = layout;
-    if (!isEnabled(working, workingPrimary)) workingPrimary = outputs::topLeft(working);
+    if (!outputs::isEnabled(working, workingPrimary)) workingPrimary = outputs::topLeft(working);
     edited = true;
     testOk = false;
     showOutputs();
@@ -611,7 +582,7 @@ void DisplaysPage::save(){
     QRadioButton *replace = new QRadioButton(tr("Replace:"));
     QRadioButton *create = new QRadioButton(tr("New profile:"));
     QComboBox *replaceCombo = new QComboBox;
-    for (const DisplayProfile &profile : sortedByName(profiles.profiles()))
+    for (const DisplayProfile &profile : DisplayProfiles::sortedByName(profiles.profiles()))
         replaceCombo->addItem(profile.name, profile.id);
     QLineEdit *nameEdit = new QLineEdit(DisplayProfiles::defaultName(working));
 
