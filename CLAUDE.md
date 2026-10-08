@@ -115,7 +115,7 @@ All in `library/`:
 - **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
 - **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `BiomeWorkspaces`, and `ToplevelTracker` (open windows + which are on the active workspace)
 - **`outputs`** — wlr-output-management client (`OutputManager`), display profiles (`DisplayProfiles`, `Displays.conf`) and layout fixups; see `docs/development-notes.md` → Display settings
-- **`hotkeyconfig`** — parse/format of `[hotkeys]` `DBUS:` actions, plus the built-in display-profile actions
+- **`hotkeyconfig`** — parse/format of `[hotkeys]` `DBUS:` actions, plus the Hotkeys page's built-in actions
 - **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `PanelButton`, `GraphWidget`)
 
 Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(target)`) link these static libs.

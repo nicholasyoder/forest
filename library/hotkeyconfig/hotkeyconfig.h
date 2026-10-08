@@ -3,6 +3,7 @@
 #ifndef HOTKEYCONFIG_H
 #define HOTKEYCONFIG_H
 
+#include <QList>
 #include <QString>
 
 #include <optional>
@@ -21,11 +22,20 @@ struct DBusHotkeyAction {
     bool sameTarget(const DBusHotkeyAction &other) const;
 };
 
+struct BuiltinHotkeyAction {
+    QString description;
+    DBusHotkeyAction action;
+    QString note; // e.g. what must be running for the call to work
+};
+
 namespace hotkeyconfig {
 
 // nullopt if `action` isn't a DBUS: action.
 std::optional<DBusHotkeyAction> parseDBusAction(const QString &action);
 QString formatDBusAction(const DBusHotkeyAction &action);
+
+// Fixed user-facing org.forest calls; display profiles are listed separately.
+QList<BuiltinHotkeyAction> builtinActions();
 
 // Built-in actions on org.forest /org/forest/displays.
 DBusHotkeyAction displayProfileAction(const QString &profileId);

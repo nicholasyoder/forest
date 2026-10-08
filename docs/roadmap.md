@@ -21,10 +21,6 @@ it here ahead of time. Small fixes don't need a plan doc.
   the locker's `DisplayPower` binds it) and defer auto-pick while any output
   is off. On wake, auto-pick only if the connected set differs from the one
   before the blank. Blanked screens must stay off whatever a monitor does.
-- **Built-in hotkey actions for Forest's D-Bus calls.** The Hotkeys page's
-  Built-in list only has display profiles. Add the other user-facing calls
-  (main menu `togglemenu`, show desktop, volume, …) so they don't need custom
-  D-Bus fields, and so the shipped defaults show up as built-ins.
 - **Hotkeys on punctuation keys don't bind** (e.g. Alt+`). The log shows
   `globalhotkey: could not resolve a keysym for "Alt+`"`: `triggerString()`
   looks up `QKeySequence(key).toString()` ("`") with `xkb_keysym_from_name`,
@@ -109,6 +105,10 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   monitor's backend (#38) so both use the same one.
 - **Battery monitor: configurable low-battery notifications** (#38).
   Thresholds and actions (warn / suspend / hibernate) in settings.
+- **Native brightness control.** The shipped brightness hotkeys shell out to
+  `bash -c "brightnessctl …"`. Add a services D-Bus method (e.g. logind
+  `Session.SetBrightness` on the backlight device, no setuid helper) and make
+  it a built-in hotkey action; the lock-screen hotkeys item wants it too.
 - **System monitor popups** (#28). Popups for CPU/memory monitors with
   per-core and RAM/swap graphs, and per-sensor graphs for `sensors`.
 - **More hardware info on the About page** (#61). Machine vendor/model,
