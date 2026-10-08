@@ -45,7 +45,10 @@ Behaviour worth knowing:
 - **Matching.** An output's identity key is `make|model|serial` when the
   serial is non-empty and unique among connected heads, else the connector.
   A profile matches when its key set equals the connected set; the most
-  recently used match wins. Identical monitors without serials are keyed by
+  recently used match wins. Auto-pick runs at login and when the connected
+  set settles (3 s debounce) on a different set than at the last auto-pick.
+  A monitor that drops off and returns within that window (some DP monitors
+  do on power-off) is ignored, because Biome restores its settings itself. Identical monitors without serials are keyed by
   connector, so swapping their cables swaps their settings.
 - **Apply and Save are separate.** Applying never writes a profile. The
   active profile is whichever saved one equals the live layout (and
