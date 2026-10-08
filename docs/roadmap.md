@@ -11,7 +11,7 @@ up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`,
 following the existing `docs/greeter-plan.md` pattern), rather than designing
 it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.10.0 — displays & desktop
+## 0.10.0 — displays & settings
 
 - **Never wake idle-blanked displays for a profile.** The displays service
   ignores a monitor that drops off and returns within its 3 s hotplug
@@ -37,18 +37,10 @@ it here ahead of time. Small fixes don't need a plan doc.
   that sets the painter to device-pixel units with the origin snapped to a
   device pixel, then lay out each painter in device pixels (constants
   × dpr, rounded). Graph history also has to be per device column.
-- **Desktop icons settings page.** Desktop → Icons is a placeholder button.
-  Icon size, grid spacing, sort/arrange, which default icons show, etc.
-- **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
-  only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
-  Move the whole selection, keeping relative positions.
-- **Wallpaper slideshow mode** (#21). Cycle through a directory at a
-  configurable interval; also add a solid-colour background mode.
-- **Notification position setting.** Popups are anchored bottom-right
-  (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
-- **Icon theme setting.** Themes → Icon is an empty category. Needs a
-  picker plus a decision on how the choice reaches other toolkits (Qt platform
-  theme, GTK via gsettings/`settings.ini`), not just Forest's own processes.
+- **Settings app rework, including search** (#25). User-facing categories
+  instead of one entry per plugin, tree navigation, search, deep links, and
+  applet settings moved in from their popup dialogs. See
+  `docs/settings-plan.md`.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
@@ -91,8 +83,22 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   instead of reusing the desktop wallpaper (`loginui::Wallpaper` reads
   `desktop/wallpaper`).
 
-## 0.11.0 — hardware & system
+## 0.11.0 — desktop, hardware & system
 
+- **Desktop icons settings page.** No page for desktop icons yet (Desktop →
+  Icons is a placeholder). Icon size, grid spacing, sort/arrange, which
+  default icons show, etc.
+- **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
+  only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
+  Move the whole selection, keeping relative positions.
+- **Wallpaper slideshow mode** (#21). Cycle through a directory at a
+  configurable interval; also add a solid-colour background mode.
+- **Notification position setting.** Popups are anchored bottom-right
+  (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
+- **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
+  placeholder). Needs a picker plus a decision on how the choice reaches
+  other toolkits (Qt platform theme, GTK via gsettings/`settings.ini`), not
+  just Forest's own processes.
 - **Network manager plugin.** `nmcontrol` is a stub (static icon, empty
   popup; not on the default panel). Needs connection status, Wi-Fi
   list/connect, wired/VPN toggles. Pick a backend first (NetworkManagerQt vs.
@@ -108,7 +114,6 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
 - **More hardware info on the About page** (#61). Machine vendor/model,
   GPU, root-disk capacity, BIOS/firmware, boot mode, Secure Boot state,
   motherboard. Maybe a separate "more details" page (lshw-gtk-like).
-- **Settings search** (#25). Search individual settings and pages.
 - **Clipboard manager.** Clipboard history; needs Biome's data-control
   support (Biome roadmap 0.2.0).
 
