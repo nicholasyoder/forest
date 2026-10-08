@@ -49,12 +49,15 @@ void edithotkeywidget::set_data(const HotkeyData& data){
 void edithotkeywidget::load_builtins(){
     const QSignalBlocker blocker(ui->builtindbusLwidget);
     ui->builtindbusLwidget->clear();
-    auto add = [this](const QString &description, const DBusHotkeyAction &action){
+    auto add = [this](const QString &description, const DBusHotkeyAction &action, const QString &note = QString()){
         auto *item = new QListWidgetItem(description, ui->builtindbusLwidget);
         item->setData(kActionRole, hotkeyconfig::formatDBusAction(action));
         item->setData(kDescriptionRole, description);
+        item->setToolTip(note);
     };
 
+    for (const BuiltinHotkeyAction &builtin : hotkeyconfig::builtinActions())
+        add(builtin.description, builtin.action, builtin.note);
     add("Next display profile", hotkeyconfig::nextDisplayProfileAction());
     DisplayProfiles profiles;
     profiles.load();
