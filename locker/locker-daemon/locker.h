@@ -4,6 +4,7 @@
 #define LOCKER_H
 
 #include <QObject>
+#include <QPointer>
 
 #include "displaypower.h"
 #include "idlewatcher.h"
@@ -39,7 +40,7 @@ private:
     LockSupervisor m_supervisor;
     ScreenSaver m_screenSaver;
     Logind m_logind;
-    QList<layeroverlay *> m_dim;
+    QList<QPointer<layeroverlay>> m_dim;
     bool m_sleepLockPending = false;
 };
 

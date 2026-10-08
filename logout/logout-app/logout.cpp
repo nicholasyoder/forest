@@ -180,7 +180,7 @@ void logoutmanager::start_action(ActionType action){
 
 void logoutmanager::close_overlays(){
     for (layeroverlay *overlay : std::as_const(overlays))
-        overlay->close();
+        if (overlay) overlay->close();
     overlays.clear();
 }
 

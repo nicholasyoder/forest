@@ -32,7 +32,7 @@ private slots:
 private:
     void setup();
     void close_overlays();
-    QList<layeroverlay*> overlays;
+    QList<QPointer<layeroverlay>> overlays;
     iconbutton *focusbt = nullptr;
     QSettings *settings = nullptr;
 };

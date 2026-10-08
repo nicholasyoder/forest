@@ -13,6 +13,14 @@ it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & desktop
 
+- **Never wake idle-blanked displays for a profile.** The displays service
+  ignores a monitor that drops off and returns within its 3 s hotplug
+  debounce (some DP monitors do on power-off), but a longer bounce still
+  auto-picks a profile, and Biome powers every output on before a modeset.
+  Track power state through `wlr-output-power-management` (`mode` events, as
+  the locker's `DisplayPower` binds it) and defer auto-pick while any output
+  is off. On wake, auto-pick only if the connected set differs from the one
+  before the blank. Blanked screens must stay off whatever a monitor does.
 - **Built-in hotkey actions for Forest's D-Bus calls.** The Hotkeys page's
   Built-in list only has display profiles. Add the other user-facing calls
   (main menu `togglemenu`, show desktop, volume, …) so they don't need custom

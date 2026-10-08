@@ -58,6 +58,7 @@ signals:
 
 private:
     void onStateChanged();
+    void onHotplugSettled();
     void autoPick();
     void apply(const DisplayProfile &profile);
     void markActive(const QString &id);
@@ -82,9 +83,11 @@ private:
     OutputManager *manager = nullptr;
     DisplayProfiles profiles;
     QSet<QString> connectedKeys;
+    QSet<QString> settledKeys; // connected set as of the last auto-pick
     bool started = false;
     int applying = 0; // applies in flight; the live layout is in flux
-    RunOnce hotplugDebounce{500};
+    // Some DP monitors drop off for ~1 s when powered off; that mustn't count as a hotplug.
+    RunOnce hotplugDebounce{3000};
 
     bool pending = false;
     OutputLayout revertTarget; // live layout before the first unconfirmed apply

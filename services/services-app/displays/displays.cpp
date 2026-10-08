@@ -24,7 +24,7 @@ void Displays::setup(){
 
     manager = new OutputManager(this);
     connect(manager, &OutputManager::stateChanged, this, &Displays::onStateChanged);
-    connect(&hotplugDebounce, &RunOnce::activated, this, &Displays::autoPick);
+    connect(&hotplugDebounce, &RunOnce::activated, this, &Displays::onHotplugSettled);
 
     revertTimer.setSingleShot(true);
     connect(&revertTimer, &QTimer::timeout, this, &Displays::revertLayout);
@@ -51,11 +51,23 @@ void Displays::onStateChanged(){
 
     if (!started){
         started = true;
+        settledKeys = connected;
         autoPick();
     }
     else {
         hotplugDebounce.try_activate();
     }
+}
+
+void Displays::onHotplugSettled(){
+    // Back to the same monitors: Biome has already restored the reconnected one.
+    if (connectedKeys == settledKeys){
+        qInfo() << "Displays: outputs reconnected, keeping the layout";
+        syncActive();
+        return;
+    }
+    settledKeys = connectedKeys;
+    autoPick();
 }
 
 void Displays::autoPick(){

@@ -22,8 +22,8 @@ layeroverlay::layeroverlay(const QColor &color, LayerShellQt::Window::Layer laye
     layer_window->setScope(scope);
 }
 
-QList<layeroverlay*> layeroverlay::showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, bool passInput){
-    QList<layeroverlay*> overlays;
+QList<QPointer<layeroverlay>> layeroverlay::showOnAllScreens(const QColor &color, LayerShellQt::Window::Layer layer, const QString &scope, bool passInput){
+    QList<QPointer<layeroverlay>> overlays;
     for (QScreen *screen : QGuiApplication::screens()){
         layeroverlay *overlay = new layeroverlay(color, layer, scope, screen, passInput);
         overlay->show();

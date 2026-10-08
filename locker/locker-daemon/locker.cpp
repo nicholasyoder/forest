@@ -107,6 +107,6 @@ void Locker::showDim()
 void Locker::hideDim()
 {
     for (layeroverlay *overlay : std::as_const(m_dim))
-        overlay->close();
+        if (overlay) overlay->close();
     m_dim.clear();
 }

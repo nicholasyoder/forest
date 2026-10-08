@@ -7,6 +7,7 @@ Changelog
   - Add display profiles, picked automatically when monitors are plugged in, with hotkeys to switch between them
   - Add a Built-in action list and a D-Bus argument field to hotkey settings
   - Fix hotkey settings crashing when adding the first hotkey
+  - Fix forest-locker crashing on wake after a monitor disconnected while dimmed
   - Fix the settings app crashing when a page rebuilds after being opened twice
 
 * Release 0.9.0 - 2026-10-05
