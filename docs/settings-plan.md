@@ -30,13 +30,13 @@ popup dialogs.
 
 ## Categories
 
-Owned by the settings app (fixed order, stable IDs). Plugins only say
-which category a page belongs in.
+Owned by the settings app (fixed order, stable IDs, title, icon). Plugins
+only say which category a page belongs in.
 
 | ID | Title | Pages (now → later) |
 |---|---|---|
 | `appearance` | Appearance | Theme, Cursor → Icon theme |
-| `desktop` | Desktop & Panel | Wallpaper, Panel, Applets (+ one subpage per applet) → Desktop icons |
+| `desktop` | Desktop & Panel | Wallpaper, Panel (+ one subpage per applet) → Desktop icons |
 | `displays` | Displays | Displays |
 | `input` | Input & Hotkeys | Hotkeys → keyboard / pointer / touchpad |
 | `notifications` | Notifications | Notifications |
@@ -44,26 +44,36 @@ which category a page belongs in.
 | `session` | Session & Startup | Autostart |
 | `system` | System | About → default apps, date & time |
 
-Unknown category IDs land in an `other` category, shown only if non-empty.
+Pages whose category is unknown land in an `other` category, shown only if
+non-empty.
 
+- Panel → Behavior and Panel → Applets merge into one Panel page (behavior
+  group + applet list), so applet pages sit one level down
+  (`desktop/panel/clock`) instead of two.
+- Multiple panels (#53) is out of scope, but the tree shape shouldn't
+  depend on panel count: it would add a panel picker at the top of the
+  Panel page (as Displays picks a monitor), not one tree entry per panel.
+  Deep links stay `desktop/panel/...` plus a panel argument.
 - Session → General (one checkbox, "Launch XDG autostart apps") folds
   into the Autostart page.
 - Empty placeholders (Themes → Widget, Themes → Icon, the Desktop → Icons
-  test button) are dropped; their roadmap items stay.
+  test button) are dropped; their roadmap items stay. The unused
+  `desktop-settings/settingswidget.{h,cpp,ui}` goes too.
 - Lock Screen's idle/display-off group may later split into its own
   "Screen blanking" page under `power`.
+- Volume's dialog is device management (master sink, autosave), not applet
+  appearance. It moves to `desktop/panel/volume` for now; a future `sound`
+  category is the natural home once there's more to put there.
 
 ## Plugin interface
 
 Replace `settings_plugin_infterace` (typo included) with a versioned
-interface that returns pages, not a tree:
+interface that returns a flat list of pages, not a tree:
 
 ```cpp
 class settings_page : public settings_category {
-    QString id;          // "desktop/panel/applets/clock"; also the deep-link path
-    QString category;    // "desktop"
-    QString parent;      // parent page id, for nested pages; empty = top of category
-    int order;           // position among siblings
+    QString path;         // "desktop/panel/clock": deep link + placement
+    int order = 0;        // position among siblings, then title
     QStringList keywords;
 };
 
@@ -73,12 +83,19 @@ class settings_plugin_interface {
 Q_DECLARE_INTERFACE(settings_plugin_interface, "forest.settings.plugin.interface/2")
 ```
 
+- The path is the only placement data: the first segment is the category,
+  everything before the last segment is the parent page. Separate
+  `category` / `parent` fields would just be redundant copies that can
+  disagree. Moving a page changes its deep link, which is fine while every
+  caller is in-tree.
+- A page whose parent path doesn't exist is logged and attached at the top
+  of its category, so load order between plugins never matters.
 - Page contents keep today's model (`settings_widget`,
   `settings_widget_group`, custom widgets) and the `opened` / `updated`
-  signals.
+  signals. Pages may have both contents and child pages (Panel).
 - `description` becomes a real description only (shown as a subtitle);
   search terms move to `keywords`.
-- `settings_item` keeps its `QUuid` for internal lookups; IDs are for
+- `settings_item` keeps its `QUuid` for internal lookups; paths are for
   placement, search and deep links.
 
 ## Plugin loading
@@ -87,96 +104,170 @@ Settings plugins install to `/usr/lib/forest/settings/` and the app loads
 every `.so` there. Installed means shown; no config entry needed.
 
 - Drop the `settings-only` entries from `etc/forest/Forest.conf`, and the
-  `settings-only` handling in `pluginutills::get_plugin_paths`. A
-  `SettingsUpgradeManager` step removes them from existing user configs.
+  `SETTINGS_PLUGIN` / `settings-only` handling in
+  `pluginutills::get_plugin_paths` (it becomes app-plugins only). A
+  `SettingsUpgradeManager` step removes the entries from existing user
+  configs.
 - App plugins that also ship settings (`desktop`, `panel`, `services`)
-  keep their `[plugins]` entry for the app side only.
-- Optional: a page may name an app plugin it requires
-  (`requires = "desktop"`) and is hidden when that plugin is disabled.
+  keep their `[plugins]` entry for the app side only. No `requires =
+  "desktop"` hiding: nobody disables those app plugins in practice, and it
+  can be added later without an interface change.
+- Old `lib*-settings.so` files left in `/usr/lib/forest/` are harmless
+  (nothing loads them any more); the `.deb` removes them, staging installs
+  need a manual `rm`.
 
 ## Navigation
 
 Replace `catlistwidget` + `breadcrumbwidget` with a QSS-styled
-`QTreeView` over a `QStandardItemModel`:
+`QTreeView` over a `QStandardItemModel` (one item per category and page,
+page pointer in a user role):
 
 - Top level: categories. Clicking one expands it and opens its first page;
   a single-page category (Displays) opens directly with no children shown.
-- Pages are leaves; nested pages (Panel → Applets → Clock) add levels.
+- Pages are leaves unless they have child pages (Panel → Clock).
 - Expanding one category collapses the others (accordion), so the tree
   stays short.
+- No home screen: with no argument the window opens the first page (Theme).
 - The page stack (`stack_hash` / `QStackedLayout`) stays as is, keyed by
   page.
 
 ## Search (#25)
 
 - Search field above the tree.
-- Index, built at load (all items already exist then): page title,
-  keywords, and the row labels (`settings_widget::name()`) of generic
-  pages. Custom-widget pages (Displays, Hotkeys, Autostart) are searchable
-  only through their title and keywords, so give them good keywords.
-- Filtering: `QSortFilterProxyModel` with `recursiveFilteringEnabled`;
-  matching pages stay visible with their categories expanded.
-- Opening a result that matched on a row label scrolls to that row and
-  briefly highlights it (a dynamic property styled in `settings.css`).
+- Each page's tree item gets a hidden search-text role, built at load (all
+  items already exist then): page title, category title, keywords, and the
+  row labels (`settings_widget::name()`) of generic pages. Custom-widget
+  pages (Displays, Hotkeys, Autostart) are searchable only through their
+  title and keywords, so give them good keywords.
+- Filtering: `QSortFilterProxyModel` on that role with
+  `recursiveFilteringEnabled`; matching pages stay visible with their
+  categories expanded. Empty query restores the accordion state.
+- Opening a result that matched on a row label scrolls to that row
+  (`QScrollArea::ensureWidgetVisible`) and briefly highlights it (a dynamic
+  property styled in `settings.css`). Needs a `settings_widget` → row frame
+  map, filled in `display_widgets` and rebuilt on `updated`.
 
 ## Deep links and single instance
 
-- `forest-settings <page-id>`, e.g. `forest-settings desktop/panel`.
-  Update the callers in `panel.cpp` and `desktop.cpp`. A category ID opens
-  that category's first page.
+- `forest-settings <path>`, e.g. `forest-settings desktop/panel`. A
+  category ID opens that category's first page; an unknown path logs and
+  opens the first page.
 - Single instance: the first instance owns `org.forest.Settings` on the
-  session bus with an `OpenPage(id)` method. Later launches call it (which
-  raises the window) and exit. This is Forest-internal, so the decoupling
-  goal doesn't call for a standard interface here.
+  session bus with `OpenPage(path, activation_token)`. Later launches call
+  it and exit. Forest-internal, so the decoupling goal doesn't call for a
+  standard interface here.
+- Raising the existing window uses `xdg-activation-v1` (Biome 0.2.0,
+  top of its roadmap). The launch forwards its `XDG_ACTIVATION_TOKEN` in
+  `OpenPage`; QtWayland's `requestActivate()` reads the token from the
+  environment (`qwaylandxdgshell.cpp`), so the receiver `qputenv`s it first
+  (what KWindowSystem does).
+- Launchers have to create that token. Qt 6.8 only exposes token requests
+  as private API (`qwaylandwindow_p.h`), so add a small raw-protocol helper
+  to `library/` (as `toplevels` does for its protocols) and use it in
+  `panel.cpp`, `desktop.cpp` and the applet "Settings" actions. `mainmenu`
+  and `quicklaunch` can adopt it later so every app launched from the panel
+  gets activation.
 
 ## Panel applet settings
 
-Applets that have settings implement a second, optional interface next to
-`panelpluginterface`, so applets without settings stay unchanged:
+Applets with settings ship a separate settings plugin next to their
+panel plugin, e.g. `libclock-settings.so` in `/usr/lib/forest/settings/`,
+using the same `settings_plugin_interface` and contributing a
+`desktop/panel/<applet>` page. No second interface and no
+`panel-settings` wiring.
 
-```cpp
-class panel_applet_settings_interface {
-    virtual QList<settings_item*> settings_items() = 0;  // page contents
-};
-```
-
-- `panel-settings` already loads every panel plugin `.so` for the Applets
-  list. It `qobject_cast`s each one to the new interface and adds a
-  `desktop/panel/applets/<name>` page for those that implement it.
-  Settings-side code must not depend on `setupPlug()` having run.
-- After a change, the page calls a panel D-Bus slot that reloads that
-  applet's settings (the in-process `settingschanged` signals go away).
+- Why not have `panel-settings` `qobject_cast` the applet `.so` to an
+  optional settings interface: the applet's root object is its panel
+  widget, and some construct real state up front (`windowlist` builds its
+  dialog as a member initializer). Loading applets in the settings process
+  only to ask for pages invites side effects; a separate module has none,
+  and follows the existing `-app` / `-settings` split.
+- Shared config keys live in a small `<applet>config.h` (as
+  `locker/lockerconfig.h` does for the locker) compiled into both sides.
+- Pages that need runtime data (sensors' chip list, volume's sinks) query
+  it themselves (libsensors, the audio engine sources) rather than asking
+  the running panel.
+- After a change the page calls `forest/panel/reloadappletsettings`, which
+  calls a new non-pure `virtual void reloadSettings() {}` on every loaded
+  applet. Adding a virtual changes the vtable, so bump the panel IID to
+  `forest.panel.plugin.interface/3` (all applets are in-tree). The
+  in-process `settingschanged` signals go away.
 - Remove the popup dialogs: `settingswidget` in clock, cpumonitor,
-  memorymonitor, volume (`.ui`) and windowlist, plus sensors'
-  `WidgetSensorConf`. Each applet's context-menu "Settings" action becomes
-  `forest-settings desktop/panel/applets/<name>`.
+  memorymonitor, volume and windowlist, plus sensors' `WidgetSensorConf`.
+  Each applet's context-menu "Settings" action becomes
+  `forest-settings desktop/panel/<applet>`.
+- Every installed applet with settings gets a page, on the panel or not
+  (falls out of "installed means shown"; lets one be set up before it's
+  added). Multiple panels (#53) turns this into "which panel's clock" and
+  is the time to move to per-instance settings files; the current ones
+  (`"CPU Monitor"`, `"Window List"`, `"Temperature Monitor"`, …) stay.
+- The Applets list on the Panel page links each row with settings to its
+  page (row button or double-click).
 - Redesign each page's contents while porting it, not as a 1:1 copy of
-  the old dialog.
-- Settings files (`"CPU Monitor"`, `"Window List"`, `"Temperature
-  Monitor"`, …) can stay as they are for now. Multiple panels (#53) will
-  need per-instance applet settings, which is the time to move them.
+  the old dialog. cpumonitor and memorymonitor share their color/opacity
+  rows; put a helper for those in `panel-library`.
 
 ## Theming
 
 `base/settings.css` needs rules for the tree view, the search field and
-the search-match highlight. Per-theme `settings.css` overrides (#56) are
-independent of this plan.
+the search-match highlight, and loses the `CategoryButton` / `BreadCrumb*`
+rules. Per-theme `settings.css` overrides and theme-change reload (#56)
+are independent of this plan, but easier after Phase 1 so the variant
+files are written against the final widget set.
 
-## Order of work
+## Phases
 
-1. **Interface, loading, categories, tree, deep links.** One PR, since the
-   interface change breaks every settings plugin at once: port all six
-   plugins, move install paths, add the config migration.
-2. **Search.**
-3. **Single instance** (`org.forest.Settings`).
-4. **Applet settings.** One PR for the interface and the panel-settings
-   wiring, ported applets in the same or follow-up PRs.
+Each phase is one PR into `develop` unless noted.
 
-## Open questions
+### Phase 1 — interface, loading, categories, tree, deep links
 
-- **Applets not on the panel.** Show settings pages for every installed
-  applet (so one can be set up before it's added), or only for applets
-  currently on the panel? Revisit with multiple panels (#53), where it
-  becomes "which panel's clock".
-- **Single-page categories.** Should Displays/Notifications still expand
-  to show their one page, for consistency?
+One PR, since the interface change breaks every settings plugin at once.
+Commit in this order so each step builds:
+
+1. **Interface.** Rewrite `settings_plugin_interface.h`: `settings_page`,
+   `settings_plugin_interface` (`/2` IID), drop the commented-out
+   `settings_widget` draft.
+2. **Port the six plugins** to `pages()` with the paths from the
+   Categories table, including the merges and drops listed there (Panel
+   behavior + applets, Session General → Autostart, placeholders,
+   dead `desktop-settings/settingswidget`). Add keywords while there.
+3. **Install paths.** Every settings module's CMake `install()` →
+   `lib/forest/settings`. `pluginutills` loses `SETTINGS_PLUGIN`.
+4. **App core.** Directory loader, category table, path → tree assembly
+   (ordering, orphan and `other` handling), `QTreeView` navigation with
+   accordion and single-page categories. Delete `catlistwidget`,
+   `breadcrumbwidget`.
+5. **Deep links.** Path argument; update `panel.cpp` (`desktop/panel`),
+   `desktop.cpp` (`desktop/wallpaper`), `debian/man/forest-settings.1`.
+6. **Config migration.** Remove `settings-only` entries from
+   `etc/forest/Forest.conf`; `upgrade_0_10_0` removes them from user
+   configs. Bumps `/etc/forest/Forest.conf`'s `version`, which staging
+   can't install, so it needs a manual copy to test.
+7. **CSS** for the tree; remove dead rules.
+
+Test: every page opens and saves as before, deep links from the panel and
+desktop context menus, fresh config and upgraded config both load all
+plugins.
+
+### Phase 2 — search
+
+Search field, search-text role, proxy filtering, row scroll + highlight,
+CSS. Keyword pass over pages that are hard to find by title.
+
+### Phase 3 — single instance
+
+Blocked on Biome's `xdg-activation-v1`. `org.forest.Settings` +
+`OpenPage`, forwarding launches with their activation token, and the
+token helper in `library/` for the launchers.
+
+### Phase 4 — applet settings infrastructure + clock
+
+`reloadSettings()` on `panelpluginterface` (`/3`),
+`reloadappletsettings` D-Bus slot, CMake pattern for `<applet>-settings`
+modules, Applets-list links, and clock (the simplest dialog) as the first
+port to prove the pattern.
+
+### Phase 5 — remaining applets
+
+cpumonitor + memorymonitor (shared color helper), windowlist, sensors,
+volume. One PR, or one per applet if pages get redesigned substantially.
