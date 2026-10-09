@@ -40,6 +40,12 @@ it here ahead of time. Small fixes don't need a plan doc.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
+- **Theme Biome's window decorations from Forest themes.** Biome uses its
+  own compiled-in look, so a light Forest theme still gets dark titlebars.
+  Ship `biome.css` in each theme layer, point Biome at them from
+  `50-forest.conf` (`[Theme] dir=`/`name=`), and have the theme page write
+  Biome's `Theme/name` on change. Needs Biome's external-theme loader
+  (Biome roadmap 0.2.0). Plan: `biome/docs/theming-plan.md`.
 
 ### Compositor portability
 
