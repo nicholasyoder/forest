@@ -5,22 +5,20 @@
 
 #include "settings_plugin_interface.h"
 #include "autostart/autostartsettings.h"
-#include "general/generalsettings.h"
 
-class SessionSettings : public QObject, settings_plugin_infterace
+class SessionSettings : public QObject, settings_plugin_interface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.settings.session.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+    Q_INTERFACES(settings_plugin_interface)
 
 public:
     SessionSettings();
     ~SessionSettings();
 
-    QList<settings_item*> get_settings_items() override;
+    QList<settings_page*> pages() override;
 
 private:
-    GeneralSettings *general_settings = nullptr;
     AutostartSettings *autostart_settings = nullptr;
 };
 

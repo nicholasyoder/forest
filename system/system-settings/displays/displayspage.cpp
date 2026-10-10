@@ -59,8 +59,8 @@ QWidget *groupRow(QWidget *content, const QString &position, const QString &name
 }
 
 DisplaysPage::DisplaysPage(){
-    settings_item = new settings_category("Displays", "monitor screen resolution refresh scale rotation profile primary identify",
-                                          "preferences-desktop-display");
+    settings_item = new settings_page("displays/displays", "Displays", "preferences-desktop-display");
+    settings_item->set_keywords({"monitor", "screen", "resolution", "refresh", "scale", "rotation", "orientation", "profile", "primary", "identify"});
 
     profileCombo = new QComboBox;
     profileCombo->setSizeAdjustPolicy(QComboBox::AdjustToContents);
@@ -189,7 +189,7 @@ DisplaysPage::DisplaysPage(){
     output_group->add_child(new settings_widget("Resolution", "", resolutionCombo));
     output_group->add_child(new settings_widget("Refresh rate", "", refreshCombo));
     output_group->add_child(new settings_widget("Scale", "", scaleCombo));
-    output_group->add_child(new settings_widget("Orientation", "rotation rotate", transformCombo));
+    output_group->add_child(new settings_widget("Orientation", "", transformCombo));
 
     QLabel *hotkeyNote = new QLabel(tr("Saved profiles can be given keyboard shortcuts under Services → Hotkeys."));
     hotkeyNote->setObjectName("SettingsNoteLabel");

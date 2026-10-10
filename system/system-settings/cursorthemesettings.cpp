@@ -25,7 +25,8 @@ QString cursor_preview_names[] = {
 };
 
 CursorThemeSettings::CursorThemeSettings(){
-    settings_item = new settings_category("Mouse Cursor", "", "preferences-desktop-mouse");
+    settings_item = new settings_page("appearance/cursor", "Cursor", "preferences-desktop-mouse", 20);
+    settings_item->set_keywords({"mouse", "pointer", "size"});
     connect(settings_item, &settings_category::opened, this, &CursorThemeSettings::load_cursor_themes);
 
     QLabel *note_label = new QLabel(tr(

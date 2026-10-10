@@ -18,24 +18,25 @@ QSpinBox *minutesSpin(int max)
 
 } // namespace
 
-QList<settings_item*> LockerSettingsPlugin::get_settings_items()
+QList<settings_page*> LockerSettingsPlugin::pages()
 {
-    settings_category *category = new settings_category("Lock Screen", "", "system-lock-screen");
-    connect(category, &settings_category::opened, this, &LockerSettingsPlugin::load_settings);
+    settings_page *page = new settings_page("power/lockscreen", "Lock Screen", "system-lock-screen");
+    page->set_keywords({"idle", "timeout", "blank", "screen", "sleep", "suspend", "dim"});
+    connect(page, &settings_page::opened, this, &LockerSettingsPlugin::load_settings);
 
     settings_widget_group *idle_group = new settings_widget_group;
-    category->add_child(idle_group);
+    page->add_child(idle_group);
     display_off_spin = minutesSpin(240);
-    idle_group->add_child(new settings_widget("Turn displays off after", "idle timeout blank screen", display_off_spin));
+    idle_group->add_child(new settings_widget("Turn displays off after", "", display_off_spin));
     dim_check = new QCheckBox;
     idle_group->add_child(new settings_widget("Dim the screen before turning displays off", "", dim_check));
     lock_on_display_off_check = new QCheckBox;
     idle_group->add_child(new settings_widget("Lock when displays turn off", "", lock_on_display_off_check));
 
     settings_widget_group *lock_group = new settings_widget_group;
-    category->add_child(lock_group);
+    page->add_child(lock_group);
     lock_on_suspend_check = new QCheckBox;
-    lock_group->add_child(new settings_widget("Lock on suspend", "sleep", lock_on_suspend_check));
+    lock_group->add_child(new settings_widget("Lock on suspend", "", lock_on_suspend_check));
     locked_display_off_spin = minutesSpin(60);
     lock_group->add_child(new settings_widget("Turn displays off while locked after", "", locked_display_off_spin));
 
@@ -48,7 +49,7 @@ QList<settings_item*> LockerSettingsPlugin::get_settings_items()
     for (QCheckBox *check : {dim_check, lock_on_display_off_check, lock_on_suspend_check})
         connect(check, &QCheckBox::toggled, this, changed);
 
-    return {category};
+    return {page};
 }
 
 void LockerSettingsPlugin::load_settings()

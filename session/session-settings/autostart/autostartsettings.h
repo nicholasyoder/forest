@@ -25,14 +25,13 @@ class AutostartSettings : public QObject {
     Q_OBJECT
 public:
     AutostartSettings();
-    settings_category* get_settings_item() { return settings_item; }
+    settings_page* get_settings_item() { return settings_item; }
 private slots:
     void load_settings();
     void reload_settings();
     void add_item();
 private:
-    settings_category *settings_item = nullptr;
-    settings_widget_group *autostart_widget_group = nullptr;
+    settings_page *settings_item = nullptr;
 };
 
 #endif // AUTOSTARTSETTINGS_H

@@ -11,7 +11,8 @@
 #include "miscutills.h"
 
 HotkeySettings::HotkeySettings(){
-    settings_item = new settings_category("Hotkeys", "", "preferences-desktop-keyboard");
+    settings_item = new settings_page("input/hotkeys", "Hotkeys", "preferences-desktop-keyboard");
+    settings_item->set_keywords({"keyboard", "shortcuts", "keybindings", "global"});
     connect(settings_item, &settings_category::opened, this, &HotkeySettings::refresh);
 }
 
