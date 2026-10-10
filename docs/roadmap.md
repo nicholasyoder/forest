@@ -7,9 +7,8 @@ land in Biome first (see `biome/docs/roadmap.md`, which uses the same
 release-grouped layout; Biome releases usually ship alongside Forest's).
 
 Kept at bullet-list altitude deliberately: when a feature is actually picked
-up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`,
-following the existing `docs/greeter-plan.md` pattern), rather than designing
-it here ahead of time. Small fixes don't need a plan doc.
+up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
+rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & settings
 
