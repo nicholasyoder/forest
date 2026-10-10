@@ -51,7 +51,7 @@ The desktop session runs as several independent processes:
 - **`forest-session`** — session manager. Launches autostart entries and the `forest` main process. Forked by the Biome compositor (its `-s` flag) once Biome's Wayland socket is ready — Biome is the top-level process, exec'd by `startforest-wayland`, the wayland-sessions entry point.
 - **`forest-logout`** — standalone fullscreen dialog for power actions.
 - **`forest-locker`** — idle/lock daemon started by `forest-session`: dim, display power, logind lock/sleep, `org.freedesktop.ScreenSaver`. Runs **`forest-lockscreen`** (`ext-session-lock-v1` + PAM) to lock. Split in two (like swayidle + swaylock) so a crashing lock UI can't leave the session stuck locked or the displays dark; the daemon respawns it. Deliberately no `org.forest.Locker`: locking goes only through logind `Session.Lock`, `org.freedesktop.ScreenSaver` and `loginctl lock-session`, so other lockers work with Forest and vice versa.
-- **`forest-settings`** — standalone settings app. Loads settings plugins for its sidebar panels.
+- **`forest-settings`** — standalone settings app. Loads every settings plugin in `/usr/lib/forest/settings/` and shows their pages in a category tree.
 
 There is a **two-tier plugin system** used by both `forest` and the panel.
 
@@ -87,7 +87,7 @@ All menus are `QMenu`, styled by the theme's `QMenu` rules. Qt can't place popup
 
 ### Settings Plugins
 
-`forest-settings` has the same plugin pattern for its settings panels, using `settings_plugin_interface` from `library/pluginutills/`.
+MODULE libs → `/usr/lib/forest/settings/`, all loaded (no config entry). Each implements `settings_plugin_interface` (`library/pluginutills/settings_plugin_interface.h`), returning a flat list of `settings_page`s. A page's path (`desktop/panel`) places it: the first segment is a category ID from the table in `settings/settingsmanager.cpp`, the rest its parent page. Paths double as deep links (`forest-settings desktop/panel`).
 
 ### Theming System
 
@@ -111,7 +111,7 @@ All in `library/`:
 - **`fstyleloader`** — theme CSS loading (header-only implementation in `.h`)
 - **`flogger`** — logging setup; call `FLogger::install("appname")` at startup
 - **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
-- **`pluginutills`** — plugin path resolution for both plugin types
+- **`pluginutills`** — app plugin path resolution, settings plugin interface
 - **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
 - **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `BiomeWorkspaces`, and `ToplevelTracker` (open windows + which are on the active workspace)
 - **`outputs`** — wlr-output-management client (`OutputManager`), display profiles (`DisplayProfiles`, `Displays.conf`) and layout fixups; see `docs/development-notes.md` → Display settings
@@ -126,6 +126,7 @@ Mirrors the final system layout under `build/`:
 - Executables → `usr/bin/`
 - App/service plugins → `usr/lib/forest/`
 - Panel plugins → `usr/lib/forest/panel/`
+- Settings plugins → `usr/lib/forest/settings/`
 - Static libs → `usr/lib/`
 - Config → `etc/forest/`
 - Data/themes/wallpapers → `usr/share/forest/`
