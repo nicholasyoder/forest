@@ -35,6 +35,7 @@ only say which category a page belongs in.
 
 | ID | Title | Pages (now → later) |
 |---|---|---|
+| `about` | About | About |
 | `appearance` | Appearance | Theme, Cursor → Icon theme |
 | `desktop` | Desktop & Panel | Wallpaper, Panel (+ one subpage per applet) → Desktop icons |
 | `displays` | Displays | Displays |
@@ -42,10 +43,13 @@ only say which category a page belongs in.
 | `notifications` | Notifications | Notifications |
 | `power` | Power & Lock | Lock Screen → battery, lid |
 | `session` | Session & Startup | Autostart |
-| `system` | System | About → default apps, date & time |
+| `system` | System | → default apps, date & time |
 
-Pages whose category is unknown land in an `other` category, shown only if
-non-empty.
+Empty categories are hidden (`system` until its first page exists). Pages
+whose category is unknown land in an `other` category at the end.
+
+- About is a single-page category at the top of the tree, so it's both the
+  first page and the default one (see Navigation).
 
 - Panel → Behavior and Panel → Applets merge into one Panel page (behavior
   group + applet list), so applet pages sit one level down
@@ -127,7 +131,8 @@ page pointer in a user role):
 - Pages are leaves unless they have child pages (Panel → Clock).
 - Expanding one category collapses the others (accordion), so the tree
   stays short.
-- No home screen: with no argument the window opens the first page (Theme).
+- No home screen: with no argument the window opens the first page,
+  About, with every category collapsed.
 - The page stack (`stack_hash` / `QStackedLayout`) stays as is, keyed by
   page.
 
@@ -156,15 +161,19 @@ page pointer in a user role):
   session bus with `OpenPage(path, activation_token)`. Later launches call
   it and exit. Forest-internal, so the decoupling goal doesn't call for a
   standard interface here.
-- Raising the existing window uses `xdg-activation-v1` (Biome 0.2.0,
-  top of its roadmap). The launch forwards its `XDG_ACTIVATION_TOKEN` in
+- Raising the existing window uses `xdg-activation-v1` (implemented in
+  Biome; policy in its `docs/architecture-notes.md`). The launch forwards its `XDG_ACTIVATION_TOKEN` in
   `OpenPage`; QtWayland's `requestActivate()` reads the token from the
   environment (`qwaylandxdgshell.cpp`), so the receiver `qputenv`s it first
   (what KWindowSystem does).
 - Launchers have to create that token. Qt 6.8 only exposes token requests
   as private API (`qwaylandwindow_p.h`), so add a small raw-protocol helper
   to `library/` (as `toplevels` does for its protocols) and use it in
-  `panel.cpp`, `desktop.cpp` and the applet "Settings" actions. `mainmenu`
+  `panel.cpp`, `desktop.cpp` and the applet "Settings" actions. Biome only
+  honors tokens with a seat + serial, minted while the clicked surface is
+  still focused, so request it in the click handler before the menu hides.
+  Without a token (terminal launch) the window is only marked urgent.
+  `mainmenu`
   and `quicklaunch` can adopt it later so every app launched from the panel
   gets activation.
 
@@ -234,7 +243,7 @@ Commit in this order so each step builds:
 3. **Install paths.** Every settings module's CMake `install()` →
    `lib/forest/settings`. `pluginutills` loses `SETTINGS_PLUGIN`.
 4. **App core.** Directory loader, category table, path → tree assembly
-   (ordering, orphan and `other` handling), `QTreeView` navigation with
+   (ordering, orphan, empty-category and `other` handling), `QTreeView` navigation with
    accordion and single-page categories. Delete `catlistwidget`,
    `breadcrumbwidget`.
 5. **Deep links.** Path argument; update `panel.cpp` (`desktop/panel`),
@@ -256,9 +265,10 @@ CSS. Keyword pass over pages that are hard to find by title.
 
 ### Phase 3 — single instance
 
-Blocked on Biome's `xdg-activation-v1`. `org.forest.Settings` +
-`OpenPage`, forwarding launches with their activation token, and the
-token helper in `library/` for the launchers.
+`org.forest.Settings` + `OpenPage`, forwarding launches with their
+activation token, and the token helper in `library/` for the launchers.
+Test that a panel/desktop-menu relaunch raises the window and a terminal
+relaunch only marks it urgent.
 
 ### Phase 4 — applet settings infrastructure + clock
 
