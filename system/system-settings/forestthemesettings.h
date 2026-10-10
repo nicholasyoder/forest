@@ -15,7 +15,7 @@ public:
     ForestThemeSettings();
 
 public slots:
-    settings_category* get_settings_item(){ return settings_item; }
+    settings_page* get_settings_item(){ return settings_item; }
 
 signals:
 
@@ -24,7 +24,7 @@ private slots:
     void set_desktop_theme(QListWidgetItem *theme_item);
 
 private:
-    settings_category *settings_item = nullptr;
+    settings_page *settings_item = nullptr;
     ListWidget *forest_theme_list = nullptr;
 
 };

@@ -1,7 +1,6 @@
 add_library(desktop-settings MODULE
     desktopsettings.cpp
     desktopsettings.h
-    settingswidget.ui
 )
 
 target_compile_definitions(desktop-settings PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)

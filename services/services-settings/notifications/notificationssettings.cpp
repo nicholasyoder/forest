@@ -8,7 +8,8 @@
 #include "../../library/miscutills/miscutills.h"
 
 NotificationsSettings::NotificationsSettings(){
-    settings_item = new settings_category("Notifications", "", "preferences-desktop-notifications");
+    settings_item = new settings_page("notifications/notifications", "Notifications", "preferences-desktop-notifications");
+    settings_item->set_keywords({"popups", "timeout", "alerts"});
     connect(settings_item, &settings_category::opened, this, &NotificationsSettings::load_settings);
 
     settings_widget_group *timeout_settings_group = new settings_widget_group;

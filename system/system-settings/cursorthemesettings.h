@@ -20,7 +20,7 @@ public:
     CursorThemeSettings();
 
 public slots:
-    settings_category* get_settings_item(){ return settings_item; }
+    settings_page* get_settings_item(){ return settings_item; }
     void set_cursor_theme(QListWidgetItem *item);
 
 signals:
@@ -32,7 +32,7 @@ private slots:
     void set_cursor_size();
 
 private:
-    settings_category *settings_item = nullptr;
+    settings_page *settings_item = nullptr;
     ListWidget *cursor_theme_list = nullptr;
     QSpinBox *size_input = nullptr;
 };

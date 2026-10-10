@@ -10,14 +10,10 @@ DesktopSettings::DesktopSettings(){
 DesktopSettings::~DesktopSettings(){
 }
 
-QList<settings_item*> DesktopSettings::get_settings_items(){
-    QList<settings_item*> items;
-    settings_category *desktop_cat = new settings_category("Desktop", "", "preferences-desktop-wallpaper");
-    items.append(desktop_cat);
-
-    settings_category *wallpaper_cat = new settings_category("Wallpaper", "Change the desktop wallpaper", "preferences-desktop-wallpaper");
-    connect(wallpaper_cat, &settings_category::opened, this, &DesktopSettings::load_wallpaper_settings);
-    desktop_cat->add_child(wallpaper_cat);
+QList<settings_page*> DesktopSettings::pages(){
+    settings_page *wallpaper_page = new settings_page("appearance/wallpaper", "Wallpaper", "preferences-desktop-wallpaper", 10);
+    wallpaper_page->set_keywords({"background", "desktop", "image", "photo"});
+    connect(wallpaper_page, &settings_category::opened, this, &DesktopSettings::load_wallpaper_settings);
 
     QFrame *preview_base = new QFrame;
     preview_base->setObjectName("WallpaperPreviewBase");
@@ -32,7 +28,7 @@ QList<settings_item*> DesktopSettings::get_settings_items(){
     preview_h_layout->addWidget(wallpaper_preview);
     preview_h_layout->addStretch(1);
     settings_widget *preview_item = new settings_widget("", "", preview_base, true);
-    wallpaper_cat->add_child(preview_item);
+    wallpaper_page->add_child(preview_item);
 
     // TODO: add option for solid color and gradient
     QPushButton *browse_button = new QPushButton("Browse");
@@ -42,7 +38,7 @@ QList<settings_item*> DesktopSettings::get_settings_items(){
     connect(open_photo_dialog, &QFileDialog::fileSelected, this, &DesktopSettings::set_wallpaper);
     connect(browse_button, &QPushButton::clicked, open_photo_dialog, &QFileDialog::show);
     settings_widget *wallpaper_select_item = new settings_widget("Choose Photo", "", browse_button);
-    wallpaper_cat->add_child(wallpaper_select_item);
+    wallpaper_page->add_child(wallpaper_select_item);
 
     wallpaper_mode = new QComboBox();
     wallpaper_mode->addItem("Fill");
@@ -51,16 +47,9 @@ QList<settings_item*> DesktopSettings::get_settings_items(){
     wallpaper_mode->addItem("Tile");
     wallpaper_mode->addItem("Center");
     settings_widget *mode_item = new settings_widget("Display Mode", "", wallpaper_mode);
-    wallpaper_cat->add_child(mode_item);
+    wallpaper_page->add_child(mode_item);
 
-    settings_category *icons_cat = new settings_category("Icons", "Configure desktop icons", "preferences-desktop-icons");
-    desktop_cat->add_child(icons_cat);
-
-    QPushButton *test_button = new QPushButton("Click Me");
-    settings_widget *test_item = new settings_widget("Don't do it.", "", test_button);
-    icons_cat->add_child(test_item);
-
-    return items;
+    return {wallpaper_page};
 }
 
 void DesktopSettings::load_wallpaper_settings(){
@@ -68,12 +57,15 @@ void DesktopSettings::load_wallpaper_settings(){
 
     QString wallpaper_path = settings.value("desktop/wallpaper").toString();
     wallpaper_preview->setPixmap(QPixmap(wallpaper_path));
-    wallpaper_mode->setCurrentIndex(settings.value("desktop/imagemode", 0).toInt());
+    {
+        const QSignalBlocker blocker(wallpaper_mode);
+        wallpaper_mode->setCurrentIndex(settings.value("desktop/imagemode", 0).toInt());
+    }
 
     wallpaper_path.remove(wallpaper_path.split("/").last());
     open_photo_dialog->setDirectory(wallpaper_path);
 
-    connect(wallpaper_mode, &QComboBox::currentTextChanged, this, &DesktopSettings::set_wallpaper_mode);
+    connect(wallpaper_mode, &QComboBox::currentTextChanged, this, &DesktopSettings::set_wallpaper_mode, Qt::UniqueConnection);
 }
 
 void DesktopSettings::set_wallpaper(QString file_path){

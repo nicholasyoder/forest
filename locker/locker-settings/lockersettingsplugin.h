@@ -9,14 +9,14 @@
 #include "settings_plugin_interface.h"
 
 // "Lock Screen" panel for forest-locker's LockerConfig.
-class LockerSettingsPlugin : public QObject, settings_plugin_infterace
+class LockerSettingsPlugin : public QObject, settings_plugin_interface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.settings.locker.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+    Q_INTERFACES(settings_plugin_interface)
 
 public:
-    QList<settings_item*> get_settings_items() override;
+    QList<settings_page*> pages() override;
 
 private slots:
     void load_settings();

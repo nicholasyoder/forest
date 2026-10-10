@@ -42,17 +42,16 @@ private:
 };
 
 
-class PanelSettings : public QObject, settings_plugin_infterace
+class PanelSettings : public QObject, settings_plugin_interface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.settings.panel.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+    Q_INTERFACES(settings_plugin_interface)
 
 public:
     PanelSettings();
 
-    // settings_plugin_infterace functions
-    QList<settings_item*> get_settings_items();
+    QList<settings_page*> pages() override;
 
 public slots:
     void load_behavior_settings();

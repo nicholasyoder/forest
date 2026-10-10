@@ -8,7 +8,8 @@
 #include "miscutills.h"
 
 ForestThemeSettings::ForestThemeSettings(){
-    settings_item = new settings_category("Desktop", "", "preferences-desktop-color");
+    settings_item = new settings_page("appearance/theme", "Theme", "preferences-desktop-color");
+    settings_item->set_keywords({"style", "colors", "dark", "light"});
     connect(settings_item, &settings_category::opened, this, &ForestThemeSettings::load_desktop_themes);
     forest_theme_list = new ListWidget();
     forest_theme_list->setMinimumHeight(5);

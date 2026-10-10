@@ -71,7 +71,7 @@ class DisplaysPage : public QObject
 public:
     DisplaysPage();
 
-    settings_category *get_settings_item(){return settings_item;}
+    settings_page* get_settings_item(){ return settings_item; }
 
 private slots:
     void onKept();
@@ -126,7 +126,7 @@ private:
     void setEnabled(bool enabled);
     void setPrimary(int index);
 
-    settings_category *settings_item = nullptr;
+    settings_page *settings_item = nullptr;
     OutputManager *manager = nullptr;
     DisplayProfiles profiles; // read-only copy, re-read on daemon signals
 

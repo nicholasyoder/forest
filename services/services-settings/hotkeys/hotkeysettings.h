@@ -37,7 +37,7 @@ public:
     HotkeySettings();
 
 public slots:
-    settings_category* get_settings_item(){ return settings_item; }
+    settings_page* get_settings_item(){ return settings_item; }
 
 signals:
 
@@ -49,7 +49,7 @@ private slots:
     void add_item();
 
 private:
-    settings_category *settings_item = nullptr;
+    settings_page *settings_item = nullptr;
     settings_widget_group *hotkey_widget_group = nullptr;
     QList<HotkeySettingItem*> item_list;
 };

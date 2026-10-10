@@ -13,27 +13,26 @@ PanelSettings::PanelSettings()
 
 }
 
-QList<settings_item*> PanelSettings::get_settings_items(){
-    QList<settings_item*> items;
+QList<settings_page*> PanelSettings::pages(){
+    settings_page *panel_page = new settings_page("desktop/panel", "Panel", "preferences-desktop");
+    panel_page->set_keywords({"taskbar", "applets", "position", "autohide"});
+    connect(panel_page, &settings_category::opened, this, &PanelSettings::load_behavior_settings);
+    connect(panel_page, &settings_category::opened, this, &PanelSettings::load_applets);
 
-    settings_category *panel_cat = new settings_category("Panel", "", "preferences-desktop");
-    items.append(panel_cat);
-
-    settings_category *behavior_cat = new settings_category("Behavior", "", "configure");
-    connect(behavior_cat, &settings_category::opened, this, &PanelSettings::load_behavior_settings);
-    panel_cat->add_child(behavior_cat);
+    settings_widget_group *behavior_group = new settings_widget_group;
+    panel_page->add_child(behavior_group);
 
     position_select = new QComboBox();
     position_select->addItem("Top");
     position_select->addItem("Bottom");
     settings_widget *position_item = new settings_widget("Position", "", position_select);
-    behavior_cat->add_child(position_item);
+    behavior_group->add_child(position_item);
 
     autohide_select = new QComboBox();
     autohide_select->addItem("Enable");
     autohide_select->addItem("Disable");
     settings_widget *autohide_item = new settings_widget("Hide when not in use", "", autohide_select);
-    behavior_cat->add_child(autohide_item);
+    behavior_group->add_child(autohide_item);
 
     autohide_delay_input = new QSpinBox();
     autohide_delay_input->setRange(0, 10000);
@@ -41,12 +40,8 @@ QList<settings_item*> PanelSettings::get_settings_items(){
     autohide_delay_input->setSuffix(" ms");
     autohide_delay_input->setKeyboardTracking(false); // one reload per edit, not per keystroke
     settings_widget *autohide_delay_item = new settings_widget("Hide delay", "", autohide_delay_input);
-    behavior_cat->add_child(autohide_delay_item);
+    behavior_group->add_child(autohide_delay_item);
 
-
-    settings_category *applets_cat = new settings_category("Applets", "", "preferences-plugin");
-    connect(applets_cat, &settings_category::opened, this, &PanelSettings::load_applets);
-    panel_cat->add_child(applets_cat);
 
     applet_list_w = new ListWidget;
     applet_list_w->setDragDropMode(QAbstractItemView::InternalMove);
@@ -55,9 +50,9 @@ QList<settings_item*> PanelSettings::get_settings_items(){
     connect(rl, &ReorderListener::reordered, this, &PanelSettings::set_applets);
     applet_list_w->installEventFilter(rl);
     settings_widget *applet_list_item = new settings_widget("", "", applet_list_w);
-    applets_cat->add_child(applet_list_item);
+    panel_page->add_child(applet_list_item);
 
-    return items;
+    return {panel_page};
 }
 
 void PanelSettings::load_behavior_settings(){

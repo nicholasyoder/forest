@@ -10,16 +10,16 @@
 #include "cursorthemesettings.h"
 #include "displays/displayspage.h"
 
-class SystemSettings : public QObject, settings_plugin_infterace
+class SystemSettings : public QObject, settings_plugin_interface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.settings.system.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+    Q_INTERFACES(settings_plugin_interface)
 public:
     SystemSettings();
     ~SystemSettings();
 
-    QList<settings_item*> get_settings_items();
+    QList<settings_page*> pages() override;
 
 private:
     AboutPage *about_page = nullptr;

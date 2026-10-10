@@ -7,21 +7,17 @@
 #include "hotkeys/hotkeysettings.h"
 #include "notifications/notificationssettings.h"
 
-class ServicesSettings : public QObject, settings_plugin_infterace
+class ServicesSettings : public QObject, settings_plugin_interface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.settings.services.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+    Q_INTERFACES(settings_plugin_interface)
 
 public:
     ServicesSettings();
     ~ServicesSettings();
 
-    // settings_plugin_infterace functions
-    QList<settings_item*> get_settings_items();
-
-    //QString get_name(){ return "Services"; }
-    //QString get_icon(){ return "preferences-system-session-services"; }
+    QList<settings_page*> pages() override;
 
 private:
     HotkeySettings* hotkey_settings = nullptr;

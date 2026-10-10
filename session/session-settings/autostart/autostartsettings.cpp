@@ -3,6 +3,7 @@
 #include "autostartsettings.h"
 
 #include <QSettings>
+#include <QCheckBox>
 #include <QHBoxLayout>
 #include <QLineEdit>
 #include <QPushButton>
@@ -10,15 +11,29 @@
 #include "miscutills.h"
 
 AutostartSettings::AutostartSettings() {
-    settings_item = new settings_category("Autostart", "", "preferences-system-session");
-    connect(settings_item, &settings_category::opened, this, &AutostartSettings::load_settings);
+    settings_item = new settings_page("session/autostart", "Autostart", "preferences-system-session");
+    settings_item->set_keywords({"startup", "login", "xdg", "session"});
+    connect(settings_item, &settings_category::opened, this, [this]{
+        if (settings_item->child_items().isEmpty()) load_settings();
+    });
 }
 
 void AutostartSettings::load_settings() {
-    autostart_widget_group = new settings_widget_group;
+    QSettings settings("Forest", "Session");
+
+    settings_widget_group *general_group = new settings_widget_group;
+    settings_item->add_child(general_group);
+    QCheckBox *xdg_checkbox = new QCheckBox;
+    xdg_checkbox->setChecked(settings.value("launch_xdg_autostart", true).toBool());
+    connect(xdg_checkbox, &QCheckBox::toggled, this, [](bool checked){
+        QSettings settings("Forest", "Session");
+        settings.setValue("launch_xdg_autostart", checked);
+    });
+    general_group->add_child(new settings_widget("Launch XDG autostart apps", "", xdg_checkbox));
+
+    settings_widget_group *autostart_widget_group = new settings_widget_group;
     settings_item->add_child(autostart_widget_group);
 
-    QSettings settings("Forest", "Session");
     settings.beginGroup("Autostart");
 
     foreach(QString key, settings.childGroups()) {

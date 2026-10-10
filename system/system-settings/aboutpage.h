@@ -16,7 +16,7 @@ public:
     AboutPage();
 
 public slots:
-    settings_category* get_settings_item(){ return settings_item; }
+    settings_page* get_settings_item(){ return settings_item; }
 
 signals:
 
@@ -33,7 +33,7 @@ private:
     QLabel *memory_label = nullptr;
     QLabel *hostname_label = nullptr;
 
-    settings_category *settings_item = nullptr;
+    settings_page *settings_item = nullptr;
 };
 
 #endif // ABOUTPAGE_H

@@ -12,17 +12,17 @@
 #include "miscutills.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
-class DesktopSettings : public QObject, settings_plugin_infterace
+class DesktopSettings : public QObject, settings_plugin_interface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.settings.desktop.plugin")
-    Q_INTERFACES(settings_plugin_infterace)
+    Q_INTERFACES(settings_plugin_interface)
 
 public:
     DesktopSettings();
     ~DesktopSettings();
 
-    QList<settings_item*> get_settings_items();
+    QList<settings_page*> pages() override;
 
 private slots:
     void load_wallpaper_settings();

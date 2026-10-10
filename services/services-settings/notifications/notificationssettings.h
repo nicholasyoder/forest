@@ -14,7 +14,7 @@ public:
     NotificationsSettings();
 
 public slots:
-    settings_category* get_settings_item(){ return settings_item; }
+    settings_page* get_settings_item(){ return settings_item; }
 
 private slots:
     void load_settings();
@@ -22,7 +22,7 @@ private slots:
     void send_test_notification();
 
 private:
-    settings_category *settings_item = nullptr;
+    settings_page *settings_item = nullptr;
     QSpinBox *min_timeout_spinbox = nullptr;
     QSpinBox *max_timeout_spinbox = nullptr;
     QSpinBox *default_timeout_spinbox = nullptr;

@@ -9,7 +9,7 @@
 #include "miscutills.h"
 
 AboutPage::AboutPage(){
-    settings_item = new settings_category("About", "", "help-about");
+    settings_item = new settings_page("about/about", "About", "help-about");
     connect(settings_item, &settings_category::opened, this, &AboutPage::load_about_data);
 
     QFrame *logo_base = new QFrame;

@@ -1,8 +1,6 @@
 add_library(session-settings MODULE
     autostart/autostartsettings.cpp
     autostart/autostartsettings.h
-    general/generalsettings.cpp
-    general/generalsettings.h
     sessionsettings.cpp
     sessionsettings.h
 )
