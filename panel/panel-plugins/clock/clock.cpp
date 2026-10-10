@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "clock.h"
-#include "clocksettingswidget.h"
+#include "clockconfig.h"
 
 clockplug::clockplug() : panelbutton(Text) {}
 
@@ -21,9 +21,6 @@ void clockplug::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     pmenu = new QMenu;
     pmenu->addActions(itemlist);
 
-    pmenu->addSeparator();
-    pmenu->addAction(QIcon::fromTheme("configure"), "Clock Settings", this, &clockplug::showsettingswidget);
-
     layout->addWidget(this);
 
     loadsettings();
@@ -32,17 +29,11 @@ void clockplug::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     connect(this, &clockplug::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
 }
 
-QHash<QString, QString> clockplug::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Clock";
-    return info;
-}
-
 void clockplug::loadsettings(){
     QSettings settings("Forest", "Clock");
     settings.sync();
-    twelvehour = settings.value("12hour", true).toBool();
-    showseconds = settings.value("showseconds", false).toBool();
+    twelvehour = settings.value(clockconfig::twelvehour, clockconfig::twelvehour_default).toBool();
+    showseconds = settings.value(clockconfig::showseconds, clockconfig::showseconds_default).toBool();
     time_format = "h:mm";
     if(showseconds)
         time_format += ":ss";
@@ -61,11 +52,4 @@ void clockplug::updatetime(){
         currentDate = date;
         cwidget->setSelectedDate(date);
     }
-}
-
-void clockplug::showsettingswidget(){
-    clocksettingswidget *settingsw = new clocksettingswidget;
-    settingsw->setWindowFlags(Qt::Dialog);
-    connect(settingsw, SIGNAL(settingschanged()), this, SLOT(loadsettings()));
-    settingsw->show();
 }

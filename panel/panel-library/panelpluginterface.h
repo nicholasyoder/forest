@@ -9,6 +9,8 @@
 
 class QAction;
 
+// Applet info lives in Q_PLUGIN_METADATA's FILE, readable without loading:
+// {"name": "Clock", "settings": "desktop/panel/clock", "stretch": true}
 class panelpluginterface
 {
 
@@ -23,13 +25,13 @@ public:
     //used when editing what plugins are on the panel
     virtual void closePlug() = 0;
 
-    //should return at least info[name] = plugname
-    virtual QHash<QString, QString> getpluginfo() = 0;
+    // Called after the applet's settings page saves.
+    virtual void reloadSettings() {}
 };
 
 QT_BEGIN_NAMESPACE
 
-Q_DECLARE_INTERFACE(panelpluginterface, "forest.panel.plugin.interface/2")
+Q_DECLARE_INTERFACE(panelpluginterface, "forest.panel.plugin.interface/3")
 
 QT_END_NAMESPACE
 

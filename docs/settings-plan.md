@@ -37,7 +37,7 @@ only say which category a page belongs in.
 |---|---|---|
 | `about` | About | About |
 | `appearance` | Appearance | Theme, Wallpaper, Cursor → Icon theme |
-| `desktop` | Panel (→ Desktop & Panel) | Panel (+ one subpage per applet) → Desktop icons |
+| `desktop` | Desktop & Panel | Panel (+ one subpage per applet) → Desktop icons |
 | `displays` | Displays | Displays |
 | `input` | Input & Hotkeys | Hotkeys → keyboard / pointer / touchpad |
 | `notifications` | Notifications | Notifications |
@@ -196,9 +196,9 @@ using the same `settings_plugin_interface` and contributing a
 - Pages that need runtime data (sensors' chip list, volume's sinks) query
   it themselves (libsensors, the audio engine sources) rather than asking
   the running panel.
-- After a change the page calls `forest/panel/reloadappletsettings`, which
-  calls a new non-pure `virtual void reloadSettings() {}` on every loaded
-  applet. Adding a virtual changes the vtable, so bump the panel IID to
+- After a change the page calls `forest/panel/reloadappletsettings` with
+  its path, which calls a new non-pure `virtual void reloadSettings() {}`
+  on that applet only. Adding a virtual changes the vtable, so bump the panel IID to
   `forest.panel.plugin.interface/3` (all applets are in-tree). The
   in-process `settingschanged` signals go away.
 - Remove the popup dialogs: `settingswidget` in clock, cpumonitor,
@@ -211,7 +211,9 @@ using the same `settings_plugin_interface` and contributing a
   is the time to move to per-instance settings files; the current ones
   (`"CPU Monitor"`, `"Window List"`, `"Temperature Monitor"`, …) stay.
 - The Applets list on the Panel page links each row with settings to its
-  page (row button or double-click).
+  page (gear button). Applet name, settings path and stretch are JSON
+  plugin metadata, so neither the list nor the panel instantiates an
+  applet just to read them.
 - Redesign each page's contents while porting it, not as a 1:1 copy of
   the old dialog. Opacity sliders fold into the color's alpha (the
   Phase 3.5 color button); pages split alpha back into the existing
@@ -247,11 +249,7 @@ Done.
 
 ### Phase 4 — applet settings infrastructure + clock
 
-`reloadSettings()` on `panelpluginterface` (`/3`),
-`reloadappletsettings` D-Bus slot, CMake pattern for `<applet>-settings`
-modules, Applets-list links, applet "Settings" actions launching through
-`XdgActivation`, and clock (the simplest dialog) as the first
-port to prove the pattern.
+Done.
 
 ### Phase 5 — remaining applets
 
@@ -261,5 +259,7 @@ per applet if pages get redesigned substantially.
 - sensors: drop the dead `displayheight` key (written, never read) and
   `sensorlist` (the applet enumerates itself); store the shown sensor by
   label instead of `ChipIndex`, which shifts when chips change.
+- volume: drop the separator after the panel items, so "Re-scan devices"
+  and "Toggle Muted" follow "Volume Control Settings" directly.
 - memorymonitor: swap mode radios become a combo; swap color row hidden
   when swap is disabled.

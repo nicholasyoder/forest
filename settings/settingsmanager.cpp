@@ -129,7 +129,7 @@ struct category_info { QString id, title, icon; };
 const QList<category_info> categories = {
     {"about", "About", "help-about"},
     {"appearance", "Appearance", "preferences-desktop-theme"},
-    {"desktop", "Panel", "preferences-desktop"},
+    {"desktop", "Desktop & Panel", "preferences-desktop"},
     {"displays", "Displays", "preferences-desktop-display"},
     {"input", "Input & Hotkeys", "preferences-desktop-keyboard"},
     {"notifications", "Notifications", "preferences-desktop-notifications"},
@@ -293,6 +293,10 @@ void SettingsManager::load_plugins(){
             if (page_hash.contains(page->id())) continue;
             pages.append(page);
             page_hash[page->id()] = page;
+            connect(page, &settings_page::open_requested, this, [this](QString path){
+                search_field->clear(); // a filtered-out target has no proxy index
+                open_path(path);
+            });
         }
     }
 }

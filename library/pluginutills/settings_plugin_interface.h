@@ -81,6 +81,9 @@ public:
     int order(){ return page_order; }
     QStringList keywords(){ return page_keywords; }
     void set_keywords(QStringList keywords){ page_keywords = keywords; }
+signals:
+    // Asks the settings app to show another page.
+    void open_requested(QString path);
 private:
     QString page_path;
     int page_order;

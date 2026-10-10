@@ -50,12 +50,6 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     loadSettings();
 }
 
-QHash<QString, QString> SensorWidget::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Sensor Monitor";
-    return info;
-}
-
 void SensorWidget::paintEvent(QPaintEvent *){
     if (displaytype == "bars"){
         if (layoutdirection == QBoxLayout::TopToBottom){

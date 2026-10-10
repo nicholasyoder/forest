@@ -32,12 +32,6 @@ void deskswitch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
     connect(biome_workspaces, &BiomeWorkspaces::windowWorkspacesChanged, this, &deskswitch::updateWindowCounts);
 }
 
-QHash<QString, QString> deskswitch::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Desktop Switcher";
-    return info;
-}
-
 void deskswitch::setupbts(){
     dbuttons.clear();
     QLayoutItem *child;

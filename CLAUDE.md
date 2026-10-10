@@ -76,10 +76,12 @@ Loaded by `panel-app` at runtime. Each implements `panelpluginterface` (`panel/p
 ```cpp
 virtual void setupPlug(QBoxLayout *, QList<QAction*>) = 0;
 virtual void closePlug() = 0;
-virtual QHash<QString, QString> getpluginfo() = 0;
+virtual void reloadSettings() {}
 ```
 
-The `QAction` list is panel-wide items (e.g. "Panel Settings") to put in the plugin's context menu.
+Applet info is JSON metadata (`Q_PLUGIN_METADATA(... FILE "clock.json")`: `name`, optional `settings` page path and `stretch`), read with `QPluginLoader::metaData()` so panel-settings never instantiates applets. The `QAction` list is panel-provided context-menu items, added first: "Panel Settings", then (when `settings` is set) a separator and "<Applet> Settings", which the applet's own items follow without a separator.
+
+Applet settings pages are a separate `<applet>-settings` module (`forest_add_applet_settings()` in `cmake/ForestDeps.cmake`) sharing keys with the applet through `<applet>config.h`. After saving, the page calls `forest/panel/reloadappletsettings` with its path, which runs `reloadSettings()` on that applet only.
 
 ### Menus
 

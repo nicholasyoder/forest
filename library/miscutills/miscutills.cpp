@@ -14,13 +14,13 @@
 #include <QIcon>
 
 namespace miscutills {
-    void call_dbus(QString path){
+    void call_dbus(QString path, const QVariantList &args){
         QString slot = path.split("/").last();
         path = path.remove("/" + slot);
 
         if (QDBusConnection::sessionBus().isConnected()){
             QDBusInterface iface("org.forest", "/org/" + path, "", QDBusConnection::sessionBus());
-            if (iface.isValid()) iface.call(slot);
+            if (iface.isValid()) iface.callWithArgumentList(QDBus::Block, slot, args);
             else qWarning() << "DBus call failed:" << QDBusConnection::sessionBus().lastError().message();
         }
         else {

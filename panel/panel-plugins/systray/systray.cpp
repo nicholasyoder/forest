@@ -44,13 +44,6 @@ void systray::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
     registerHost();
 }
 
-QHash<QString, QString> systray::getpluginfo()
-{
-    QHash<QString, QString> info;
-    info["name"] = "System Tray";
-    return info;
-}
-
 void systray::registerHost()
 {
     if (hostRegistered)

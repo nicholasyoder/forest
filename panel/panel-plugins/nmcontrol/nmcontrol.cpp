@@ -27,13 +27,6 @@ void nmcontrol::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
     connect(p_button, &panelbutton::leftclicked, this, &nmcontrol::showpopup);
 }
 
-QHash<QString, QString> nmcontrol::getpluginfo()
-{
-    QHash<QString, QString> info;
-    info["name"] = "Network Manager";
-    return info;
-}
-
 
 void nmcontrol::showpopup(){
 

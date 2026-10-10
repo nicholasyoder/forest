@@ -55,7 +55,15 @@ void SettingsBinder::changed(QWidget *row, std::function<void(QSettings&)> write
 SettingsBinder::Converter SettingsBinder::item_data(QComboBox *combo){
     QPointer<QComboBox> c(combo);
     return {
-        [c](const QVariant &stored){ return c ? QVariant(c->itemText(c->findData(stored))) : QVariant(); },
+        // Values read from file are strings; findData won't match them against bool/int data.
+        [c](const QVariant &stored){
+            for (int i = 0; c && i < c->count(); i++) {
+                QVariant value = stored;
+                if (value.convert(c->itemData(i).metaType()) && value == c->itemData(i))
+                    return QVariant(c->itemText(i));
+            }
+            return QVariant();
+        },
         [c](const QVariant &text){ return c ? c->itemData(c->findText(text.toString())) : QVariant(); },
     };
 }

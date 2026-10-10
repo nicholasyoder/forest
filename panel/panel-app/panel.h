@@ -45,6 +45,8 @@ public:
 public slots:
     void reloadsettings(){settings->sync(); loadsettings();}
     void reloadplugins();
+    // settings_path is the applet's "settings" metadata, e.g. "desktop/panel/clock".
+    void reloadappletsettings(const QString &settings_path);
     void addplugin(QString path);
     void update_panel_size();
 
@@ -64,6 +66,7 @@ private:
     QBoxLayout *wlayout;
     panelpluginterface *pluginterface;
     QList<panelpluginterface*> pluglist;
+    QHash<QString, panelpluginterface*> settings_plugs; // settings path -> applet
     AutoHideManager* autohide_manager = nullptr;
     GeometryManager* geometry_manager = nullptr;
     panelQFrame *pframe = nullptr;

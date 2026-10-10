@@ -43,12 +43,6 @@ void mainmenu::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     QDBusConnection::sessionBus().registerObject("/org/forest/panel/mainmenu", this, QDBusConnection::ExportAllSlots);
 }
 
-QHash<QString, QString> mainmenu::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Main Menu";
-    return info;
-}
-
 void mainmenu::togglemenu(){
     if(pBox->isVisible())
         closemenu();

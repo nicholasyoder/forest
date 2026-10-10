@@ -31,11 +31,6 @@ void memmon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     loadsettings();
 }
 
-QHash<QString, QString> memmon::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Memory Monitor";
-    return info;
-}
 //end of plugin interface
 
 void memmon::loadsettings(){

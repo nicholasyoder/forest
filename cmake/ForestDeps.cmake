@@ -105,3 +105,17 @@ endfunction()
 function(forest_link_hotkeyconfig target)
     target_link_libraries(${target} PRIVATE hotkeyconfig)
 endfunction()
+
+# forest_add_applet_settings(applet SOURCES...)
+# Adds the <applet>-settings module: the applet's settings page, installed
+# beside the other settings plugins
+function(forest_add_applet_settings applet)
+    set(target ${applet}-settings)
+    add_library(${target} MODULE ${ARGN})
+    target_compile_definitions(${target} PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
+    target_link_libraries(${target} PRIVATE Qt6::Widgets Qt6::DBus)
+    forest_link_pluginutills(${target})
+    forest_link_settings_widgets(${target})
+    forest_link_miscutills(${target})
+    install(TARGETS ${target} LIBRARY DESTINATION lib/forest/settings)
+endfunction()

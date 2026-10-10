@@ -16,7 +16,7 @@
 
 class quicklaunch : public QWidget, panelpluginterface {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.quicklaunch.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.quicklaunch.plugin" FILE "quicklaunch.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -26,7 +26,6 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
     //end plugininterface
 
 public slots:

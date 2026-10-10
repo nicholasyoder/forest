@@ -41,12 +41,6 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     QDBusConnection::sessionBus().registerObject("/org/forest/panel/volume", this, QDBusConnection::ExportScriptableSlots);
 }
 
-QHash<QString, QString> fvolume::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Volume Control";
-    return info;
-}
-
 void fvolume::wheelEvent(QWheelEvent *event){
     if (!master_device) return;
 

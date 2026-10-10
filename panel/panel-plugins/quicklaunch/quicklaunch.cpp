@@ -31,12 +31,6 @@ void quicklaunch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     QDBusConnection::sessionBus().registerObject("/org/forest/panel/quicklaunch", this, QDBusConnection::ExportAllSlots);
 }
 
-QHash<QString, QString> quicklaunch::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Quick Launch";
-    return info;
-}
-
 void quicklaunch::dragEnterEvent(QDragEnterEvent *event){
     if (event->mimeData()->hasUrls()){
         bool hasurl = true;

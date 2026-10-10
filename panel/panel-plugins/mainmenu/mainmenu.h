@@ -20,7 +20,7 @@
 class mainmenu : public panelbutton, panelpluginterface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.mainmenu.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.mainmenu.plugin" FILE "mainmenu.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -29,7 +29,6 @@ public:
 
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
 
 public slots:
     void togglemenu();
