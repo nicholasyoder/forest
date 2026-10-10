@@ -1,16 +1,14 @@
 add_library(windowlist MODULE
     imagepopup.cpp
-    settingswidget.cpp
     windowbutton.cpp
     windowlist.cpp
     iconresolver.cpp
     closebutton.h
     imagepopup.h
-    settingswidget.h
     windowbutton.h
     windowlist.h
     iconresolver.h
-    settingswidget.ui
+    windowlistconfig.h
 )
 
 target_compile_definitions(windowlist PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
@@ -25,3 +23,9 @@ forest_link_miscutills(windowlist)
 forest_link_toplevels(windowlist)
 
 install(TARGETS windowlist LIBRARY DESTINATION lib/forest/panel)
+
+forest_add_applet_settings(windowlist
+    windowlistsettings.cpp
+    windowlistsettings.h
+    windowlistconfig.h
+)

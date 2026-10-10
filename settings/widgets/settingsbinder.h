@@ -10,6 +10,7 @@
 #include <QWidget>
 #include <functional>
 
+class ColorButton;
 class QComboBox;
 
 // Loads and saves controls through their USER property (QSpinBox value, QCheckBox checked,
@@ -27,6 +28,17 @@ public:
 
     void bind(QWidget *widget, const QString &key, const QVariant &default_value,
               const Converter &converter = Converter());
+    // Control spanning several keys: load/save read and write the settings directly.
+    template <typename W, typename Signal>
+    void bind_custom(W *widget, Signal signal, std::function<void(QSettings&)> load,
+                     std::function<void(QSettings&)> save){
+        custom_loads[widget] = load;
+        connect(widget, signal, this, [this, widget, save]{ changed(widget, save); });
+        connect(widget, &QObject::destroyed, this, [this, widget]{ custom_loads.remove(widget); });
+    }
+    // Color stored as "r,g,b" plus a separate 0-1 opacity key; the button edits both as alpha.
+    void bind_color(ColorButton *button, const QString &color_key, const QString &opacity_key,
+                    const QColor &default_color);
     // Runs after each successful save.
     void set_callback(std::function<void()> callback){ saved_callback = callback; }
     // For hand-written controls: saves through write with the next batch and flashes row's row.
@@ -57,6 +69,7 @@ private:
 
     QString organization, application, group;
     QHash<QWidget*, Binding> bindings;
+    QHash<QWidget*, std::function<void(QSettings&)>> custom_loads;
     QList<QPointer<QWidget>> dirty;
     QList<QPair<QPointer<QWidget>, std::function<void(QSettings&)>>> writers;
     std::function<void()> saved_callback;

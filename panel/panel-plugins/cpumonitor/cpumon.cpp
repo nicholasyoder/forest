@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "cpumon.h"
+#include "cpumonitorconfig.h"
 #include <QGenericPlugin>
 
 using namespace miscutills;
@@ -21,8 +22,6 @@ void cpumon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
     pmenu = new QMenu;
     pmenu->addActions(itemlist);
-    pmenu->addSeparator();
-    pmenu->addAction(QIcon::fromTheme("configure"), "CPU Monitor Settings", this, &cpumon::showsettingswidget);
 
     connect(this, &cpumon::leftclicked, this, &cpumon::runcommand);
     connect(this, &cpumon::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
@@ -33,50 +32,21 @@ void cpumon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 //end of plugin interface
 
 void cpumon::loadsettings(){
+    namespace cfg = cpumonitorconfig;
     settings->sync();
 
-    QColor backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
-    QColor forecolor = string_to_color(settings->value("foregroundcolor", "0,255,0").toString());
-    qreal backopacity = settings->value("backgroundopacity", 1).toDouble();
-    qreal foreopacity = settings->value("foregroundopacity", 1).toDouble();
+    QColor backcolor = string_to_color(settings->value(cfg::backgroundcolor, color_to_string(cfg::backgroundcolor_default)).toString());
+    QColor forecolor = string_to_color(settings->value(cfg::foregroundcolor, color_to_string(cfg::foregroundcolor_default)).toString());
+    qreal backopacity = settings->value(cfg::backgroundopacity, 1).toDouble();
+    qreal foreopacity = settings->value(cfg::foregroundopacity, 1).toDouble();
     gwidget->setupgraphs(1, {forecolor}, {foreopacity}, backcolor, backopacity);
-    gwidget->setFixedWidth(settings->value("width", 40).toInt());
-    clickedcommand = settings->value("command", "").toString();
+    gwidget->setFixedWidth(settings->value(cfg::width, cfg::width_default).toInt());
+    clickedcommand = settings->value(cfg::command, "").toString();
 
     delete refreshtimer;
     refreshtimer = new QTimer;
     connect(refreshtimer, &QTimer::timeout, this, &cpumon::updatecpu);
-    refreshtimer->start(settings->value("refreshrate", 500).toInt());
-}
-
-void cpumon::showsettingswidget(){
-    settingswidget *swidget = new settingswidget;
-    connect(swidget, &settingswidget::colorschanged, this, &cpumon::reloadcolors);
-    connect(swidget, &settingswidget::settingschanged, this, &cpumon::reloadsettings);
-    connect(swidget, &settingswidget::backOpChanged, this, &cpumon::setbackop);
-    connect(swidget, &settingswidget::foreOpChanged, this, &cpumon::setforeop);
-    swidget->setAttribute(Qt::WA_DeleteOnClose);
-    swidget->show();
-}
-
-void cpumon::reloadcolors(){
-    gwidget->backcolor = string_to_color(settings->value("backgroundcolor", "0,0,0").toString());
-    gwidget->colors = {string_to_color(settings->value("foregroundcolor", "0,255,0").toString())};
-    gwidget->update();
-}
-
-void cpumon::setbackop(qreal opacity){
-    gwidget->backopacity = opacity;
-    gwidget->update();
-}
-
-void cpumon::setforeop(qreal opacity){
-    gwidget->opacitys[0] = opacity;
-    gwidget->update();
-}
-
-void cpumon::reloadsettings(){
-    loadsettings();
+    refreshtimer->start(settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt());
 }
 
 void cpumon::runcommand(){

@@ -1,9 +1,7 @@
 add_library(memorymonitor MODULE
     memmon.cpp
-    settingswidget.cpp
     memmon.h
-    settingswidget.h
-    settingswidget.ui
+    memorymonitorconfig.h
 )
 
 target_compile_definitions(memorymonitor PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
@@ -13,3 +11,9 @@ forest_link_panel_library(memorymonitor)
 forest_link_miscutills(memorymonitor)
 
 install(TARGETS memorymonitor LIBRARY DESTINATION lib/forest/panel)
+
+forest_add_applet_settings(memorymonitor
+    memorymonitorsettings.cpp
+    memorymonitorsettings.h
+    memorymonitorconfig.h
+)

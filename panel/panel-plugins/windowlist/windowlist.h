@@ -15,7 +15,6 @@
 #include "topleveltracker.h"
 
 #include "imagepopup.h"
-#include "settingswidget.h"
 #include "panelpluginterface.h"
 #include "panelanchor.h"
 
@@ -31,10 +30,8 @@ public:
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){ close(); deleteLater();}
+    void reloadSettings();
     //end plugin interface
-
-public slots:
-    void reloadsettings();
 
 signals:
     void updatebuttondata();
@@ -44,7 +41,6 @@ protected:
 
 private slots:
     void loadsettings();
-    void showsettingswidget();
 
     void onWindowAdded(ForeignToplevelHandle *handle);
     void onWindowRemoved(ForeignToplevelHandle *handle);
@@ -67,9 +63,6 @@ private:
 
     QMenu *pmenu = nullptr;
     imagepopup *ipopup = nullptr;
-
-    settingswidget *swidget = new settingswidget;
-
 };
 
 #endif // WINDOWLIST_H

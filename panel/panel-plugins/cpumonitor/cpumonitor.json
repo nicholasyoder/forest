@@ -1,3 +1,4 @@
 {
-    "name": "CPU Monitor"
+    "name": "CPU Monitor",
+    "settings": "desktop/panel/cpumonitor"
 }

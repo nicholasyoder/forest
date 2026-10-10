@@ -15,7 +15,6 @@
 #include <QStylePainter>
 #include <QStyleOptionButton>
 
-#include "settingswidget.h"
 #include "panelpluginterface.h"
 #include "panelbutton.h"
 #include "popup.h"
@@ -34,14 +33,8 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
+    void reloadSettings(){ loadsettings(); }
     //end plugininterface
-
-public slots:
-    void showsettingswidget();
-    void reloadcolors();
-    void reloadsettings();
-    void setbackop(qreal opacity);
-    void setforeop(qreal opacity);
 
 private slots:
     void loadsettings();

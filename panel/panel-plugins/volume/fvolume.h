@@ -32,6 +32,7 @@ public:
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
+    void reloadSettings(){ loadsettings(); }
     //end plugin interface
 
 public slots:
@@ -44,7 +45,6 @@ protected:
 
 private slots:
     void loadsettings();
-    void showsettings();
     void save_volumes();
     void setvolume(int value);
     //void togglemuted();

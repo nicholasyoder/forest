@@ -33,10 +33,6 @@ it here ahead of time. Small fixes don't need a plan doc.
   that sets the painter to device-pixel units with the origin snapped to a
   device pixel, then lay out each painter in device pixels (constants
   × dpr, rounded). Graph history also has to be per device column.
-- **Settings app rework, including search** (#25). User-facing categories
-  instead of one entry per plugin, tree navigation, search, deep links, and
-  applet settings moved in from their popup dialogs. See
-  `docs/settings-plan.md`.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
