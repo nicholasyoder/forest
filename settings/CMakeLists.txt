@@ -7,7 +7,7 @@ add_executable(forest-settings
 )
 
 
-target_link_libraries(forest-settings PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets)
+target_link_libraries(forest-settings PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus)
 forest_link_pluginutills(forest-settings)
 forest_link_flogger(forest-settings)
 

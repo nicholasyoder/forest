@@ -21,5 +21,6 @@ forest_link_miscutills(desktop-app)
 forest_link_layershellqt(desktop-app)
 forest_link_menuanchor(desktop-app)
 forest_link_fileops(desktop-app)
+forest_link_activation(desktop-app)
 
 install(TARGETS desktop-app LIBRARY DESTINATION lib/forest)

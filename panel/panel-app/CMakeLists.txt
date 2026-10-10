@@ -15,5 +15,6 @@ target_link_libraries(panel-app PRIVATE
 forest_link_panel_library(panel-app)
 forest_link_miscutills(panel-app)
 forest_link_layershellqt(panel-app)
+forest_link_activation(panel-app)
 
 install(TARGETS panel-app LIBRARY DESTINATION lib/forest)

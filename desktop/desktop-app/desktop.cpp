@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "desktop.h"
+#include "xdgactivation.h"
 
 #include <QWindow>
 
@@ -132,11 +133,12 @@ void desktop::setupmenus(){
 
     QAction *desktopsettingsaction = new QAction(QIcon::fromTheme("preferences-desktop"), "Desktop settings", this);
     connect(desktopsettingsaction, &QAction::triggered, this, &desktop::showsettings);
+    XdgActivation::instance()->watch(desktopsettingsaction);
     deskmenu->addAction(desktopsettingsaction);
 }
 
 void desktop::showsettings(){
-    QProcess::startDetached("forest-settings", QStringList("appearance/wallpaper"));
+    XdgActivation::instance()->launch("forest-settings", {"appearance/wallpaper"});
 }
 
 void desktop::updateicons(){

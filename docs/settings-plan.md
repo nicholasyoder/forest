@@ -167,16 +167,13 @@ page pointer in a user role):
   `OpenPage`; QtWayland's `requestActivate()` reads the token from the
   environment (`qwaylandxdgshell.cpp`), so the receiver `qputenv`s it first
   (what KWindowSystem does).
-- Launchers have to create that token. Qt 6.8 only exposes token requests
-  as private API (`qwaylandwindow_p.h`), so add a small raw-protocol helper
-  to `library/` (as `toplevels` does for its protocols) and use it in
-  `panel.cpp`, `desktop.cpp` and the applet "Settings" actions. Biome only
-  honors tokens with a seat + serial, minted while the clicked surface is
-  still focused, so request it in the click handler before the menu hides.
-  Without a token (terminal launch) the window is only marked urgent.
-  `mainmenu`
-  and `quicklaunch` can adopt it later so every app launched from the panel
-  gets activation.
+- Launchers create that token with `library/activation` (`XdgActivation`):
+  `watch(action)` once, then `launch(program, args)` from `triggered`.
+  `QMenu` hides before `triggered` and Biome only honors tokens minted while
+  the clicked surface is focused, so an app-wide event filter requests the
+  token on the release/Enter that triggers a watched action. Without a token
+  (terminal launch) the window is only marked urgent. `mainmenu` and
+  `quicklaunch` use it for every app they launch.
 
 ## Panel applet settings
 
@@ -239,16 +236,14 @@ Done.
 
 ### Phase 3 — single instance
 
-`org.forest.Settings` + `OpenPage`, forwarding launches with their
-activation token, and the token helper in `library/` for the launchers.
-Test that a panel/desktop-menu relaunch raises the window and a terminal
-relaunch only marks it urgent.
+Done.
 
 ### Phase 4 — applet settings infrastructure + clock
 
 `reloadSettings()` on `panelpluginterface` (`/3`),
 `reloadappletsettings` D-Bus slot, CMake pattern for `<applet>-settings`
-modules, Applets-list links, and clock (the simplest dialog) as the first
+modules, Applets-list links, applet "Settings" actions launching through
+`XdgActivation`, and clock (the simplest dialog) as the first
 port to prove the pattern.
 
 ### Phase 5 — remaining applets

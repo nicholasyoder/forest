@@ -211,7 +211,28 @@ bool SettingsManager::eventFilter(QObject *watched, QEvent *event){
 void SettingsManager::load_settings_ui(){
     load_plugins();
     build_tree();
+    loaded = true;
     open_path(initial_path);
+}
+
+void SettingsManager::OpenPage(const QString &path, const QString &activation_token){
+    // QtWayland's requestActivate() reads the token from the environment.
+    if (activation_token.isEmpty())
+        qunsetenv("XDG_ACTIVATION_TOKEN");
+    else
+        qputenv("XDG_ACTIVATION_TOKEN", activation_token.toUtf8());
+
+    if (!path.isEmpty()) {
+        if (!loaded) {
+            initial_path = path;
+        } else {
+            search_field->clear();
+            open_path(path);
+        }
+    }
+    showNormal();
+    raise();
+    activateWindow();
 }
 
 void SettingsManager::load_plugins(){

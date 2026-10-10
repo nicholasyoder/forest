@@ -1,11 +1,13 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "quicklaunch.h"
+#include "xdgactivation.h"
 
 quicklaunch::quicklaunch(QWidget *parent) : QWidget(parent){}
 quicklaunch::~quicklaunch(){ delete pmenu; }
 
 void quicklaunch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
+    XdgActivation::instance(); // binds asynchronously; must be ready by the first launch
     basehlayout->setContentsMargins(QMargins(0,0,0,0));
     basehlayout->setSpacing(0);
     this->setLayout(basehlayout);
