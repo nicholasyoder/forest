@@ -18,4 +18,4 @@ forest_link_miscutills(services-settings)
 forest_link_outputs(services-settings)
 forest_link_hotkeyconfig(services-settings)
 
-install(TARGETS services-settings LIBRARY DESTINATION lib/forest)
+install(TARGETS services-settings LIBRARY DESTINATION lib/forest/settings)
