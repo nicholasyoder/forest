@@ -120,11 +120,19 @@ QMenu::separator {
     color: white;
 }
 
-#notifyPopup #closeButton {
+#notifyPopup QPushButton {
     color: white;
 }
 
-#notifyPopup #closeButton:hover  { 
+/* Close button stays flat until hovered; action buttons keep the outline at rest. */
+#notifyPopup #actionButton {
+    border-top: 1px solid rgba(60,60,60, 60%);
+    border-right: 1px solid rgba(60,60,60, 60%);
+    border-bottom: 1px solid rgba(55,55,55, 60%);
+    border-left: 1px solid rgba(55,55,55, 60%);
+}
+
+#notifyPopup QPushButton:hover  { 
     background: rgba(50,50,50, 70%);
     border-top: 1px solid rgba(60,60,60, 60%);
     border-right: 1px solid rgba(60,60,60, 60%);
@@ -132,7 +140,7 @@ QMenu::separator {
     border-left: 1px solid rgba(55,55,55, 60%);
 } 
 
-#notifyPopup #closeButton:pressed  { 
+#notifyPopup QPushButton:pressed  { 
     background: rgba(40,40,40, 70%);
     border-top: 1px solid rgba(60,60,60, 60%);
     border-right: 1px solid rgba(60,60,60, 60%);

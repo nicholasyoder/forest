@@ -1,49 +1,34 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "notifyadapter.h"
+#include "notify.h"
 
-notifyadapter::notifyadapter(QObject *parent) : QDBusAbstractAdaptor(parent)
+notifyadapter::notifyadapter(notify *parent) : QDBusAbstractAdaptor(parent), service(parent)
 {
-    this->setAutoRelaySignals(true);
+    setAutoRelaySignals(true);
 }
 
-notifyadapter::~notifyadapter()
+QStringList notifyadapter::GetCapabilities()
 {
-
+    // No "body-markup": FadingLabel draws clipped bodies as plain text.
+    return {"body", "actions"};
 }
 
 void notifyadapter::GetServerInformation(QString &name, QString &vendor, QString &version, QString &spec_version)
 {
-    name = "forest-notification";
-    vendor = "forest";
-    version = "0.5";
-    spec_version = "0.1";
+    name = "Forest";
+    vendor = "Forest";
+    version = FOREST_VERSION;
+    spec_version = "1.2";
 }
 
-void notifyadapter::CloseNotification(const uint &id)
+void notifyadapter::CloseNotification(uint id)
 {
-    QMetaObject::invokeMethod(parent(), "closeslot", Q_ARG(uint, id));
+    service->close_popup(id, notify::ClosedByCall);
 }
 
-void notifyadapter::Notify(
-        const QString &app_name,
-        const uint replaces_id,
-        const QString &app_icon,
-        const QString &summary,
-        const QString &body,
-        const QStringList &actions,
-        const QVariantMap &hints,
-        const int expire_timeout,
-        uint &id)
+uint notifyadapter::Notify(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
+                           const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout)
 {
-    QMetaObject::invokeMethod(parent(), "notifyslot",
-                              Q_ARG(QString, app_name),
-                              Q_ARG(uint, replaces_id),
-                              Q_ARG(QString, app_icon),
-                              Q_ARG(QString, summary),
-                              Q_ARG(QString, body),
-                              Q_ARG(QStringList, actions),
-                              Q_ARG(QVariantMap, hints),
-                              Q_ARG(int, expire_timeout),
-                              Q_ARG(uint, id) );
+    return service->show_notification(app_name, replaces_id, app_icon, summary, body, actions, hints, expire_timeout);
 }

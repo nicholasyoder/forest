@@ -18,19 +18,26 @@ class notify : public QObject
     Q_OBJECT
 
 public:
+    // NotificationClosed reasons from the freedesktop spec.
+    enum CloseReason : uint { Expired = 1, Dismissed = 2, ClosedByCall = 3 };
+
     notify();
     ~notify();
 
     void setup();
 
-private slots:
-    void notifyslot(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
-                const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout, uint id);
+    uint show_notification(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
+                           const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout);
+    void close_popup(uint id, uint reason);
 
-    void closeslot(uint id);
+signals:
+    void NotificationClosed(uint id, uint reason);
+    void ActionInvoked(uint id, const QString &action_key);
 
 private:
-    QHash<uint, notifypopup*> popuphash;
+    void remove_popup(uint id);
 
+    QHash<uint, notifypopup*> popuphash;
+    uint next_id = 1;
 };
 #endif // NOTIFY_H

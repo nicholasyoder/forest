@@ -11,7 +11,7 @@
 
 #include "miscutills.h"
 
-notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id){
+notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, const QStringList &actions, int timeout, uint id){
     setWindowFlags(Qt::FramelessWindowHint);
     setAttribute(Qt::WA_TranslucentBackground);
     setAutoFillBackground(true);
@@ -48,7 +48,7 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     QPushButton *closebt = new QPushButton;
     closebt->setIcon(QIcon::fromTheme("dialog-close"));
     closebt->setObjectName("closeButton");
-    connect(closebt, SIGNAL(clicked()), this, SLOT(close()));
+    connect(closebt, &QPushButton::clicked, this, [this]{ closepopup(2); }); // spec reason: dismissed
     tophlayout->addWidget(closebt);
     contentsvlayout->addLayout(tophlayout);
     body_text = body;
@@ -58,6 +58,28 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     bodylabel->setWordWrap(true);
     bodylabel->setAlignment(Qt::AlignTop);
     contentsvlayout->addWidget(bodylabel);
+
+    // actions is a flat [key, label, key, label, ...] list; "default" is a click on the popup itself.
+    QFrame *actionsbox = new QFrame;
+    actionsbox->setObjectName("actionsBox");
+    QHBoxLayout *actionslayout = new QHBoxLayout(actionsbox);
+    actionslayout->setContentsMargins(QMargins(0,0,0,0));
+    actionslayout->addStretch(1);
+    for (int i = 0; i + 1 < actions.size(); i += 2) {
+        const QString key = actions[i];
+        if (key == "default") {
+            has_default_action = true;
+            continue;
+        }
+        QPushButton *actionbt = new QPushButton(actions[i + 1]);
+        actionbt->setObjectName("actionButton");
+        connect(actionbt, &QPushButton::clicked, this, [this, key]{ emit actionInvoked(popupid, key); });
+        actionslayout->addWidget(actionbt);
+    }
+    if (actionslayout->count() > 1)
+        contentsvlayout->addWidget(actionsbox);
+    else
+        delete actionsbox;
 
     QVBoxLayout *basevlayout = new QVBoxLayout;
     basevlayout->setContentsMargins(QMargins(0,0,0,0));
@@ -109,7 +131,7 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
 
     timeout_timer = new QTimer(this);
     timeout_timer->setSingleShot(true);
-    connect(timeout_timer, &QTimer::timeout, this, &notifypopup::closepopup);
+    connect(timeout_timer, &QTimer::timeout, this, [this]{ closepopup(1); }); // spec reason: expired
     timeout_timer->start(full_timeout);
 
     timeout_updater = new QTimer(this);
@@ -136,7 +158,7 @@ void notifypopup::enterEvent(QEnterEvent *){
     resume_timeout = timeout_timer->remainingTime();
     timeout_updater->stop();
     timeout_timer->stop();
-    if (bodylabel->is_clipped())
+    if (has_default_action || bodylabel->is_clipped())
         setCursor(Qt::PointingHandCursor);
 }
 
@@ -148,7 +170,12 @@ void notifypopup::leaveEvent(QEvent *){
 
 /* Open a scrollable detail window if the body text was clipped in the popup */
 void notifypopup::mouseReleaseEvent(QMouseEvent *event){
-    if (event->button() != Qt::LeftButton || !bodylabel->is_clipped()) return;
+    if (event->button() != Qt::LeftButton) return;
+    if (has_default_action) {
+        emit actionInvoked(popupid, "default");
+        return;
+    }
+    if (!bodylabel->is_clipped()) return;
 
     QDialog *detail = new QDialog;
     detail->setAttribute(Qt::WA_DeleteOnClose);

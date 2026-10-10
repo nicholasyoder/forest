@@ -231,14 +231,15 @@ class notifypopup : public QWidget
     Q_OBJECT
 
 public:
-    notifypopup(QString app_name, QString summary, QString body, QString app_icon, int timeout, uint id);
+    notifypopup(QString app_name, QString summary, QString body, QString app_icon, const QStringList &actions, int timeout, uint id);
 
 signals:
-    void readyToClose(uint);
+    void readyToClose(uint id, uint reason);
+    void actionInvoked(uint id, const QString &action_key);
 
 private slots:
     QIcon geticon(QString icon_name, QString app_name);
-    void closepopup(){ timeout_updater->stop(); emit readyToClose(popupid); }
+    void closepopup(uint reason){ timeout_updater->stop(); emit readyToClose(popupid, reason); }
     void update_timeout_bar();
 
 protected:
@@ -248,6 +249,7 @@ protected:
 
 private:
     uint popupid;
+    bool has_default_action = false;
     QString body_text;
     QString summary_text;
     FadingLabel *bodylabel = nullptr;
