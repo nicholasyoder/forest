@@ -43,6 +43,7 @@ void SettingsUpgradeManager::perform_upgrades(){
     QMap<QVector<int>, std::function<void()>> upgrade_map = {
         {{0,7,9}, [this](){ this->upgrade_0_7_9(); }},
         {{0,9,0}, [this](){ this->upgrade_0_9_0(); }},
+        {{0,10,0}, [this](){ this->upgrade_0_10_0(); }},
     };
 
     // Get version of existing settings
@@ -103,12 +104,6 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
         settings->setValue(hotkey + "/description", "Lock screen");
         settings->setValue(hotkey + "/keysequence", "Meta+L");
     }
-    QString plugin = next_free_key(settings, "plugins", "plug-", "name", "locker");
-    if (!plugin.isEmpty()){
-        settings->setValue(plugin + "/enabled", true);
-        settings->setValue(plugin + "/name", "locker");
-        settings->setValue(plugin + "/settings-only", true);
-    }
     // gnome-screenshot can't capture under Biome, and show desktop moved off
     // /org/forest/hotkeys; customized actions are left alone.
     settings->beginGroup("hotkeys");
@@ -131,4 +126,13 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
         if (panel_settings.value(child + "/path").toString() == "seperator")
             panel_settings.setValue(child + "/path", "separator");
     panel_settings.endGroup();
+}
+
+void SettingsUpgradeManager::upgrade_0_10_0(){
+    // forest-settings loads every module in /usr/lib/forest/settings now.
+    settings->beginGroup("plugins");
+    foreach (QString child, settings->childGroups())
+        if (settings->value(child + "/settings-only", false).toBool())
+            settings->remove(child);
+    settings->endGroup();
 }
