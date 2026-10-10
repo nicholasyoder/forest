@@ -6,8 +6,9 @@
 #include <QObject>
 #include <QWidget>
 #include <QUuid>
+#include <QStringList>
 
-// Base settings item class with name and optional description (used for search)
+// Base settings item class with name and optional description
 class settings_item : public QObject {
     Q_OBJECT
 public:
@@ -69,41 +70,27 @@ private:
     bool custom_widget = false;
 };
 
-/*
-// Settings item with custom widget
-class settings_widget : public settings_item {
+// Page in the settings tree. Path is "<category>/[<parent>/...]<page>": deep link and placement.
+class settings_page : public settings_category {
     Q_OBJECT
 public:
-    settings_widget(QString name, QString description = "", QWidget *widget = nullptr)
-        : settings_item(name, description) { set_widget(widget); }
-signals:
-    void widget_ready(QWidget *widget);
-    void widget_request();
-public slots:
-    // Request item widget
-    // Called when item is ready to be shown and widget is needed
-    // If item_widget is already prepared, emit widget_ready passing item_widget
-    // Other wise emit a widget_request signal to notify the relevent plugin-settings to setup this widget
-    void request_widget(){
-        if (item_widget)
-            emit widget_ready(item_widget);
-        else
-            emit widget_request();
-    }
-
-    void set_widget(QWidget *widget){
-        item_widget = widget;
-        emit widget_ready(item_widget);
-    }
-
+    settings_page(QString path, QString name, QString icon = "", int order = 0)
+        : settings_category(name, "", icon), page_path(path), page_order(order) {}
+    QString path(){ return page_path; }
+    int order(){ return page_order; }
+    QStringList keywords(){ return page_keywords; }
+    void set_keywords(QStringList keywords){ page_keywords = keywords; }
 private:
-    QWidget *item_widget = nullptr;
+    QString page_path;
+    int page_order;
+    QStringList page_keywords;
 };
 
-class settings_control : public settings_widget {
-    Q_OBJECT
+class settings_plugin_interface {
+public:
+    virtual ~settings_plugin_interface() {}
+    virtual QList<settings_page*> pages() = 0;
 };
-*/
 
 class settings_plugin_infterace {
 
@@ -119,6 +106,7 @@ public:
 
 QT_BEGIN_NAMESPACE
 Q_DECLARE_INTERFACE(settings_plugin_infterace, "forest.settings.plugin.interface")
+Q_DECLARE_INTERFACE(settings_plugin_interface, "forest.settings.plugin.interface/2")
 QT_END_NAMESPACE
 
 #endif // SETTINGS_PLUGIN_INTERFACE_H
