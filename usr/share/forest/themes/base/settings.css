@@ -9,11 +9,6 @@ QTabBar::tab:selected { background: solid #ffffff; }
 QTabBar::scroller { width: 15px; }
 */
 
-#CategoriesPane {
-
-
-}
-
 #ControlsScrollArea {
     border: none;
     background: rgba(240,240,240, 100%);
@@ -23,85 +18,42 @@ QTabBar::scroller { width: 15px; }
     padding: 30px;
 }
 
-#CategoryList {
+#CategoryTree {
     background: rgba(250,250,250, 100%);
     border: 1px solid rgba(225,225,225, 100%);
     border-left: none;
     border-bottom: none;
     padding: 8px;
+    outline: 0;
+    show-decoration-selected: 0;
+    qproperty-indentation: 24;
+    qproperty-rootIsDecorated: false;
 }
 
-#BreadCrumbWidget {
-    background: rgba(240,240,240, 100%);
-    /*border-bottom: 1px solid rgba(150,150,150, 40%);*/
-    padding: 6px 6px 4px 6px;
-}
-
-#BreadCrumbItem {
-    background: rgba(0,0,0, 0%);
-    border: 1px solid transparent;
-    padding: 4px;
-    font-size: 10.5pt;
-
-    border-radius: 3px;
-}
-
-#BreadCrumbItem:hover {
-    color: rgba(60,60,60, 100%);
-}
-
-#BreadCrumbItem:pressed {
-    color: rgba(3,3,3, 100%);
-}
-
-#BreadCrumbDivider {
-    background: rgba(0,0,0, 0%);
-    border: 1px solid transparent;
-    padding: 4px 0px 4px 0px;
-    font-size: 10.5pt;
-}
-
-#CategoryButton {
+#CategoryTree::item {
     border: 1px solid transparent;
     border-radius: 3px;
-
-    text-align: left;
-    padding-left: 3px;
-    padding-right: 3px;
+    padding: 0px 3px;
     margin-bottom: 2px;
     min-height: 30px;
-    min-width: 200px;
-    icon-size: 22px;
+    color: rgb(20,20,20);
 }
 
-#CategoryButton:hover  {
+#CategoryTree::item:hover {
     background: rgba(255,255,255, 70%);
-    border-top: 1px solid rgba(160,160,160, 60%);
-    border-right: 1px solid rgba(160,160,160, 60%);
-    border-bottom: 1px solid rgba(155,155,155, 60%);
-    border-left: 1px solid rgba(155,155,155, 60%);
+    border: 1px solid rgba(160,160,160, 60%);
 }
 
-#CategoryButton:pressed  {
-    background: rgba(250,250,250, 70%);
-    border-top: 1px solid rgba(160,160,160, 60%);
-    border-right: 1px solid rgba(160,160,160, 60%);
-    border-bottom: 1px solid rgba(155,155,155, 60%);
-    border-left: 1px solid rgba(155,155,155, 60%);
+#CategoryTree::item:selected {
+    background: rgba(255,255,255, 100%);
+    border: 1px solid rgba(155,155,155, 80%);
 }
 
-#CategoryDivider {
-    border-bottom: 1px solid rgba(150,150,150, 40%);
-    background: rgba(0,0,0, 0%);
-    margin: 0px 6px 8px 6px;
-    padding: 8px 0px 5px 0px;
-    text-align: center;
-    font-style: bold;
+#CategoryTree::branch, #CategoryTree::branch:selected, #CategoryTree::branch:hover {
+    background: transparent;
 }
 
-#ControlsScrollArea {
 
-}
 
 QScrollBar:vertical {
     background: transparent;
