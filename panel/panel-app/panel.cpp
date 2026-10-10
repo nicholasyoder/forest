@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "panel.h"
+#include "panelconfig.h"
 #include "xdgactivation.h"
 
 panel::panel(){}
@@ -39,7 +40,7 @@ void panel::showsettings(){
 }
 
 void panel::loadsettings(){
-    bool autohide = settings->value("autohide").toBool();
+    bool autohide = settings->value(panelconfig::autohide, panelconfig::autohide_default).toBool();
 
     // only reserve screen space for panel if it is always visible
     geometry_manager->set_reserve_screen_space(!autohide);
@@ -53,9 +54,9 @@ void panel::loadsettings(){
         autohide_manager = nullptr;
     }
     if (autohide_manager)
-        autohide_manager->set_delay(settings->value("autohide_delay", 1000).toInt());
+        autohide_manager->set_delay(settings->value(panelconfig::autohide_delay, panelconfig::autohide_delay_default).toInt());
 
-    QString position = settings->value("position", "bottom").toString().toLower();
+    QString position = settings->value(panelconfig::position, panelconfig::position_default).toString().toLower();
     geometry_manager->set_panel_position(position);
     geometry_manager->update_geometry();
 }

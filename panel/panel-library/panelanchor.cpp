@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "panelanchor.h"
+#include "panelconfig.h"
 #include "menuanchor.h"
 
 #include <QApplication>
@@ -55,7 +56,7 @@ ToggleGuard *toggleGuard(QMenu *menu)
 PanelAnchor panelAnchor(QWidget *launcher, PositionpPolicy policy)
 {
     QWidget *toplevel = launcher->window();
-    bool top = QSettings("Forest","Panel").value("position").toString().toLower() == "top";
+    bool top = QSettings("Forest","Panel").value(panelconfig::position, panelconfig::position_default).toString().toLower() == "top";
 
     // Full toplevel height so the edges below are the panel's, not the launcher's.
     PanelAnchor result;
