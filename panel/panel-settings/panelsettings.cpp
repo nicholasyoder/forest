@@ -15,7 +15,7 @@ PanelSettings::PanelSettings()
 
 QList<settings_page*> PanelSettings::pages(){
     settings_page *panel_page = new settings_page("desktop/panel", "Panel", "preferences-desktop");
-    panel_page->set_keywords({"taskbar", "applets", "position", "autohide"});
+    panel_page->set_keywords({"taskbar", "applets", "plugins", "widgets", "position", "autohide", "top", "bottom"});
     connect(panel_page, &settings_category::opened, this, &PanelSettings::load_behavior_settings);
     connect(panel_page, &settings_category::opened, this, &PanelSettings::load_applets);
 

@@ -10,6 +10,7 @@
 
 AboutPage::AboutPage(){
     settings_item = new settings_page("about/about", "About", "help-about");
+    settings_item->set_keywords({"system", "info", "version", "hardware", "computer", "ram"});
     connect(settings_item, &settings_category::opened, this, &AboutPage::load_about_data);
 
     QFrame *logo_base = new QFrame;

@@ -9,8 +9,12 @@
 #include <QPainter>
 #include <QHBoxLayout>
 #include <QLabel>
+#include <QKeyEvent>
 #include <QPluginLoader>
 #include <QScrollArea>
+#include <QShortcut>
+#include <QSortFilterProxyModel>
+#include <QStyle>
 #include <QStyledItemDelegate>
 #include <QTimer>
 #include <QVBoxLayout>
@@ -52,6 +56,23 @@ protected:
 
 const QString plugin_dir = "/usr/lib/forest/settings";
 const int PageIdRole = Qt::UserRole;
+const int SearchTextRole = Qt::UserRole + 1; // title, category, keywords, row labels
+const int BaseSearchTextRole = Qt::UserRole + 2; // without row labels
+
+QStringList query_words(const QString &query){
+    return query.toLower().split(' ', Qt::SkipEmptyParts);
+}
+
+QStringList row_labels(const QList<settings_item*> &items){
+    QStringList labels;
+    foreach (settings_item *item, items) {
+        if (settings_category *group = dynamic_cast<settings_category*>(item))
+            labels += row_labels(group->child_items());
+        else if (!item->name().isEmpty())
+            labels += item->name();
+    }
+    return labels;
+}
 
 struct category_info { QString id, title, icon; };
 
@@ -71,6 +92,27 @@ const QList<category_info> categories = {
 
 }
 
+// Keeps rows whose search text contains every query word; ancestors of matches stay via recursive filtering.
+class SearchFilterModel : public QSortFilterProxyModel {
+public:
+    using QSortFilterProxyModel::QSortFilterProxyModel;
+    void set_query(const QString &query){
+        words = query_words(query);
+        invalidateRowsFilter();
+    }
+protected:
+    bool filterAcceptsRow(int row, const QModelIndex &parent) const override {
+        if (words.isEmpty()) return true;
+        QString text = sourceModel()->index(row, 0, parent).data(SearchTextRole).toString();
+        if (text.isEmpty()) return false;
+        foreach (const QString &word, words)
+            if (!text.contains(word)) return false;
+        return true;
+    }
+private:
+    QStringList words;
+};
+
 SettingsManager::SettingsManager(){
     this->setWindowTitle("Forest Settings");
     this->setWindowIcon(QIcon::fromTheme("preferences-system"));
@@ -85,9 +127,31 @@ SettingsManager::SettingsManager(){
     hlayout->setSpacing(0);
 
     model = new QStandardItemModel(this);
+    proxy = new SearchFilterModel(this);
+    proxy->setSourceModel(model);
+    proxy->setRecursiveFilteringEnabled(true);
+
+    // Spacing goes on a wrapper: QLineEdit places its clear button ignoring its own QSS margin.
+    QFrame *search_box = new QFrame;
+    search_box->setObjectName("SearchBox");
+    QVBoxLayout *search_layout = new QVBoxLayout(search_box);
+    search_layout->setContentsMargins(QMargins(0,0,0,0));
+    search_field = new QLineEdit;
+    search_layout->addWidget(search_field);
+    search_field->setObjectName("SearchField");
+    search_field->setPlaceholderText("Search");
+    search_field->setClearButtonEnabled(true);
+    search_field->installEventFilter(this);
+    connect(search_field, &QLineEdit::textChanged, this, &SettingsManager::search_changed);
+    QShortcut *find_shortcut = new QShortcut(QKeySequence::Find, this);
+    connect(find_shortcut, &QShortcut::activated, this, [this]{
+        search_field->setFocus();
+        search_field->selectAll();
+    });
+
     tree = new QTreeView;
     tree->setObjectName("CategoryTree");
-    tree->setModel(model);
+    tree->setModel(proxy);
     tree->setHeaderHidden(true);
     tree->setEditTriggers(QAbstractItemView::NoEditTriggers);
     tree->setExpandsOnDoubleClick(false);
@@ -95,11 +159,19 @@ SettingsManager::SettingsManager(){
     tree->setMinimumWidth(200);
     tree->setItemDelegate(new UntintedIconDelegate(tree));
     tree->viewport()->installEventFilter(this);
-    connect(tree->selectionModel(), &QItemSelectionModel::currentChanged, this, &SettingsManager::current_changed);
-    connect(tree, &QTreeView::clicked, this, &SettingsManager::item_clicked);
+    connect(tree, &QTreeView::clicked, this, &SettingsManager::open_index);
+    connect(tree, &QTreeView::activated, this, &SettingsManager::open_index);
     connect(tree, &QTreeView::expanded, this, &SettingsManager::collapse_others);
 
-    hlayout->addWidget(tree);
+    QFrame *sidebar = new QFrame;
+    sidebar->setObjectName("Sidebar");
+    QVBoxLayout *sidebar_layout = new QVBoxLayout(sidebar);
+    sidebar_layout->setContentsMargins(QMargins(0,0,0,0));
+    sidebar_layout->setSpacing(0);
+    sidebar_layout->addWidget(search_box);
+    sidebar_layout->addWidget(tree, 1);
+
+    hlayout->addWidget(sidebar);
     hlayout->addLayout(stacked_layout, 1);
 
     this->resize(850,600);
@@ -109,6 +181,21 @@ SettingsManager::SettingsManager(){
 SettingsManager::~SettingsManager(){}
 
 bool SettingsManager::eventFilter(QObject *watched, QEvent *event){
+    if (watched == search_field && event->type() == QEvent::KeyPress) {
+        int key = static_cast<QKeyEvent*>(event)->key();
+        if (key == Qt::Key_Escape && !search_field->text().isEmpty()) {
+            search_field->clear();
+            return true;
+        }
+        if (key == Qt::Key_Down) {
+            tree->setFocus();
+            return true;
+        }
+        if (key == Qt::Key_Return || key == Qt::Key_Enter) {
+            open_index(tree->currentIndex());
+            return true;
+        }
+    }
     // At fractional scales the hover border bleeds past the row's update rect and leaves lines behind.
     if (watched == tree->viewport() && (event->type() == QEvent::HoverMove || event->type() == QEvent::HoverLeave)) {
         QModelIndex index = event->type() == QEvent::HoverMove
@@ -204,6 +291,22 @@ void SettingsManager::build_tree(){
             cat->removeRow(0);
         }
     }
+
+    foreach (settings_page *page, pages) {
+        QStandardItem *item = path_items.value(page->path());
+        if (item && item->data(PageIdRole).toUuid() == page->id())
+            set_search_text(item, page);
+    }
+}
+
+void SettingsManager::set_search_text(QStandardItem *item, settings_page *page){
+    QStandardItem *cat = item;
+    while (cat->parent()) cat = cat->parent();
+    QStringList base = QStringList{page->name(), cat->text()} + page->keywords();
+    // Rows built on open (Hotkeys, Autostart, Displays) are only found through title and keywords.
+    QStringList full = base + row_labels(page->child_items());
+    item->setData(base.join('\n').toLower(), BaseSearchTextRole);
+    item->setData(full.join('\n').toLower(), SearchTextRole);
 }
 
 void SettingsManager::open_path(QString path){
@@ -214,39 +317,102 @@ void SettingsManager::open_path(QString path){
     if (!item)
         item = model->item(0);
     if (!item) return;
-    if (!item->data(PageIdRole).isValid() && item->hasChildren())
-        item = item->child(0);
-    tree->setCurrentIndex(item->index());
+    open_index(proxy->mapFromSource(item->index()));
 }
 
-void SettingsManager::current_changed(const QModelIndex &index){
+void SettingsManager::search_changed(const QString &text){
+    proxy->set_query(text);
+    if (!text.trimmed().isEmpty()) {
+        tree->expandAll();
+        QModelIndex match = first_match();
+        if (match.isValid())
+            tree->setCurrentIndex(match);
+        else
+            tree->selectionModel()->clear();
+        return;
+    }
+    tree->collapseAll();
+    QModelIndex shown = proxy->mapFromSource(shown_index);
+    open_index(shown.isValid() ? shown : proxy->index(0, 0));
+}
+
+QModelIndex SettingsManager::first_match(){
+    QModelIndex index = proxy->index(0, 0);
+    while (index.isValid() && !index.data(PageIdRole).isValid())
+        index = proxy->index(0, 0, index);
+    return index;
+}
+
+// Arrow keys only move the current row; click and Enter open it.
+void SettingsManager::open_index(QModelIndex index){
     if (!index.isValid()) return;
-    QModelIndex top = index;
-    while (top.parent().isValid()) top = top.parent();
-    collapse_others(top);
-    for (QModelIndex p = index.parent(); p.isValid(); p = p.parent())
-        tree->expand(p);
-    if (model->hasChildren(index))
-        tree->expand(index);
+    while (!index.data(PageIdRole).isValid() && proxy->hasChildren(index))
+        index = proxy->index(0, 0, index);
+    tree->setCurrentIndex(index);
 
-    // A multi-page category shows its first page but stays current, so arrow keys can pass it.
-    QModelIndex page_index = index;
-    while (!page_index.data(PageIdRole).isValid() && model->hasChildren(page_index))
-        page_index = model->index(0, 0, page_index);
-    if (settings_page *page = page_hash.value(page_index.data(PageIdRole).toUuid()))
+    bool searching = !search_field->text().trimmed().isEmpty();
+    if (!searching) {
+        QModelIndex top = index;
+        while (top.parent().isValid()) top = top.parent();
+        collapse_others(top);
+        for (QModelIndex p = index.parent(); p.isValid(); p = p.parent())
+            tree->expand(p);
+        if (proxy->hasChildren(index))
+            tree->expand(index);
+    }
+
+    settings_page *page = page_hash.value(index.data(PageIdRole).toUuid());
+    if (!page) return;
+    QModelIndex source = proxy->mapToSource(index);
+    if (source != shown_index) {
+        shown_index = source;
         open_page(page);
-}
-
-void SettingsManager::item_clicked(const QModelIndex &index){
-    if (!index.data(PageIdRole).isValid() && model->hasChildren(index))
-        tree->setCurrentIndex(model->index(0, 0, index));
+    }
+    if (searching)
+        highlight_match(index);
 }
 
 void SettingsManager::collapse_others(const QModelIndex &index){
-    if (index.parent().isValid()) return;
-    for (int row = 0; row < model->rowCount(); row++)
+    if (index.parent().isValid() || !search_field->text().trimmed().isEmpty()) return;
+    for (int row = 0; row < proxy->rowCount(); row++)
         if (row != index.row())
-            tree->collapse(model->index(row, 0));
+            tree->collapse(proxy->index(row, 0));
+}
+
+void SettingsManager::highlight_match(const QModelIndex &page_index){
+    // Only when the query needs a row label to match, i.e. title, category and keywords don't cover it.
+    QString base = page_index.data(BaseSearchTextRole).toString();
+    QStringList words;
+    foreach (const QString &word, query_words(search_field->text()))
+        if (!base.contains(word)) words += word;
+    if (words.isEmpty()) return;
+
+    QPointer<QWidget> best;
+    int best_score = 0;
+    for (const auto &row : row_frames.value(page_index.data(PageIdRole).toUuid())) {
+        int score = 0;
+        foreach (const QString &word, words)
+            if (row.first.contains(word)) score++;
+        if (score > best_score && row.second) {
+            best = row.second;
+            best_score = score;
+        }
+    }
+    QPointer<QScrollArea> area = qobject_cast<QScrollArea*>(stacked_layout->currentWidget());
+    if (!best || !area) return;
+
+    // After the new page's layout has run, or ensureWidgetVisible sees stale geometry.
+    QTimer::singleShot(0, best, [best, area]{
+        if (area) area->ensureWidgetVisible(best, 0, 50);
+        best->setProperty("searchmatch", true);
+        best->style()->unpolish(best);
+        best->style()->polish(best);
+    });
+    QTimer::singleShot(1500, best, [best]{
+        best->setProperty("searchmatch", false);
+        best->style()->unpolish(best);
+        best->style()->polish(best);
+    });
 }
 
 void SettingsManager::open_page(settings_page *page){
@@ -258,6 +424,7 @@ void SettingsManager::open_page(settings_page *page){
 }
 
 void SettingsManager::update_widgets(QUuid parent_id, QList<settings_item*> items){
+    row_frames.remove(parent_id);
     delete stack_hash.take(parent_id);
     display_widgets(parent_id, items);
 }
@@ -272,7 +439,7 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
         foreach(settings_item* item, items){
             settings_widget *widget_item = dynamic_cast<settings_widget*>(item);
             if(widget_item != nullptr){
-                QWidget *widget = (widget_item->is_custom()) ? widget_item->widget() : create_control(widget_item);
+                QWidget *widget = (widget_item->is_custom()) ? widget_item->widget() : create_control(parent_id, widget_item);
                 page_layout->addWidget(widget);
                 continue;
             }
@@ -292,7 +459,7 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
                             groupposition = "first";
                         else if (sub_item == widget_group->child_items().last())
                             groupposition = "last";
-                        QWidget *widget = (sub_widget_item->is_custom()) ? sub_widget_item->widget() : create_control(sub_widget_item, groupposition);
+                        QWidget *widget = (sub_widget_item->is_custom()) ? sub_widget_item->widget() : create_control(parent_id, sub_widget_item, groupposition);
                         group_v_layout->addWidget(widget);
                         continue;
                     }
@@ -320,7 +487,7 @@ void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> ite
     }
 }
 
-QWidget* SettingsManager::create_control(settings_widget* item, QString groupposition){
+QWidget* SettingsManager::create_control(QUuid page_id, settings_widget* item, QString groupposition){
     QFrame *base_widget = new QFrame;
     QHBoxLayout *base_layout = new QHBoxLayout(base_widget);
     base_layout->setContentsMargins(QMargins(0,0,0,0));
@@ -335,6 +502,7 @@ QWidget* SettingsManager::create_control(settings_widget* item, QString grouppos
     if(item->name() != ""){
         QLabel *name_label = new QLabel(item->name());
         h_layout->addWidget(name_label, 1);
+        row_frames[page_id].append({item->name().toLower(), control_widget});
     }
     h_layout->addWidget(item->widget());
     base_layout->addWidget(control_widget, 1);
