@@ -3,18 +3,12 @@
 #ifndef SETTINGSMANAGER_H
 #define SETTINGSMANAGER_H
 
-#include <QMainWindow>
-#include <QSettings>
-#include <QHBoxLayout>
-#include <QVBoxLayout>
+#include <QFrame>
 #include <QHash>
-#include <QMap>
 #include <QStackedLayout>
-#include <QScrollArea>
+#include <QStandardItemModel>
+#include <QTreeView>
 
-
-#include "breadcrumbwidget.h"
-#include "catlistwidget.h"
 #include "settings_plugin_interface.h"
 
 class SettingsManager : public QFrame
@@ -25,29 +19,33 @@ public:
     SettingsManager();
     ~SettingsManager();
 
-    void load_items(QList<settings_item*> items);
-    void display_categories(QUuid parent_id, QList<settings_item*> items, bool show_back_button = false);
-    void display_widgets(QUuid parent_id, QList<settings_item*> items);
-    void update_widgets(QUuid parent_id, QList<settings_item*> items);
-    QWidget* create_control(settings_widget* item, QString groupposition = "middle");
-    void set_initial_page(QString page_name);
+    void set_initial_path(QString path){ initial_path = path; }
 
 public slots:
     void load_settings_ui();
+    void open_path(QString path);
 
 private slots:
-    void open_item(QUuid id);
-    void open_home(){ open_item(home_id); }
+    void current_changed(const QModelIndex &index);
+    void item_clicked(const QModelIndex &index);
+    void collapse_others(const QModelIndex &index);
+    void update_widgets(QUuid parent_id, QList<settings_item*> items);
 
 private:
-    breadcrumbwidget *bcw = nullptr;
-    catlistwidget *listw = nullptr;
+    void load_plugins();
+    void build_tree();
+    void open_page(settings_page *page);
+    void display_widgets(QUuid parent_id, QList<settings_item*> items);
+    QWidget* create_control(settings_widget* item, QString groupposition = "middle");
+
+    QTreeView *tree = nullptr;
+    QStandardItemModel *model = nullptr;
     QStackedLayout *stacked_layout = nullptr;
 
-    QHash<QUuid, settings_item*> item_hash;
-    QList<settings_item*> top_level_items;
-    QUuid home_id = QUuid::createUuid();
+    QList<settings_page*> pages;
+    QHash<QUuid, settings_page*> page_hash;
+    QHash<QString, QStandardItem*> path_items; // category IDs and page paths
     QHash<QUuid, QWidget*> stack_hash; // pages; layout indices shift when one is replaced
-    QString initial_page;
+    QString initial_path;
 };
 #endif // SETTINGSMANAGER_H
