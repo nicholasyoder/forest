@@ -41,7 +41,7 @@ void forest::loadstylesheet(){
 }
 
 void forest::loadplugins(){
-    QStringList plugin_paths = pluginutills::get_plugin_paths(APP_PLUGIN);
+    QStringList plugin_paths = pluginutills::get_plugin_paths();
     foreach (QString plugin_path, plugin_paths) {
         QPluginLoader plugloader(plugin_path);
         if (plugloader.load()) {

@@ -92,20 +92,7 @@ public:
     virtual QList<settings_page*> pages() = 0;
 };
 
-class settings_plugin_infterace {
-
-public:
-
-    // Destructor
-    virtual ~settings_plugin_infterace() {}
-
-    // Get settings items
-    virtual QList<settings_item*> get_settings_items() = 0;
-
-};
-
 QT_BEGIN_NAMESPACE
-Q_DECLARE_INTERFACE(settings_plugin_infterace, "forest.settings.plugin.interface")
 Q_DECLARE_INTERFACE(settings_plugin_interface, "forest.settings.plugin.interface/2")
 QT_END_NAMESPACE
 

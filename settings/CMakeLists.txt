@@ -1,14 +1,9 @@
 add_subdirectory(widgets)
 
 add_executable(forest-settings
-    breadcrumbwidget.cpp
-    catlistwidget.cpp
     main.cpp
     settingsmanager.cpp
-    breadcrumbwidget.h
-    catlistwidget.h
     settingsmanager.h
-    widgets/listwidget.h
 )
 
 
