@@ -5,6 +5,7 @@ add_library(panel-library STATIC
     panelpluginterface.h
     popup.h
     panelanchor.h
+    panelconfig.h
     panelbutton.h
     graphwidget.h
 )

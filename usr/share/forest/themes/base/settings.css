@@ -156,9 +156,38 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     border-top-right-radius: 0px;
 }
 
-/* Row a search result matched on; after the groupposition rules so it wins at equal specificity. */
-#ControlWidget[searchmatch="true"], #WidgetGroup #ControlWidget[searchmatch="true"] {
+#WidgetGroup #ControlWidget[groupposition="only"] {
+    border: none;
+    background: rgba(0,0,0,0%);
+}
+
+#GroupTitle {
+    font-weight: bold;
+    margin: 10px 0px 7px 2px;
+}
+
+#RowDescription {
+    color: #777;
+    font-size: 8pt;
+    margin: 0px;
+    padding: 0px;
+}
+
+#ControlWidget QLabel:disabled {
+    color: #aaa;
+}
+
+/* Flashed rows; after the groupposition rules so they win at equal specificity. */
+#ControlWidget[searchmatch="true"], #WidgetGroup #ControlWidget[searchmatch="true"], #WidgetGroup[searchmatch="true"] {
     background: rgba(255,200,60, 30%);
+}
+
+#ControlWidget[saved="true"], #WidgetGroup #ControlWidget[saved="true"] {
+    background: rgba(39,174,96, 18%);
+}
+
+#ControlWidget[saved="error"], #WidgetGroup #ControlWidget[saved="error"] {
+    background: rgba(192,57,43, 20%);
 }
 
 

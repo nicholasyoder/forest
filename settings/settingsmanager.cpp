@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "settingsmanager.h"
+#include "settingsrow.h"
 #include "xdgactivation.h"
 
 #include <QDebug>
@@ -67,13 +68,60 @@ QStringList query_words(const QString &query){
 QStringList row_labels(const QList<settings_item*> &items){
     QStringList labels;
     foreach (settings_item *item, items) {
+        if (!item->name().isEmpty()) labels += item->name();
+        if (!item->description().isEmpty()) labels += item->description();
         if (settings_category *group = dynamic_cast<settings_category*>(item))
             labels += row_labels(group->child_items());
-        else if (!item->name().isEmpty())
-            labels += item->name();
     }
     return labels;
 }
+
+// Centres a widget like the settings rows (capped by QSS max-width).
+QWidget *centered(QWidget *widget){
+    QWidget *wrapper = new QWidget;
+    QHBoxLayout *layout = new QHBoxLayout(wrapper);
+    layout->setContentsMargins(QMargins(0,0,0,0));
+    layout->setSpacing(0);
+    layout->addStretch(0);
+    layout->addWidget(widget, 1);
+    layout->addStretch(0);
+    return wrapper;
+}
+
+// Mirrors the control's show/hide onto its row and its enabled state onto the row's labels.
+// The row is never disabled: under a disabled parent, the control's setEnabled(true) is a silent no-op.
+class RowSync : public QObject {
+public:
+    RowSync(QWidget *control, QWidget *row, QList<QWidget*> labels, std::function<void()> visibility_changed)
+        : QObject(row), control(control), row(row), labels(labels), visibility_changed(visibility_changed)
+    {
+        if (control->testAttribute(Qt::WA_WState_ExplicitShowHide) && control->testAttribute(Qt::WA_WState_Hidden))
+            row->hide();
+        sync_enabled();
+        control->installEventFilter(this);
+    }
+protected:
+    bool eventFilter(QObject *, QEvent *event) override {
+        if (event->type() == QEvent::ShowToParent || event->type() == QEvent::HideToParent) {
+            bool shown = event->type() == QEvent::ShowToParent;
+            if (row->isHidden() == shown) {
+                row->setVisible(shown);
+                if (visibility_changed) visibility_changed();
+            }
+        }
+        else if (event->type() == QEvent::EnabledChange) {
+            sync_enabled();
+        }
+        return false;
+    }
+private:
+    void sync_enabled(){
+        foreach (QWidget *label, labels) label->setEnabled(control->isEnabled());
+    }
+    QWidget *control, *row;
+    QList<QWidget*> labels;
+    std::function<void()> visibility_changed;
+};
 
 struct category_info { QString id, title, icon; };
 
@@ -421,14 +469,7 @@ void SettingsManager::highlight_match(const QModelIndex &page_index){
     // After the new page's layout has run, or ensureWidgetVisible sees stale geometry.
     QTimer::singleShot(0, best, [best, area]{
         if (area) area->ensureWidgetVisible(best, 0, 50);
-        best->setProperty("searchmatch", true);
-        best->style()->unpolish(best);
-        best->style()->polish(best);
-    });
-    QTimer::singleShot(1500, best, [best]{
-        best->setProperty("searchmatch", false);
-        best->style()->unpolish(best);
-        best->style()->polish(best);
+        settingsrow::flash(best, "searchmatch", true, 1500);
     });
 }
 
@@ -449,80 +490,115 @@ void SettingsManager::update_widgets(QUuid parent_id, QList<settings_item*> item
 void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> items){
     if(stack_hash.contains(parent_id)){
         stacked_layout->setCurrentWidget(stack_hash[parent_id]);
+        return;
     }
-    else{
 
-        QVBoxLayout *page_layout = new QVBoxLayout();
-        foreach(settings_item* item, items){
-            settings_widget *widget_item = dynamic_cast<settings_widget*>(item);
-            if(widget_item != nullptr){
-                QWidget *widget = (widget_item->is_custom()) ? widget_item->widget() : create_control(parent_id, widget_item);
-                page_layout->addWidget(widget);
-                continue;
-            }
-
-            settings_widget_group *widget_group = dynamic_cast<settings_widget_group*>(item);
-            if(widget_group != nullptr){
-                QFrame *widget_group_frame = new QFrame;
-                widget_group_frame->setObjectName("WidgetGroup");
-                QVBoxLayout *group_v_layout = new QVBoxLayout(widget_group_frame);
-                group_v_layout->setContentsMargins(QMargins(0,0,0,0));
-                group_v_layout->setSpacing(0);
-                foreach (settings_item* sub_item, widget_group->child_items()) {
-                    settings_widget *sub_widget_item = dynamic_cast<settings_widget*>(sub_item);
-                    if(sub_widget_item != nullptr){
-                        QString groupposition = "middle";
-                        if (sub_item == widget_group->child_items().first())
-                            groupposition = "first";
-                        else if (sub_item == widget_group->child_items().last())
-                            groupposition = "last";
-                        QWidget *widget = (sub_widget_item->is_custom()) ? sub_widget_item->widget() : create_control(parent_id, sub_widget_item, groupposition);
-                        group_v_layout->addWidget(widget);
-                        continue;
-                    }
-                }
-                page_layout->addWidget(widget_group_frame);
-            }
+    QVBoxLayout *page_layout = new QVBoxLayout();
+    foreach(settings_item* item, items){
+        if (settings_widget *widget_item = dynamic_cast<settings_widget*>(item)) {
+            page_layout->addWidget(widget_item->is_custom() ? centered(widget_item->widget()) : create_control(parent_id, widget_item));
+            continue;
         }
-        page_layout->addStretch(1);
-
-
-        QFrame *controls_pane = new QFrame;
-        controls_pane->setObjectName("ControlsPane");
-        controls_pane->setLayout(page_layout);
-
-        QScrollArea *controls_area = new QScrollArea;
-        controls_area->setObjectName("ControlsScrollArea");
-        controls_area->setWidget(controls_pane);
-        controls_area->setWidgetResizable(true);
-        controls_area->setFocusPolicy(Qt::NoFocus);
-
-
-        stacked_layout->addWidget(controls_area);
-        stack_hash[parent_id] = controls_area;
-        stacked_layout->setCurrentWidget(controls_area);
+        if (settings_widget_group *widget_group = dynamic_cast<settings_widget_group*>(item))
+            page_layout->addWidget(create_group(parent_id, widget_group));
     }
+    page_layout->addStretch(1);
+
+    QFrame *controls_pane = new QFrame;
+    controls_pane->setObjectName("ControlsPane");
+    controls_pane->setLayout(page_layout);
+
+    QScrollArea *controls_area = new QScrollArea;
+    controls_area->setObjectName("ControlsScrollArea");
+    controls_area->setWidget(controls_pane);
+    controls_area->setWidgetResizable(true);
+    controls_area->setFocusPolicy(Qt::NoFocus);
+
+    stacked_layout->addWidget(controls_area);
+    stack_hash[parent_id] = controls_area;
+    stacked_layout->setCurrentWidget(controls_area);
 }
 
-QWidget* SettingsManager::create_control(QUuid page_id, settings_widget* item, QString groupposition){
-    QFrame *base_widget = new QFrame;
-    QHBoxLayout *base_layout = new QHBoxLayout(base_widget);
-    base_layout->setContentsMargins(QMargins(0,0,0,0));
-    base_layout->setSpacing(0);
-    base_layout->addStretch(0);
+QWidget* SettingsManager::create_group(QUuid page_id, settings_widget_group *group){
+    QWidget *column = new QWidget;
+    QVBoxLayout *column_layout = new QVBoxLayout(column);
+    column_layout->setContentsMargins(QMargins(0,0,0,0));
+    column_layout->setSpacing(0);
+
+    QFrame *frame = new QFrame;
+    frame->setObjectName("WidgetGroup");
+    if (!group->name().isEmpty()) {
+        QLabel *title = new QLabel(group->name());
+        title->setObjectName("GroupTitle");
+        column_layout->addWidget(title);
+        row_frames[page_id].append({group->name().toLower(), frame});
+    }
+    column_layout->addWidget(frame);
+
+    QVBoxLayout *group_layout = new QVBoxLayout(frame);
+    group_layout->setContentsMargins(QMargins(0,0,0,0));
+    group_layout->setSpacing(0);
+    // Outer row widgets (children of column, so the lambda can't outlive them); their ControlWidget holds groupposition.
+    auto rows = std::make_shared<QList<QWidget*>>();
+    // Positions skip hidden rows; a group with none visible hides with its title.
+    auto update_positions = [column, rows]{
+        QList<QWidget*> visible;
+        foreach (QWidget *row, *rows)
+            if (!row->isHidden()) visible.append(row);
+        column->setVisible(!visible.isEmpty() || rows->isEmpty());
+        for (int i = 0; i < visible.size(); i++) {
+            QString position = visible.size() == 1 ? "only" : i == 0 ? "first" : i == visible.size() - 1 ? "last" : "middle";
+            QWidget *control = visible[i]->findChild<QWidget*>("ControlWidget");
+            if (control->property("groupposition").toString() == position) continue;
+            control->setProperty("groupposition", position);
+            settingsrow::repolish(control);
+        }
+    };
+    foreach (settings_item *sub_item, group->child_items()) {
+        settings_widget *sub_widget = dynamic_cast<settings_widget*>(sub_item);
+        if (!sub_widget) continue;
+        if (sub_widget->is_custom()) {
+            group_layout->addWidget(sub_widget->widget());
+            continue;
+        }
+        QWidget *row = create_control(page_id, sub_widget, update_positions);
+        group_layout->addWidget(row);
+        rows->append(row);
+    }
+
+    update_positions();
+    return column;
+}
+
+QWidget* SettingsManager::create_control(QUuid page_id, settings_widget* item, std::function<void()> visibility_changed){
     QFrame *control_widget = new QFrame;
     control_widget->setObjectName("ControlWidget");
-    control_widget->setProperty("groupposition", groupposition);
     QHBoxLayout *h_layout = new QHBoxLayout(control_widget);
     h_layout->setContentsMargins(QMargins(0,0,0,0));
     h_layout->setSpacing(0);
-    if(item->name() != ""){
+    QList<QWidget*> labels;
+    if (!item->name().isEmpty()) {
+        QVBoxLayout *label_layout = new QVBoxLayout;
+        label_layout->setContentsMargins(QMargins(0,0,0,0));
+        label_layout->setSpacing(0);
         QLabel *name_label = new QLabel(item->name());
-        h_layout->addWidget(name_label, 1);
-        row_frames[page_id].append({item->name().toLower(), control_widget});
+        label_layout->addWidget(name_label);
+        labels.append(name_label);
+        if (!item->description().isEmpty()) {
+            QLabel *description_label = new QLabel(item->description());
+            description_label->setObjectName("RowDescription");
+            description_label->setWordWrap(true);
+            label_layout->addWidget(description_label);
+            labels.append(description_label);
+        }
+        h_layout->addLayout(label_layout, 1);
+        row_frames[page_id].append({(item->name() + '\n' + item->description()).toLower(), control_widget});
     }
-    h_layout->addWidget(item->widget());
-    base_layout->addWidget(control_widget, 1);
-    base_layout->addStretch(0);
-    return base_widget;
+    // Unnamed rows are full width.
+    h_layout->addWidget(item->widget(), item->name().isEmpty() ? 1 : 0);
+
+    QWidget *row = centered(control_widget);
+    // After reparenting: setParent hides a visible widget, which would read as the page hiding it.
+    new RowSync(item->widget(), row, labels, visibility_changed);
+    return row;
 }

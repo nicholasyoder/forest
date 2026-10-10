@@ -243,43 +243,7 @@ Done.
 
 ### Phase 3.5 — page framework gaps
 
-Fills gaps that each applet page would otherwise work around on its own
-(Displays already did, with its own `groupRow()` / `centered()`).
-
-- **Row visibility/enabled follows the control.** `create_control`
-  watches the inner widget's Show/Hide and enabled changes and applies
-  them to the row frame (label included). Group `first`/`last` positions
-  are recomputed over visible rows. Pages just call `setVisible` /
-  `setEnabled` (sensors' text/bars modes, Panel's hide delay).
-- **Full-width rows and group titles.** An unnamed row's control gets
-  stretch 1. `settings_widget_group` takes an optional title (heading
-  above the frame, included in search text). Displays then drops
-  `groupRow()` / `centered()`.
-- **Binder for load/save.** Binds a control to a `QSettings` key + default
-  through the widget's USER property and its notify signal (as
-  `QDataWidgetMapper` does), so there's no per-widget-type code. Loads on
-  `opened` with signals blocked, saves debounced (short for typed
-  values, immediate for checks/combos), then runs one callback
-  (`reloadappletsettings` for applets). Optional converters for combos
-  that store item data. Hand-written parts (checklists) call its
-  changed hook.
-- **Saved indicator.** After the binder's write (and a clean
-  `QSettings::status()`), each row changed since the last save gets a
-  `saved` dynamic property for ~1 s; `settings.css` styles
-  `#ControlWidget[saved="true"]` (green tint). The row is the control's
-  nearest `#ControlWidget` ancestor, so no new API. The same
-  set-property/repolish/clear helper serves the existing `searchmatch`
-  highlight and is callable from hand-written pages. QSS can't animate,
-  so it's an on/off tint, not a fade. A failed write sets
-  `saved="error"` instead.
-- **Color button** in `settings/widgets` (not `panel-library`: settings
-  modules shouldn't link the panel's layer-shell code): swatch button,
-  `QColorDialog` with alpha, `color` USER property so the binder handles
-  it.
-- **Row descriptions.** Show `settings_widget::description()` as a
-  subtitle under the row label (stored today but never displayed).
-- Move Panel, Notifications and Locker onto the binder to prove it
-  (Notifications currently re-saves what it just loaded).
+Done.
 
 ### Phase 4 — applet settings infrastructure + clock
 

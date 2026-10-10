@@ -47,14 +47,15 @@ private:
     QList<settings_item*> item_children;
 };
 
-// Group of widgets
+// Group of widgets; the optional title is shown above it and searched.
 class settings_widget_group : public settings_category {
     Q_OBJECT
 public:
-    settings_widget_group() : settings_category("") {}
+    settings_widget_group(QString title = "") : settings_category(title) {}
 };
 
-// Settings item with custom widget
+// Settings row: name on the left (description below it), widget on the right; unnamed rows are full width.
+// The row follows the widget's setVisible / setEnabled. Custom widgets are placed as-is.
 class settings_widget : public settings_item {
     Q_OBJECT
 public:

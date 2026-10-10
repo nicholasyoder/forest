@@ -5,7 +5,7 @@
 
 #include <QObject>
 
-#include "../../settings/widgets/listwidget.h"
+#include "listwidget.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
 class ForestThemeSettings : public QObject

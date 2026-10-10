@@ -10,6 +10,7 @@
 #include <QStackedLayout>
 #include <QStandardItemModel>
 #include <QTreeView>
+#include <functional>
 
 #include "settings_plugin_interface.h"
 
@@ -49,7 +50,8 @@ private:
     void highlight_match(const QModelIndex &page_index);
     QModelIndex first_match();
     void display_widgets(QUuid parent_id, QList<settings_item*> items);
-    QWidget* create_control(QUuid page_id, settings_widget* item, QString groupposition = "middle");
+    QWidget* create_group(QUuid page_id, settings_widget_group *group);
+    QWidget* create_control(QUuid page_id, settings_widget* item, std::function<void()> visibility_changed = {});
 
     QTreeView *tree = nullptr;
     QStandardItemModel *model = nullptr;
@@ -61,7 +63,7 @@ private:
     QHash<QUuid, settings_page*> page_hash;
     QHash<QString, QStandardItem*> path_items; // category IDs and page paths
     QHash<QUuid, QWidget*> stack_hash; // pages; layout indices shift when one is replaced
-    QHash<QUuid, QList<QPair<QString, QPointer<QWidget>>>> row_frames; // page ID -> (label, ControlWidget)
+    QHash<QUuid, QList<QPair<QString, QPointer<QWidget>>>> row_frames; // page ID -> (search text, ControlWidget or titled WidgetGroup)
     QPersistentModelIndex shown_index; // source index of the open page
     QString initial_path;
     bool loaded = false;

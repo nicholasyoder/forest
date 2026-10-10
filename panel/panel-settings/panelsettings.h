@@ -5,7 +5,7 @@
 
 #include <QComboBox>
 #include <QSpinBox>
-#include "../../settings/widgets/listwidget.h"
+#include "listwidget.h"
 #include <QDebug>
 #include <QDropEvent>
 #include <QTimer>
@@ -54,19 +54,12 @@ public:
     QList<settings_page*> pages() override;
 
 public slots:
-    void load_behavior_settings();
-    void set_behavior_settings();
-
     void load_applets();
     void set_applets();
 
-    void resize_applet_list();
 
 private:
     QString padwithzeros(int number);
-    QComboBox *position_select = nullptr;
-    QComboBox *autohide_select = nullptr;
-    QSpinBox *autohide_delay_input = nullptr;
     ListWidget *applet_list_w = nullptr;
     QHash <QString, QString> path_hash;
 };

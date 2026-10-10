@@ -10,6 +10,7 @@
 #include <LayerShellQt/Window>
 
 #include "miscutills.h"
+#include "../../notificationsconfig.h"
 
 notifypopup::notifypopup(QString app_name, QString summary, QString body, QString app_icon, const QStringList &actions, int timeout, uint id){
     setWindowFlags(Qt::FramelessWindowHint);
@@ -101,12 +102,12 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     vlayout->addWidget(popupQFrame);
 
     QSettings settings("Forest", "Forest");
-    settings.beginGroup("notifications");
-    int min_timeout = settings.value("min_timeout", 3).toInt() * 1000;
-    int max_timeout = settings.value("max_timeout", 30).toInt() * 1000;
-    int default_timeout = settings.value("default_timeout", 8).toInt() * 1000;
-    qreal height_percent = settings.value("height", 0.7).toReal();
-    qreal width_percent = settings.value("width", 0.5).toReal();
+    settings.beginGroup(notificationsconfig::group);
+    int min_timeout = settings.value(notificationsconfig::min_timeout, notificationsconfig::min_timeout_default).toInt() * 1000;
+    int max_timeout = settings.value(notificationsconfig::max_timeout, notificationsconfig::max_timeout_default).toInt() * 1000;
+    int default_timeout = settings.value(notificationsconfig::default_timeout, notificationsconfig::default_timeout_default).toInt() * 1000;
+    qreal height_percent = settings.value(notificationsconfig::height, notificationsconfig::height_default).toReal();
+    qreal width_percent = settings.value(notificationsconfig::width, notificationsconfig::width_default).toReal();
 
     QScreen *screen = ScreenTracker::primary();
     if (!screen)

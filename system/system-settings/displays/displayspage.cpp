@@ -30,32 +30,6 @@ const char *kInterface = "org.forest.displays";
 const QString kCurrent = "#current";
 const QString kEdited = "#edited";
 
-// Centres a full-width custom widget like the settings rows (they're capped by QSS max-width).
-QWidget *centered(QWidget *widget){
-    QWidget *wrapper = new QWidget;
-    QHBoxLayout *layout = new QHBoxLayout(wrapper);
-    layout->setContentsMargins(QMargins(0,0,0,0));
-    layout->setSpacing(0);
-    layout->addStretch(0);
-    layout->addWidget(widget, 1);
-    layout->addStretch(0);
-    return wrapper;
-}
-
-// A row of a hand-built #WidgetGroup, styled like SettingsManager::create_control's
-// rows: `name` on the left, `content` on the right (or full width without a name).
-QWidget *groupRow(QWidget *content, const QString &position, const QString &name = QString()){
-    QFrame *control = new QFrame;
-    control->setObjectName("ControlWidget");
-    control->setProperty("groupposition", position);
-    QHBoxLayout *layout = new QHBoxLayout(control);
-    layout->setContentsMargins(QMargins(0,0,0,0));
-    layout->setSpacing(0);
-    if (!name.isEmpty()) layout->addWidget(new QLabel(name), 1);
-    layout->addWidget(content, name.isEmpty() ? 1 : 0);
-    return centered(control);
-}
-
 }
 
 DisplaysPage::DisplaysPage(){
@@ -139,23 +113,18 @@ DisplaysPage::DisplaysPage(){
     arrangementLayout->addWidget(area);
     arrangementLayout->addWidget(buttons);
 
-    // Built by hand: settings_widget_group doesn't frame custom (full-width) rows.
-    QFrame *group = new QFrame;
-    group->setObjectName("WidgetGroup");
-    QVBoxLayout *groupLayout = new QVBoxLayout(group);
-    groupLayout->setContentsMargins(QMargins(0,0,0,0));
-    groupLayout->setSpacing(0);
-    groupLayout->addWidget(groupRow(profileRow, "first", tr("Profile")));
-    groupLayout->addWidget(groupRow(primaryCombo, "middle", tr("Primary display")));
-    groupLayout->addWidget(groupRow(statusRow, "middle", tr("Status")));
-    groupLayout->addWidget(groupRow(arrangement, "last"));
-    settings_item->add_child(new settings_widget("", "", group, true));
+    settings_widget_group *group = new settings_widget_group;
+    settings_item->add_child(group);
+    group->add_child(new settings_widget(tr("Profile"), "", profileRow));
+    group->add_child(new settings_widget(tr("Primary display"), "", primaryCombo));
+    group->add_child(new settings_widget(tr("Status"), "", statusRow));
+    group->add_child(new settings_widget("", "", arrangement));
 
     errorLabel = new QLabel;
     errorLabel->setObjectName("DisplaysErrorLabel");
     errorLabel->setWordWrap(true);
     errorLabel->hide();
-    settings_item->add_child(new settings_widget("", "", centered(errorLabel), true));
+    settings_item->add_child(new settings_widget("", "", errorLabel, true));
 
     selectedLabel = new ElidingLabel;
     selectedLabel->setObjectName("SystemInfoLabel");
@@ -194,7 +163,7 @@ DisplaysPage::DisplaysPage(){
     QLabel *hotkeyNote = new QLabel(tr("Saved profiles can be given keyboard shortcuts under Services → Hotkeys."));
     hotkeyNote->setObjectName("SettingsNoteLabel");
     hotkeyNote->setWordWrap(true);
-    settings_item->add_child(new settings_widget("", "", centered(hotkeyNote), true));
+    settings_item->add_child(new settings_widget("", "", hotkeyNote, true));
 
     testDebounce.setSingleShot(true);
     testDebounce.setInterval(300);

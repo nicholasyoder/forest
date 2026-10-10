@@ -1,6 +1,12 @@
 add_library(settings-widgets STATIC
+    colorbutton.cpp
+    colorbutton.h
     listwidget.cpp
     listwidget.h
+    settingsbinder.cpp
+    settingsbinder.h
+    settingsrow.cpp
+    settingsrow.h
 )
 
 set_target_properties(settings-widgets PROPERTIES POSITION_INDEPENDENT_CODE ON)

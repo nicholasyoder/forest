@@ -4,8 +4,6 @@
 #define NOTIFICATIONSSETTINGS_H
 
 #include <QObject>
-#include <QSpinBox>
-#include <QPushButton>
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
 class NotificationsSettings : public QObject {
@@ -17,17 +15,10 @@ public slots:
     settings_page* get_settings_item(){ return settings_item; }
 
 private slots:
-    void load_settings();
-    void save_settings();
     void send_test_notification();
 
 private:
     settings_page *settings_item = nullptr;
-    QSpinBox *min_timeout_spinbox = nullptr;
-    QSpinBox *max_timeout_spinbox = nullptr;
-    QSpinBox *default_timeout_spinbox = nullptr;
-    QSpinBox *height_spinbox = nullptr;
-    QSpinBox *width_spinbox = nullptr;
 };
 
 #endif // NOTIFICATIONSSETTINGS_H

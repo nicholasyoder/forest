@@ -19,22 +19,12 @@ LockerConfig LockerConfig::load()
     QSettings settings("Forest", "Locker");
     LockerConfig defaults;
     LockerConfig config;
-    config.displayOffMinutes = minutes(settings, "display_off_minutes", defaults.displayOffMinutes);
-    config.dimBeforeDisplayOff = settings.value("dim_before_display_off", defaults.dimBeforeDisplayOff).toBool();
-    config.lockOnDisplayOff = settings.value("lock_on_display_off", defaults.lockOnDisplayOff).toBool();
-    config.lockOnSuspend = settings.value("lock_on_suspend", defaults.lockOnSuspend).toBool();
-    config.lockedDisplayOffMinutes = minutes(settings, "locked_display_off_minutes", defaults.lockedDisplayOffMinutes);
+    config.displayOffMinutes = minutes(settings, displayOffKey, defaults.displayOffMinutes);
+    config.dimBeforeDisplayOff = settings.value(dimBeforeDisplayOffKey, defaults.dimBeforeDisplayOff).toBool();
+    config.lockOnDisplayOff = settings.value(lockOnDisplayOffKey, defaults.lockOnDisplayOff).toBool();
+    config.lockOnSuspend = settings.value(lockOnSuspendKey, defaults.lockOnSuspend).toBool();
+    config.lockedDisplayOffMinutes = minutes(settings, lockedDisplayOffKey, defaults.lockedDisplayOffMinutes);
     return config;
-}
-
-void LockerConfig::save() const
-{
-    QSettings settings("Forest", "Locker");
-    settings.setValue("display_off_minutes", displayOffMinutes);
-    settings.setValue("dim_before_display_off", dimBeforeDisplayOff);
-    settings.setValue("lock_on_display_off", lockOnDisplayOff);
-    settings.setValue("lock_on_suspend", lockOnSuspend);
-    settings.setValue("locked_display_off_minutes", lockedDisplayOffMinutes);
 }
 
 bool LockerConfig::operator==(const LockerConfig &other) const

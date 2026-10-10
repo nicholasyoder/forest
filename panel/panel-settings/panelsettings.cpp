@@ -2,11 +2,15 @@
 
 #include "panelsettings.h"
 
+#include <QCheckBox>
 #include <QSettings>
 #include <QPluginLoader>
 #include <QTimer>
 
 #include "../panel-library/panelpluginterface.h"
+#include "panelconfig.h"
+#include "settingsbinder.h"
+#include "settingsrow.h"
 
 PanelSettings::PanelSettings()
 {
@@ -16,71 +20,44 @@ PanelSettings::PanelSettings()
 QList<settings_page*> PanelSettings::pages(){
     settings_page *panel_page = new settings_page("desktop/panel", "Panel", "preferences-desktop");
     panel_page->set_keywords({"taskbar", "applets", "plugins", "widgets", "position", "autohide", "top", "bottom"});
-    connect(panel_page, &settings_category::opened, this, &PanelSettings::load_behavior_settings);
+
+    SettingsBinder *binder = new SettingsBinder("Forest", "Panel", QString(), this);
+    binder->set_callback([]{ miscutills::call_dbus("forest/panel/reloadsettings"); });
+    connect(panel_page, &settings_category::opened, binder, &SettingsBinder::load);
     connect(panel_page, &settings_category::opened, this, &PanelSettings::load_applets);
 
-    settings_widget_group *behavior_group = new settings_widget_group;
+    settings_widget_group *behavior_group = new settings_widget_group("Behavior");
     panel_page->add_child(behavior_group);
 
-    position_select = new QComboBox();
-    position_select->addItem("Top");
-    position_select->addItem("Bottom");
-    settings_widget *position_item = new settings_widget("Position", "", position_select);
-    behavior_group->add_child(position_item);
+    QComboBox *position_select = new QComboBox();
+    position_select->addItems({"Top", "Bottom"});
+    binder->bind(position_select, panelconfig::position, panelconfig::position_default);
+    behavior_group->add_child(new settings_widget("Position", "", position_select));
 
-    autohide_select = new QComboBox();
-    autohide_select->addItem("Enable");
-    autohide_select->addItem("Disable");
-    settings_widget *autohide_item = new settings_widget("Hide when not in use", "", autohide_select);
-    behavior_group->add_child(autohide_item);
+    QCheckBox *autohide_check = new QCheckBox();
+    binder->bind(autohide_check, panelconfig::autohide, panelconfig::autohide_default);
+    behavior_group->add_child(new settings_widget("Hide when not in use", "", autohide_check));
 
-    autohide_delay_input = new QSpinBox();
+    QSpinBox *autohide_delay_input = new QSpinBox();
     autohide_delay_input->setRange(0, 10000);
     autohide_delay_input->setSingleStep(100);
     autohide_delay_input->setSuffix(" ms");
-    autohide_delay_input->setKeyboardTracking(false); // one reload per edit, not per keystroke
-    settings_widget *autohide_delay_item = new settings_widget("Hide delay", "", autohide_delay_input);
-    behavior_group->add_child(autohide_delay_item);
+    binder->bind(autohide_delay_input, panelconfig::autohide_delay, panelconfig::autohide_delay_default);
+    behavior_group->add_child(new settings_widget("Hide delay", "", autohide_delay_input));
+    connect(autohide_check, &QCheckBox::toggled, autohide_delay_input, &QWidget::setVisible);
+    autohide_delay_input->setVisible(autohide_check->isChecked());
 
-
+    settings_widget_group *applets_group = new settings_widget_group("Applets");
+    panel_page->add_child(applets_group);
     applet_list_w = new ListWidget;
     applet_list_w->setDragDropMode(QAbstractItemView::InternalMove);
     connect(applet_list_w, &QListWidget::itemChanged, this, &PanelSettings::set_applets);
     ReorderListener *rl = new ReorderListener(applet_list_w);
     connect(rl, &ReorderListener::reordered, this, &PanelSettings::set_applets);
     applet_list_w->installEventFilter(rl);
-    settings_widget *applet_list_item = new settings_widget("", "", applet_list_w);
-    panel_page->add_child(applet_list_item);
+    applets_group->add_child(new settings_widget("", "", applet_list_w));
 
     return {panel_page};
-}
-
-void PanelSettings::load_behavior_settings(){
-    QSettings settings("Forest", "Panel");
-
-    {
-        // Runs on every open; don't write back half-loaded state.
-        const QSignalBlocker b1(position_select), b2(autohide_select), b3(autohide_delay_input);
-        position_select->setCurrentText(settings.value("position").toString());
-        autohide_select->setCurrentText(settings.value("autohide", false).toBool() ? "Enable" : "Disable");
-        autohide_delay_input->setValue(settings.value("autohide_delay", 1000).toInt());
-    }
-    autohide_delay_input->setEnabled(autohide_select->currentText() == "Enable");
-
-    connect(position_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings, Qt::UniqueConnection);
-    connect(autohide_select, &QComboBox::currentTextChanged, this, &PanelSettings::set_behavior_settings, Qt::UniqueConnection);
-    connect(autohide_delay_input, &QSpinBox::valueChanged, this, &PanelSettings::set_behavior_settings, Qt::UniqueConnection);
-}
-
-void PanelSettings::set_behavior_settings(){
-    QSettings settings("Forest", "Panel");
-    settings.setValue("position", position_select->currentText());
-    settings.setValue("autohide", autohide_select->currentText() == "Enable");
-    settings.setValue("autohide_delay", autohide_delay_input->value());
-    autohide_delay_input->setEnabled(autohide_select->currentText() == "Enable");
-    settings.sync();
-
-    miscutills::call_dbus("forest/panel/reloadsettings");
 }
 
 void PanelSettings::load_applets(){
@@ -135,6 +112,8 @@ void PanelSettings::set_applets(){
         settings.endGroup();
     }
     settings.sync();
+    bool ok = settings.status() == QSettings::NoError;
+    settingsrow::flash(settingsrow::row_of(applet_list_w), "saved", ok ? "true" : "error", ok ? 1000 : 3000);
 
     miscutills::call_dbus("forest/panel/reloadplugins");
 }

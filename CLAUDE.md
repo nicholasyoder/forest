@@ -87,7 +87,7 @@ All menus are `QMenu`, styled by the theme's `QMenu` rules. Qt can't place popup
 
 ### Settings Plugins
 
-MODULE libs → `/usr/lib/forest/settings/`, all loaded (no config entry). Each implements `settings_plugin_interface` (`library/pluginutills/settings_plugin_interface.h`), returning a flat list of `settings_page`s. A page's path (`desktop/panel`) places it: the first segment is a category ID from the table in `settings/settingsmanager.cpp`, the rest its parent page. Paths double as deep links (`forest-settings desktop/panel`).
+MODULE libs → `/usr/lib/forest/settings/`, all loaded (no config entry). Each implements `settings_plugin_interface` (`library/pluginutills/settings_plugin_interface.h`), returning a flat list of `settings_page`s. A page's path (`desktop/panel`) places it: the first segment is a category ID from the table in `settings/settingsmanager.cpp`, the rest its parent page. Paths double as deep links (`forest-settings desktop/panel`). Pages load/save controls with `SettingsBinder` (`settings/widgets`) against keys + defaults from a shared `<component>config.h`; rows follow their control's `setVisible` / `setEnabled`.
 
 ### Theming System
 
