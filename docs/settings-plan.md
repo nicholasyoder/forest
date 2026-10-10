@@ -189,8 +189,10 @@ using the same `settings_plugin_interface` and contributing a
   dialog as a member initializer). Loading applets in the settings process
   only to ask for pages invites side effects; a separate module has none,
   and follows the existing `-app` / `-settings` split.
-- Shared config keys live in a small `<applet>config.h` (as
-  `locker/lockerconfig.h` does for the locker) compiled into both sides.
+- Shared config keys live in a small `<applet>config.h` compiled into
+  both sides: key + default constants that the applet and the page's
+  binder (Phase 3.5) both read, so defaults can't drift (sensors repeats
+  every default today).
 - Pages that need runtime data (sensors' chip list, volume's sinks) query
   it themselves (libsensors, the audio engine sources) rather than asking
   the running panel.
@@ -211,8 +213,9 @@ using the same `settings_plugin_interface` and contributing a
 - The Applets list on the Panel page links each row with settings to its
   page (row button or double-click).
 - Redesign each page's contents while porting it, not as a 1:1 copy of
-  the old dialog. cpumonitor and memorymonitor share their color/opacity
-  rows; put a helper for those in `panel-library`.
+  the old dialog. Opacity sliders fold into the color's alpha (the
+  Phase 3.5 color button); pages split alpha back into the existing
+  `*opacity` keys, so stored config doesn't change.
 
 ## Theming
 
@@ -238,6 +241,46 @@ Done.
 
 Done.
 
+### Phase 3.5 — page framework gaps
+
+Fills gaps that each applet page would otherwise work around on its own
+(Displays already did, with its own `groupRow()` / `centered()`).
+
+- **Row visibility/enabled follows the control.** `create_control`
+  watches the inner widget's Show/Hide and enabled changes and applies
+  them to the row frame (label included). Group `first`/`last` positions
+  are recomputed over visible rows. Pages just call `setVisible` /
+  `setEnabled` (sensors' text/bars modes, Panel's hide delay).
+- **Full-width rows and group titles.** An unnamed row's control gets
+  stretch 1. `settings_widget_group` takes an optional title (heading
+  above the frame, included in search text). Displays then drops
+  `groupRow()` / `centered()`.
+- **Binder for load/save.** Binds a control to a `QSettings` key + default
+  through the widget's USER property and its notify signal (as
+  `QDataWidgetMapper` does), so there's no per-widget-type code. Loads on
+  `opened` with signals blocked, saves debounced (short for typed
+  values, immediate for checks/combos), then runs one callback
+  (`reloadappletsettings` for applets). Optional converters for combos
+  that store item data. Hand-written parts (checklists) call its
+  changed hook.
+- **Saved indicator.** After the binder's write (and a clean
+  `QSettings::status()`), each row changed since the last save gets a
+  `saved` dynamic property for ~1 s; `settings.css` styles
+  `#ControlWidget[saved="true"]` (green tint). The row is the control's
+  nearest `#ControlWidget` ancestor, so no new API. The same
+  set-property/repolish/clear helper serves the existing `searchmatch`
+  highlight and is callable from hand-written pages. QSS can't animate,
+  so it's an on/off tint, not a fade. A failed write sets
+  `saved="error"` instead.
+- **Color button** in `settings/widgets` (not `panel-library`: settings
+  modules shouldn't link the panel's layer-shell code): swatch button,
+  `QColorDialog` with alpha, `color` USER property so the binder handles
+  it.
+- **Row descriptions.** Show `settings_widget::description()` as a
+  subtitle under the row label (stored today but never displayed).
+- Move Panel, Notifications and Locker onto the binder to prove it
+  (Notifications currently re-saves what it just loaded).
+
 ### Phase 4 — applet settings infrastructure + clock
 
 `reloadSettings()` on `panelpluginterface` (`/3`),
@@ -248,5 +291,11 @@ port to prove the pattern.
 
 ### Phase 5 — remaining applets
 
-cpumonitor + memorymonitor (shared color helper), windowlist, sensors,
-volume. One PR, or one per applet if pages get redesigned substantially.
+cpumonitor + memorymonitor, windowlist, sensors, volume. One PR, or one
+per applet if pages get redesigned substantially.
+
+- sensors: drop the dead `displayheight` key (written, never read) and
+  `sensorlist` (the applet enumerates itself); store the shown sensor by
+  label instead of `ChipIndex`, which shifts when chips change.
+- memorymonitor: swap mode radios become a combo; swap color row hidden
+  when swap is disabled.
