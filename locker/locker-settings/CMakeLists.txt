@@ -9,4 +9,4 @@ target_link_libraries(locker-settings PRIVATE Qt6::Widgets lockerconfig)
 forest_link_pluginutills(locker-settings)
 forest_link_miscutills(locker-settings)
 
-install(TARGETS locker-settings LIBRARY DESTINATION lib/forest)
+install(TARGETS locker-settings LIBRARY DESTINATION lib/forest/settings)

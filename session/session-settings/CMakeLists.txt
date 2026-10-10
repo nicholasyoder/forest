@@ -11,4 +11,4 @@ target_link_libraries(session-settings PRIVATE Qt6::Widgets)
 forest_link_pluginutills(session-settings)
 forest_link_miscutills(session-settings)
 
-install(TARGETS session-settings LIBRARY DESTINATION lib/forest)
+install(TARGETS session-settings LIBRARY DESTINATION lib/forest/settings)
