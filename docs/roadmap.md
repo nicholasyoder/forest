@@ -149,6 +149,9 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   client can't see the global pointer under Wayland), each with a
   user-configurable action (show desktop, open menu, run command, task view
   once it exists).
+- **Main menu drag icon.** Dragging an app out of the main menu (e.g. onto
+  quicklaunch) shows nothing under the pointer: `itemhandler::doDrag` sets no
+  `QDrag` pixmap. Biome already renders client drag icons; use the app icon.
 - **Directory menu.** Panel plugin that browses a folder as cascading menus.
   Unblocked: panel menus are QMenus with real submenus.
 
