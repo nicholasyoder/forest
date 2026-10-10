@@ -139,18 +139,19 @@ page pointer in a user role):
 ## Search (#25)
 
 - Search field above the tree.
-- Each page's tree item gets a hidden search-text role, built at load (all
-  items already exist then): page title, category title, keywords, and the
-  row labels (`settings_widget::name()`) of generic pages. Custom-widget
-  pages (Displays, Hotkeys, Autostart) are searchable only through their
-  title and keywords, so give them good keywords.
+- Each page's tree item gets a hidden search-text role, built at load:
+  page title, category title, keywords, and row labels
+  (`settings_widget::name()`). Pages that build their rows on open
+  (Displays, Hotkeys, Autostart) are searchable only through their title
+  and keywords, so give them good keywords.
 - Filtering: `QSortFilterProxyModel` on that role with
-  `recursiveFilteringEnabled`; matching pages stay visible with their
-  categories expanded. Empty query restores the accordion state.
+  `recursiveFilteringEnabled`, every query word must match; matching pages
+  stay visible with their categories expanded. Empty query restores the
+  accordion state.
 - Opening a result that matched on a row label scrolls to that row
   (`QScrollArea::ensureWidgetVisible`) and briefly highlights it (a dynamic
-  property styled in `settings.css`). Needs a `settings_widget` → row frame
-  map, filled in `display_widgets` and rebuilt on `updated`.
+  property styled in `settings.css`). Needs a row label → row frame map,
+  filled in `display_widgets` and rebuilt on `updated`.
 
 ## Deep links and single instance
 
@@ -230,38 +231,11 @@ Each phase is one PR into `develop` unless noted.
 
 ### Phase 1 — interface, loading, categories, tree, deep links
 
-One PR, since the interface change breaks every settings plugin at once.
-Commit in this order so each step builds:
-
-1. **Interface.** Rewrite `settings_plugin_interface.h`: `settings_page`,
-   `settings_plugin_interface` (`/2` IID), drop the commented-out
-   `settings_widget` draft.
-2. **Port the six plugins** to `pages()` with the paths from the
-   Categories table, including the merges and drops listed there (Panel
-   behavior + applets, Session General → Autostart, placeholders,
-   dead `desktop-settings/settingswidget`). Add keywords while there.
-3. **Install paths.** Every settings module's CMake `install()` →
-   `lib/forest/settings`. `pluginutills` loses `SETTINGS_PLUGIN`.
-4. **App core.** Directory loader, category table, path → tree assembly
-   (ordering, orphan, empty-category and `other` handling), `QTreeView` navigation with
-   accordion and single-page categories. Delete `catlistwidget`,
-   `breadcrumbwidget`.
-5. **Deep links.** Path argument; update `panel.cpp` (`desktop/panel`),
-   `desktop.cpp` (`appearance/wallpaper`), `debian/man/forest-settings.1`.
-6. **Config migration.** Remove `settings-only` entries from
-   `etc/forest/Forest.conf`; `upgrade_0_10_0` removes them from user
-   configs. Bumps `/etc/forest/Forest.conf`'s `version`, which staging
-   can't install, so it needs a manual copy to test.
-7. **CSS** for the tree; remove dead rules.
-
-Test: every page opens and saves as before, deep links from the panel and
-desktop context menus, fresh config and upgraded config both load all
-plugins.
+Done (`af2c807`..`b7918fd` on `develop`).
 
 ### Phase 2 — search
 
-Search field, search-text role, proxy filtering, row scroll + highlight,
-CSS. Keyword pass over pages that are hard to find by title.
+Done.
 
 ### Phase 3 — single instance
 
