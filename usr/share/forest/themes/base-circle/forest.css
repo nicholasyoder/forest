@@ -11,6 +11,10 @@
     margin: 2px 4px 2px 4px;
 }
 
+#deskButton {
+    border-radius: 5px;
+}
+
 #panelButton { 
     border: 1px solid transparent;
     border-radius: 20px; 

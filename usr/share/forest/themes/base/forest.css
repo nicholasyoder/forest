@@ -43,6 +43,17 @@
     icon-size: 22px;
 }
 
+#deskButton {
+    min-width: 20px;
+    max-width: 20px;
+    margin: 1px;
+    border: 1px solid;
+}
+
+#deskWindow {
+    border: 1px solid;
+}
+
 #popup {
     background: grey;
     padding: 3px;

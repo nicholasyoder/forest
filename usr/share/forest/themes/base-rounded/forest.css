@@ -9,6 +9,10 @@ QWidget[FSS-widget-type="pane"] {
     margin: 2px 4px 2px 4px;
 }
 
+#deskButton {
+    border-radius: 2px;
+}
+
 #panelButton {
     border: 1px solid transparent;
     border-radius: 3px; 

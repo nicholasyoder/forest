@@ -2,61 +2,68 @@
 
 #include "deskbutton.h"
 
+#include <QStyle>
+
 deskbutton::deskbutton(int desknumber)
 {
     desknum = desknumber;
-    this->setFixedWidth(23);
+    setObjectName("deskButton");
+    setProperty("active", false);
 
-    //connect(this, &deskbutton::leftclicked, this, &deskbutton::handleclick);
-    //setupbt();
-    //setbuttondata("", "draw-rectangle");
+    for (int i = 0; i < 3; i++){
+        QFrame *window = new QFrame(this);
+        window->setObjectName("deskWindow");
+        window->setAttribute(Qt::WA_TransparentForMouseEvents);
+        window->hide();
+        windows << window;
+    }
 }
 
 void deskbutton::setactive(int num)
 {
-    if (num == desknum)
-    {
-        active = true;
-        this->update();
-    }
-    else
-    {
-        active = false;
-        this->update();
-    }
+    const bool active = num == desknum;
+    if (property("active").toBool() == active)
+        return;
 
+    setProperty("active", active);
+    // QSS matches dynamic properties only at polish time; children use them via descendant selectors.
+    style()->unpolish(this);
+    style()->polish(this);
+    for (QFrame *window : std::as_const(windows)){
+        style()->unpolish(window);
+        style()->polish(window);
+    }
 }
 
-void deskbutton::paintEvent(QPaintEvent *)
+void deskbutton::setNumDeskWindows(int num)
 {
-    QSize outlinesize(this->width() - 4, this->height() - 4);
-    int boxsize = (outlinesize.width() /2) - 2;
+    numDeskWindows = num;
+    layoutWindows();
+}
 
-    QPainter p(this);
-    p.setPen(Qt::lightGray);
-    QRect outline(2,2, outlinesize.width(), outlinesize.height());
+void deskbutton::resizeEvent(QResizeEvent *event)
+{
+    QFrame::resizeEvent(event);
+    layoutWindows();
+}
 
-    if (active){
-        p.setPen(QColor(100,170,100));
-        p.setBrush(QColor(150,150,150, 80));
-    }
-    p.drawRect(outline);
-    p.setBrush(Qt::gray);
+void deskbutton::layoutWindows()
+{
+    static const QList<int> offsets[] = {{}, {0}, {-1, 1}, {-2, 0, 2}};
+    const QList<int> &shown = offsets[qBound(0, numDeskWindows, 3)];
 
-    int boxX = width()/2 - boxsize/2;
-    int boxY = height()/2 - boxsize/2;
+    const QRect area = contentsRect();
+    const int size = area.width() / 2;
+    QRect box(0, 0, size, size);
+    box.moveCenter(area.center());
 
-    if (numDeskWindows == 1){
-        p.drawRect(boxX, boxY, boxsize, boxsize);
-    }
-    else if (numDeskWindows == 2){
-        p.drawRect(boxX-1, boxY-1, boxsize, boxsize);
-        p.drawRect(boxX+1, boxY+1, boxsize, boxsize);
-    }
-    else if (numDeskWindows > 2){
-        p.drawRect(boxX-2, boxY-2, boxsize, boxsize);
-        p.drawRect(boxX, boxY, boxsize, boxsize);
-        p.drawRect(boxX+2, boxY+2, boxsize, boxsize);
+    for (int i = 0; i < windows.length(); i++){
+        if (i < shown.length()){
+            windows[i]->setGeometry(box.translated(shown[i], shown[i]));
+            windows[i]->show();
+        }
+        else
+            windows[i]->hide();
     }
 }
 

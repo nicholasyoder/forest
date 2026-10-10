@@ -1,12 +1,12 @@
 # Panel plugins: replace custom pixel painting
 
 Roadmap item "Custom-painted panel plugins at fractional scale" (0.10.0).
-`graphwidget`, `deskbutton`, `battery` and `SensorWidget` (bars mode) paint
+`graphwidget`, `battery` and `SensorWidget` (bars mode) paint
 in integer logical pixels. At fractional DPR, 1px lines, graph columns and
 bar widths/gaps come out 1 or 2 device pixels depending on position.
 
 Approach: stop hand-painting wherever a standard mechanism fits. Use
-QSS-styled widgets for the workspace switcher and sensor bars, theme icons
+QSS-styled widgets for the sensor bars, theme icons
 for the battery, and an antialiased vector path for the graph. These widgets
 will still round edges the way every other Qt widget does at fractional scale.
 What goes away is the patterns of repeated 1px elements that make the rounding
@@ -14,21 +14,6 @@ visible, along with the hardcoded colours that ignore the theme.
 
 Fallback: if a piece below doesn't work out, `fractional-paint-plan.md` covers
 device-pixel painting for the same widgets.
-
-## Phase 1: `deskbutton` → QSS widgets
-
-- `deskbutton` becomes a `QFrame` (`#deskButton`) with an `active` property.
-  Restyle it on change with `style()->unpolish/polish`; QSS only matches
-  dynamic properties at polish time.
-- Window indicators are 0–3 child `QFrame`s (`#deskWindow`), stacked with a
-  2px logical offset so they still read as overlapping windows. At 1.5x, 2px
-  is a whole 3 device pixels, so the offsets stay even; today's ±1 steps
-  don't. Size and place them in `resizeEvent` from `contentsRect()`. Their
-  border and fill come from QSS.
-- Move the fixed 23px width into QSS (`min-width`/`max-width`).
-- Add `#deskButton`, `#deskButton[active="true"]` and `#deskWindow` rules to
-  `base/forest.css`, with colour overrides in `base-dark`/`base-light`. Match
-  the current look as a starting point.
 
 ## Phase 2: `SensorWidget` bars → QSS frames + painted fill
 
@@ -109,15 +94,14 @@ don't change.
 ## Testing
 
 Manual. Run Biome at 1x, 1.25x and 1.5x, with the panel horizontal and
-then vertical, on Circle and Round in both dark and light. Check:
+then vertical, on Circle and Round in both dark and light. Per phase:
 
-- deskbutton outlines and window stacks look even across all desktop
-  buttons, and the active state restyles
-- sensor bars are even and the gradient matches today's; settings changes
-  apply live via `reloadSettings()`
-- the battery icon resolves sensibly under several icon themes
-- the graph scrolls without banding, and memmon's separate-swap mode shows
-  swap
+- Phase 2: sensor bars are even and the gradient matches today's; settings
+  changes apply live via `reloadSettings()`
+- Phase 3: the battery icon resolves sensibly under several icon themes
+- Phase 4: the graph scrolls without banding, and memmon's separate-swap
+  mode shows swap
 
-One PR (`panel-rendering` off `develop`), one commit per phase. When it
-merges, delete this doc, `fractional-paint-plan.md` and the roadmap item.
+One PR per phase, each off `develop`. Each PR removes its phase from this
+doc; the last one deletes the doc, `fractional-paint-plan.md` and the
+roadmap item.

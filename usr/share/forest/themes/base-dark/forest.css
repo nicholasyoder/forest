@@ -16,6 +16,24 @@ QWidget[FSS-widget-type="pane"] {
     background: qlineargradient(x1:0, y1:0, x2:0, y2:1, stop:0 rgba(0,0,0, 0%), stop:0.15 rgba(100,100,100, 80%), stop:0.85 rgba(100,100,100, 80%), stop:1 rgba(0,0,0, 0%));
 }
 
+#deskButton {
+    border-color: rgb(120,120,120);
+}
+
+#deskWindow {
+    border-color: rgb(120,120,120);
+    background: rgb(60,60,60);
+}
+
+#deskButton[active="true"] {
+    border-color: rgb(100,170,100);
+    background: rgba(255,255,255, 10%);
+}
+
+#deskButton[active="true"] #deskWindow {
+    border-color: rgb(100,170,100);
+}
+
 #panelButton {
     color: white;
 }
