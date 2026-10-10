@@ -3,11 +3,10 @@
 #ifndef DESKBUTTON_H
 #define DESKBUTTON_H
 
-#include <QWidget>
+#include <QFrame>
 #include <QMouseEvent>
-#include <QPainter>
 
-class deskbutton : public QWidget
+class deskbutton : public QFrame
 {
     Q_OBJECT
 
@@ -20,17 +19,18 @@ signals:
 public slots:
     void setactive(int num);
     int desknumber(){return desknum;}
-    void setNumDeskWindows(int num){numDeskWindows = num; update();}
+    void setNumDeskWindows(int num);
 
 protected:
-    void paintEvent(QPaintEvent *);
+    void resizeEvent(QResizeEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
 
 private:
-    int desknum = 0;
-    bool active = false;
-    int numDeskWindows=0;
+    void layoutWindows();
 
+    int desknum = 0;
+    int numDeskWindows = 0;
+    QList<QFrame*> windows;
 };
 
 #endif // DESKBUTTON_H
