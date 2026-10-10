@@ -36,8 +36,8 @@ only say which category a page belongs in.
 | ID | Title | Pages (now → later) |
 |---|---|---|
 | `about` | About | About |
-| `appearance` | Appearance | Theme, Cursor → Icon theme |
-| `desktop` | Desktop & Panel | Wallpaper, Panel (+ one subpage per applet) → Desktop icons |
+| `appearance` | Appearance | Theme, Wallpaper, Cursor → Icon theme |
+| `desktop` | Desktop & Panel | Panel (+ one subpage per applet) → Desktop icons |
 | `displays` | Displays | Displays |
 | `input` | Input & Hotkeys | Hotkeys → keyboard / pointer / touchpad |
 | `notifications` | Notifications | Notifications |
@@ -247,7 +247,7 @@ Commit in this order so each step builds:
    accordion and single-page categories. Delete `catlistwidget`,
    `breadcrumbwidget`.
 5. **Deep links.** Path argument; update `panel.cpp` (`desktop/panel`),
-   `desktop.cpp` (`desktop/wallpaper`), `debian/man/forest-settings.1`.
+   `desktop.cpp` (`appearance/wallpaper`), `debian/man/forest-settings.1`.
 6. **Config migration.** Remove `settings-only` entries from
    `etc/forest/Forest.conf`; `upgrade_0_10_0` removes them from user
    configs. Bumps `/etc/forest/Forest.conf`'s `version`, which staging
