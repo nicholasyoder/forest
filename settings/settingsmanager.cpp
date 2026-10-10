@@ -4,14 +4,51 @@
 
 #include <QDebug>
 #include <QDir>
+#include <QHoverEvent>
+#include <QIconEngine>
+#include <QPainter>
 #include <QHBoxLayout>
 #include <QLabel>
 #include <QPluginLoader>
 #include <QScrollArea>
+#include <QStyledItemDelegate>
 #include <QTimer>
 #include <QVBoxLayout>
 
 namespace {
+
+// Fusion tints selected icons with the highlight color; the QSS border marks selection.
+class UntintedIconEngine : public QIconEngine {
+public:
+    UntintedIconEngine(const QIcon &icon) : icon(icon) {}
+    void paint(QPainter *painter, const QRect &rect, QIcon::Mode mode, QIcon::State state) override {
+        icon.paint(painter, rect, Qt::AlignCenter, untinted(mode), state);
+    }
+    QPixmap pixmap(const QSize &size, QIcon::Mode mode, QIcon::State state) override {
+        return icon.pixmap(size, untinted(mode), state);
+    }
+    QPixmap scaledPixmap(const QSize &size, QIcon::Mode mode, QIcon::State state, qreal scale) override {
+        return icon.pixmap(size, scale, untinted(mode), state);
+    }
+    QSize actualSize(const QSize &size, QIcon::Mode mode, QIcon::State state) override {
+        return icon.actualSize(size, untinted(mode), state);
+    }
+    QIconEngine *clone() const override { return new UntintedIconEngine(icon); }
+private:
+    static QIcon::Mode untinted(QIcon::Mode mode){ return mode == QIcon::Selected ? QIcon::Normal : mode; }
+    QIcon icon;
+};
+
+class UntintedIconDelegate : public QStyledItemDelegate {
+public:
+    using QStyledItemDelegate::QStyledItemDelegate;
+protected:
+    void initStyleOption(QStyleOptionViewItem *option, const QModelIndex &index) const override {
+        QStyledItemDelegate::initStyleOption(option, index);
+        if (!option->icon.isNull())
+            option->icon = QIcon(new UntintedIconEngine(option->icon));
+    }
+};
 
 const QString plugin_dir = "/usr/lib/forest/settings";
 const int PageIdRole = Qt::UserRole;
@@ -22,7 +59,7 @@ struct category_info { QString id, title, icon; };
 const QList<category_info> categories = {
     {"about", "About", "help-about"},
     {"appearance", "Appearance", "preferences-desktop-theme"},
-    {"desktop", "Desktop & Panel", "preferences-desktop"},
+    {"desktop", "Panel", "preferences-desktop"},
     {"displays", "Displays", "preferences-desktop-display"},
     {"input", "Input & Hotkeys", "preferences-desktop-keyboard"},
     {"notifications", "Notifications", "preferences-desktop-notifications"},
@@ -56,6 +93,8 @@ SettingsManager::SettingsManager(){
     tree->setExpandsOnDoubleClick(false);
     tree->setIconSize(QSize(22, 22));
     tree->setMinimumWidth(200);
+    tree->setItemDelegate(new UntintedIconDelegate(tree));
+    tree->viewport()->installEventFilter(this);
     connect(tree->selectionModel(), &QItemSelectionModel::currentChanged, this, &SettingsManager::current_changed);
     connect(tree, &QTreeView::clicked, this, &SettingsManager::item_clicked);
     connect(tree, &QTreeView::expanded, this, &SettingsManager::collapse_others);
@@ -68,6 +107,19 @@ SettingsManager::SettingsManager(){
 }
 
 SettingsManager::~SettingsManager(){}
+
+bool SettingsManager::eventFilter(QObject *watched, QEvent *event){
+    // At fractional scales the hover border bleeds past the row's update rect and leaves lines behind.
+    if (watched == tree->viewport() && (event->type() == QEvent::HoverMove || event->type() == QEvent::HoverLeave)) {
+        QModelIndex index = event->type() == QEvent::HoverMove
+            ? tree->indexAt(static_cast<QHoverEvent*>(event)->position().toPoint()) : QModelIndex();
+        if (index != hovered_index) {
+            hovered_index = index;
+            tree->viewport()->update();
+        }
+    }
+    return QFrame::eventFilter(watched, event);
+}
 
 void SettingsManager::load_settings_ui(){
     load_plugins();

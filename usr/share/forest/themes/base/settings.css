@@ -45,7 +45,7 @@ QTabBar::scroller { width: 15px; }
 }
 
 #CategoryTree::item:selected {
-    background: rgba(255,255,255, 100%);
+    background: transparent;
     border: 1px solid rgba(155,155,155, 80%);
 }
 

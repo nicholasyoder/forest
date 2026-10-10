@@ -25,6 +25,9 @@ public slots:
     void load_settings_ui();
     void open_path(QString path);
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 private slots:
     void current_changed(const QModelIndex &index);
     void item_clicked(const QModelIndex &index);
@@ -47,5 +50,6 @@ private:
     QHash<QString, QStandardItem*> path_items; // category IDs and page paths
     QHash<QUuid, QWidget*> stack_hash; // pages; layout indices shift when one is replaced
     QString initial_path;
+    QPersistentModelIndex hovered_index;
 };
 #endif // SETTINGSMANAGER_H
