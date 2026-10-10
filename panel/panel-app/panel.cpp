@@ -34,7 +34,7 @@ void panel::setupPlug(){
 }
 
 void panel::showsettings(){
-    QProcess::startDetached("forest-settings", QStringList("Panel"));
+    QProcess::startDetached("forest-settings", QStringList("desktop/panel"));
 }
 
 void panel::loadsettings(){

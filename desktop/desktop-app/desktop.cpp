@@ -136,7 +136,7 @@ void desktop::setupmenus(){
 }
 
 void desktop::showsettings(){
-    QProcess::startDetached("forest-settings", QStringList("Desktop"));
+    QProcess::startDetached("forest-settings", QStringList("appearance/wallpaper"));
 }
 
 void desktop::updateicons(){
