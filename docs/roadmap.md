@@ -97,6 +97,17 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   configurable interval; also add a solid-colour background mode.
 - **Notification position setting.** Popups are anchored bottom-right
   (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
+- **Notification stacking.** Every popup anchors to the same corner with no
+  offset, so simultaneous notifications overlap. Stack them (layer-shell
+  margins), reflowing as they close; do alongside the position setting.
+- **Notification `ActivationToken`.** Spec 1.2 signal sent before
+  `ActionInvoked` so the client can raise its window via xdg-activation.
+  Without it, clicking e.g. a browser notification may not focus the browser.
+  Needs a way to get an xdg-activation token from Qt for the popup's surface.
+- **More notification hints.** `body-markup` (`FadingLabel`'s clipped path
+  paints plain text, so it needs rich-text rendering first), `urgency`
+  (styling; critical shouldn't time out), `image-data` / `image-path`,
+  `transient`, `category`/`desktop-entry` (better app icon/name lookup).
 - **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
   placeholder). Needs a picker plus a decision on how the choice reaches
   other toolkits (Qt platform theme, GTK via gsettings/`settings.ini`), not

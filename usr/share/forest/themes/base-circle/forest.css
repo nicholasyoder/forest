@@ -118,8 +118,12 @@ QMenu::icon, QMenu::indicator {
     border-bottom-right-radius: 15px;
 }
 
-#notifyPopup #closeButton {
+#notifyPopup QPushButton {
     border: 1px solid transparent;
+    border-radius: 12px;
+}
+
+#notifyPopup #closeButton {
     border-radius: 15px;
     margin-bottom: 10px;
 }

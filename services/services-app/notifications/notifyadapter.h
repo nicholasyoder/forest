@@ -6,48 +6,30 @@
 #include <QObject>
 #include <QtDBus>
 
+class notify;
+
 class notifyadapter : public QDBusAbstractAdaptor
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Notifications")
 
-    /*
-    Q_CLASSINFO("D-Bus Introspection", ""
-    "  <interface name=\"org.freedesktop.Notifications\">\n"
-    "    <method name=\"GetServerInformation\">\n"
-    "      <arg direction=\"out\" type=\"s\" name=\"name\"/>\n"
-    "      <arg direction=\"out\" type=\"s\" name=\"vendor\"/>\n"
-    "      <arg direction=\"out\" type=\"s\" name=\"version\"/>\n"
-    "      <arg direction=\"out\" type=\"s\" name=\"spec_version\"/>\n"
-    "    </method>\n"
-    "    <method name=\"Notify\">\n"
-    "      <arg direction=\"in\" type=\"s\"/>\n"
-    "      <arg direction=\"in\" type=\"u\"/>\n"
-    "      <arg direction=\"in\" type=\"s\"/>\n"
-    "      <arg direction=\"in\" type=\"s\"/>\n"
-    "      <arg direction=\"in\" type=\"s\"/>\n"
-    "      <arg direction=\"in\" type=\"as\"/>\n"
-    "      <arg direction=\"in\" type=\"a{sv}\"/>\n"
-    "      <annotation name=\"org.qtproject.QtDBus.QtTypeName.In6\" value=\"QVariantMap\"/>\n"
-    "      <arg direction=\"in\" type=\"i\"/>\n"
-    "      <arg direction=\"out\" type=\"u\"/>\n"
-    "    </method>\n"
-    "  </interface>\n"
-    "")*/
-
-    //"</method>\n"
-
 public:
-    notifyadapter(QObject *parent);
-    virtual ~notifyadapter();
+    notifyadapter(notify *parent);
 
 public slots:
+    QStringList GetCapabilities();
     void GetServerInformation(QString &name, QString &vendor, QString &version, QString &spec_version);
-    void CloseNotification(const uint &id);
+    void CloseNotification(uint id);
+    uint Notify(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
+                const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout);
 
-    void Notify(const QString &app_name, const uint replaces_id, const QString &app_icon, const QString &summary,
-                const QString &body, const QStringList &actions, const QVariantMap &hints, const int expire_timeout, uint &id);
+signals:
+    // Relayed from notify by setAutoRelaySignals().
+    void NotificationClosed(uint id, uint reason);
+    void ActionInvoked(uint id, const QString &action_key);
 
+private:
+    notify *service;
 };
 
 #endif // NOTIFYADAPTER_H

@@ -29,7 +29,7 @@ add_library(services-app MODULE
     displays/confirmcards.h
 )
 
-target_compile_definitions(services-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
+target_compile_definitions(services-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS FOREST_VERSION="${PROJECT_VERSION}")
 
 target_include_directories(services-app PRIVATE
     ${CMAKE_SOURCE_DIR}/library

@@ -69,9 +69,12 @@ QMenu::item {
     margin-bottom: 10px;
 }
 
-#notifyPopup #closeButton {
+#notifyPopup QPushButton {
     border: 1px solid transparent;
-    border-radius: 3px; 
+    border-radius: 3px;
+}
+
+#notifyPopup #closeButton {
     margin-bottom: 10px;
 }
 
