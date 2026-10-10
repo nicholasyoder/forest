@@ -1,20 +1,27 @@
-.TH FOREST-SETTINGS 1 "July 2026" "forest" "Forest desktop environment"
+.TH FOREST-SETTINGS 1 "October 2026" "forest" "Forest desktop environment"
 .SH NAME
 forest-settings \- Forest settings application
 .SH SYNOPSIS
 .B forest-settings
-.RI [ page ]
+.RI [ path ]
 .SH DESCRIPTION
 .B forest-settings
 is the standalone settings application for the Forest desktop
-environment. It loads settings plugins for its sidebar panels, letting
-the user configure appearance, plugins, and other desktop behavior. It
+environment. It loads every settings plugin in
+.I /usr/lib/forest/settings
+and lists their pages by category in a sidebar tree. It
 is styled using the active Forest theme's
 .IR settings.css .
 .SH OPTIONS
 .TP
-.I page
-Optional name of a settings page/category to open initially, instead
-of the settings home screen.
+.I path
+Page to open, e.g.
+.B desktop/panel
+or
+.BR appearance/wallpaper .
+A category ID such as
+.B appearance
+opens its first page. Without a path, or with an unknown one, the
+About page opens.
 .SH SEE ALSO
 .BR forest (1)
