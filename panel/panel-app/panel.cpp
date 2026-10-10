@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "panel.h"
+#include "xdgactivation.h"
 
 panel::panel(){}
 
@@ -34,7 +35,7 @@ void panel::setupPlug(){
 }
 
 void panel::showsettings(){
-    QProcess::startDetached("forest-settings", QStringList("desktop/panel"));
+    XdgActivation::instance()->launch("forest-settings", {"desktop/panel"});
 }
 
 void panel::loadsettings(){
@@ -121,6 +122,7 @@ void panel::addplugin(QString path){
                 if (!settingsaction) {
                     settingsaction = new QAction(QIcon::fromTheme("preferences-system"), "Panel Settings", this);
                     connect(settingsaction, &QAction::triggered, this, &panel::showsettings);
+                    XdgActivation::instance()->watch(settingsaction);
                 }
                 pluginterface->setupPlug(wlayout, {settingsaction});
 

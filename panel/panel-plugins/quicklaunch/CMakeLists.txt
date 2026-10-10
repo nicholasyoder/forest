@@ -10,5 +10,6 @@ target_compile_definitions(quicklaunch PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNIN
 target_link_libraries(quicklaunch PRIVATE Qt6::Widgets Qt6::DBus Qt6Xdg)
 forest_link_panel_library(quicklaunch)
 forest_link_miscutills(quicklaunch)
+forest_link_activation(quicklaunch)
 
 install(TARGETS quicklaunch LIBRARY DESTINATION lib/forest/panel)

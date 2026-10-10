@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "itemhandler.h"
+#include "xdgactivation.h"
 
 #include <QScrollArea>
 #include <QDrag>
@@ -8,6 +9,7 @@
 
 itemhandler::itemhandler()
 {
+    XdgActivation::instance(); // binds asynchronously; must be ready by the first launch
     currentItem = default_item_id;
     settings->beginGroup("hitCounts");
     QStringList apps = settings->childKeys();
@@ -97,10 +99,11 @@ void itemhandler::itemEvent(QUuid uuid, ITEM_EVENT eventtype, QEvent *event){
 
 void itemhandler::itemActivated(QUuid id){
     if(appHash.contains(id)){
+        XdgActivation::instance()->request(itemHash[id]); // before appLaunch hides the menu
         emit appLaunch();
         XdgDesktopFile dfile = appHash[id];
         incrementHits(dfile.name());
-        dfile.startDetached();
+        XdgActivation::instance()->launch([dfile](){ dfile.startDetached(); });
     }
     else if(catItems.contains(id)){
         emit categorySelect(catItems.indexOf(id));

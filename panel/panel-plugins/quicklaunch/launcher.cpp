@@ -3,6 +3,8 @@
 #include "launcher.h"
 #include <qt6xdg/XdgDesktopFile>
 
+#include "xdgactivation.h"
+
 launcher::launcher(int num, QString desktopfilepath) : panelbutton(Icon) {
     lnum = num;
     dfilepath = desktopfilepath;
@@ -18,7 +20,8 @@ void launcher::runcommand(){
     // so if the desktop file is changed mid run, this uses the new file.
     XdgDesktopFile deskfile;
     deskfile.load(dfilepath);
-    deskfile.startDetached(QStringList());
+    XdgActivation::instance()->request(this);
+    XdgActivation::instance()->launch([deskfile](){ deskfile.startDetached(QStringList()); });
 }
 
 void launcher::mouseReleaseEvent(QMouseEvent *event){

@@ -18,6 +18,7 @@ class SearchFilterModel;
 class SettingsManager : public QFrame
 {
     Q_OBJECT
+    Q_CLASSINFO("D-Bus Interface", "org.forest.Settings")
 
 public:
     SettingsManager();
@@ -28,6 +29,8 @@ public:
 public slots:
     void load_settings_ui();
     void open_path(QString path);
+    // Called by later launches; an empty path keeps the current page.
+    Q_SCRIPTABLE void OpenPage(const QString &path, const QString &activation_token);
 
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
@@ -61,6 +64,7 @@ private:
     QHash<QUuid, QList<QPair<QString, QPointer<QWidget>>>> row_frames; // page ID -> (label, ControlWidget)
     QPersistentModelIndex shown_index; // source index of the open page
     QString initial_path;
+    bool loaded = false;
     QPersistentModelIndex hovered_index;
 };
 #endif // SETTINGSMANAGER_H

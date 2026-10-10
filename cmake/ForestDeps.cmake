@@ -87,6 +87,12 @@ function(forest_link_toplevels target)
     target_link_libraries(${target} PRIVATE toplevels)
 endfunction()
 
+# forest_link_activation(target)
+# Links the activation static library (xdg-activation tokens for launches)
+function(forest_link_activation target)
+    target_link_libraries(${target} PRIVATE activation)
+endfunction()
+
 # forest_link_outputs(target)
 # Links the outputs static library (wlr-output-management client and
 # display profiles)
