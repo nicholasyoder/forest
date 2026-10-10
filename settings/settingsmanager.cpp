@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "settingsmanager.h"
+#include "xdgactivation.h"
 
 #include <QDebug>
 #include <QDir>
@@ -175,6 +176,7 @@ SettingsManager::SettingsManager(){
     hlayout->addLayout(stacked_layout, 1);
 
     this->resize(850,600);
+    XdgActivation::instance(); // binds asynchronously; must be ready by the first OpenPage
     QTimer::singleShot(0, this, &SettingsManager::load_settings_ui);
 }
 
@@ -216,12 +218,6 @@ void SettingsManager::load_settings_ui(){
 }
 
 void SettingsManager::OpenPage(const QString &path, const QString &activation_token){
-    // QtWayland's requestActivate() reads the token from the environment.
-    if (activation_token.isEmpty())
-        qunsetenv("XDG_ACTIVATION_TOKEN");
-    else
-        qputenv("XDG_ACTIVATION_TOKEN", activation_token.toUtf8());
-
     if (!path.isEmpty()) {
         if (!loaded) {
             initial_path = path;
@@ -232,7 +228,7 @@ void SettingsManager::OpenPage(const QString &path, const QString &activation_to
     }
     showNormal();
     raise();
-    activateWindow();
+    XdgActivation::instance()->activateWindow(this, activation_token);
 }
 
 void SettingsManager::load_plugins(){

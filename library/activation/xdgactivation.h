@@ -33,6 +33,10 @@ public:
     // `start` with the token in this process's environment, which it inherits.
     void launch(const std::function<void()> &start);
 
+    // Raise `window` with `token`. Without one, a seat-less token lets the
+    // compositor mark it urgent; Qt's own fallback token is rejected when unfocused.
+    void activateWindow(QWidget *window, const QString &token);
+
 protected:
     bool eventFilter(QObject *watched, QEvent *event) override;
 

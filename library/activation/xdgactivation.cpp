@@ -71,17 +71,22 @@ bool XdgActivation::eventFilter(QObject *watched, QEvent *event) {
     return false;
 }
 
+static ::wl_surface *surfaceOf(QWidget *widget) {
+    QWindow *window = widget->window()->windowHandle();
+    auto *waylandWindow = window ? dynamic_cast<QtWaylandClient::QWaylandWindow*>(window->handle()) : nullptr;
+    return waylandWindow ? waylandWindow->wlSurface() : nullptr;
+}
+
 void XdgActivation::request(QWidget *source) {
     auto *app = qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>();
-    QWindow *window = source->window()->windowHandle();
-    auto *waylandWindow = window ? dynamic_cast<QtWaylandClient::QWaylandWindow*>(window->handle()) : nullptr;
-    if (!isActive() || !app || !waylandWindow || !waylandWindow->wlSurface())
+    ::wl_surface *surface = surfaceOf(source);
+    if (!isActive() || !app || !surface)
         return;
 
     delete pending;
     pending = new XdgActivationToken(get_activation_token());
     pending->set_serial(app->lastInputSerial(), app->lastInputSeat());
-    pending->set_surface(waylandWindow->wlSurface());
+    pending->set_surface(surface);
     pending->commit();
     // `triggered` runs inside this same event; anything left after it was not a launch.
     QTimer::singleShot(0, pending.data(), [this, token = pending.data()](){
@@ -122,6 +127,23 @@ void XdgActivation::launch(const std::function<void()> &start) {
     connect(token, &XdgActivationToken::done, token, [token, run](){
         run(token->token);
         token->deleteLater();
+    });
+}
+
+void XdgActivation::activateWindow(QWidget *window, const QString &token) {
+    if (!isActive() || !surfaceOf(window))
+        return;
+    if (!token.isEmpty()) {
+        activate(token, surfaceOf(window));
+        return;
+    }
+    auto *own = new XdgActivationToken(get_activation_token());
+    own->commit();
+    QPointer<QWidget> target = window;
+    connect(own, &XdgActivationToken::done, own, [this, own, target](){
+        if (target && surfaceOf(target))
+            activate(own->token, surfaceOf(target));
+        own->deleteLater();
     });
 }
 
