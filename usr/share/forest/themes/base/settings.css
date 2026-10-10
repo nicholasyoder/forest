@@ -18,11 +18,32 @@ QTabBar::scroller { width: 15px; }
     padding: 30px;
 }
 
-#CategoryTree {
+#Sidebar {
     background: rgba(250,250,250, 100%);
     border: 1px solid rgba(225,225,225, 100%);
     border-left: none;
     border-bottom: none;
+}
+
+#SearchBox {
+    padding: 8px 8px 0px 8px;
+}
+
+#SearchField {
+    background: #fdfdfd;
+    border: 1px solid rgba(180,180,180, 80%);
+    border-radius: 3px;
+    padding: 4px 6px;
+    min-height: 20px;
+}
+
+#SearchField:focus {
+    border-color: palette(highlight);
+}
+
+#CategoryTree {
+    background: transparent;
+    border: none;
     padding: 8px;
     outline: 0;
     show-decoration-selected: 0;
@@ -133,6 +154,11 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: rgba(0,0,0,0%);
     border-top-left-radius: 0px;
     border-top-right-radius: 0px;
+}
+
+/* Row a search result matched on; after the groupposition rules so it wins at equal specificity. */
+#ControlWidget[searchmatch="true"], #WidgetGroup #ControlWidget[searchmatch="true"] {
+    background: rgba(255,200,60, 30%);
 }
 
 

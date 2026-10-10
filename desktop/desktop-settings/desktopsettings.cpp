@@ -12,7 +12,7 @@ DesktopSettings::~DesktopSettings(){
 
 QList<settings_page*> DesktopSettings::pages(){
     settings_page *wallpaper_page = new settings_page("appearance/wallpaper", "Wallpaper", "preferences-desktop-wallpaper", 10);
-    wallpaper_page->set_keywords({"background", "desktop", "image", "photo"});
+    wallpaper_page->set_keywords({"background", "desktop", "image", "photo", "picture", "fill", "fit", "stretch", "center", "tile"});
     connect(wallpaper_page, &settings_category::opened, this, &DesktopSettings::load_wallpaper_settings);
 
     QFrame *preview_base = new QFrame;

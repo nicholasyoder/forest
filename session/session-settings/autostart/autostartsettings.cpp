@@ -12,7 +12,7 @@
 
 AutostartSettings::AutostartSettings() {
     settings_item = new settings_page("session/autostart", "Autostart", "preferences-system-session");
-    settings_item->set_keywords({"startup", "login", "xdg", "session"});
+    settings_item->set_keywords({"startup", "login", "xdg", "session", "applications", "apps", "programs", "launch"});
     connect(settings_item, &settings_category::opened, this, [this]{
         if (settings_item->child_items().isEmpty()) load_settings();
     });
