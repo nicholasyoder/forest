@@ -15,7 +15,7 @@
 class nmcontrol : public QObject, panelpluginterface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.nmcontrol.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.nmcontrol.plugin" FILE "nmcontrol.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -25,7 +25,6 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){p_button->close(); p_button->deleteLater(); this->deleteLater();}
-    QHash<QString, QString> getpluginfo();
     //end plugininterface
 
 private slots:

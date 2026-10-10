@@ -15,7 +15,7 @@ class trayicon;
 class systray : public QWidget, panelpluginterface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.systray.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.systray.plugin" FILE "systray.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -25,7 +25,6 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
     //end plugininterface
 
 private:

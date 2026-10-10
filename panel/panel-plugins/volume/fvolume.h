@@ -22,7 +22,7 @@
 class fvolume : public panelbutton, panelpluginterface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.volume.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.volume.plugin" FILE "volume.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -32,7 +32,6 @@ public:
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
     //end plugin interface
 
 public slots:

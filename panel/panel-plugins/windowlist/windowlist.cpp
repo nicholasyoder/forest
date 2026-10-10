@@ -36,13 +36,6 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     connect(tracker, &ToplevelTracker::toplevelAdded, this, &windowlist::onWindowAdded);
 }
 
-QHash<QString, QString> windowlist::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "Window List";
-    info["stretch"] = "true";
-    return info;
-}
-
 void windowlist::reloadsettings(){
     loadsettings();
     foreach (windowbutton *wbt, button_list) {

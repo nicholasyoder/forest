@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QDropEvent>
 #include <QTimer>
+#include <QToolButton>
 
 #include "miscutills.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
@@ -42,6 +43,15 @@ private:
 };
 
 
+// Gear at the right of an applet row, overlaid with setItemWidget.
+class AppletSettingsButton : public QWidget {
+public:
+    explicit AppletSettingsButton(const QString &applet_name);
+    QToolButton *button = nullptr;
+protected:
+    void resizeEvent(QResizeEvent *) override;
+};
+
 class PanelSettings : public QObject, settings_plugin_interface
 {
     Q_OBJECT
@@ -60,6 +70,7 @@ public slots:
 
 private:
     QString padwithzeros(int number);
+    settings_page *panel_page = nullptr;
     ListWidget *applet_list_w = nullptr;
     QHash <QString, QString> path_hash;
 };

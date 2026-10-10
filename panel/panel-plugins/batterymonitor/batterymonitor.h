@@ -19,7 +19,7 @@
 class batterymonitor : public QWidget, panelpluginterface
 {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.batterymonitor.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.batterymonitor.plugin" FILE "batterymonitor.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -29,7 +29,6 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
     //end plugininterface
 
 private slots:

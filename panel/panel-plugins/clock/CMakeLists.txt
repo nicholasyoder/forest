@@ -1,9 +1,7 @@
 add_library(clock MODULE
     clock.cpp
-    clocksettingswidget.cpp
     clock.h
-    clocksettingswidget.h
-    clocksettingswidget.ui
+    clockconfig.h
 )
 
 target_compile_definitions(clock PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
@@ -13,3 +11,9 @@ forest_link_panel_library(clock)
 forest_link_miscutills(clock)
 
 install(TARGETS clock LIBRARY DESTINATION lib/forest/panel)
+
+forest_add_applet_settings(clock
+    clocksettings.cpp
+    clocksettings.h
+    clockconfig.h
+)

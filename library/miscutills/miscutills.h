@@ -6,6 +6,7 @@
 #include <QImage>
 #include <QPointer>
 #include <QTimer>
+#include <QVariantList>
 
 class QScreen;
 
@@ -14,7 +15,7 @@ enum WALLPAPER_MODE { Fill, Fit, Stretch, Tile, Center};
 namespace miscutills {
 
     // Call forest dbus method, path should start with 'forest/'
-    void call_dbus(QString path);
+    void call_dbus(QString path, const QVariantList &args = {});
 
     // Run bash command, wait for finished, and return output
     QString run_shell_command(QString command);

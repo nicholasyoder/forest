@@ -225,6 +225,27 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: #eee;
 }
 
+#ControlWidget #AppletList::item {
+    min-height: 22px; /* room for the gear button */
+}
+
+#AppletSettingsButton {
+    qproperty-iconSize: 20px 20px;
+    background: transparent;
+    border: 1px solid transparent;
+    border-radius: 3px;
+    padding: 2px;
+    margin-right: 6px;
+}
+
+#AppletSettingsButton:hover {
+    border-color: #ccc;
+}
+
+#AppletSettingsButton:pressed {
+    background: #eee;
+}
+
 /* Plugin specific stuff - this should really be moved to be with the plugin itself somehow. Maybe? */
 
 #WallpaperPreviewBase {

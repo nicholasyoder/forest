@@ -21,7 +21,7 @@
 
 class windowlist : public QWidget, panelpluginterface{
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.windowlist.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.windowlist.plugin" FILE "windowlist.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -31,7 +31,6 @@ public:
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){ close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
     //end plugin interface
 
 public slots:

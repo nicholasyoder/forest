@@ -30,11 +30,6 @@ void cpumon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     loadsettings();
 }
 
-QHash<QString, QString> cpumon::getpluginfo(){
-    QHash<QString, QString> info;
-    info["name"] = "CPU Monitor";
-    return info;
-}
 //end of plugin interface
 
 void cpumon::loadsettings(){

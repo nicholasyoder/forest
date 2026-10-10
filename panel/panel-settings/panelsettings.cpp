@@ -3,11 +3,12 @@
 #include "panelsettings.h"
 
 #include <QCheckBox>
+#include <QHBoxLayout>
+#include <QJsonObject>
 #include <QSettings>
 #include <QPluginLoader>
 #include <QTimer>
 
-#include "../panel-library/panelpluginterface.h"
 #include "panelconfig.h"
 #include "settingsbinder.h"
 #include "settingsrow.h"
@@ -17,8 +18,23 @@ PanelSettings::PanelSettings()
 
 }
 
+AppletSettingsButton::AppletSettingsButton(const QString &applet_name){
+    QHBoxLayout *layout = new QHBoxLayout(this);
+    layout->setContentsMargins(0, 0, 0, 0);
+    layout->addStretch();
+    button = new QToolButton;
+    button->setObjectName("AppletSettingsButton");
+    button->setIcon(QIcon::fromTheme("configure"));
+    button->setToolTip(applet_name + " Settings");
+    layout->addWidget(button);
+}
+
+void AppletSettingsButton::resizeEvent(QResizeEvent *){
+    setMask(button->geometry()); // the rest of the row still takes clicks and drags
+}
+
 QList<settings_page*> PanelSettings::pages(){
-    settings_page *panel_page = new settings_page("desktop/panel", "Panel", "preferences-desktop");
+    panel_page = new settings_page("desktop/panel", "Panel", "preferences-desktop");
     panel_page->set_keywords({"taskbar", "applets", "plugins", "widgets", "position", "autohide", "top", "bottom"});
 
     SettingsBinder *binder = new SettingsBinder("Forest", "Panel", QString(), this);
@@ -50,6 +66,7 @@ QList<settings_page*> PanelSettings::pages(){
     settings_widget_group *applets_group = new settings_widget_group("Applets");
     panel_page->add_child(applets_group);
     applet_list_w = new ListWidget;
+    applet_list_w->setObjectName("AppletList");
     applet_list_w->setDragDropMode(QAbstractItemView::InternalMove);
     connect(applet_list_w, &QListWidget::itemChanged, this, &PanelSettings::set_applets);
     ReorderListener *rl = new ReorderListener(applet_list_w);
@@ -69,30 +86,27 @@ void PanelSettings::load_applets(){
     foreach(QString key, settings.childGroups()){
         QString path = settings.value(key+"/path").toString();
         bool enabled = settings.value(key+"/enabled", false).toBool();
-        if (path == "separator"){
-            QListWidgetItem *item = new QListWidgetItem("Separator");
-            item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-            item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
-            applet_list_w->addItem(item);
-            path_hash["Separator"] = path;
-        }
-        else {
-            QPluginLoader plugloader(path);
-            if (plugloader.load()){
-                QObject *plugin = plugloader.instance();
-                if (plugin){
-                    if (panelpluginterface *pluginterface = qobject_cast<panelpluginterface *>(plugin)){
-                        QString name = pluginterface->getpluginfo()["name"];
-                        QListWidgetItem *item = new QListWidgetItem(name);
-                        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
-                        item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
-                        applet_list_w->addItem(item);
-                        path_hash[name] = path;
-                        delete pluginterface;
-                    }
-                }
+        QString name = "Separator";
+        QString settings_path;
+        if (path != "separator"){
+            // Metadata only: instantiating would construct the applet in this process.
+            QJsonObject info = QPluginLoader(path).metaData().value("MetaData").toObject();
+            name = info.value("name").toString();
+            if (name.isEmpty()) {
+                qWarning() << "Not a panel applet:" << path;
+                continue;
             }
-            plugloader.unload();
+            settings_path = info.value("settings").toString();
+        }
+        QListWidgetItem *item = new QListWidgetItem(name);
+        item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
+        item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
+        applet_list_w->addItem(item);
+        path_hash[name] = path;
+        if (!settings_path.isEmpty()) {
+            AppletSettingsButton *button = new AppletSettingsButton(name);
+            connect(button->button, &QToolButton::clicked, panel_page, [this, settings_path]{ emit panel_page->open_requested(settings_path); });
+            applet_list_w->setItemWidget(item, button);
         }
     }
 }

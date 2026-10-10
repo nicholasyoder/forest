@@ -1,6 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "panel.h"
+
+#include <QJsonObject>
+
 #include "panelconfig.h"
 #include "xdgactivation.h"
 
@@ -93,6 +96,7 @@ void panel::reloadplugins(){
     }
 
     pluglist.clear();
+    settings_plugs.clear();
     numofstretchplugs = 0;
 
     QLayoutItem *child;
@@ -113,19 +117,31 @@ void panel::addplugin(QString path){
             if (pluginterface){
                 pluglist.append(pluginterface);
 
-                QHash<QString, QString> info = pluginterface->getpluginfo();
-                bool stretch = false;
-                if (info["stretch"] == "true"){
-                    stretch = true;
+                QJsonObject info = plugloader->metaData().value("MetaData").toObject();
+                bool stretch = info.value("stretch").toBool();
+                if (stretch)
                     numofstretchplugs++;
-                }
 
                 if (!settingsaction) {
                     settingsaction = new QAction(QIcon::fromTheme("preferences-system"), "Panel Settings", this);
                     connect(settingsaction, &QAction::triggered, this, &panel::showsettings);
                     XdgActivation::instance()->watch(settingsaction);
                 }
-                pluginterface->setupPlug(wlayout, {settingsaction});
+                QList<QAction*> actions = {settingsaction};
+                QString settings_path = info.value("settings").toString();
+                if (!settings_path.isEmpty()) {
+                    settings_plugs[settings_path] = pluginterface;
+                    // Parented to the applet so it goes when the applet does.
+                    QAction *appletaction = new QAction(QIcon::fromTheme("configure"), info.value("name").toString() + " Settings", plugin);
+                    connect(appletaction, &QAction::triggered, this, [settings_path]{
+                        XdgActivation::instance()->launch("forest-settings", {settings_path});
+                    });
+                    XdgActivation::instance()->watch(appletaction);
+                    QAction *separator = new QAction(plugin);
+                    separator->setSeparator(true);
+                    actions << separator << appletaction;
+                }
+                pluginterface->setupPlug(wlayout, actions);
 
                 if (stretch)
                     wlayout->setStretch(wlayout->count()-1, 5);
@@ -133,6 +149,11 @@ void panel::addplugin(QString path){
         }
     }
     else { qDebug() << plugloader->errorString(); }
+}
+
+void panel::reloadappletsettings(const QString &settings_path){
+    if (panelpluginterface *plug = settings_plugs.value(settings_path))
+        plug->reloadSettings();
 }
 
 void panel::update_panel_size() {

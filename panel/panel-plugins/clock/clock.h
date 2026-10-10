@@ -19,7 +19,7 @@
 
 class clockplug : public panelbutton, panelpluginterface {
     Q_OBJECT
-    Q_PLUGIN_METADATA(IID "forest.panel.clock.plugin")
+    Q_PLUGIN_METADATA(IID "forest.panel.clock.plugin" FILE "clock.json")
     Q_INTERFACES(panelpluginterface)
 
 public:
@@ -29,13 +29,12 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
-    QHash<QString, QString> getpluginfo();
+    void reloadSettings(){ loadsettings(); }
     //end plugininterface
 
 private slots:
     void loadsettings();
     void updatetime();
-    void showsettingswidget();
     void showpopup(){popupbox->showpopup();}
 
 private:

@@ -53,13 +53,6 @@ void batterymonitor::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
     connect(pb, &panelbutton::leftclicked, this, &batterymonitor::showpopup);
 }
 
-QHash<QString, QString> batterymonitor::getpluginfo()
-{
-    QHash<QString, QString> info;
-    info["name"] = "Battery Monitor";
-    return info;
-}
-
 
 void batterymonitor::updatedata()
 {
