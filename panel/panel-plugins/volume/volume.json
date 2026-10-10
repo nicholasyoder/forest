@@ -1,3 +1,4 @@
 {
-    "name": "Volume Control"
+    "name": "Volume Control",
+    "settings": "desktop/panel/volume"
 }

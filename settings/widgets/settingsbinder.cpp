@@ -1,6 +1,8 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "settingsbinder.h"
+#include "colorbutton.h"
+#include "miscutills.h"
 #include "settingsrow.h"
 
 #include <QAbstractButton>
@@ -52,6 +54,20 @@ void SettingsBinder::changed(QWidget *row, std::function<void(QSettings&)> write
     schedule(true);
 }
 
+void SettingsBinder::bind_color(ColorButton *button, const QString &color_key, const QString &opacity_key,
+                                const QColor &default_color){
+    bind_custom(button, &ColorButton::colorChanged,
+        [=](QSettings &settings){
+            QColor color = miscutills::string_to_color(settings.value(color_key, miscutills::color_to_string(default_color)).toString());
+            color.setAlphaF(settings.value(opacity_key, default_color.alphaF()).toDouble());
+            button->setColor(color);
+        },
+        [=](QSettings &settings){
+            settings.setValue(color_key, miscutills::color_to_string(button->color()));
+            settings.setValue(opacity_key, button->color().alphaF());
+        });
+}
+
 SettingsBinder::Converter SettingsBinder::item_data(QComboBox *combo){
     QPointer<QComboBox> c(combo);
     return {
@@ -93,6 +109,8 @@ void SettingsBinder::load(){
         value.convert(prop.metaType());
         prop.write(it.key(), value);
     }
+    for (auto it = custom_loads.cbegin(); it != custom_loads.cend(); ++it)
+        it.value()(*settings);
     loading = false;
 }
 

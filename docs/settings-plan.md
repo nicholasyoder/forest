@@ -253,13 +253,4 @@ Done.
 
 ### Phase 5 — remaining applets
 
-cpumonitor + memorymonitor, windowlist, sensors, volume. One PR, or one
-per applet if pages get redesigned substantially.
-
-- sensors: drop the dead `displayheight` key (written, never read) and
-  `sensorlist` (the applet enumerates itself); store the shown sensor by
-  label instead of `ChipIndex`, which shifts when chips change.
-- volume: drop the separator after the panel items, so "Re-scan devices"
-  and "Toggle Muted" follow "Volume Control Settings" directly.
-- memorymonitor: swap mode radios become a combo; swap color row hidden
-  when swap is disabled.
+Done.

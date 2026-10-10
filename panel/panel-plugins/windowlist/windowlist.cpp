@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "windowlist.h"
+#include "windowlistconfig.h"
 
 windowlist::windowlist(){}
 
@@ -24,9 +25,6 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     pmenu = new QMenu;
     pmenu->addActions(itemlist);
 
-    pmenu->addSeparator();
-    pmenu->addAction(QIcon::fromTheme("configure"), "Windowlist Settings", this, &windowlist::showsettingswidget);
-
     ipopup = new imagepopup(this);
 
     loadsettings();
@@ -36,7 +34,7 @@ void windowlist::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     connect(tracker, &ToplevelTracker::toplevelAdded, this, &windowlist::onWindowAdded);
 }
 
-void windowlist::reloadsettings(){
+void windowlist::reloadSettings(){
     loadsettings();
     foreach (windowbutton *wbt, button_list) {
         wbt->setMaximumWidth(maxbtsize);
@@ -51,15 +49,9 @@ void windowlist::mouseReleaseEvent(QMouseEvent *event){
 void windowlist::loadsettings(){
     QSettings settings("Forest", "Window List");
     settings.sync();
-    ipopup->set_enabled(settings.value("showthumbnails", true).toBool());
-    maxbtsize = settings.value("maxbuttonsize", 170).toInt();
+    ipopup->set_enabled(settings.value(windowlistconfig::showthumbnails, windowlistconfig::showthumbnails_default).toBool());
+    maxbtsize = settings.value(windowlistconfig::maxbuttonsize, windowlistconfig::maxbuttonsize_default).toInt();
 }
-
-void windowlist::showsettingswidget(){
-    connect(swidget, SIGNAL(settingschanged()), this, SLOT(reloadsettings()));
-    swidget->show();
-}
-
 
 void windowlist::onWindowAdded(ForeignToplevelHandle *handle){
     connect(handle, &ForeignToplevelHandle::changed, this, &windowlist::onWindowChanged);

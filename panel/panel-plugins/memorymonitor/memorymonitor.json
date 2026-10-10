@@ -1,3 +1,4 @@
 {
-    "name": "Memory Monitor"
+    "name": "Memory Monitor",
+    "settings": "desktop/panel/memorymonitor"
 }

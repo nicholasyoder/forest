@@ -3,7 +3,7 @@
 #include <QFileSystemWatcher>
 
 #include "fvolume.h"
-#include "settingswidget.h"
+#include "volumeconfig.h"
 
 fvolume::fvolume() : panelbutton(Icon) {}
 
@@ -19,9 +19,6 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
     pmenu = new QMenu;
     pmenu->addActions(itemlist);
-
-    pmenu->addSeparator();
-    pmenu->addAction(QIcon::fromTheme("preferences-sound"), "Manage devices", this, &fvolume::showsettings);
     pmenu->addAction(QIcon::fromTheme("reload"), "Re-scan devices", this, &fvolume::loadsettings);
     pmenu->addAction(QIcon::fromTheme("audio-volume-muted"), "Toggle Muted", this, &fvolume::togglemuted);
 
@@ -58,10 +55,10 @@ void fvolume::loadsettings(){
 
     QSettings settings("Forest", "Volume Manager");
     settings.sync();
-    autosave = settings.value("autosave", true).toBool();
+    autosave = settings.value(volumeconfig::autosave, volumeconfig::autosave_default).toBool();
 
     AudioDevice *first_dev = audioengine->sinks().isEmpty() ? nullptr : audioengine->sinks().first();
-    QString master = settings.value("master", first_dev ? first_dev->description() : "").toString();
+    QString master = settings.value(volumeconfig::master, first_dev ? first_dev->description() : "").toString();
 
     // Clear the existing layout
     QLayoutItem *item;
@@ -89,7 +86,7 @@ void fvolume::loadsettings(){
         if(!fallback_master) fallback_master = dev; // set first device found to be the fallback master device
         if(dev->description() == master) master_device = dev;
 
-        if (settings.value(dev->description() + "/show", true).toBool() == true){
+        if (settings.value(volumeconfig::show(dev->description()), volumeconfig::show_default).toBool() == true){
             QVBoxLayout *device_layout = new QVBoxLayout;
             QLabel* label = new QLabel(dev->name());
             device_layout->addWidget(label);
@@ -98,7 +95,7 @@ void fvolume::loadsettings(){
             slider->setRange(0, audioengine->volumeMax(dev));
             if(autosave){
                 int current_volume = dev->volume();
-                int saved_volume = settings.value(dev->description() + "/volume", current_volume).toInt();
+                int saved_volume = settings.value(volumeconfig::volume(dev->description()), current_volume).toInt();
                 slider->setValue(saved_volume);
                 if(current_volume != saved_volume)
                     dev->setVolume(saved_volume);
@@ -122,24 +119,11 @@ void fvolume::loadsettings(){
     }
 }
 
-void fvolume::showsettings(){
-    // rescan devices and reload
-    loadsettings();
-
-    QStringList sink_list;
-    foreach(AudioDevice *dev, audioengine->sinks())
-        sink_list.append(dev->description());
-
-    SettingsWidget* s_widget = new SettingsWidget(sink_list);
-    connect(s_widget, &SettingsWidget::settings_changed, this, &fvolume::loadsettings);
-    s_widget->show();
-}
-
 void fvolume::save_volumes(){
     QSettings settings("Forest", "Volume Manager");
     foreach(AudioDevice *dev, audioengine->sinks()){
-        if (settings.value(dev->description() + "/show", true).toBool() == true)
-            settings.setValue(dev->description() + "/volume", dev->volume());
+        if (settings.value(volumeconfig::show(dev->description()), volumeconfig::show_default).toBool() == true)
+            settings.setValue(volumeconfig::volume(dev->description()), dev->volume());
     }
 }
 

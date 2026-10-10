@@ -135,4 +135,10 @@ void SettingsUpgradeManager::upgrade_0_10_0(){
         if (settings->value(child + "/settings-only", false).toBool())
             settings->remove(child);
     settings->endGroup();
+
+    // Sensor Monitor keys sensors by chip + label now; the shown sensor and bar choices reset.
+    QSettings sensors("Forest", "Temperature Monitor");
+    foreach (QString key, sensors.childKeys())
+        if (key.endsWith("Barenabled") || key == "ChipIndex" || key == "sensorlist" || key == "displayheight")
+            sensors.remove(key);
 }

@@ -13,7 +13,6 @@
 #include <QMouseEvent>
 #include <QtDBus>
 
-#include "settingswidget.h"
 #include "panelpluginterface.h"
 #include "panelbutton.h"
 #include "popup.h"
@@ -32,16 +31,8 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
+    void reloadSettings(){ loadsettings(); }
     //end plugininterface
-
-
-public slots:
-    void showsettingswidget();
-    void reloadcolors();
-    void reloadsettings();
-    void setbackop(qreal opacity);
-    void setramop(qreal opacity);
-    void setswapop(qreal opacity);
 
 private slots:
     void loadsettings();

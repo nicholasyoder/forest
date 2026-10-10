@@ -1,4 +1,5 @@
 {
     "name": "Window List",
+    "settings": "desktop/panel/windowlist",
     "stretch": true
 }

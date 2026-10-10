@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "sensorwidget.h"
-#include "widgetsensorconf.h"
+#include "sensorsconfig.h"
 #include <QSettings>
 #include <QGenericPlugin>
 
@@ -13,15 +13,6 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
     mSensors = new Sensors;
     mDetectedChips = mSensors->getDetectedChips();
-    int sensornum = 0;
-    for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
-        const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
-        for (unsigned int j = 0; j < features.size(); ++j){
-            if (features[j].getType() == SENSORS_FEATURE_TEMP)
-                sensornum++;
-        }
-    }
-
     layoutdirection = layout->direction();
     pbutton = new panelbutton;
     QHBoxLayout *hlayout = new QHBoxLayout;
@@ -39,9 +30,6 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
     pmenu = new QMenu;
     pmenu->addActions(itemlist);
-
-    pmenu->addSeparator();
-    pmenu->addAction(QIcon::fromTheme("configure"), "Sensors Settings", this, &SensorWidget::showsettingswidget);
     connect(pbutton, &panelbutton::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, pbutton, CenteredOnWidget); });
 
     timer=new QTimer;
@@ -114,45 +102,28 @@ void SensorWidget::paintEvent(QPaintEvent *){
 }
 
 void SensorWidget::loadSettings(){
+    namespace cfg = sensorsconfig;
     timer->stop();
 
     QSettings settings("Forest", "Temperature Monitor");
     settings.sync();
-    mTimeUpdat = settings.value("TimeUpdat",3).toInt()*1000;
-    mFahrenheit = settings.value("Fahrenheit",false).toBool();
-    mChipIndex = settings.value("ChipIndex",0).toInt();
-    displaytype = settings.value("display", "text").toString();
-    warningtemp = settings.value("warningtemp", 70).toInt();
-    criticaltemp = settings.value("criticaltemp", 90).toInt();
-    QStringList sensorlist = settings.value("sensorlist").toStringList();
-    foreach (QString sensor, sensorlist)
-        enabledbars[sensor] = settings.value(sensor + "Barenabled", true).toBool();
+    mTimeUpdat = settings.value(cfg::updateinterval, cfg::updateinterval_default).toInt()*1000;
+    mFahrenheit = settings.value(cfg::fahrenheit, cfg::fahrenheit_default).toBool();
+    shownsensor = settings.value(cfg::sensor).toString();
+    displaytype = settings.value(cfg::display, cfg::display_text).toString();
+    warningtemp = settings.value(cfg::warningtemp, cfg::warningtemp_default).toInt();
+    criticaltemp = settings.value(cfg::criticaltemp, cfg::criticaltemp_default).toInt();
+    hiddenbars = settings.value(cfg::hiddenbars).toStringList();
 
-    barwidth = settings.value("barwidth", 5).toInt();
-    barspacing = settings.value("barspacing", 2).toInt();
-    margin = settings.value("margin", 2).toInt();
-    maxtemp = settings.value("maxtemp", 110).toInt();
-    backcolor = settings.value("backcolor").value<QColor>();
+    barwidth = settings.value(cfg::barwidth, cfg::barwidth_default).toInt();
+    barspacing = settings.value(cfg::barspacing, cfg::barspacing_default).toInt();
+    margin = settings.value(cfg::margin, cfg::margin_default).toInt();
+    maxtemp = settings.value(cfg::maxtemp, cfg::maxtemp_default).toInt();
+    backcolor = settings.value(cfg::backcolor, cfg::backcolor_default).value<QColor>();
 
     updateSensor();
 
     timer->start(mTimeUpdat);
-}
-
-void SensorWidget::showsettingswidget(){
-    QStringList list;
-    for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
-        const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
-        for (unsigned int j = 0; j < features.size(); ++j){
-            if (features[j].getType() == SENSORS_FEATURE_TEMP){
-                QString name= QString::fromStdString(features[j].getLabel());
-                list.append(name);
-            }
-        }
-    }
-    WidgetSensorConf *dlg=new WidgetSensorConf(list);
-    connect(dlg,SIGNAL(settingSaved()),this,SLOT(loadSettings()));
-    dlg->show();
 }
 
 void SensorWidget::updateSensor(){
@@ -161,6 +132,7 @@ void SensorWidget::updateSensor(){
 
     int index=-1;
     double curTemp = 0;
+    bool shownfound = false;
 
     for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
         const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
@@ -178,18 +150,15 @@ void SensorWidget::updateSensor(){
                 else popuptext += QString::number(int(curTemp)) +" C"+ QChar(0x00B0);
                 popuptext += "</td>";
 
-                if (enabledbars[name] == true || enabledbars.isEmpty())
+                QString id = sensorsconfig::sensor_id(mDetectedChips[i], features[j]);
+                if (!hiddenbars.contains(id))
                     temps.append(int(curTemp));
 
-                if(mChipIndex==index){
-                    if (mFahrenheit){
-                        iconTemp = celsius2fahrenheit(curTemp);
-                        cicontemp = curTemp;
-                    }
-                    else{
-                        iconTemp = curTemp;
-                        cicontemp = curTemp;
-                    }
+                // First sensor until the chosen one turns up.
+                if (index == 0 || (!shownfound && id == shownsensor)){
+                    shownfound = id == shownsensor;
+                    iconTemp = mFahrenheit ? celsius2fahrenheit(curTemp) : curTemp;
+                    cicontemp = curTemp;
                 }
 
                 popuptext += "</tr>";

@@ -30,13 +30,13 @@ public:
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
     void closePlug(){this->close(); deleteLater();}
+    void reloadSettings(){ loadSettings(); }
     //end plugininterface
 
 private slots:
     void paintEvent(QPaintEvent *);
     void updateSensor();
     void loadSettings();
-    void showsettingswidget();
     double celsius2fahrenheit(double celsius);
 
 private:
@@ -51,11 +51,10 @@ private:
 
     bool mFahrenheit;
     int  mTimeUpdat;
-    int mChipIndex;
+    QString shownsensor;
     double iconTemp = 0;
     double cicontemp = 0;
     QString displaytype;
-    //int displayheight = 0;
     int warningtemp = 0;
     int criticaltemp = 0;
     int barwidth = 0;
@@ -64,7 +63,7 @@ private:
     int maxtemp = 0;
     QTimer *timer;
     QList<int> temps;
-    QHash<QString, bool> enabledbars;
+    QStringList hiddenbars;
     QColor backcolor;
     QBoxLayout::Direction layoutdirection;
     QString plugnum;

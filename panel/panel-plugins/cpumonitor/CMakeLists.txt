@@ -1,9 +1,7 @@
 add_library(cpumonitor MODULE
     cpumon.cpp
-    settingswidget.cpp
     cpumon.h
-    settingswidget.h
-    settingswidget.ui
+    cpumonitorconfig.h
 )
 
 target_compile_definitions(cpumonitor PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)
@@ -13,3 +11,9 @@ forest_link_panel_library(cpumonitor)
 forest_link_miscutills(cpumonitor)
 
 install(TARGETS cpumonitor LIBRARY DESTINATION lib/forest/panel)
+
+forest_add_applet_settings(cpumonitor
+    cpumonitorsettings.cpp
+    cpumonitorsettings.h
+    cpumonitorconfig.h
+)

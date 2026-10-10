@@ -1,3 +1,4 @@
 {
-    "name": "Sensor Monitor"
+    "name": "Sensor Monitor",
+    "settings": "desktop/panel/sensors"
 }
