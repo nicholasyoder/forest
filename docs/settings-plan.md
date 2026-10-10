@@ -37,7 +37,7 @@ only say which category a page belongs in.
 |---|---|---|
 | `about` | About | About |
 | `appearance` | Appearance | Theme, Wallpaper, Cursor → Icon theme |
-| `desktop` | Desktop & Panel | Panel (+ one subpage per applet) → Desktop icons |
+| `desktop` | Panel (→ Desktop & Panel) | Panel (+ one subpage per applet) → Desktop icons |
 | `displays` | Displays | Displays |
 | `input` | Input & Hotkeys | Hotkeys → keyboard / pointer / touchpad |
 | `notifications` | Notifications | Notifications |
