@@ -28,10 +28,9 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   (cpu/memory monitors), `deskbutton`, `battery` and `sensorwidget` paint
   in integer logical pixels. At 1.5x each logical pixel is 1.5 device
   pixels, so 1px lines/columns come out 1 or 2px and bar widths/gaps vary,
-  depending on the widget's position. Fix: shared panel-library helper
-  that sets the painter to device-pixel units with the origin snapped to a
-  device pixel, then lay out each painter in device pixels (constants
-  × dpr, rounded). Graph history also has to be per device column.
+  depending on the widget's position. Fix: replace the painting with QSS
+  widgets (deskbutton, sensor bars), theme icons (battery) and an
+  antialiased path (graphs). Plan: `docs/panel-rendering-plan.md`.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
