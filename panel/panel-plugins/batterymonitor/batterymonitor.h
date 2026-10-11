@@ -8,7 +8,6 @@
 #include <QWidget>
 #include <QTimer>
 #include <QDir>
-#include <QHBoxLayout>
 #include <QLabel>
 
 #include "panelpluginterface.h"
@@ -16,7 +15,7 @@
 #include "panelbutton.h"
 #include "popup.h"
 
-class batterymonitor : public QWidget, panelpluginterface
+class batterymonitor : public panelbutton, panelpluginterface
 {
     Q_OBJECT
     Q_PLUGIN_METADATA(IID "forest.panel.batterymonitor.plugin" FILE "batterymonitor.json")
@@ -31,13 +30,19 @@ public:
     void closePlug(){this->close(); deleteLater();}
     //end plugininterface
 
+protected:
+    void changeEvent(QEvent *event) override;
+
 private slots:
     void updatedata();
     void showpopup();
 
 private:
-    QHBoxLayout *basehlayout = new QHBoxLayout;
+    void updateicon();
+
     QList<battery*> batterylist;
+    // Last lookup's candidates; hasThemeIcon() only runs again when they change.
+    QStringList iconcandidates;
     QTimer *updatetimer = new QTimer(this);
     popup *pbox;
     QLabel *popuplabel = new QLabel;
