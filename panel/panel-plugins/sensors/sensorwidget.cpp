@@ -13,11 +13,20 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
     mSensors = new Sensors;
     mDetectedChips = mSensors->getDetectedChips();
-    layoutdirection = layout->direction();
+    // Bars run across the panel: vertical on a horizontal panel.
+    bool vertical_panel = layout->direction() == QBoxLayout::TopToBottom;
+    barorientation = vertical_panel ? Qt::Horizontal : Qt::Vertical;
     pbutton = new panelbutton;
     QHBoxLayout *hlayout = new QHBoxLayout;
     hlayout->setContentsMargins(QMargins(0,0,0,0));
     hlayout->addWidget(this);
+
+    bars = new QFrame;
+    bars->setObjectName("sensorBars");
+    barlayout = new QBoxLayout(vertical_panel ? QBoxLayout::TopToBottom : QBoxLayout::LeftToRight, bars);
+    if (vertical_panel) bars->setSizePolicy(QSizePolicy::Preferred, QSizePolicy::Fixed);
+    else bars->setSizePolicy(QSizePolicy::Fixed, QSizePolicy::Preferred);
+    hlayout->addWidget(bars);
     pbutton->setLayout(hlayout);
     layout->addWidget(pbutton);
 
@@ -39,66 +48,17 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 }
 
 void SensorWidget::paintEvent(QPaintEvent *){
-    if (displaytype == "bars"){
-        if (layoutdirection == QBoxLayout::TopToBottom){
-            int displayheight = this->width();
+    QPainter painter(this);
+    QPen pen;
+    if (cicontemp < warningtemp)
+        pen.setColor(Qt::green);
+    else if(cicontemp < criticaltemp)
+        pen.setColor(Qt::yellow);
+    else if(cicontemp >= criticaltemp)
+        pen.setColor(Qt::red);
 
-            QPainter painter1(this);
-            painter1.fillRect(0, 0, displayheight, this->height(), backcolor);
-
-            int y = margin;
-            foreach (int temp, temps){
-                double percentage = double(temp) / maxtemp;
-                double barheight = double(displayheight) * percentage;
-
-                QLinearGradient gradient(displayheight, 0, 0, 0);
-                gradient.setColorAt(0.2, Qt::red);
-                gradient.setColorAt(0.5, Qt::yellow);
-                gradient.setColorAt(1, Qt::green);
-
-                QBrush brush(gradient);
-                QPainter painter(this);
-                painter.fillRect(0, y, int(barheight), barwidth, brush);
-                y += barwidth + barspacing;
-            }
-        }
-        else{
-            int displayheight = this->height();
-
-            QPainter painter1(this);
-            painter1.fillRect(0, 0, this->width(), displayheight, backcolor);
-
-            int x = margin;
-            foreach (int temp, temps)
-            {
-                double percentage = double(temp) / maxtemp;
-                double barheight = double(displayheight) * percentage;
-
-                QLinearGradient gradient(0, 0, 0, displayheight);
-                gradient.setColorAt(0.2, Qt::red);
-                gradient.setColorAt(0.5, Qt::yellow);
-                gradient.setColorAt(1, Qt::green);
-
-                QBrush brush(gradient);
-                QPainter painter(this);
-                painter.fillRect(x, displayheight - int(barheight), barwidth, int(barheight), brush);
-                x += barwidth + barspacing;
-            }
-        }
-    }
-    else{
-        QPainter painter(this);
-        QPen pen;
-        if (cicontemp < warningtemp)
-            pen.setColor(Qt::green);
-        else if(cicontemp < criticaltemp)
-            pen.setColor(Qt::yellow);
-        else if(cicontemp >= criticaltemp)
-            pen.setColor(Qt::red);
-
-        painter.setPen(pen);
-        painter.drawText(0,0,this->width(),this->height(), Qt::AlignCenter, this->text());
-    }
+    painter.setPen(pen);
+    painter.drawText(0,0,this->width(),this->height(), Qt::AlignCenter, this->text());
 }
 
 void SensorWidget::loadSettings(){
@@ -120,6 +80,16 @@ void SensorWidget::loadSettings(){
     margin = settings.value(cfg::margin, cfg::margin_default).toInt();
     maxtemp = settings.value(cfg::maxtemp, cfg::maxtemp_default).toInt();
     backcolor = settings.value(cfg::backcolor, cfg::backcolor_default).value<QColor>();
+
+    bool showbars = displaytype == cfg::display_bars;
+    setVisible(!showbars);
+    bars->setVisible(showbars);
+    bars->setStyleSheet(QString("#sensorBars { background: %1; }").arg(backcolor.name(QColor::HexArgb)));
+    barlayout->setSpacing(barspacing);
+    if (barorientation == Qt::Vertical) barlayout->setContentsMargins(margin, 0, margin, 0);
+    else barlayout->setContentsMargins(0, margin, 0, margin);
+    qDeleteAll(barlist); // rebuilt by updateSensor() with the new width
+    barlist.clear();
 
     updateSensor();
 
@@ -177,13 +147,19 @@ void SensorWidget::updateSensor(){
         setFixedWidth(sizeHint().width());
     }
     else{
-        setText("");
-        int size = temps.length() * (barwidth + barspacing) + margin*2 - barspacing;
-        if (layoutdirection == QBoxLayout::TopToBottom)
-            setFixedHeight(size);
-        else
-            setFixedWidth(size);
-        update();
+        if (barlist.size() != temps.size()){
+            qDeleteAll(barlist);
+            barlist.clear();
+            for (int i = 0; i < temps.size(); ++i){
+                SensorBar *bar = new SensorBar(barorientation);
+                if (barorientation == Qt::Vertical) bar->setFixedWidth(barwidth);
+                else bar->setFixedHeight(barwidth);
+                barlayout->addWidget(bar);
+                barlist.append(bar);
+            }
+        }
+        for (int i = 0; i < temps.size(); ++i)
+            barlist[i]->setValue(double(temps[i]) / maxtemp);
     }
 }
 

@@ -135,6 +135,8 @@ Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
   positioning so they open away from the panel edge, not over it.
 - **Multiple panels** (#53). E.g. dock at the bottom + status bar at the
   top. `Panel.conf` and panel settings assume a single panel today.
+- **Vertical panels.** Left/right screen edges. Some plugins carry
+  untested `TopToBottom` layout branches; most assume a horizontal panel.
 - **Combined taskbar and quicklaunch** (#55, needs research). Pinned
   launchers that become window buttons when running (KDE icons-only task
   manager / Plank style). The hard part is matching toplevel `app_id`s to
