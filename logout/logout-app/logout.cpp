@@ -58,7 +58,7 @@ logoutmanager::logoutmanager(){
     winId(); // force native window creation so windowHandle() is valid
     LayerShellQt::Window *layer_window = LayerShellQt::Window::get(windowHandle());
     layer_window->setLayer(LayerShellQt::Window::LayerOverlay);
-    layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityOnDemand);
+    layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityExclusive);
     layer_window->setScope("forest-logout");
 
     // No anchors: layer-shell centres the surface. LayerShellQt defaults to all four.

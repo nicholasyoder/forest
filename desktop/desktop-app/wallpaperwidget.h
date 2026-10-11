@@ -16,7 +16,7 @@ class wallpaperwidget : public QWidget
 {
     Q_OBJECT
 public:
-    wallpaperwidget(QImage *image, WALLPAPER_MODE imode, QScreen *screen);
+    wallpaperwidget(QImage *image, WALLPAPER_MODE imode, QScreen *screen, bool hasicons);
 
 public slots:
     void setwallpaper(QImage *image){ wallpaper = image; setup_wallpaper(); }

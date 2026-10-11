@@ -30,7 +30,6 @@ signals:
     void refreshrequest();
     void filesdropped(QStringList paths, Qt::DropAction action);
     void keypressed(QKeyEvent *event);
-    void keyreleased(QKeyEvent *event);
 
 public slots:
     void addicon(desktopicon *icon, int column = 0, int row = 0);
@@ -40,7 +39,6 @@ public slots:
     void seticonintexteditmode(QString ID);
     void setscreensize(QSize size){screensize = size;}
     void setusabledesktopspace(QRect usable){usablespace = usable;}
-    void setinmultiselectmode(bool inmode){inmultiselectmode = inmode;}
     void setdropdir(QString dir){dropdir = dir;}
     QList<desktopicon*> selectedicons();
 
@@ -49,7 +47,6 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
     void mouseReleaseEvent(QMouseEvent *event);
     void keyPressEvent(QKeyEvent *event);
-    void keyReleaseEvent(QKeyEvent *event);
     void dragEnterEvent(QDragEnterEvent *event);
     void dragMoveEvent(QDragMoveEvent *event);
     void dropEvent(QDropEvent *event);

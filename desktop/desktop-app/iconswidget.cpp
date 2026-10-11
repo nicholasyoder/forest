@@ -3,6 +3,8 @@
 #include "iconswidget.h"
 #include "fileops.h"
 
+#include <QGuiApplication>
+
 iconswidget::iconswidget(QSize size, QRect usable)
 {
     screensize = size;
@@ -120,11 +122,6 @@ void iconswidget::keyPressEvent(QKeyEvent *event)
     emit keypressed(event);
 }
 
-void iconswidget::keyReleaseEvent(QKeyEvent *event)
-{
-    emit keyreleased(event);
-}
-
 // Re-evaluated on every move: the drag source sees the action and modifiers can change mid-drag.
 bool iconswidget::acceptdrop(QDropEvent *event)
 {
@@ -158,7 +155,7 @@ void iconswidget::dropEvent(QDropEvent *event)
 
 void iconswidget::handleiconselected(QString iconID)
 {
-    if (!inmultiselectmode)
+    if (!inmultiselectmode && !(QGuiApplication::keyboardModifiers() & Qt::ControlModifier))
     {
         foreach (desktopicon *icon, iconXYposhash)
         {
