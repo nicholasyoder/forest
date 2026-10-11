@@ -3,30 +3,27 @@
 #ifndef BATTERY_H
 #define BATTERY_H
 
-#include <QWidget>
+#include <QString>
 
-class battery : public QWidget
+class battery
 {
-    Q_OBJECT
-
 public:
     battery(QString path);
 
-    // Re-reads sysfs and schedules a repaint.
+    // Re-reads sysfs.
     void refresh();
-    qreal getpercentfull() const { return percentfull; }
+    qreal getnow() const { return now; }
+    qreal getfull() const { return full; }
+    qreal getpercentfull() const { return full > 0 ? now / full : 0; }
     QString getstatus() const { return status; }
-    QSize sizeHint() const override;
-
-protected:
-    void paintEvent(QPaintEvent *) override;
 
 private:
     void notifylow();
 
     bool sentnotification = false;
     QString pathtobatdir;
-    qreal percentfull = 0;
+    qreal now = 0;
+    qreal full = 0;
     QString status;
 };
 
