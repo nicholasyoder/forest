@@ -119,7 +119,7 @@ All in `library/`:
 - **`activation`** — xdg-activation client (`XdgActivation`): launch programs with a token so they can raise an existing window. `QMenu` actions need `watch()`; custom popups call `request()` before hiding. Create the instance at startup (binds asynchronously)
 - **`outputs`** — wlr-output-management client (`OutputManager`), display profiles (`DisplayProfiles`, `Displays.conf`) and layout fixups; see `docs/development-notes.md` → Display settings
 - **`hotkeyconfig`** — parse/format of `[hotkeys]` `DBUS:` actions, plus the Hotkeys page's built-in actions
-- **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `PanelButton`, `GraphWidget`)
+- **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `panelbutton`, `graphwidget`)
 
 Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(target)`) link these static libs.
 
