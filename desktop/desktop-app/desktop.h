@@ -63,7 +63,6 @@ private slots:
     void opendesktopfolder(){openfile(desktopdir());}
 
     void handlekeypressed(QKeyEvent *event);
-    void handlekeyreleased(QKeyEvent *event);
     void handlefilesdropped(QStringList paths, Qt::DropAction action);
     void handleicontextchanged(QString ID, QString newtext);
 
@@ -83,8 +82,6 @@ private:
     static void openfile(const QString &file);
     QStringList selectedpaths();
 
-    bool ctrldown = false;
-    bool shiftdown = false;
     bool updatepaused = false;
 
     QList <wallpaperwidget *> wallwidgetlist;

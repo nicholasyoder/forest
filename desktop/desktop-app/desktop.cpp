@@ -45,7 +45,7 @@ void desktop::reloadwallpaper(){
 void desktop::loadwallpaperwidgets(){
     QScreen *primary = ScreenTracker::primary();
     foreach (QScreen *screen, qApp->screens()){
-        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen);
+        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen, screen == primary);
         wallwidgetlist << wallwidget;
 
         if (screen == primary){
@@ -58,7 +58,6 @@ void desktop::loadwallpaperwidgets(){
             iwidget->setdropdir(desktopdir());
             connect(iwidget, &iconswidget::filesdropped, this, &desktop::handlefilesdropped);
             connect(iwidget, &iconswidget::keypressed, this, &desktop::handlekeypressed);
-            connect(iwidget, &iconswidget::keyreleased, this, &desktop::handlekeyreleased);
             wallwidget->setLayout(vlayout);
             wallwidget->setcontextmenu(deskmenu);
         }
@@ -199,7 +198,8 @@ void desktop::handleScreenChange(){
 }
 
 void desktop::handlekeypressed(QKeyEvent *event){
-    if (ctrldown){
+    const Qt::KeyboardModifiers mods = event->modifiers() & ~Qt::KeypadModifier;
+    if (mods == Qt::ControlModifier){
         switch (event->key()){
         case Qt::Key_A: iwidget->selectall(); break;
         case Qt::Key_C: copyselected(); break;
@@ -207,28 +207,14 @@ void desktop::handlekeypressed(QKeyEvent *event){
         case Qt::Key_V: paste2desktop(); break;
         }
     }
-    else if (shiftdown){
-        switch (event->key()){
-        case Qt::Key_Delete: deleteselected(); break;
-        }
+    else if (mods == Qt::ShiftModifier){
+        if (event->key() == Qt::Key_Delete) deleteselected();
     }
-    else{
+    else if (mods == Qt::NoModifier){
         switch (event->key()){
-        case Qt::Key_Control: ctrldown = true; iwidget->setinmultiselectmode(true); break;
-        case Qt::Key_Shift: shiftdown = true; break;
         case Qt::Key_F5: updateicons(); break;
         case Qt::Key_Delete: trashselected(); break;
         }
-    }
-}
-
-void desktop::handlekeyreleased(QKeyEvent *event){
-    if (event->key() == Qt::Key_Control){
-        ctrldown = false;
-        iwidget->setinmultiselectmode(false);
-    }
-    else if (event->key() == Qt::Key_Shift){
-        shiftdown = false;
     }
 }
 
