@@ -121,8 +121,8 @@ void memmon::updatemem(){
         values << (mtotal - mfree) / mtotal;
 
         double sfree = swapfree.toDouble();
-        double stotal = swapfree.toDouble();
-        values << (stotal - sfree) / stotal;
+        double stotal = swaptotal.toDouble();
+        values << (stotal > 0 ? (stotal - sfree) / stotal : 0);
     }
     gwidget->updategraph(values);
 }

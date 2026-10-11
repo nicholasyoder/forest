@@ -4,115 +4,28 @@
 #define GRAPHWIDGET_H
 
 #include <QWidget>
-#include <QPainter>
-#include <QTimer>
-#include <QDebug>
-
-
-typedef  QHash<int, int> inthash;
-typedef  QHash<int, qreal> qrealhash;
 
 class graphwidget : public QWidget
 {
     Q_OBJECT
 
-public:
-    graphwidget(){}
-    ~graphwidget(){}
-
-    int numofgraphs = 0;
-    QList<inthash> valueslist;
-    QList<qrealhash> alphaslist;
-
-    QList<QColor> colors;
-    QList<qreal> opacitys;
-
-    QColor backcolor;
-    qreal backopacity;
-
 public slots:
-    void setupgraphs(int numberofgraphs, QList<QColor> gcolors, QList<qreal> gopacitys, QColor gbackcolor, qreal gbackopacity)
-    {
-        numofgraphs = numberofgraphs;
-        valueslist.clear();
-        for (int i = 0; i < numofgraphs; i++){
-            inthash hash;
-            valueslist.append(hash);
-            qrealhash qrhash;
-            alphaslist.append(qrhash);
-        }
-
-        colors = gcolors;
-        opacitys = gopacitys;
-        backcolor = gbackcolor;
-        backopacity = gbackopacity;
-    }
-
-    void updategraph(QList<qreal> newvalues)
-    {
-        if (newvalues.count() != numofgraphs) return;
-
-        for (int i = 0; i < numofgraphs; i++)
-        {
-            inthash currenthash = valueslist[i];
-            qrealhash currentalphahash = alphaslist[i];
-            qreal currentvalue = newvalues[i];
-
-            //move values in hash up
-            int a = 0, b = 1;
-            while (a < width())
-            {
-                currenthash[a] = currenthash[b];
-                currentalphahash[a] = currentalphahash[b];
-                a++;
-                b++;
-            }
-
-            //value is a percentage i.e. 0.25
-            //height * value = num of pixels high the bar should be
-            int barheight = int(currentvalue * height());
-            currentalphahash[a-1] = currentvalue * height() - barheight;//just get decimal
-            currenthash[a-1] = int(currentvalue * height());
-
-            valueslist[i] = currenthash;
-            alphaslist[i] = currentalphahash;
-        }
-        update();
-    }
+    void setupgraphs(int numberofgraphs, QList<QColor> gcolors, QList<qreal> gopacitys, QColor gbackcolor, qreal gbackopacity);
+    void updategraph(QList<qreal> newvalues);
 
 protected:
-    void paintEvent(QPaintEvent *)
-    {
-        //Background~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        QPainter painter(this);
-        painter.setOpacity(backopacity);
-        painter.fillRect(0,0, width(), height(), backcolor);
-        //~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    void paintEvent(QPaintEvent *) override;
+    void resizeEvent(QResizeEvent *) override;
 
-        for (int i = 0; i < numofgraphs; i++)//for each graph
-        {
-            inthash currenthash = valueslist[i]; //get value hash for current graph
-            qrealhash currentalphahash = alphaslist[i];
+private:
+    void trim();
 
-            int b = 0;
-            while(b < width())
-            {
-                QPainter painter(this);
-                painter.setOpacity(opacitys[i]);
-                int y = height() - currenthash[b];
-                painter.fillRect(b, y, 1, currenthash[b], colors[i]);
-
-                int alphapixY = y-1;
-                if (alphapixY > 0){
-                    QColor color = colors[i];
-                    color.setAlpha(255 * currentalphahash[b]);
-                    painter.fillRect(b, alphapixY, 1, currenthash[b], color);
-                }
-
-                b++;
-            }
-        }
-    }
+    // Per graph, oldest first, one sample per logical pixel of width.
+    QList<QList<qreal>> samples;
+    QList<QColor> colors;
+    QList<qreal> opacitys;
+    QColor backcolor;
+    qreal backopacity = 1;
 };
 
 #endif // GRAPHWIDGET_H

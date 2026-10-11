@@ -24,13 +24,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   `globalhotkey: could not resolve a keysym for "Alt+`"`: `triggerString()`
   looks up `QKeySequence(key).toString()` ("`") with `xkb_keysym_from_name`,
   which wants keysym names ("grave"). Probably affects most punctuation keys.
-- **Custom-painted panel plugins at fractional scale.** `graphwidget`
-  (cpu/memory monitors), `deskbutton`, `battery` and `sensorwidget` paint
-  in integer logical pixels. At 1.5x each logical pixel is 1.5 device
-  pixels, so 1px lines/columns come out 1 or 2px and bar widths/gaps vary,
-  depending on the widget's position. Fix: replace the painting with QSS
-  widgets (deskbutton, sensor bars), theme icons (battery) and an
-  antialiased path (graphs). Plan: `docs/panel-rendering-plan.md`.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
