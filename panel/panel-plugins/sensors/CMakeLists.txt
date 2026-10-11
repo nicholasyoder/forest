@@ -1,9 +1,11 @@
 add_library(sensors MODULE
     sensorwidget.cpp
+    sensorbar.cpp
     sensor/sensors.cpp
     sensor/chip.cpp
     sensor/feature.cpp
     sensorwidget.h
+    sensorbar.h
     sensorsconfig.h
     sensor/sensors.h
     sensor/chip.h

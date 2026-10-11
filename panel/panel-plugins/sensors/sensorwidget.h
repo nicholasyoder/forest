@@ -16,6 +16,7 @@
 
 #include "popup.h"
 #include "panelbutton.h"
+#include "sensorbar.h"
 
 class SensorWidget : public QLabel, panelpluginterface
 {
@@ -42,6 +43,9 @@ private slots:
 private:
     panelbutton *pbutton;
     QLabel *mLabelInfo;
+    QFrame *bars;
+    QBoxLayout *barlayout;
+    QList<SensorBar*> barlist;
     QString popuptext;
     popup *popupbox;
     QMenu *pmenu = nullptr;
@@ -65,7 +69,7 @@ private:
     QList<int> temps;
     QStringList hiddenbars;
     QColor backcolor;
-    QBoxLayout::Direction layoutdirection;
+    Qt::Orientation barorientation;
     QString plugnum;
 
 };

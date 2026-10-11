@@ -15,33 +15,6 @@ visible, along with the hardcoded colours that ignore the theme.
 Fallback: if a piece below doesn't work out, `fractional-paint-plan.md` covers
 device-pixel painting for the same widgets.
 
-## Phase 2: `SensorWidget` bars → QSS frames + painted fill
-
-- Bars mode becomes a container (`#sensorBars`) holding one small `QFrame`
-  subclass per shown sensor (`#sensorBar`, value 0–`maxtemp`). The bars are
-  vertical on a horizontal panel and horizontal on a vertical one.
-- Settings map onto Qt instead of manual geometry:
-  - `barwidth` → the bar's fixed thickness
-  - `barspacing` → layout spacing
-  - `margin` → layout contents margins
-  - the container's size comes from the layout, so the manual
-    `setFixedWidth/Height` calculation goes.
-- QSS styles the frame (track background, border, thickness). The fill is
-  painted in C++: `QFrame::paintEvent`, then `fillRect` over the filled
-  part of `contentsRect()` with a `QLinearGradient` spanning the **whole**
-  bar length. This keeps today's behaviour, where taller bars reach redder.
-  A QSS `::chunk` gradient can't do this because it's relative to the
-  chunk. It's a single rect per bar, so there are no repeated 1px elements
-  to go uneven.
-- Gradient colours default to today's (green → yellow at 0.5 → red from
-  0.8), exposed as `QColor` `Q_PROPERTY`s so a theme can override them with
-  `qproperty-…`.
-- `backcolor` stays a user setting, applied as a local stylesheet on the
-  container so it overrides the theme.
-- Rebuild the bar list only when the shown set changes; otherwise just
-  `setValue()`.
-- Text mode is unchanged.
-
 ## Phase 3: battery → theme icons
 
 - Replace `battery`'s `paintEvent` with a theme icon. Make the plugin's
@@ -93,11 +66,9 @@ don't change.
 
 ## Testing
 
-Manual. Run Biome at 1x, 1.25x and 1.5x, with the panel horizontal and
-then vertical, on Circle and Round in both dark and light. Per phase:
+Manual. Run Biome at 1x, 1.25x and 1.5x, on Circle and Round in both dark
+and light (vertical panels aren't supported yet). Per phase:
 
-- Phase 2: sensor bars are even and the gradient matches today's; settings
-  changes apply live via `reloadSettings()`
 - Phase 3: the battery icon resolves sensibly under several icon themes
 - Phase 4: the graph scrolls without banding, and memmon's separate-swap
   mode shows swap
