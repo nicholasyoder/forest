@@ -89,8 +89,6 @@ void logoutmanager::setup(){
     basevlayout->addLayout(closehlayout);
     QHBoxLayout *actionshlayout = new QHBoxLayout;
     actionshlayout->setSpacing(0);
-    iconbutton *lockbt = new iconbutton(QIcon::fromTheme("system-lock-screen"), 48, 48, true, "Lock");
-    actionshlayout->addWidget(lockbt);
     iconbutton *shutdownbt = new iconbutton(QIcon::fromTheme("system-shutdown"), 48, 48, true, "Shutdown");
     actionshlayout->addWidget(shutdownbt);
     iconbutton *rebootbt = new iconbutton(QIcon::fromTheme("system-reboot"), 48, 48, true, "Reboot");
@@ -101,6 +99,8 @@ void logoutmanager::setup(){
     actionshlayout->addWidget(suspendbt);
     iconbutton *hibernatebt = new iconbutton(QIcon::fromTheme("system-suspend-hibernate"), 48, 48, true, "Hibernate");
     actionshlayout->addWidget(hibernatebt);
+    iconbutton *lockbt = new iconbutton(QIcon::fromTheme("system-lock-screen"), 48, 48, true, "Lock");
+    actionshlayout->addWidget(lockbt);
     basevlayout->addLayout(actionshlayout);
     QFrame *mainframe = new QFrame;
     mainframe->setObjectName("logout_MainWindow");
@@ -130,12 +130,12 @@ void logoutmanager::setup(){
     connect(logoutbt, &iconbutton::clicked, this, [this](){start_action(ActionType::LOGOUT);});
     connect(suspendbt, &iconbutton::clicked, this, [this](){start_action(ActionType::SUSPEND);});
     connect(hibernatebt, &iconbutton::clicked, this, [this](){start_action(ActionType::HIBERNATE);});
-    QWidget::setTabOrder(lockbt, shutdownbt);
     QWidget::setTabOrder(shutdownbt, rebootbt);
     QWidget::setTabOrder(rebootbt, logoutbt);
     QWidget::setTabOrder(logoutbt, suspendbt);
     QWidget::setTabOrder(suspendbt, hibernatebt);
-    QWidget::setTabOrder(hibernatebt, closebt);
+    QWidget::setTabOrder(hibernatebt, lockbt);
+    QWidget::setTabOrder(lockbt, closebt);
 }
 
 void logoutmanager::set_initial_focus(){
