@@ -26,7 +26,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   - Displays service: while off, track `connectedKeys` but don't auto-pick; on
     wake, run the `onHotplugSettled()` check (auto-pick only if the set differs
     from `settledKeys`). Locker absent = on.
-  - Needs Biome's reconnect-off fix (Biome roadmap 0.2.0).
 - **Hotkeys on punctuation keys don't bind** (e.g. Alt+`). The log shows
   `globalhotkey: could not resolve a keysym for "Alt+`"`: `triggerString()`
   looks up `QKeySequence(key).toString()` ("`") with `xkb_keysym_from_name`,
