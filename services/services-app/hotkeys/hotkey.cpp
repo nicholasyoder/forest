@@ -10,12 +10,19 @@ globalhotkey::globalhotkey(const QString &id, const QString &description, const 
     qDebug() << "Add Global Hotkey:" << id << sequence.toString();
 }
 
-void globalhotkey::exec(){
+void globalhotkey::exec(const QString &activationToken){
     if(hotkey_type == Type_Exec){
         QStringList args = QProcess::splitCommand(shcommand);
         if (!args.isEmpty()) {
-            QString program = args.takeFirst();
-            QProcess::startDetached(program, args);
+            QProcess process;
+            process.setProgram(args.takeFirst());
+            process.setArguments(args);
+            QProcessEnvironment env = QProcessEnvironment::systemEnvironment();
+            env.remove("XDG_ACTIVATION_TOKEN");
+            if (!activationToken.isEmpty())
+                env.insert("XDG_ACTIVATION_TOKEN", activationToken);
+            process.setProcessEnvironment(env);
+            process.startDetached();
         }
     }
     else{
@@ -23,6 +30,7 @@ void globalhotkey::exec(){
         QDBusMessage call = QDBusMessage::createMethodCall(dbusaction.service, dbusaction.path,
                                                            dbusaction.interface, dbusaction.method);
         if (!dbusaction.arg.isEmpty()) call << dbusaction.arg;
+        if (!activationToken.isEmpty() && hotkeyconfig::takesActivationToken(dbusaction)) call << activationToken;
         auto *watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), this);
         connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *w) {
             if (w->isError()) qWarning() << "globalhotkey:" << hotkey_id << "D-Bus call failed:" << w->error().message();

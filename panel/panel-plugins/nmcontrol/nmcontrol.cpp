@@ -31,5 +31,5 @@ void nmcontrol::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 void nmcontrol::showpopup(){
 
 
-    p_box->show();
+    p_box->showpopup();
 }

@@ -17,6 +17,8 @@ struct DBusHotkeyAction {
     QString interface;
     QString method;
     QString arg; // optional single string argument
+    // Built-ins only, not stored: the call takes an xdg-activation token as its last argument.
+    bool activationToken = false;
 
     // Same call; an empty interface on either side matches any.
     bool sameTarget(const DBusHotkeyAction &other) const;
@@ -36,6 +38,9 @@ QString formatDBusAction(const DBusHotkeyAction &action);
 
 // Fixed user-facing org.forest calls; display profiles are listed separately.
 QList<BuiltinHotkeyAction> builtinActions();
+
+// Whether `action` is a built-in that takes an xdg-activation token.
+bool takesActivationToken(const DBusHotkeyAction &action);
 
 // Built-in actions on org.forest /org/forest/displays.
 DBusHotkeyAction displayProfileAction(const QString &profileId);

@@ -221,11 +221,10 @@ void GlobalShortcutsPortal::closeSession(std::function<void()> onClosed) {
 void GlobalShortcutsPortal::handleActivated(const QDBusObjectPath &session_handle, const QString &shortcut_id,
         qulonglong timestamp, const QVariantMap &options) {
     Q_UNUSED(timestamp);
-    Q_UNUSED(options);
     if (session_handle != m_sessionHandle) {
         return; // stale signal from a session we've already torn down
     }
-    emit shortcutActivated(shortcut_id);
+    emit shortcutActivated(shortcut_id, options.value(QStringLiteral("activation_token")).toString());
 }
 
 void GlobalShortcutsPortal::handleClosed(const QVariantMap &details) {

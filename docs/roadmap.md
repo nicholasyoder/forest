@@ -36,23 +36,13 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ### Compositor portability
 
-Forest-side halves of Biome-only focus exceptions. Each must land *before*
-Biome removes its exception (Biome roadmap 0.2.0), or Forest input breaks.
-
-- **Panel popups rely on a Biome-only focus exception** (needs research).
-  `popup.h` popups (main-menu launcher, volume, calendar, battery, sensors,
-  nmcontrol, windowlist thumbnails) are non-grabbing `Qt::ToolTip` xdg_popups.
-  Their keyboard input (e.g. the main-menu search box) and click-outside-closes
-  (`WindowDeactivate`) only work because Biome focuses any layer-shell-owned
-  popup (`popup_wants_keyboard_focus()`). On other compositors they get no
-  keys and don't close. Likely direction: click-opened popups become grabbing
-  `Qt::Popup`s (fresh press serial, like QMenus). The hotkey-opened launcher
-  has no serial, so it needs something else, e.g. its own layer surface with
-  keyboard interactivity when hotkey-opened. Panel QMenus grab and don't use
-  the exception, with one exception: mainmenu's app right-click menu is a
-  grabbing xdg_popup whose parent is the non-grabbing launcher popup.
-  xdg-shell says that's an `invalid_grab` error; wlroots doesn't check, but
-  stricter compositors may. A grabbing launcher popup fixes this too.
+- **Hotkey-opened popups get keys only where popup activation is honored.**
+  They can't grab (no press serial), so `popup.h` shows them non-grabbing
+  and activates them with the GlobalShortcuts `activation_token`. Biome
+  focuses an activated popup; sway, KWin and Hyprland seem to activate only
+  toplevels, so there the main menu opens without keyboard. Portable
+  alternative: popups as their own `exclusive` layer surfaces. Revisit if
+  other compositors matter.
 - **Greeter on Biome, shared with the lockscreen.** Move the greeter from
   cage to Biome with one window per output on `loginui`'s per-screen
   background; split `PasswordView` into a card shared with

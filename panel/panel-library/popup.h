@@ -13,22 +13,26 @@
 #include <QWindow>
 #include <QPointer>
 #include <QTimer>
+#include <utility>
+#include <QtGui/qguiapplication_platform.h>
 
 #include "panelanchor.h"
+#include "xdgactivation.h"
 
 class popup : public QWidget
 {
     Q_OBJECT
 public:
-    popup(QLayout *layout, QWidget *launcherw, PositionpPolicy policy){
+    // Click-opened popups grab. Hotkey-opened ones can't (no press serial), so they get
+    // focus from an xdg-activation token instead; non-grabbing popups (those, and hover
+    // thumbnails) hand-roll click-outside in eventFilter()/event().
+    popup(QLayout *layout, QWidget *launcherw, PositionpPolicy policy, bool grabbing = true){
         contentlayout = layout;
         launcherwidget = launcherw;
         pospolicy = policy;
+        this->grabbing = grabbing;
 
-        // Not Qt::Popup: that needs an xdg_popup grab, which fails without a recent
-        // input serial (e.g. hotkey-triggered), degrading to a decorated toplevel.
-        // Cost: click-outside-closes is hand-rolled in eventFilter()/event().
-        setWindowFlags(Qt::ToolTip);
+        setWindowFlags(Qt::ToolTip); // finishShow() picks the real type
         setAttribute(Qt::WA_TranslucentBackground);
 
         QHBoxLayout *hlayout = new QHBoxLayout(this);
@@ -51,8 +55,12 @@ signals:
     void outsideclicked();
 
 public slots:
-    void showpopup(){
-        if (!launcherwidget) return;
+    void showpopup(){ showpopupActivated(QString()); }
+
+    // activationToken: from a hotkey (GlobalShortcuts' activation_token), for keyboard focus.
+    void showpopupActivated(const QString &activationToken){
+        if (!launcherwidget || closedByPress) return;
+        pendingToken = activationToken;
         QWidget *toplevel = launcherwidget->window();
         toplevel->winId();
         QWindow *toplevelHandle = toplevel->windowHandle();
@@ -96,8 +104,13 @@ protected:
         QWidget::showEvent(e);
     }
 
+    // Qt delivers the press that closed us to the launcher too; keep the filter until
+    // its release so that click toggles instead of reopening.
     void hideEvent(QHideEvent *e) override {
-        qApp->removeEventFilter(this);
+        if (QGuiApplication::mouseButtons() != Qt::NoButton)
+            closedByPress = true;
+        else
+            qApp->removeEventFilter(this);
         QWidget::hideEvent(e);
     }
 
@@ -108,7 +121,11 @@ protected:
         if (watched == pendingParent && event->type() == QEvent::Expose && pendingParent->isExposed()) {
             pendingTimeout.start(0);
         }
-        else if (event->type() == QEvent::MouseButtonPress && isVisible()) {
+        else if (closedByPress && !isVisible() && event->type() == QEvent::MouseButtonRelease) {
+            qApp->removeEventFilter(this);
+            QTimer::singleShot(0, this, [this]{ closedByPress = false; });
+        }
+        else if (!isGrabbing() && event->type() == QEvent::MouseButtonPress && isVisible()) {
             QWidget *clicked = qobject_cast<QWidget*>(watched);
             bool onLauncher = clicked && launcherwidget
                 && (clicked == launcherwidget || launcherwidget->isAncestorOf(clicked));
@@ -126,7 +143,7 @@ protected:
     // Cross-process click-outside: Biome gives this window real focus despite no grab.
     // A chained grabbing popup (e.g. a context menu) takes focus without closing this.
     bool event(QEvent *e) override {
-        if (e->type() == QEvent::WindowDeactivate && isVisible()) {
+        if (!isGrabbing() && e->type() == QEvent::WindowDeactivate && isVisible()) {
             bool skip = lastPressOnLauncher || chainedPopupVisible();
             lastPressOnLauncher = false;
             if (!skip) closepopup();
@@ -135,6 +152,14 @@ protected:
     }
 
 private:
+    bool isGrabbing() const { return windowType() == Qt::Popup; }
+
+    // Qt 6.8 makes a Qt::Popup a toplevel until the app has seen a press (later Qts crash).
+    static bool hasInputSeat(){
+        auto *wayland = qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>();
+        return wayland && wayland->lastInputSeat();
+    }
+
     // A popup window transient (directly or not) to this one.
     bool isChainedPopup(QWindow *window) const {
         QWindow *self = windowHandle();
@@ -172,9 +197,15 @@ private:
     void finishShow(){
         cancelPendingShow();
         if (!launcherwidget) return;
+        const QString token = std::exchange(pendingToken, QString());
+        const Qt::WindowType type = grabbing && token.isEmpty() && hasInputSeat() ? Qt::Popup : Qt::ToolTip;
+        if (windowType() != type)
+            setWindowFlags(type);
         adjustSize(); // fit current content; a hidden-time resize() would otherwise stick
         positionOnLauncher();
         show();
+        if (!token.isEmpty())
+            XdgActivation::instance()->activateWindow(this, token);
     }
 
     void cancelPendingShow(){
@@ -186,9 +217,12 @@ private:
     QLayout *contentlayout;
     QPointer<QWidget> launcherwidget;
     QPointer<QWindow> pendingParent;
+    QString pendingToken;
     QTimer pendingTimeout;
     PositionpPolicy pospolicy;
     bool lastPressOnLauncher = false;
+    bool grabbing;
+    bool closedByPress = false;
 };
 
 #endif // POPUPBOX_H

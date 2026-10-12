@@ -22,7 +22,7 @@ imagepopup::imagepopup(QWidget *parentw){
     scrshotlabel->setStyleSheet("margin: 10px;");
     scrshotlabel->setGraphicsEffect(ds_effect);
     popupglayout->addWidget(scrshotlabel, 1,0, 1, 2);
-    pbox = new popup(popupglayout, parentwidget, CenteredOnWidget);
+    pbox = new popup(popupglayout, parentwidget, CenteredOnWidget, false);
     connect(cbt, &closebutton::clicked, pbox, &popup::closepopup);
     connect(cbt, &closebutton::clicked, this, &imagepopup::closewindow);
 
