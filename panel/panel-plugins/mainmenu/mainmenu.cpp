@@ -37,26 +37,26 @@ void mainmenu::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     pMenu = new QMenu;
     pMenu->addActions(itemlist);
 
-    connect(this, &mainmenu::leftclicked, this, &mainmenu::showmenu);
+    connect(this, &mainmenu::leftclicked, this, [this]{ showmenu(); });
     connect(this, &mainmenu::rightclicked, this, [this]{ popupMenuOnLauncher(pMenu, this, CenteredOnWidget); });
 
     QDBusConnection::sessionBus().registerObject("/org/forest/panel/mainmenu", this, QDBusConnection::ExportAllSlots);
 }
 
-void mainmenu::togglemenu(){
+void mainmenu::togglemenu(const QString &activationToken){
     if(pBox->isVisible())
         closemenu();
     else
-        showmenu();
+        showmenu(activationToken);
 }
 
-void mainmenu::showmenu(){
+void mainmenu::showmenu(const QString &activationToken){
     allowClose = false;
     searchBox->setText("");
     itemHandler->setItemFocus(itemHandler->default_item_id);
     itemHandler->setSelectByMouse(false);
     setCategory(catIndexList.count()-1);
-    pBox->showpopup();
+    pBox->showpopupActivated(activationToken);
     QTimer::singleShot(100, this, SLOT(setAllowClose()));
     QTimer::singleShot(100, itemHandler, SLOT(setAllowSelectByMouse()));
 }

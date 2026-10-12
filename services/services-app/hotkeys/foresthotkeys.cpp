@@ -41,11 +41,11 @@ void foresthotkeys::setup(){
     reconcile();
 }
 
-void foresthotkeys::dispatch(QString id){
+void foresthotkeys::dispatch(QString id, QString activationToken){
     if (!pausers.isEmpty()) return;
     for (globalhotkey *item : hotkeylist) {
         if (item->id() == id) {
-            item->exec();
+            item->exec(activationToken);
             return;
         }
     }

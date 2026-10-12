@@ -31,8 +31,9 @@ public:
     void closePlug(){this->close(); deleteLater();}
 
 public slots:
-    void togglemenu();
-    void showmenu();
+    // D-Bus (hotkeys) passes an xdg-activation token for keyboard focus.
+    void togglemenu(const QString &activationToken = QString());
+    void showmenu(const QString &activationToken = QString());
     void closemenu();
 
 private slots:

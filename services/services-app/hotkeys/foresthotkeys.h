@@ -30,7 +30,7 @@ public slots:
     void resumeHotkeys();
 
 private slots:
-    void dispatch(QString id);
+    void dispatch(QString id, QString activationToken);
 
 private:
     void loadhotkeys();

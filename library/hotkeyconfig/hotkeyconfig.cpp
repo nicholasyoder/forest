@@ -47,11 +47,12 @@ QString formatDBusAction(const DBusHotkeyAction &a){
 }
 
 // No interface: the panel plugins export Qt's generated local.* names.
-static DBusHotkeyAction forestAction(const QString &path, const QString &method){
+static DBusHotkeyAction forestAction(const QString &path, const QString &method, bool activationToken = false){
     DBusHotkeyAction a;
     a.service = "org.forest";
     a.path = path;
     a.method = method;
+    a.activationToken = activationToken;
     return a;
 }
 
@@ -60,13 +61,20 @@ QList<BuiltinHotkeyAction> builtinActions(){
     const QString volume = "/org/forest/panel/volume";
     const QString volumeNote = "Needs the Volume panel plugin";
     return {
-        {"Toggle main menu", forestAction(menu, "togglemenu"), {}},
-        {"Show main menu", forestAction(menu, "showmenu"), {}},
+        {"Toggle main menu", forestAction(menu, "togglemenu", true), {}},
+        {"Show main menu", forestAction(menu, "showmenu", true), {}},
         {"Show desktop", forestAction("/org/forest/showdesktop", "toggle"), {}},
         {"Volume up", forestAction(volume, "volumeup"), volumeNote},
         {"Volume down", forestAction(volume, "volumedown"), volumeNote},
         {"Toggle mute", forestAction(volume, "togglemuted"), volumeNote},
     };
+}
+
+bool takesActivationToken(const DBusHotkeyAction &action){
+    for (const BuiltinHotkeyAction &builtin : builtinActions())
+        if (builtin.action.activationToken && builtin.action.sameTarget(action))
+            return true;
+    return false;
 }
 
 static DBusHotkeyAction displaysAction(const QString &method, const QString &arg = QString()){

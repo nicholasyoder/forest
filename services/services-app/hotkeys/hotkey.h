@@ -34,7 +34,7 @@ public slots:
     void setDbusAction(const DBusHotkeyAction &action){dbusaction = action;}
     void setExecCommand(const QString &command){shcommand=command;}
 
-    void exec();
+    void exec(const QString &activationToken = QString());
 
 private:
     QString hotkey_id;

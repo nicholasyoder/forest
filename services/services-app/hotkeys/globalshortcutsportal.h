@@ -25,7 +25,7 @@ public:
     void closeSession(std::function<void()> onClosed);
 
 signals:
-    void shortcutActivated(QString id);
+    void shortcutActivated(QString id, QString activationToken);
     // The portal closed our session or went away; in-flight requests fail first.
     void sessionLost();
     void portalAvailable();
