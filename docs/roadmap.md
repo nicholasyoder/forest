@@ -12,20 +12,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & settings
 
-- **Never wake idle-blanked displays for a profile.** The displays service
-  ignores a monitor that drops off and returns within its 3 s hotplug
-  debounce (some DP monitors do on power-off), but a longer bounce still
-  auto-picks a profile, and Biome powers every output on before a modeset.
-  Output power control is exclusive per output (wlroots sends `failed` to a
-  second client), so the displays service can't bind it alongside the locker:
-  - Locker: export a `DisplaysOff` getter + `DisplaysOffChanged(bool)` signal
-    on a Forest-only, read-only D-Bus interface (e.g. `org.forest.DisplayPower`,
-    not a lock API) set in `idled`/`resumed`/`start`, and
-    have `DisplayPower::addScreen()` send the last `setAll()` state so a
-    reconnected monitor follows it.
-  - Displays service: while off, track `connectedKeys` but don't auto-pick; on
-    wake, run the `onHotplugSettled()` check (auto-pick only if the set differs
-    from `settledKeys`). Locker absent = on.
 - **Hotkeys on punctuation keys don't bind** (e.g. Alt+`). The log shows
   `globalhotkey: could not resolve a keysym for "Alt+`"`: `triggerString()`
   looks up `QKeySequence(key).toString()` ("`") with `xkb_keysym_from_name`,

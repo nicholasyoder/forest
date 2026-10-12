@@ -2,6 +2,8 @@
 
 #include "displaypower.h"
 
+#include <QDBusConnection>
+#include <QDBusError>
 #include <QDebug>
 #include <QGuiApplication>
 #include <QScreen>
@@ -46,6 +48,11 @@ DisplayPower::DisplayPower(QObject *parent)
         qWarning() << "Compositor lacks wlr-output-power-management: display power disabled";
         return;
     }
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    bus.registerObject(QStringLiteral("/org/forest/DisplayPower"), this,
+                       QDBusConnection::ExportScriptableSlots | QDBusConnection::ExportScriptableSignals);
+    if (!bus.registerService(QStringLiteral("org.forest.DisplayPower")))
+        qWarning() << "Couldn't own org.forest.DisplayPower:" << bus.lastError().message();
     connect(qGuiApp, &QGuiApplication::screenAdded, this, &DisplayPower::addScreen);
     connect(qGuiApp, &QGuiApplication::screenRemoved, this, &DisplayPower::removeScreen);
     for (QScreen *screen : QGuiApplication::screens())
@@ -64,8 +71,14 @@ bool DisplayPower::isValid() const
 
 void DisplayPower::setAll(bool on)
 {
+    if (!isValid())
+        return;
+    const bool changed = on != m_on;
+    m_on = on;
     for (OutputPower *output : std::as_const(m_outputs))
         output->setOn(on);
+    if (changed)
+        emit DisplaysOffChanged(!on);
 }
 
 void DisplayPower::addScreen(QScreen *screen)
@@ -74,7 +87,11 @@ void DisplayPower::addScreen(QScreen *screen)
     auto *waylandScreen = dynamic_cast<QtWaylandClient::QWaylandScreen *>(screen->handle());
     if (!waylandScreen || m_outputs.contains(screen))
         return;
-    m_outputs.insert(screen, new OutputPower(m_manager->get_output_power(waylandScreen->output())));
+    auto *output = new OutputPower(m_manager->get_output_power(waylandScreen->output()));
+    // A monitor plugged in while blanked stays dark until the wake.
+    if (!m_on)
+        output->setOn(false);
+    m_outputs.insert(screen, output);
 }
 
 void DisplayPower::removeScreen(QScreen *screen)

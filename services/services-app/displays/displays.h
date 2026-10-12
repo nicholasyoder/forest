@@ -3,6 +3,7 @@
 #ifndef DISPLAYS_H
 #define DISPLAYS_H
 
+#include <QDBusServiceWatcher>
 #include <QDeadlineTimer>
 #include <QObject>
 #include <QSet>
@@ -56,9 +57,14 @@ signals:
     // Forest.conf [hotkeys] changed (profile renamed or deleted).
     void hotkeysChanged();
 
+private slots:
+    // From forest-locker's org.forest.DisplayPower; absent = on.
+    void setDisplaysOff(bool off);
+
 private:
     void onStateChanged();
     void onHotplugSettled();
+    void watchDisplayPower();
     void autoPick();
     void apply(const DisplayProfile &profile);
     void markActive(const QString &id);
@@ -88,6 +94,9 @@ private:
     int applying = 0; // applies in flight; the live layout is in flux
     // Some DP monitors drop off for ~1 s when powered off; that mustn't count as a hotplug.
     RunOnce hotplugDebounce{3000};
+    // An apply wakes blanked outputs, so auto-picks wait for the wake.
+    bool displaysOff = false;
+    QDBusServiceWatcher displayPowerWatcher;
 
     bool pending = false;
     OutputLayout revertTarget; // live layout before the first unconfirmed apply
