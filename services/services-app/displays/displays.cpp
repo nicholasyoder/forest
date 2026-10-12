@@ -8,6 +8,8 @@
 
 #include <QDBusConnection>
 #include <QDBusError>
+#include <QDBusPendingCallWatcher>
+#include <QDBusPendingReply>
 #include <QDebug>
 #include <QSettings>
 #include <QTimer>
@@ -25,6 +27,7 @@ void Displays::setup(){
     manager = new OutputManager(this);
     connect(manager, &OutputManager::stateChanged, this, &Displays::onStateChanged);
     connect(&hotplugDebounce, &RunOnce::activated, this, &Displays::onHotplugSettled);
+    watchDisplayPower();
 
     revertTimer.setSingleShot(true);
     connect(&revertTimer, &QTimer::timeout, this, &Displays::revertLayout);
@@ -60,6 +63,10 @@ void Displays::onStateChanged(){
 }
 
 void Displays::onHotplugSettled(){
+    if (displaysOff){
+        qInfo() << "Displays: outputs changed while blanked, waiting for the wake";
+        return;
+    }
     // Back to the same monitors: Biome has already restored the reconnected one.
     if (connectedKeys == settledKeys){
         qInfo() << "Displays: outputs reconnected, keeping the layout";
@@ -68,6 +75,39 @@ void Displays::onHotplugSettled(){
     }
     settledKeys = connectedKeys;
     autoPick();
+}
+
+void Displays::watchDisplayPower(){
+    static const QString service = QStringLiteral("org.forest.DisplayPower");
+    static const QString path = QStringLiteral("/org/forest/DisplayPower");
+    QDBusConnection bus = QDBusConnection::sessionBus();
+    // Subscribe before querying so a change in between isn't missed.
+    bus.connect(service, path, service, QStringLiteral("DisplaysOffChanged"), this, SLOT(setDisplaysOff(bool)));
+
+    auto query = [this, bus](){
+        const QDBusMessage call = QDBusMessage::createMethodCall(service, path, service, QStringLiteral("DisplaysOff"));
+        auto *watcher = new QDBusPendingCallWatcher(bus.asyncCall(call), this);
+        connect(watcher, &QDBusPendingCallWatcher::finished, this, [this](QDBusPendingCallWatcher *watcher){
+            const QDBusPendingReply<bool> reply = *watcher;
+            if (reply.isValid())
+                setDisplaysOff(reply.value());
+            watcher->deleteLater();
+        });
+    };
+    displayPowerWatcher.setConnection(bus);
+    displayPowerWatcher.addWatchedService(service);
+    connect(&displayPowerWatcher, &QDBusServiceWatcher::serviceRegistered, this, query);
+    connect(&displayPowerWatcher, &QDBusServiceWatcher::serviceUnregistered, this, [this](){ setDisplaysOff(false); });
+    query();
+}
+
+void Displays::setDisplaysOff(bool off){
+    if (off == displaysOff)
+        return;
+    displaysOff = off;
+    // Debounced in case the wake lands mid-bounce.
+    if (!off && started && connectedKeys != settledKeys)
+        hotplugDebounce.try_activate();
 }
 
 void Displays::autoPick(){
