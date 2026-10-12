@@ -36,13 +36,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ### Compositor portability
 
-- **Hotkey-opened popups get keys only where popup activation is honored.**
-  They can't grab (no press serial), so `popup.h` shows them non-grabbing
-  and activates them with the GlobalShortcuts `activation_token`. Biome
-  focuses an activated popup; sway, KWin and Hyprland seem to activate only
-  toplevels, so there the main menu opens without keyboard. Portable
-  alternative: popups as their own `exclusive` layer surfaces. Revisit if
-  other compositors matter.
 - **Greeter on Biome, shared with the lockscreen.** Move the greeter from
   cage to Biome with one window per output on `loginui`'s per-screen
   background; split `PasswordView` into a card shared with
@@ -165,3 +158,10 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   `org.biome.Workspaces` (`BiomeWorkspaces`, hidden when absent) — replace it
   with a standard protocol if one appears (ext-workspace has no toplevel
   membership).
+- **Hotkey-opened popups get keys only where popup activation is honored.**
+  They can't grab (no press serial), so `popup.h` shows them non-grabbing
+  and activates them with the GlobalShortcuts `activation_token`. Biome
+  focuses an activated popup; sway, KWin and Hyprland seem to activate only
+  toplevels, so there the main menu opens without keyboard. Portable
+  alternative: popups as their own `exclusive` layer surfaces. Revisit if
+  other compositors matter.
