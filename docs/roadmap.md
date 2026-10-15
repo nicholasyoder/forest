@@ -157,3 +157,7 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   toplevels, so there the main menu opens without keyboard. Portable
   alternative: popups as their own `exclusive` layer surfaces. Revisit if
   other compositors matter.
+- **Package management page in forest-settings.** A "Packages"/"Apps" page
+  over PackageKit (`libpackagekitqt6`) replacing Synaptic, whose root-run GUI
+  can't connect to Wayland (GNOME Packages is the stopgap). Browse/search,
+  install/remove, and updates may outgrow a single settings page.
