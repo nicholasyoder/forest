@@ -34,9 +34,13 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   `forest-lockscreen`'s `PasswordCard`; maybe rename `greeter.css` (and the
   `greeter_*` object names) to a shared login component. The lockscreen's
   card already follows keyboard focus between screens; do the same in the
-  greeter. Also give the greeter and lockscreen their own wallpaper setting
-  instead of reusing the desktop wallpaper (`loginui::Wallpaper` reads
-  `desktop/wallpaper`).
+  greeter. Needs Biome to exit when its `-s` command exits (Biome roadmap
+  0.2.0). Plan: `docs/greeter-on-biome-plan.md`.
+- **Login wallpaper setting.** Give the greeter and lockscreen their own
+  wallpaper instead of reusing the desktop one (`loginui::Wallpaper` reads
+  `desktop/wallpaper`). System-wide, so a copy of the image under
+  `/var/lib/forest` written by a `pkexec` helper; sketch at the end of
+  `docs/greeter-on-biome-plan.md`.
 
 ## 0.11.0 — desktop, hardware & system
 
