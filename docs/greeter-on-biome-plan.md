@@ -20,9 +20,9 @@ cage exits with its client; Biome forks `-s` (`core/main.cpp`) and never
 watches it, so `biome -s forest-greeter` would sit on a blank screen after
 a successful login.
 
-- Keep the forked pid. Add a `SIGCHLD` source on the event loop
-  (`wl_event_loop_add_signal`), `waitpid` it, and `wl_display_terminate()`
-  when that pid exits.
+- Keep the forked pid, watch it with a pidfd on the event loop (not a
+  `SIGCHLD` signalfd: Qt's threads have it unblocked), `waitpid` it, and
+  `wl_display_terminate()`. Done in biome PR #12.
 - Unconditional, not a flag. Forest logs out via logind `Terminate`, so
   logout is unaffected. The only other case is `forest-session` crashing,
   where dropping back to the greeter beats a bare compositor with no shell.
