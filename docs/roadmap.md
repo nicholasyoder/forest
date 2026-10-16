@@ -12,10 +12,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & settings
 
-- **Hotkeys on punctuation keys don't bind** (e.g. Alt+`). The log shows
-  `globalhotkey: could not resolve a keysym for "Alt+`"`: `triggerString()`
-  looks up `QKeySequence(key).toString()` ("`") with `xkb_keysym_from_name`,
-  which wants keysym names ("grave"). Probably affects most punctuation keys.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.

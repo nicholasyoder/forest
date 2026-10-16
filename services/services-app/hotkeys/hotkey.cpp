@@ -60,22 +60,30 @@ QString globalhotkey::triggerString() const {
     if (mods & Qt::ShiftModifier) parts << QStringLiteral("SHIFT");
     if (mods & Qt::MetaModifier) parts << QStringLiteral("LOGO");
 
-    // Media/brightness/function keys first: the table maps Qt::Key to xkb
-    // keysyms (same values as libxkbcommon's), so a cast is enough.
     xkb_keysym_t keysym = XKB_KEY_NoSymbol;
-    int i = 0;
-    while (KeyTbl[i]) {
-        if (KeyTbl[i + 1] == static_cast<uint>(key)) {
-            keysym = static_cast<xkb_keysym_t>(KeyTbl[i]);
-            break;
-        }
-        i += 2;
-    }
 
-    // Not in the table (ordinary letter/digit/punctuation): resolve by name.
-    if (keysym == XKB_KEY_NoSymbol) {
-        const QByteArray name = QKeySequence(key).toString().toUtf8();
-        keysym = xkb_keysym_from_name(name.constData(), XKB_KEYSYM_CASE_INSENSITIVE);
+    // Printable Latin-1 keys (letters, digits, punctuation): Qt::Key and xkb
+    // keysym values are both defined to equal the Unicode/Latin-1 code point
+    // here, so resolve directly. KeyTbl isn't safe for these: it's a reverse
+    // lookup of Qt's xkb-keysym -> Qt::Key table, which isn't 1:1 (e.g.
+    // Qt::Key_Equal only appears there mapped from XKB_KEY_KP_Equal, so a
+    // main-row "=" would otherwise resolve to the numpad keysym).
+    if (key >= 0x20 && key <= 0xff) {
+        // Qt::Key is always upper-case for a letter regardless of Shift, but
+        // xkb's unshifted/canonical keysym for a letter press is lower-case.
+        keysym = (key >= Qt::Key_A && key <= Qt::Key_Z) ? static_cast<xkb_keysym_t>(key + 0x20)
+                                                          : static_cast<xkb_keysym_t>(key);
+    } else {
+        // Media/brightness/function/navigation keys: table maps Qt::Key to
+        // xkb keysyms (same values as libxkbcommon's), so a cast is enough.
+        int i = 0;
+        while (KeyTbl[i]) {
+            if (KeyTbl[i + 1] == static_cast<uint>(key)) {
+                keysym = static_cast<xkb_keysym_t>(KeyTbl[i]);
+                break;
+            }
+            i += 2;
+        }
     }
 
     if (keysym == XKB_KEY_NoSymbol) {
