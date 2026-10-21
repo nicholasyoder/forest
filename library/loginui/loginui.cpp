@@ -10,6 +10,7 @@
 #include <QSettings>
 #include <QTextStream>
 #include <QTimer>
+#include <QVBoxLayout>
 
 #include <memory>
 
@@ -87,6 +88,24 @@ QImage Wallpaper::scaled(QSize size)
     QImage result = img ? *img : QImage();
     m_cache.insert(key, result);
     return result;
+}
+
+Card::Card(QWidget *parent)
+    : QFrame(parent)
+{
+    setObjectName("greeter_Card");
+    new QVBoxLayout(this);
+    layout()->setSpacing(8);
+}
+
+void Card::addWidget(QWidget *widget)
+{
+    layout()->addWidget(widget);
+}
+
+void Card::addLayout(QLayout *layout)
+{
+    static_cast<QVBoxLayout *>(this->layout())->addLayout(layout);
 }
 
 Clock::Clock(QWidget *parent)

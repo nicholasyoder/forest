@@ -7,10 +7,9 @@
 #include <QLabel>
 #include <QLineEdit>
 #include <QPushButton>
-#include <QStackedWidget>
-#include <QStyle>
 
 #include "loginui.h"
+#include "passwordform.h"
 
 PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     : QWidget(parent)
@@ -19,52 +18,27 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     layout->setSpacing(8);
     layout->setContentsMargins(0, 0, 0, 0);
 
-    // --- Header stack ---
-    m_headerStack = new QStackedWidget;
-
-    // Index 0: known user
-    auto *knownHeader = new QWidget;
-    auto *knownLay = new QVBoxLayout(knownHeader);
-    knownLay->setContentsMargins(0, 0, 0, 0);
-    knownLay->setSpacing(6);
-    knownLay->setAlignment(Qt::AlignHCenter);
-    m_avatarLabel = new QLabel;
-    m_avatarLabel->setObjectName("greeter_PasswordAvatar");
-    m_avatarLabel->setAlignment(Qt::AlignCenter);
-    knownLay->addWidget(m_avatarLabel, 0, Qt::AlignHCenter);
-    m_displayNameLabel = new QLabel;
-    m_displayNameLabel->setObjectName("greeter_UserDisplayName");
-    m_displayNameLabel->setAlignment(Qt::AlignCenter);
-    knownLay->addWidget(m_displayNameLabel);
-    m_headerStack->addWidget(knownHeader);
-
-    // Index 1: manual entry
-    auto *manualHeader = new QWidget;
-    auto *manualLay = new QVBoxLayout(manualHeader);
+    // Replaces the form's header in manual mode.
+    m_manualHeader = new QWidget;
+    auto *manualLay = new QVBoxLayout(m_manualHeader);
     manualLay->setContentsMargins(0, 0, 0, 0);
-    manualLay->setSpacing(6);
-    manualLay->setAlignment(Qt::AlignHCenter);
-    m_genericAvatarLabel = new QLabel;
-    m_genericAvatarLabel->setObjectName("greeter_PasswordAvatar");
-    m_genericAvatarLabel->setPixmap(loginui::circularAvatar({}, 96, "?"));
-    m_genericAvatarLabel->setAlignment(Qt::AlignCenter);
-    manualLay->addWidget(m_genericAvatarLabel, 0, Qt::AlignHCenter);
+    manualLay->setSpacing(8);
+    auto *genericAvatar = new QLabel;
+    genericAvatar->setObjectName("greeter_PasswordAvatar");
+    genericAvatar->setPixmap(loginui::circularAvatar({}, 96, "?"));
+    genericAvatar->setAlignment(Qt::AlignCenter);
+    manualLay->addWidget(genericAvatar, 0, Qt::AlignHCenter);
     m_usernameEdit = new QLineEdit;
     m_usernameEdit->setObjectName("greeter_UsernameEdit");
     m_usernameEdit->setPlaceholderText("Username");
     manualLay->addWidget(m_usernameEdit);
-    m_headerStack->addWidget(manualHeader);
+    m_manualHeader->hide();
+    layout->addWidget(m_manualHeader);
 
-    layout->addWidget(m_headerStack);
+    m_form = new loginui::PasswordForm;
+    m_form->setButtonText("Login");
+    layout->addWidget(m_form);
 
-    // --- Password field ---
-    m_passwordEdit = new QLineEdit;
-    m_passwordEdit->setObjectName("greeter_PasswordEdit");
-    m_passwordEdit->setEchoMode(QLineEdit::Password);
-    m_passwordEdit->setPlaceholderText("Password");
-    layout->addWidget(m_passwordEdit);
-
-    // --- Session row ---
     auto *sessionRow = new QHBoxLayout;
     auto *sessionLabel = new QLabel("Session:");
     sessionLabel->setObjectName("greeter_Label");
@@ -72,34 +46,17 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     m_sessionBtn->setObjectName("greeter_SessionButton");
     sessionRow->addWidget(sessionLabel);
     sessionRow->addWidget(m_sessionBtn, 1);
-    layout->addLayout(sessionRow);
+    m_form->addRow(sessionRow);
 
-    // --- Button row ---
-    auto *btnRow = new QHBoxLayout;
-    m_backButton = new QPushButton("Back");
-    m_backButton->setObjectName("greeter_BackButton");
-    m_loginButton = new QPushButton("Login");
-    m_loginButton->setObjectName("greeter_LoginButton");
-    m_loginButton->setDefault(true);
-    btnRow->addWidget(m_backButton);
-    btnRow->addStretch();
-    btnRow->addWidget(m_loginButton);
-    layout->addLayout(btnRow);
+    auto *backButton = new QPushButton("Back");
+    backButton->setObjectName("greeter_BackButton");
+    m_form->addLeadingButton(backButton);
 
-    // --- Status label ---
-    m_statusLabel = new QLabel;
-    m_statusLabel->setObjectName("greeter_StatusLabel");
-    m_statusLabel->setAlignment(Qt::AlignCenter);
-    m_statusLabel->setWordWrap(true);
-    m_statusLabel->hide();
-    layout->addWidget(m_statusLabel);
-
-    connect(m_loginButton, &QPushButton::clicked, this, &PasswordView::onLoginClicked);
-    connect(m_passwordEdit, &QLineEdit::returnPressed, this, &PasswordView::onLoginClicked);
-    connect(m_usernameEdit, &QLineEdit::returnPressed, this, [this]() {
-        m_passwordEdit->setFocus();
+    connect(m_form, &loginui::PasswordForm::submitted, this, [this](const QString &password) {
+        emit loginAttempted(getUsername(), password);
     });
-    connect(m_backButton, &QPushButton::clicked, this, &PasswordView::backClicked);
+    connect(m_usernameEdit, &QLineEdit::returnPressed, m_form, &loginui::PasswordForm::focusInput);
+    connect(backButton, &QPushButton::clicked, this, &PasswordView::backClicked);
     connect(m_sessionBtn, &QPushButton::clicked, this, &PasswordView::sessionButtonClicked);
 }
 
@@ -107,9 +64,10 @@ void PasswordView::setUser(const UserInfo &user)
 {
     m_isManualMode = false;
     m_knownUsername = user.username;
-    m_avatarLabel->setPixmap(loginui::circularAvatar(user.faceIconPath, 96, user.displayName));
-    m_displayNameLabel->setText(user.displayName);
-    m_headerStack->setCurrentIndex(0);
+    m_form->setUser(user.displayName, user.faceIconPath);
+    m_manualHeader->hide();
+    m_form->setHeaderVisible(true);
+    resetPrompt();
 }
 
 void PasswordView::setManualEntry(const QString &prefillUsername)
@@ -117,32 +75,26 @@ void PasswordView::setManualEntry(const QString &prefillUsername)
     m_isManualMode = true;
     m_knownUsername.clear();
     m_usernameEdit->setText(prefillUsername);
-    m_headerStack->setCurrentIndex(1);
+    m_form->setHeaderVisible(false);
+    m_manualHeader->show();
+    resetPrompt();
 }
 
 void PasswordView::setPrompt(const QString &prompt, bool secret)
 {
-    m_passwordEdit->setPlaceholderText(prompt.isEmpty() ? (secret ? "Password" : "Input") : prompt);
-    m_passwordEdit->setEchoMode(secret ? QLineEdit::Password : QLineEdit::Normal);
-    m_passwordEdit->setFocus();
+    m_form->setPrompt(prompt, secret);
 }
 
 void PasswordView::setStatus(const QString &text, bool isError)
 {
-    if (text.isEmpty()) {
-        m_statusLabel->hide();
-        return;
-    }
-    m_statusLabel->setText(text);
-    m_statusLabel->setProperty("error", isError);
-    m_statusLabel->style()->unpolish(m_statusLabel);
-    m_statusLabel->style()->polish(m_statusLabel);
-    m_statusLabel->show();
+    m_form->setStatus(text, isError);
 }
 
-void PasswordView::clearPassword()
+void PasswordView::resetPrompt()
 {
-    m_passwordEdit->clear();
+    m_form->setBusy();
+    if (m_isManualMode)
+        m_form->setPrompt({}, true);
 }
 
 void PasswordView::focusInput()
@@ -150,12 +102,7 @@ void PasswordView::focusInput()
     if (m_isManualMode && m_usernameEdit->text().isEmpty())
         m_usernameEdit->setFocus();
     else
-        m_passwordEdit->setFocus();
-}
-
-void PasswordView::setLoginEnabled(bool enabled)
-{
-    m_loginButton->setEnabled(enabled);
+        m_form->focusInput();
 }
 
 QString PasswordView::getUsername() const
@@ -172,9 +119,4 @@ void PasswordView::setSelectedSession(int index, const QString &name)
 {
     m_sessionIndex = index;
     m_sessionBtn->setText(name);
-}
-
-void PasswordView::onLoginClicked()
-{
-    emit loginAttempted(getUsername(), m_passwordEdit->text());
 }

@@ -1,34 +1,22 @@
 # Greeter on Biome, shared with the lockscreen — Plan
 
 Move `forest-greeter` from cage to Biome, and share its card and per-screen
-windows with `forest-lockscreen`. Status: **proposed, not started**.
+windows with `forest-lockscreen`. Status: **step 1 done; step 2 not started**.
 
 The login wallpaper setting was split out into its own roadmap item; see
 [Login wallpaper](#login-wallpaper-separate-item) at the end for the sketch.
 
 ## Order
 
-1. **Biome PR:** exit when the `-s` command exits.
+1. ~~**Biome PR:** exit when the `-s` command exits.~~ Done.
 2. **Forest PR**, three commits: shared `loginui` refactor, CSS rename,
    greeter switch to Biome. `forest-greeter` depends on the Biome release
-   from step 1.
+   from step 1, 0.2.0 (not cut yet).
 
-## 1. Biome: exit when the `-s` command exits
+## 1. Biome: exit when the `-s` command exits — done
 
-greetd starts the user's session only after the greeter command exits.
-cage exits with its client; Biome forks `-s` (`core/main.cpp`) and never
-watches it, so `biome -s forest-greeter` would sit on a blank screen after
-a successful login.
-
-- Keep the forked pid, watch it with a pidfd on the event loop (not a
-  `SIGCHLD` signalfd: Qt's threads have it unblocked), `waitpid` it, and
-  `wl_display_terminate()`. Done in biome PR #12.
-- Unconditional, not a flag. Forest logs out via logind `Terminate`, so
-  logout is unaffected. The only other case is `forest-session` crashing,
-  where dropping back to the greeter beats a bare compositor with no shell.
-- While there, check that Biome copes with running as `_greetd`: global
-  shortcuts portal / D-Bus init when there's no session bus, Xwayland and
-  cursor-theme setup with an empty home config.
+Merged in biome PR #12 (on `develop`, not yet in a release). Biome exits
+with its `-s` command's status; tested under greetd as `_greetd`.
 
 ## 2. Forest: shared login UI (no behaviour change)
 

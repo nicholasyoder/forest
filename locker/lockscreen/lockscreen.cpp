@@ -2,16 +2,17 @@
 
 #include "lockscreen.h"
 
+#include <QCoreApplication>
 #include <QDebug>
-#include <QGuiApplication>
-#include <QScreen>
 #include <QTimer>
 
 #include <cstdio>
+#include <pwd.h>
 #include <unistd.h>
 
-#include "lockwindow.h"
-#include "passwordcard.h"
+#include "loginui.h"
+#include "passwordform.h"
+#include "screenset.h"
 #include "sessionlock.h"
 
 namespace {
@@ -22,8 +23,26 @@ constexpr int NoPromptRetryMs = 2000;
 
 LockScreen::LockScreen(QObject *parent)
     : QObject(parent)
-    , m_card(new PasswordCard)
+    , m_form(new loginui::PasswordForm)
 {
+    QString username, displayName, homeDir;
+    if (passwd *pw = getpwuid(getuid())) {
+        username = QString::fromLocal8Bit(pw->pw_name);
+        homeDir = QString::fromLocal8Bit(pw->pw_dir);
+        displayName = QString::fromLocal8Bit(pw->pw_gecos).split(',').first().trimmed();
+    }
+    if (displayName.isEmpty())
+        displayName = username;
+    m_form->setUser(displayName, loginui::faceIconPath(username, homeDir));
+
+    auto *card = new loginui::Card;
+    card->addWidget(m_form);
+    // Primary first: compositors tend to focus the first lock surface.
+    m_screens = new loginui::ScreenSet(
+        card, [](QWindow *window) { sessionlock::Lock::instance()->attach(window); },
+        loginui::ScreenSet::InitialFocus::First, this);
+    connect(m_screens, &loginui::ScreenSet::cardPlaced, m_form, &loginui::PasswordForm::focusInput);
+
     auto *lock = sessionlock::Lock::instance();
     connect(lock, &sessionlock::Lock::locked, this, [this] {
         // Readiness for forest-locker: the screens are actually covered now.
@@ -37,31 +56,18 @@ LockScreen::LockScreen(QObject *parent)
         QCoreApplication::exit(1);
     });
 
-    connect(&m_pam, &PamAuth::prompt, m_card, &PasswordCard::setPrompt);
-    connect(&m_pam, &PamAuth::message, m_card, &PasswordCard::setStatus);
+    connect(&m_pam, &PamAuth::prompt, m_form, &loginui::PasswordForm::setPrompt);
+    connect(&m_pam, &PamAuth::message, m_form, &loginui::PasswordForm::setStatus);
     connect(&m_pam, &PamAuth::succeeded, this, &LockScreen::unlockAndQuit);
     connect(&m_pam, &PamAuth::failed, this, [this](const QString &reason) {
-        m_card->setStatus(reason.isEmpty() ? "Authentication failed" : reason, true);
+        m_form->setStatus(reason.isEmpty() ? "Authentication failed" : reason, true);
         // A round that fails without prompting would otherwise retry in a tight loop.
         if (m_pam.prompted())
             m_pam.start();
         else
             QTimer::singleShot(NoPromptRetryMs, &m_pam, &PamAuth::start);
     });
-    connect(m_card, &PasswordCard::submitted, &m_pam, &PamAuth::respond);
-
-    connect(qGuiApp, &QGuiApplication::screenAdded, this, &LockScreen::addScreen);
-    connect(qGuiApp, &QGuiApplication::screenRemoved, this, &LockScreen::removeScreen);
-    connect(&m_tracker, &ScreenTracker::screens_replaced, this, &LockScreen::placeCard);
-    // The compositor picks which lock surface gets the keyboard; put the card there.
-    connect(qGuiApp, &QGuiApplication::focusWindowChanged, this, &LockScreen::placeCard);
-}
-
-LockScreen::~LockScreen()
-{
-    // Not owned by a window while detached.
-    if (!m_card->parent())
-        delete m_card;
+    connect(m_form, &loginui::PasswordForm::submitted, &m_pam, &PamAuth::respond);
 }
 
 bool LockScreen::start()
@@ -69,11 +75,7 @@ bool LockScreen::start()
     if (!sessionlock::Lock::instance()->lock())
         return false;
 
-    // Primary first: compositors tend to focus the first lock surface.
-    QScreen *primary = ScreenTracker::primary();
-    addScreen(primary);
-    for (QScreen *screen : QGuiApplication::screens())
-        addScreen(screen);
+    m_screens->showOnAllScreens();
 
     m_pam.start();
     return true;
@@ -92,50 +94,4 @@ void LockScreen::unlockAndQuit()
     // (e.g. fprintd), keeping forest-locker in its locked state.
     fflush(nullptr);
     _exit(0);
-}
-
-void LockScreen::addScreen(QScreen *screen)
-{
-    if (!screen || m_windows.contains(screen))
-        return;
-    auto *window = new LockWindow(screen);
-    window->winId();
-    sessionlock::Lock::instance()->attach(window->windowHandle());
-    m_windows.insert(screen, window);
-    placeCard();
-    window->show();
-}
-
-void LockScreen::removeScreen(QScreen *screen)
-{
-    LockWindow *window = m_windows.take(screen);
-    if (!window)
-        return;
-    window->setCard(nullptr);
-    delete window;
-    placeCard();
-}
-
-void LockScreen::placeCard()
-{
-    // The focused window, else wherever the card already is, else primary, else any.
-    LockWindow *host = nullptr;
-    for (LockWindow *window : std::as_const(m_windows)) {
-        if (window->windowHandle() == QGuiApplication::focusWindow())
-            host = window;
-        else if (!host && window->card())
-            host = window;
-    }
-    if (!host)
-        host = m_windows.value(ScreenTracker::primary());
-    if (!host && !m_windows.isEmpty())
-        host = *m_windows.cbegin();
-    if (!host || host->card() == m_card)
-        return;
-    for (LockWindow *window : std::as_const(m_windows)) {
-        if (window->card())
-            window->setCard(nullptr);
-    }
-    host->setCard(m_card);
-    m_card->focusInput();
 }
