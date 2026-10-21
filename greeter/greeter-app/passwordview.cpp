@@ -31,6 +31,8 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     m_usernameEdit = new QLineEdit;
     m_usernameEdit->setObjectName("login_UsernameEdit");
     m_usernameEdit->setPlaceholderText("Username");
+    // Layer surfaces can't place popups.
+    m_usernameEdit->setContextMenuPolicy(Qt::NoContextMenu);
     manualLay->addWidget(m_usernameEdit);
     m_manualHeader->hide();
     layout->addWidget(m_manualHeader);
