@@ -48,17 +48,17 @@ PasswordForm::PasswordForm(QWidget *parent)
     headerLayout->setContentsMargins(0, 0, 0, 0);
     headerLayout->setSpacing(8);
     m_avatar = new QLabel;
-    m_avatar->setObjectName("greeter_PasswordAvatar");
+    m_avatar->setObjectName("login_PasswordAvatar");
     m_avatar->setAlignment(Qt::AlignCenter);
     headerLayout->addWidget(m_avatar, 0, Qt::AlignHCenter);
     m_nameLabel = new QLabel;
-    m_nameLabel->setObjectName("greeter_UserDisplayName");
+    m_nameLabel->setObjectName("login_UserDisplayName");
     m_nameLabel->setAlignment(Qt::AlignCenter);
     headerLayout->addWidget(m_nameLabel);
     layout->addWidget(m_header);
 
     m_input = new QLineEdit;
-    m_input->setObjectName("greeter_PasswordEdit");
+    m_input->setObjectName("login_PasswordEdit");
     m_input->setEchoMode(QLineEdit::Password);
     m_input->setPlaceholderText("Password");
     // Lock and layer surfaces can't place popups.
@@ -67,7 +67,7 @@ PasswordForm::PasswordForm(QWidget *parent)
     layout->addWidget(m_input);
 
     m_capsLockLabel = new QLabel("Caps Lock is on");
-    m_capsLockLabel->setObjectName("greeter_CapsLockLabel");
+    m_capsLockLabel->setObjectName("login_CapsLockLabel");
     m_capsLockLabel->setAlignment(Qt::AlignCenter);
     m_capsLockLabel->hide();
     layout->addWidget(m_capsLockLabel);
@@ -79,13 +79,13 @@ PasswordForm::PasswordForm(QWidget *parent)
     m_buttonRow = new QHBoxLayout;
     m_buttonRow->addStretch();
     m_submitButton = new QPushButton("Unlock");
-    m_submitButton->setObjectName("greeter_LoginButton");
+    m_submitButton->setObjectName("login_LoginButton");
     m_submitButton->setDefault(true);
     m_buttonRow->addWidget(m_submitButton);
     layout->addLayout(m_buttonRow);
 
     m_statusLabel = new QLabel;
-    m_statusLabel->setObjectName("greeter_StatusLabel");
+    m_statusLabel->setObjectName("login_StatusLabel");
     m_statusLabel->setAlignment(Qt::AlignCenter);
     m_statusLabel->setWordWrap(true);
     m_statusLabel->hide();

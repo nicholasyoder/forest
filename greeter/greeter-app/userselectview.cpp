@@ -19,7 +19,7 @@ public:
                       bool isOther, QWidget *parent = nullptr)
         : QFrame(parent)
     {
-        setObjectName("greeter_UserTile");
+        setObjectName("login_UserTile");
         setCursor(Qt::PointingHandCursor);
 
         auto *lay = new QHBoxLayout(this);
@@ -27,13 +27,13 @@ public:
         lay->setSpacing(12);
 
         auto *avatar = new QLabel;
-        avatar->setObjectName("greeter_UserTileAvatar");
+        avatar->setObjectName("login_UserTileAvatar");
         avatar->setPixmap(loginui::circularAvatar(iconPath, 48, isOther ? "?" : name));
         avatar->setFixedSize(48, 48);
         lay->addWidget(avatar);
 
         auto *nameLabel = new QLabel(name);
-        nameLabel->setObjectName("greeter_UserTileName");
+        nameLabel->setObjectName("login_UserTileName");
         lay->addWidget(nameLabel);
         lay->addStretch();
     }

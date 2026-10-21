@@ -19,7 +19,7 @@ usr/share/forest/power-manager.desktop
 usr/share/forest/qtct.conf
 usr/share/forest/startforest-wayland
 usr/share/forest/themes/*/forest.css
-usr/share/forest/themes/*/greeter.css
+usr/share/forest/themes/*/login.css
 usr/share/forest/themes/*/logout.css
 usr/share/forest/themes/*/settings.css
 usr/share/forest/themes/*/theme.conf

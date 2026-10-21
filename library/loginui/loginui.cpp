@@ -93,7 +93,7 @@ QImage Wallpaper::scaled(QSize size)
 Card::Card(QWidget *parent)
     : QFrame(parent)
 {
-    setObjectName("greeter_Card");
+    setObjectName("login_Card");
     new QVBoxLayout(this);
     layout()->setSpacing(8);
 }
@@ -111,7 +111,7 @@ void Card::addLayout(QLayout *layout)
 Clock::Clock(QWidget *parent)
     : QLabel(parent)
 {
-    setObjectName("greeter_Clock");
+    setObjectName("login_Clock");
     setAlignment(Qt::AlignCenter);
     auto *timer = new QTimer(this);
     connect(timer, &QTimer::timeout, this, &Clock::tick);

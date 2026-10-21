@@ -1,93 +1,93 @@
-#greeter_Card {
+#login_Card {
     background: grey;
     padding: 24px;
     min-width: 300px;
     max-width: 380px;
 }
 
-#greeter_Clock {
+#login_Clock {
     font-size: 75pt;
     padding-bottom: 8px;
     qproperty-alignment: AlignCenter;
 }
 
-#greeter_UserTile {
+#login_UserTile {
     border-radius: 4px;
     padding: 0;
     margin: 0;
 }
 
-#greeter_UserTileName {
+#login_UserTileName {
     font-size: 12pt;
 }
 
-#greeter_PasswordAvatar {
+#login_PasswordAvatar {
     margin-bottom: 4px;
 }
 
-#greeter_UserDisplayName {
+#login_UserDisplayName {
     font-size: 14pt;
     font-weight: bold;
     qproperty-alignment: AlignCenter;
     margin-bottom: 4px;
 }
 
-#greeter_PromptLabel {
+#login_PromptLabel {
     margin-top: 4px;
 }
 
-#greeter_UsernameEdit,
-#greeter_PasswordEdit {
+#login_UsernameEdit,
+#login_PasswordEdit {
     min-height: 24px;
     padding: 2px 4px;
 }
 
-#greeter_Label {
+#login_Label {
     margin-top: 4px;
 }
 
-#greeter_SessionTile {
+#login_SessionTile {
     border-radius: 4px;
     padding: 0;
     margin: 0;
 }
 
-#greeter_SessionTileName {
+#login_SessionTileName {
     font-size: 12pt;
 }
 
-#greeter_SessionButton {
+#login_SessionButton {
     min-height: 24px;
     padding: 2px 4px;
     qproperty-alignment: AlignLeft;
 }
 
-#greeter_BackButton,
-#greeter_LoginButton {
+#login_BackButton,
+#login_LoginButton {
     padding: 4px 12px;
     margin-top: 8px;
 }
 
-#greeter_StatusLabel {
+#login_StatusLabel {
     padding: 4px;
     margin-top: 4px;
     color: red;
 }
 
-#greeter_CapsLockLabel {
+#login_CapsLockLabel {
     padding: 2px;
 }
 
-#greeter_PowerButton {
+#login_PowerButton {
     margin-top: 8px;
     padding: 2px 10px;
 }
 
 /* Keep scroll area background transparent inside the card */
-#greeter_Card QScrollArea {
+#login_Card QScrollArea {
     background: transparent;
 }
 
-#greeter_Card QScrollArea > QWidget > QWidget {
+#login_Card QScrollArea > QWidget > QWidget {
     background: transparent;
 }
