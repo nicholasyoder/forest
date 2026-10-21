@@ -138,12 +138,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   shipped volume/brightness entries) and have `forest-lockscreen` run only
   flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
   commands unauthenticated. Parse actions with `library/hotkeyconfig`.
-- **Hold-to-repeat hotkeys.** Holding volume/brightness keys steps once
-  instead of ramping. Add per-hotkey `repeat` + `repeat_interval` (settings
-  checkbox + spinbox, default off / 100 ms; on for shipped volume/brightness),
-  repeating between portal `Activated` and `Deactivated`. Needs Biome to send
-  real `Deactivated` on release first. Plan:
-  `biome/docs/global-shortcuts-hold-plan.md`.
 - **Laptop lid switch.** Display profiles handle docking, but "lid closed ⇒
   disable the internal panel" needs logind lid events (`LidClosed`) feeding
   the displays service. Wait for a laptop target.

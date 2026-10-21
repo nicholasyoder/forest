@@ -26,12 +26,15 @@ public:
 
 signals:
     void shortcutActivated(QString id, QString activationToken);
+    void shortcutDeactivated(QString id);
     // The portal closed our session or went away; in-flight requests fail first.
     void sessionLost();
     void portalAvailable();
 
 private slots:
     void handleActivated(const QDBusObjectPath &session_handle, const QString &shortcut_id,
+        qulonglong timestamp, const QVariantMap &options);
+    void handleDeactivated(const QDBusObjectPath &session_handle, const QString &shortcut_id,
         qulonglong timestamp, const QVariantMap &options);
     void handleClosed(const QVariantMap &details);
 

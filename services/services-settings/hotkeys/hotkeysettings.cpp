@@ -8,6 +8,7 @@
 #include <QLabel>
 #include <QPushButton>
 
+#include "hotkeyconfig.h"
 #include "miscutills.h"
 
 HotkeySettings::HotkeySettings(){
@@ -97,6 +98,9 @@ void HotkeySettingItem::edit(){
     data.shortcut = settings.value("keysequence", "").toString();
     data.description = settings.value("description", "").toString();
     data.action = settings.value("action", "").toString();
+    data.repeat = settings.value(hotkeyconfig::kRepeatKey, false).toBool();
+    data.repeatInterval = settings.value(hotkeyconfig::kRepeatIntervalKey,
+                                         hotkeyconfig::kDefaultRepeatIntervalMs).toInt();
 
     edit_widget->set_data(data);
     edit_widget->show();
@@ -140,6 +144,8 @@ void HotkeySettingItem::save(const HotkeyData &data){
     settings.setValue("description", data.description);
     settings.setValue("keysequence", data.shortcut);
     settings.setValue("action", data.action);
+    settings.setValue(hotkeyconfig::kRepeatKey, data.repeat);
+    settings.setValue(hotkeyconfig::kRepeatIntervalKey, data.repeatInterval);
     settings.sync();
     emit item_changed();
 }

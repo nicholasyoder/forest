@@ -15,6 +15,8 @@ public:
     QString shortcut;
     QString description;
     QString action; // Forest.conf form: a command or a DBUS: action
+    bool repeat = false;
+    int repeatInterval = 0; // ms
 };
 
 namespace Ui { class edithotkeywidget; }

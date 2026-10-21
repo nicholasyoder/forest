@@ -32,6 +32,11 @@ struct BuiltinHotkeyAction {
 
 namespace hotkeyconfig {
 
+// Per-hotkey keys under [hotkeys]/<item>: re-run the action every interval while held.
+inline constexpr char kRepeatKey[] = "repeat";
+inline constexpr char kRepeatIntervalKey[] = "repeat_interval";
+inline constexpr int kDefaultRepeatIntervalMs = 100;
+
 // nullopt if `action` isn't a DBUS: action.
 std::optional<DBusHotkeyAction> parseDBusAction(const QString &action);
 QString formatDBusAction(const DBusHotkeyAction &action);

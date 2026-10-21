@@ -31,6 +31,7 @@ public slots:
 
 private slots:
     void dispatch(QString id, QString activationToken);
+    void dispatchRelease(QString id);
 
 private:
     void loadhotkeys();
@@ -38,6 +39,8 @@ private:
     void reconcile();
     void scheduleRetry();
     void retryNow();
+    // A Deactivated can be lost with the session, so stop repeats explicitly.
+    void releaseAll();
 
     GlobalShortcutsPortal *portal = nullptr;
     QList<globalhotkey*> hotkeylist;

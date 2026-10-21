@@ -33,7 +33,9 @@ void foresthotkeys::setup(){
 
     portal = new GlobalShortcutsPortal(this);
     connect(portal, &GlobalShortcutsPortal::shortcutActivated, this, &foresthotkeys::dispatch);
+    connect(portal, &GlobalShortcutsPortal::shortcutDeactivated, this, &foresthotkeys::dispatchRelease);
     connect(portal, &GlobalShortcutsPortal::sessionLost, this, [this]() {
+        releaseAll();
         sessionOpen = false;
         retryNow();
     });
@@ -45,10 +47,23 @@ void foresthotkeys::dispatch(QString id, QString activationToken){
     if (!pausers.isEmpty()) return;
     for (globalhotkey *item : hotkeylist) {
         if (item->id() == id) {
-            item->exec(activationToken);
+            item->press(activationToken);
             return;
         }
     }
+}
+
+void foresthotkeys::dispatchRelease(QString id){
+    for (globalhotkey *item : hotkeylist) {
+        if (item->id() == id) {
+            item->release();
+            return;
+        }
+    }
+}
+
+void foresthotkeys::releaseAll(){
+    for (globalhotkey *item : hotkeylist) item->release();
 }
 
 // Closes the session rather than just muting dispatch: Biome keeps swallowing
@@ -89,6 +104,7 @@ void foresthotkeys::reconcile(){
 
     const bool paused = !pausers.isEmpty();
     if (sessionOpen && (paused || configChanged)) {
+        releaseAll();
         busy = true;
         portal->closeSession([this]() {
             sessionOpen = false;
@@ -146,16 +162,19 @@ void foresthotkeys::loadhotkeys(){
         QString description = settings.value("description").toString();
 
         const QString action = settings.value("action").toString();
+        globalhotkey *item;
         if (const auto dbusAction = hotkeyconfig::parseDBusAction(action)){
-            globalhotkey *item = new globalhotkey(hotkey, description, kseq, Type_Dbus);
+            item = new globalhotkey(hotkey, description, kseq, Type_Dbus);
             item->setDbusAction(*dbusAction);
-            hotkeylist.append(item);
         }
         else{
-            globalhotkey *item= new globalhotkey(hotkey, description, kseq, Type_Exec);
+            item = new globalhotkey(hotkey, description, kseq, Type_Exec);
             item->setExecCommand(action);
-            hotkeylist.append(item);
         }
+        if (settings.value(hotkeyconfig::kRepeatKey, false).toBool())
+            item->setRepeatInterval(settings.value(hotkeyconfig::kRepeatIntervalKey,
+                                                   hotkeyconfig::kDefaultRepeatIntervalMs).toInt());
+        hotkeylist.append(item);
         settings.endGroup();
     }
 
