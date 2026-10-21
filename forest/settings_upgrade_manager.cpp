@@ -141,4 +141,17 @@ void SettingsUpgradeManager::upgrade_0_10_0(){
     foreach (QString key, sensors.childKeys())
         if (key.endsWith("Barenabled") || key == "ChipIndex" || key == "sensorlist" || key == "displayheight")
             sensors.remove(key);
+
+    // Hold-to-repeat for the shipped volume/brightness hotkeys; customized actions are left alone.
+    const QStringList repeating = {
+        "DBUS:bus=Session,service=org.forest,path=/org/forest/panel/volume,method=volumeup",
+        "DBUS:bus=Session,service=org.forest,path=/org/forest/panel/volume,method=volumedown",
+        "bash -c \"brightnessctl set $((`brightnessctl get`-100))\"",
+        "bash -c \"brightnessctl set $((`brightnessctl get`+100))\"",
+    };
+    settings->beginGroup("hotkeys");
+    foreach (QString child, settings->childGroups())
+        if (repeating.contains(settings->value(child + "/action").toString()) && !settings->contains(child + "/repeat"))
+            settings->setValue(child + "/repeat", true);
+    settings->endGroup();
 }

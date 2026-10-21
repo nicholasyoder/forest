@@ -8,6 +8,22 @@
 globalhotkey::globalhotkey(const QString &id, const QString &description, const QKeySequence &sequence, HK_Type type)
     : hotkey_id(id), hotkey_description(description), keyseq(sequence), hotkey_type(type) {
     qDebug() << "Add Global Hotkey:" << id << sequence.toString();
+    // Repeats run without a token: tokens are single-use.
+    connect(&repeatTimer, &QTimer::timeout, this, [this]() { exec(); });
+}
+
+void globalhotkey::setRepeatInterval(int intervalMs){
+    repeatTimer.stop();
+    repeatTimer.setInterval(qMax(intervalMs, 0));
+}
+
+void globalhotkey::press(const QString &activationToken){
+    exec(activationToken);
+    if (repeatTimer.interval() > 0) repeatTimer.start();
+}
+
+void globalhotkey::release(){
+    repeatTimer.stop();
 }
 
 void globalhotkey::exec(const QString &activationToken){

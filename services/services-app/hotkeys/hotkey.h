@@ -5,6 +5,7 @@
 
 #include <QtDBus>
 #include <QKeySequence>
+#include <QTimer>
 
 #include "hotkeyconfig.h"
 
@@ -33,8 +34,13 @@ public:
 public slots:
     void setDbusAction(const DBusHotkeyAction &action){dbusaction = action;}
     void setExecCommand(const QString &command){shcommand=command;}
+    // intervalMs <= 0 disables repeat.
+    void setRepeatInterval(int intervalMs);
 
     void exec(const QString &activationToken = QString());
+    // Key down/up: exec() once, then again every repeat interval until release().
+    void press(const QString &activationToken);
+    void release();
 
 private:
     QString hotkey_id;
@@ -43,6 +49,7 @@ private:
     HK_Type hotkey_type;
     QString shcommand;
     DBusHotkeyAction dbusaction;
+    QTimer repeatTimer;
 };
 
 #endif // HOTKEY_H

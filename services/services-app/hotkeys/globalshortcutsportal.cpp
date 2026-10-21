@@ -95,6 +95,13 @@ GlobalShortcutsPortal::GlobalShortcutsPortal(QObject *parent) : QObject(parent) 
         qWarning() << "GlobalShortcutsPortal: failed to connect to Activated signal:"
                    << QDBusConnection::sessionBus().lastError().message();
     }
+    if (!QDBusConnection::sessionBus().connect(
+            QString(kBusService), QString(kObjectPath), QString(kGlobalShortcutsIface),
+            QStringLiteral("Deactivated"), this,
+            SLOT(handleDeactivated(QDBusObjectPath, QString, qulonglong, QVariantMap)))) {
+        qWarning() << "GlobalShortcutsPortal: failed to connect to Deactivated signal:"
+                   << QDBusConnection::sessionBus().lastError().message();
+    }
 
     auto *watcher = new QDBusServiceWatcher(QString(kBusService), QDBusConnection::sessionBus(),
         QDBusServiceWatcher::WatchForOwnerChange, this);
@@ -225,6 +232,16 @@ void GlobalShortcutsPortal::handleActivated(const QDBusObjectPath &session_handl
         return; // stale signal from a session we've already torn down
     }
     emit shortcutActivated(shortcut_id, options.value(QStringLiteral("activation_token")).toString());
+}
+
+void GlobalShortcutsPortal::handleDeactivated(const QDBusObjectPath &session_handle, const QString &shortcut_id,
+        qulonglong timestamp, const QVariantMap &options) {
+    Q_UNUSED(timestamp);
+    Q_UNUSED(options);
+    if (session_handle != m_sessionHandle) {
+        return;
+    }
+    emit shortcutDeactivated(shortcut_id);
 }
 
 void GlobalShortcutsPortal::handleClosed(const QVariantMap &details) {

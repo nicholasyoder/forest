@@ -38,6 +38,49 @@
       </widget>
      </item>
      <item row="4" column="0" colspan="5">
+      <layout class="QHBoxLayout" name="repeatLayout">
+       <item>
+        <widget class="QCheckBox" name="repeatCbox">
+         <property name="text">
+          <string>Repeat while held, every</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QSpinBox" name="repeatIntervalSbox">
+         <property name="suffix">
+          <string> ms</string>
+         </property>
+         <property name="minimum">
+          <number>10</number>
+         </property>
+         <property name="maximum">
+          <number>2000</number>
+         </property>
+         <property name="singleStep">
+          <number>10</number>
+         </property>
+         <property name="value">
+          <number>100</number>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <spacer name="repeatSpacer">
+         <property name="orientation">
+          <enum>Qt::Horizontal</enum>
+         </property>
+         <property name="sizeHint" stdset="0">
+          <size>
+           <width>40</width>
+           <height>20</height>
+          </size>
+         </property>
+        </spacer>
+       </item>
+      </layout>
+     </item>
+     <item row="5" column="0" colspan="5">
       <layout class="QHBoxLayout" name="horizontalLayout">
        <item>
         <spacer name="horizontalSpacer_2">
@@ -282,6 +325,8 @@
   <tabstop>customdbusRbt</tabstop>
   <tabstop>builtindbusRbt</tabstop>
   <tabstop>commandTbox</tabstop>
+  <tabstop>repeatCbox</tabstop>
+  <tabstop>repeatIntervalSbox</tabstop>
   <tabstop>okbt</tabstop>
   <tabstop>cancelbt</tabstop>
   <tabstop>serviceTbox</tabstop>

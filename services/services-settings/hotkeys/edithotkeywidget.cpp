@@ -14,6 +14,7 @@ constexpr int kDescriptionRole = Qt::UserRole + 1;
 edithotkeywidget::edithotkeywidget(QWidget *parent) : QWidget(parent), ui(new Ui::edithotkeywidget){
     ui->setupUi(this);
     ui->commandRbt->setChecked(true);
+    connect(ui->repeatCbox, &QCheckBox::toggled, ui->repeatIntervalSbox, &QSpinBox::setEnabled);
 }
 
 edithotkeywidget::~edithotkeywidget(){
@@ -23,6 +24,9 @@ edithotkeywidget::~edithotkeywidget(){
 void edithotkeywidget::set_data(const HotkeyData& data){
     ui->shortcutbt->setText(data.shortcut);
     ui->descriptionTbox->setText(data.description);
+    ui->repeatCbox->setChecked(data.repeat);
+    ui->repeatIntervalSbox->setEnabled(data.repeat);
+    ui->repeatIntervalSbox->setValue(data.repeatInterval);
     load_builtins();
 
     const auto dbusAction = hotkeyconfig::parseDBusAction(data.action);
@@ -135,6 +139,8 @@ void edithotkeywidget::on_okbt_clicked(){
     HotkeyData data;
     data.shortcut = ui->shortcutbt->text();
     data.description = ui->descriptionTbox->text();
+    data.repeat = ui->repeatCbox->isChecked();
+    data.repeatInterval = ui->repeatIntervalSbox->value();
 
     if (ui->commandRbt->isChecked()){
         data.action = ui->commandTbox->text();
