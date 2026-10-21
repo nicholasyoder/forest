@@ -71,9 +71,9 @@ void GreeterWindow::setupUi()
     auto *powerRow = new QHBoxLayout;
     powerRow->addStretch();
     auto *shutdownBtn = new QPushButton("Shutdown");
-    shutdownBtn->setObjectName("greeter_PowerButton");
+    shutdownBtn->setObjectName("login_PowerButton");
     auto *rebootBtn = new QPushButton("Reboot");
-    rebootBtn->setObjectName("greeter_PowerButton");
+    rebootBtn->setObjectName("login_PowerButton");
     powerRow->addWidget(shutdownBtn);
     powerRow->addWidget(rebootBtn);
     card->addLayout(powerRow);

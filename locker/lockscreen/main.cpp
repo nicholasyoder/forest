@@ -24,7 +24,7 @@ int main(int argc, char *argv[])
     app.setQuitOnLastWindowClosed(false);
     FLogger::install("lockscreen");
 
-    app.setStyleSheet(fstyleloader::loadstyle("greeter"));
+    app.setStyleSheet(fstyleloader::loadstyle("login"));
 
     LockScreen lockScreen;
     if (!lockScreen.start())

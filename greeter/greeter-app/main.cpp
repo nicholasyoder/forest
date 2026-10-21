@@ -10,7 +10,7 @@
 int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     FLogger::install("greeter");
-    a.setStyleSheet(fstyleloader::loadstyle("greeter"));
+    a.setStyleSheet(fstyleloader::loadstyle("login"));
     GreeterWindow w;
     w.showFullScreen();
     return a.exec();

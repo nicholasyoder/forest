@@ -24,12 +24,12 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
     manualLay->setContentsMargins(0, 0, 0, 0);
     manualLay->setSpacing(8);
     auto *genericAvatar = new QLabel;
-    genericAvatar->setObjectName("greeter_PasswordAvatar");
+    genericAvatar->setObjectName("login_PasswordAvatar");
     genericAvatar->setPixmap(loginui::circularAvatar({}, 96, "?"));
     genericAvatar->setAlignment(Qt::AlignCenter);
     manualLay->addWidget(genericAvatar, 0, Qt::AlignHCenter);
     m_usernameEdit = new QLineEdit;
-    m_usernameEdit->setObjectName("greeter_UsernameEdit");
+    m_usernameEdit->setObjectName("login_UsernameEdit");
     m_usernameEdit->setPlaceholderText("Username");
     manualLay->addWidget(m_usernameEdit);
     m_manualHeader->hide();
@@ -41,15 +41,15 @@ PasswordView::PasswordView(const QList<SessionInfo> &sessions, QWidget *parent)
 
     auto *sessionRow = new QHBoxLayout;
     auto *sessionLabel = new QLabel("Session:");
-    sessionLabel->setObjectName("greeter_Label");
+    sessionLabel->setObjectName("login_Label");
     m_sessionBtn = new QPushButton(sessions.isEmpty() ? QString() : sessions.first().name);
-    m_sessionBtn->setObjectName("greeter_SessionButton");
+    m_sessionBtn->setObjectName("login_SessionButton");
     sessionRow->addWidget(sessionLabel);
     sessionRow->addWidget(m_sessionBtn, 1);
     m_form->addRow(sessionRow);
 
     auto *backButton = new QPushButton("Back");
-    backButton->setObjectName("greeter_BackButton");
+    backButton->setObjectName("login_BackButton");
     m_form->addLeadingButton(backButton);
 
     connect(m_form, &loginui::PasswordForm::submitted, this, [this](const QString &password) {

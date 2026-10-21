@@ -1,21 +1,21 @@
-#greeter_Card {
+#login_Card {
     border: 1px solid lightgrey;
     border-radius: 24px;
 }
 
-#greeter_UserTile {
+#login_UserTile {
     border-radius: 16px;
 }
 
-#greeter_Card QLineEdit {
+#login_Card QLineEdit {
     border-radius: 12px;
 }
 
-#greeter_SessionTile {
+#login_SessionTile {
     border-radius: 16px;
 }
 
-#greeter_Card QPushButton {
+#login_Card QPushButton {
     border: 1px solid transparent;
     border-radius: 18px;
 }

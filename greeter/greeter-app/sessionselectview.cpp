@@ -17,14 +17,14 @@ public:
     explicit SessionTile(const QString &name, QWidget *parent = nullptr)
         : QFrame(parent)
     {
-        setObjectName("greeter_SessionTile");
+        setObjectName("login_SessionTile");
         setCursor(Qt::PointingHandCursor);
 
         auto *lay = new QHBoxLayout(this);
         lay->setContentsMargins(8, 8, 8, 8);
 
         auto *nameLabel = new QLabel(name);
-        nameLabel->setObjectName("greeter_SessionTileName");
+        nameLabel->setObjectName("login_SessionTileName");
         lay->addWidget(nameLabel);
         lay->addStretch();
     }
@@ -53,7 +53,7 @@ SessionSelectView::SessionSelectView(const QList<SessionInfo> &sessions, QWidget
     mainLayout->setSpacing(4);
 
     auto *backBtn = new QPushButton("Back");
-    backBtn->setObjectName("greeter_BackButton");
+    backBtn->setObjectName("login_BackButton");
     auto *topRow = new QHBoxLayout;
     topRow->addWidget(backBtn);
     topRow->addStretch();
