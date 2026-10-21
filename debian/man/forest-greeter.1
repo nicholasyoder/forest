@@ -5,7 +5,7 @@ forest-greeter \- Qt-based login greeter for greetd
 .B forest-greeter
 .SH DESCRIPTION
 .B forest-greeter
-is a fullscreen, Qt-based login greeter for the
+is a Qt-based login greeter for the
 .BR greetd (1)
 display manager, styled with the Forest theme system's
 .I login.css .
@@ -16,18 +16,18 @@ command in
 (installed as
 .IR /etc/forest/greetd.toml )
 and is run inside the
-.B cage
-Wayland compositor on VT1.
+.BR biome (1)
+Wayland compositor on VT1, covering every output.
 .PP
 .B forest-greeter
-is not intended to be run directly outside of a greetd/cage session.
+is not intended to be run directly outside of a greetd/biome session.
 .SH FILES
 .I /etc/forest/greetd.toml
 .RS
 greetd configuration pointing it at
 .B forest-greeter
-running inside cage.
+running inside biome.
 .RE
 .SH SEE ALSO
 .BR forest (1),
-.BR cage (1)
+.BR biome (1)

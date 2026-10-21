@@ -19,11 +19,11 @@ Description: lightweight Qt-based desktop environment
 
 Package: forest-greeter
 Architecture: amd64
-Depends: ${shlibs:Depends}, ${misc:Depends}, forest, greetd, cage
+Depends: ${shlibs:Depends}, ${misc:Depends}, forest, greetd, biome (>= 0.2.0)
 Recommends: xinit, xserver-xorg
 Description: greetd greeter using the Forest theme system
  A Qt-based login greeter for the greetd display manager,
- styled with the Forest theme system. Runs inside the cage
+ styled with the Forest theme system. Runs inside the Biome
  Wayland compositor on VT1. xinit/xserver-xorg are only needed
  to start xsessions entries (see forest-greeter-xsession); Forest's
  own session is Wayland-only.

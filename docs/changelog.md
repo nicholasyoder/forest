@@ -3,6 +3,9 @@ Changelog
 ============
 
 * Unreleased
+  - Run the greeter on Biome instead of cage, with a window per monitor; the login card follows the focused monitor
+  - Show a Caps Lock warning in the greeter
+  - Rename themes' greeter.css to login.css, shared by the greeter and lockscreen
   - Add a Displays settings page: arrangement, resolution, refresh rate, scale, orientation and primary display, with a keep-or-revert prompt
   - Add display profiles, picked automatically when monitors are plugged in, with hotkeys to switch between them
   - Add a Built-in action list and a D-Bus argument field to hotkey settings

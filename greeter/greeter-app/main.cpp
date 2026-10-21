@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "greeterwindow.h"
+#include "greeter.h"
 #include "flogger.h"
 
 #include "../../library/fstyleloader/fstyleloader.h"
@@ -11,7 +11,6 @@ int main(int argc, char *argv[]) {
     QApplication a(argc, argv);
     FLogger::install("greeter");
     a.setStyleSheet(fstyleloader::loadstyle("login"));
-    GreeterWindow w;
-    w.showFullScreen();
+    Greeter greeter;
     return a.exec();
 }

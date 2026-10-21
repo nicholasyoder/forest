@@ -1,26 +1,27 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#include "greeterwindow.h"
+#include "greeter.h"
 
 #include <QApplication>
-#include <QScreen>
-#include <QPainter>
-#include <QVBoxLayout>
 #include <QHBoxLayout>
 #include <QProcess>
 #include <QSettings>
 #include <QPushButton>
 #include <QDebug>
+#include <QWindow>
 
-GreeterWindow::GreeterWindow(QWidget *parent)
-    : QWidget(parent)
+#include <LayerShellQt/Window>
+
+#include "loginui.h"
+#include "screenset.h"
+
+Greeter::Greeter(QObject *parent)
+    : QObject(parent)
     , m_client(new GreetdClient(this))
 {
-    setWindowFlags(Qt::FramelessWindowHint);
-
-    connect(m_client, &GreetdClient::authMessage, this, &GreeterWindow::onAuthMessage);
-    connect(m_client, &GreetdClient::authSucceeded, this, &GreeterWindow::onAuthSucceeded);
-    connect(m_client, &GreetdClient::authFailed, this, &GreeterWindow::onAuthFailed);
+    connect(m_client, &GreetdClient::authMessage, this, &Greeter::onAuthMessage);
+    connect(m_client, &GreetdClient::authSucceeded, this, &Greeter::onAuthSucceeded);
+    connect(m_client, &GreetdClient::authFailed, this, &Greeter::onAuthFailed);
     connect(m_client, &GreetdClient::sessionStarted, this, [this]() {
         QSettings settings("Forest", "Forest");
         settings.setValue("greeter/last_user", m_currentUsername);
@@ -32,29 +33,27 @@ GreeterWindow::GreeterWindow(QWidget *parent)
         QApplication::quit();
     });
 
-    setupUi();
+    // Biome focuses the newest exclusive surface, so primary goes last.
+    m_screens = new loginui::ScreenSet(createCard(), [](QWindow *window) {
+        auto *layer = LayerShellQt::Window::get(window);
+        layer->setLayer(LayerShellQt::Window::LayerOverlay);
+        layer->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorTop | LayerShellQt::Window::AnchorBottom
+                                                        | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
+        layer->setExclusiveZone(-1);
+        layer->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityExclusive);
+        layer->setScope("forest-greeter");
+    }, loginui::ScreenSet::InitialFocus::Last, this);
+    connect(m_screens, &loginui::ScreenSet::cardPlaced, this, [this] {
+        if (m_stack->currentWidget() == m_passwordView)
+            m_passwordView->focusInput();
+    });
+
     initStartupView();
+    m_screens->showOnAllScreens();
 }
 
-void GreeterWindow::setupUi()
+QWidget *Greeter::createCard()
 {
-    // Confine layout content to the primary screen's area within the (possibly
-    // multi-monitor) fullscreen surface that cage spans across all outputs.
-    QRect primary = QGuiApplication::primaryScreen()->geometry();
-    QRect virt    = QGuiApplication::primaryScreen()->virtualGeometry();
-
-    auto *mainLayout = new QVBoxLayout(this);
-    mainLayout->setContentsMargins(
-        primary.left()   - virt.left(),
-        primary.top()    - virt.top(),
-        virt.right()     - primary.right(),
-        virt.bottom()    - primary.bottom()
-    );
-    mainLayout->addStretch(1);
-
-    auto *centerRow = new QHBoxLayout;
-    centerRow->addStretch(1);
-
     auto *card = new loginui::Card;
 
     // View stack
@@ -78,35 +77,20 @@ void GreeterWindow::setupUi()
     powerRow->addWidget(rebootBtn);
     card->addLayout(powerRow);
 
-    centerRow->addWidget(card);
-    centerRow->addStretch(1);
-
-    auto *clock_layout = new QVBoxLayout;
-    clock_layout->addStretch(1);
-    clock_layout->addWidget(new loginui::Clock);
-    clock_layout->addStretch(1);
-
-    centerRow->addLayout(clock_layout);
-    centerRow->addStretch(1);
-
-
-    mainLayout->addLayout(centerRow);
-    mainLayout->addStretch(1);
-
     connect(m_userSelectView, &UserSelectView::userSelected,
-            this, &GreeterWindow::onUserSelected);
+            this, &Greeter::onUserSelected);
     connect(m_userSelectView, &UserSelectView::otherUserRequested,
-            this, &GreeterWindow::onOtherUserRequested);
+            this, &Greeter::onOtherUserRequested);
     connect(m_passwordView, &PasswordView::loginAttempted,
-            this, &GreeterWindow::onLoginAttempted);
+            this, &Greeter::onLoginAttempted);
     connect(m_passwordView, &PasswordView::backClicked,
-            this, &GreeterWindow::onBackClicked);
+            this, &Greeter::onBackClicked);
     connect(m_passwordView, &PasswordView::sessionButtonClicked,
-            this, &GreeterWindow::onSessionButtonClicked);
+            this, &Greeter::onSessionButtonClicked);
     connect(m_sessionSelectView, &SessionSelectView::sessionSelected,
-            this, &GreeterWindow::onSessionSelected);
+            this, &Greeter::onSessionSelected);
     connect(m_sessionSelectView, &SessionSelectView::cancelled,
-            this, &GreeterWindow::showPasswordView);
+            this, &Greeter::showPasswordView);
 
     connect(shutdownBtn, &QPushButton::clicked, this, []() {
         QProcess::startDetached("systemctl", {"poweroff"});
@@ -114,9 +98,10 @@ void GreeterWindow::setupUi()
     connect(rebootBtn, &QPushButton::clicked, this, []() {
         QProcess::startDetached("systemctl", {"reboot"});
     });
+    return card;
 }
 
-void GreeterWindow::restoreLastSession()
+void Greeter::restoreLastSession()
 {
     QString lastExec = QSettings("Forest", "Forest").value("greeter/last_session").toString();
     if (lastExec.isEmpty())
@@ -130,7 +115,7 @@ void GreeterWindow::restoreLastSession()
     }
 }
 
-void GreeterWindow::initStartupView()
+void Greeter::initStartupView()
 {
     QSettings settings("Forest", "Forest");
     QString lastUser = settings.value("greeter/last_user").toString();
@@ -166,42 +151,28 @@ void GreeterWindow::initStartupView()
     }
 }
 
-void GreeterWindow::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    QPoint origin = QGuiApplication::primaryScreen()->virtualGeometry().topLeft();
-    for (QScreen *screen : QGuiApplication::screens()) {
-        QRect r = screen->geometry().translated(-origin);
-        QImage img = m_wallpaper.scaled(r.size());
-        if (!img.isNull())
-            painter.drawImage(r, img);
-        else
-            painter.fillRect(r, QColor(30, 30, 30));
-    }
-}
-
-void GreeterWindow::showUserSelectView()
+void Greeter::showUserSelectView()
 {
     m_stack->setCurrentIndex(0);
 }
 
-void GreeterWindow::showPasswordView()
+void Greeter::showPasswordView()
 {
     m_stack->setCurrentIndex(1);
 }
 
-void GreeterWindow::showSessionSelectView()
+void Greeter::showSessionSelectView()
 {
     m_stack->setCurrentIndex(2);
 }
 
-void GreeterWindow::onSessionButtonClicked()
+void Greeter::onSessionButtonClicked()
 {
     m_sessionSelectView->highlightSession(m_passwordView->sessionIndex());
     showSessionSelectView();
 }
 
-void GreeterWindow::onSessionSelected(int index)
+void Greeter::onSessionSelected(int index)
 {
     const auto &sessions = m_sessions.sessions();
     if (index >= 0 && index < sessions.size())
@@ -209,14 +180,14 @@ void GreeterWindow::onSessionSelected(int index)
     showPasswordView();
 }
 
-void GreeterWindow::beginAuth(const QString &username)
+void Greeter::beginAuth(const QString &username)
 {
     m_currentUsername = username;
     m_sessionActive = true;
     m_client->createSession(username);
 }
 
-void GreeterWindow::onUserSelected(const UserInfo &user)
+void Greeter::onUserSelected(const UserInfo &user)
 {
     if (m_sessionActive)
         m_client->cancelSession();
@@ -232,7 +203,7 @@ void GreeterWindow::onUserSelected(const UserInfo &user)
     beginAuth(user.username);
 }
 
-void GreeterWindow::onOtherUserRequested()
+void Greeter::onOtherUserRequested()
 {
     if (m_sessionActive)
         m_client->cancelSession();
@@ -248,7 +219,7 @@ void GreeterWindow::onOtherUserRequested()
     m_passwordView->focusInput();
 }
 
-void GreeterWindow::onLoginAttempted(const QString &username, const QString &password)
+void Greeter::onLoginAttempted(const QString &username, const QString &password)
 {
     if (m_isManualEntry && !m_sessionActive) {
         // First login click in manual mode: start the session then auto-submit the password
@@ -263,7 +234,7 @@ void GreeterWindow::onLoginAttempted(const QString &username, const QString &pas
     }
 }
 
-void GreeterWindow::onBackClicked()
+void Greeter::onBackClicked()
 {
     if (m_sessionActive)
         m_client->cancelSession();
@@ -277,7 +248,7 @@ void GreeterWindow::onBackClicked()
     showUserSelectView();
 }
 
-void GreeterWindow::onAuthMessage(const QString &type, const QString &message)
+void Greeter::onAuthMessage(const QString &type, const QString &message)
 {
     if (m_autoSubmitPending && type == "secret") {
         // Silently submit the pre-filled password — user never sees this exchange.
@@ -305,7 +276,7 @@ void GreeterWindow::onAuthMessage(const QString &type, const QString &message)
     }
 }
 
-void GreeterWindow::onAuthSucceeded()
+void Greeter::onAuthSucceeded()
 {
     int idx = m_passwordView->sessionIndex();
     if (idx < 0 || idx >= m_sessions.sessions().size()) {
@@ -327,7 +298,7 @@ void GreeterWindow::onAuthSucceeded()
     m_client->startSession(cmd, env);
 }
 
-void GreeterWindow::onAuthFailed(const QString &description)
+void Greeter::onAuthFailed(const QString &description)
 {
     m_sessionActive = false;
     m_autoSubmitPending = false;

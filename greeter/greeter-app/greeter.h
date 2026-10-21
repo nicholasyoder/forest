@@ -1,10 +1,9 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
-#ifndef GREETERWINDOW_H
-#define GREETERWINDOW_H
+#ifndef GREETER_H
+#define GREETER_H
 
-#include <QWidget>
-#include <QLabel>
+#include <QObject>
 #include <QStackedWidget>
 
 #include "greetdclient.h"
@@ -13,15 +12,14 @@
 #include "userselectview.h"
 #include "passwordview.h"
 #include "sessionselectview.h"
-#include "loginui.h"
 
-class GreeterWindow : public QWidget {
+namespace loginui { class ScreenSet; }
+
+// greetd login flow, with the card on one of a layer-shell window per screen.
+class Greeter : public QObject {
     Q_OBJECT
 public:
-    explicit GreeterWindow(QWidget *parent = nullptr);
-
-protected:
-    void paintEvent(QPaintEvent *event) override;
+    explicit Greeter(QObject *parent = nullptr);
 
 private slots:
     void onAuthMessage(const QString &type, const QString &message);
@@ -35,7 +33,7 @@ private slots:
     void onSessionSelected(int index);
 
 private:
-    void setupUi();
+    QWidget *createCard();
     void initStartupView();
     void restoreLastSession();
     void showUserSelectView();
@@ -51,7 +49,7 @@ private:
     UserSelectView *m_userSelectView;
     PasswordView *m_passwordView;
     SessionSelectView *m_sessionSelectView;
-    loginui::Wallpaper m_wallpaper;
+    loginui::ScreenSet *m_screens;
 
     bool m_sessionActive = false;
     bool m_isManualEntry = false;
@@ -60,4 +58,4 @@ private:
     QString m_currentUsername;
 };
 
-#endif // GREETERWINDOW_H
+#endif // GREETER_H
