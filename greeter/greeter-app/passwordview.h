@@ -8,11 +8,11 @@
 #include "userlistmodel.h"
 #include "sessionlistmodel.h"
 
-class QLabel;
 class QLineEdit;
 class QPushButton;
-class QStackedWidget;
+namespace loginui { class PasswordForm; }
 
+// loginui::PasswordForm plus manual username entry, the session row and Back.
 class PasswordView : public QWidget {
     Q_OBJECT
 public:
@@ -23,9 +23,10 @@ public:
 
     void setPrompt(const QString &prompt, bool secret);
     void setStatus(const QString &text, bool isError = false);
-    void clearPassword();
+    // Clears the input. Known user: busy until greetd prompts. Manual entry: ready, since the
+    // greetd session only starts on submit.
+    void resetPrompt();
     void focusInput();
-    void setLoginEnabled(bool enabled);
 
     QString getUsername() const;
     int sessionIndex() const;
@@ -36,24 +37,12 @@ signals:
     void loginAttempted(const QString &username, const QString &password);
     void sessionButtonClicked();
 
-private slots:
-    void onLoginClicked();
-
 private:
-    QStackedWidget *m_headerStack;
-    // Header index 0: known user (avatar + display name)
-    QLabel *m_avatarLabel;
-    QLabel *m_displayNameLabel;
-    // Header index 1: manual entry (generic avatar + username field)
-    QLabel *m_genericAvatarLabel;
+    QWidget *m_manualHeader;
     QLineEdit *m_usernameEdit;
-
-    QLineEdit *m_passwordEdit;
+    loginui::PasswordForm *m_form;
     QPushButton *m_sessionBtn;
     int m_sessionIndex = 0;
-    QPushButton *m_loginButton;
-    QPushButton *m_backButton;
-    QLabel *m_statusLabel;
 
     bool m_isManualMode = false;
     QString m_knownUsername;

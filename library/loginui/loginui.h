@@ -3,6 +3,7 @@
 #ifndef LOGINUI_H
 #define LOGINUI_H
 
+#include <QFrame>
 #include <QHash>
 #include <QImage>
 #include <QLabel>
@@ -30,6 +31,15 @@ private:
     QString m_file;
     int m_mode;
     QHash<quint64, QImage> m_cache;
+};
+
+// The themed frame around a login UI.
+class Card : public QFrame {
+    Q_OBJECT
+public:
+    explicit Card(QWidget *parent = nullptr);
+    void addWidget(QWidget *widget);
+    void addLayout(QLayout *layout);
 };
 
 class Clock : public QLabel {

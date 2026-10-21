@@ -7,7 +7,6 @@
 #include <QPainter>
 #include <QVBoxLayout>
 #include <QHBoxLayout>
-#include <QFrame>
 #include <QProcess>
 #include <QSettings>
 #include <QPushButton>
@@ -56,10 +55,7 @@ void GreeterWindow::setupUi()
     auto *centerRow = new QHBoxLayout;
     centerRow->addStretch(1);
 
-    auto *card = new QFrame;
-    card->setObjectName("greeter_Card");
-    auto *cardLayout = new QVBoxLayout(card);
-    cardLayout->setSpacing(8);
+    auto *card = new loginui::Card;
 
     // View stack
     m_stack = new QStackedWidget;
@@ -69,7 +65,7 @@ void GreeterWindow::setupUi()
     m_stack->addWidget(m_userSelectView);    // index 0
     m_stack->addWidget(m_passwordView);      // index 1
     m_stack->addWidget(m_sessionSelectView); // index 2
-    cardLayout->addWidget(m_stack);
+    card->addWidget(m_stack);
 
     // Power buttons — always visible below the stack
     auto *powerRow = new QHBoxLayout;
@@ -80,7 +76,7 @@ void GreeterWindow::setupUi()
     rebootBtn->setObjectName("greeter_PowerButton");
     powerRow->addWidget(shutdownBtn);
     powerRow->addWidget(rebootBtn);
-    cardLayout->addLayout(powerRow);
+    card->addLayout(powerRow);
 
     centerRow->addWidget(card);
     centerRow->addStretch(1);
@@ -231,7 +227,6 @@ void GreeterWindow::onUserSelected(const UserInfo &user)
     m_pendingPassword.clear();
 
     m_passwordView->setUser(user);
-    m_passwordView->clearPassword();
     m_passwordView->setStatus({});
     showPasswordView();
     beginAuth(user.username);
@@ -248,7 +243,6 @@ void GreeterWindow::onOtherUserRequested()
     m_pendingPassword.clear();
 
     m_passwordView->setManualEntry();
-    m_passwordView->clearPassword();
     m_passwordView->setStatus({});
     showPasswordView();
     m_passwordView->focusInput();
@@ -261,12 +255,10 @@ void GreeterWindow::onLoginAttempted(const QString &username, const QString &pas
         // when greetd sends the first secret auth_message.
         m_pendingPassword = password;
         m_autoSubmitPending = true;
-        m_passwordView->setLoginEnabled(false);
         beginAuth(username);
     } else {
         // Known-user mode (session already started by onUserSelected) or a subsequent
         // PAM round after the initial auto-submit.
-        m_passwordView->setLoginEnabled(false);
         m_client->postAuthResponse(password);
     }
 }
@@ -302,10 +294,8 @@ void GreeterWindow::onAuthMessage(const QString &type, const QString &message)
 
     if (type == "secret") {
         m_passwordView->setPrompt(message, true);
-        m_passwordView->setLoginEnabled(true);
     } else if (type == "visible") {
         m_passwordView->setPrompt(message, false);
-        m_passwordView->setLoginEnabled(true);
     } else if (type == "info") {
         m_passwordView->setStatus(message, false);
         m_client->postAuthResponse({});
@@ -345,8 +335,7 @@ void GreeterWindow::onAuthFailed(const QString &description)
 
     m_passwordView->setStatus(
         description.isEmpty() ? "Authentication failed" : description, true);
-    m_passwordView->clearPassword();
-    m_passwordView->setLoginEnabled(true);
+    m_passwordView->resetPrompt();
 
     if (!m_isManualEntry) {
         // Auto-restart the session so the user can try again immediately.
