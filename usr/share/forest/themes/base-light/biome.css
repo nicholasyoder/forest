@@ -1,0 +1,81 @@
+QWidget#biomeTitlebar,
+biome_decoration--DecorationBorder {
+    background: rgb(235, 235, 235);
+}
+QWidget#biomeTitlebar,
+QWidget#biomeBorderLeft,
+QWidget#biomeBorderRight,
+QWidget#biomeBorderBottom {
+    border-color: rgb(160, 160, 160);
+}
+
+QLabel#biomeTitle { color: rgb(30, 30, 30); }
+biome_decoration--DecorationFrame#biomeFrame[focused="false"] QLabel#biomeTitle {
+    color: rgb(120, 120, 120);
+}
+
+/* Urgent: amber-tinted titlebar and borders. */
+biome_decoration--DecorationFrame#biomeFrame[urgent="true"] QWidget#biomeTitlebar,
+biome_decoration--DecorationFrame#biomeFrame[urgent="true"] biome_decoration--DecorationBorder {
+    background: rgb(245, 220, 165);
+}
+biome_decoration--DecorationFrame#biomeFrame[urgent="true"] QLabel#biomeTitle {
+    color: rgb(30, 30, 30);
+}
+
+biome_decoration--DecorationButton#biomeButtonMinimize {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/minimize-normal.svg);
+}
+biome_decoration--DecorationButton#biomeButtonMaximize {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/maximize-normal.svg);
+}
+biome_decoration--DecorationButton#biomeButtonClose {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/close-normal.svg);
+}
+biome_decoration--DecorationFrame#biomeFrame[focused="false"] biome_decoration--DecorationButton#biomeButtonMinimize {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/minimize-dim.svg);
+}
+biome_decoration--DecorationFrame#biomeFrame[focused="false"] biome_decoration--DecorationButton#biomeButtonMaximize {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/maximize-dim.svg);
+}
+biome_decoration--DecorationFrame#biomeFrame[focused="false"] biome_decoration--DecorationButton#biomeButtonClose {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/close-dim.svg);
+}
+biome_decoration--DecorationFrame#biomeFrame[biomeMaximized="true"] biome_decoration--DecorationButton#biomeButtonMaximize {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/restore-normal.svg);
+}
+biome_decoration--DecorationFrame#biomeFrame[biomeMaximized="true"][focused="false"] biome_decoration--DecorationButton#biomeButtonMaximize {
+    qproperty-icon: url(/usr/share/forest/themes/base-light/icons/restore-dim.svg);
+}
+
+biome_decoration--DecorationButton:hover {
+    background: rgba(0, 0, 0, 10%);
+    border-color: rgba(0, 0, 0, 15%);
+}
+biome_decoration--DecorationButton:pressed {
+    background: rgba(0, 0, 0, 18%);
+    border-color: rgba(0, 0, 0, 25%);
+}
+biome_decoration--DecorationButton#biomeButtonClose:hover {
+    background: rgba(225, 70, 70, 80%);
+    border-color: rgba(200, 50, 50, 90%);
+}
+biome_decoration--DecorationButton#biomeButtonClose:pressed {
+    background: rgba(200, 50, 50, 80%);
+    border-color: rgba(190, 40, 40, 90%);
+}
+
+QFrame#biomeSwitcherPanel {
+    background: rgb(235, 235, 235);
+    border-color: rgba(120, 120, 120, 50%);
+}
+QToolButton#biomeSwitcherIcon[selected="true"] {
+    background: rgb(212, 212, 212);
+    border-color: rgb(160, 160, 160);
+}
+QToolButton#biomeSwitcherIcon[urgent="true"] { border-color: rgb(200, 140, 40); }
+QLabel#biomeSwitcherTitleLabel { color: rgb(30, 30, 30); }
+QFrame#biomeSwitcherHighlight {
+    background: rgba(90, 150, 220, 15%);
+    border-color: rgb(90, 150, 220);
+}
