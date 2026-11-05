@@ -1,0 +1,23 @@
+/* 4px borders keep the client's square corners inside the 12px outer radius. */
+QWidget#biomeTitlebar {
+    border-top-left-radius: 15px;
+    border-top-right-radius: 15px;
+}
+QWidget#biomeBorderLeft,
+QWidget#biomeBorderRight { min-width: 5px; }
+QWidget#biomeBorderBottom {
+    min-height: 5px;
+    border-bottom-left-radius: 5px;
+    border-bottom-right-radius: 5px;
+}
+/* 8px icon + 2px border (1px both sides) + 2x padding px divided in half is radius */
+biome_decoration--DecorationButton {
+    padding: 8px;
+    border-radius: 13px;
+}
+QFrame#biomeSwitcherPanel { border-radius: 16px; }
+QToolButton#biomeSwitcherIcon { border-radius: 14px; }
+QFrame#biomeSwitcherHighlight { border-radius: 16px; }
+QToolButton#biomeTitleIcon {
+    margin: 0px 8px;
+}

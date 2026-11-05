@@ -1,0 +1,12 @@
+QWidget#biomeTitlebar {
+    border-top-left-radius: 3px;
+    border-top-right-radius: 3px;
+}
+QWidget#biomeBorderBottom {
+    border-bottom-left-radius: 3px;
+    border-bottom-right-radius: 3px;
+}
+biome_decoration--DecorationButton { border-radius: 3px; }
+QFrame#biomeSwitcherPanel { border-radius: 6px; }
+QToolButton#biomeSwitcherIcon { border-radius: 3px; }
+QFrame#biomeSwitcherHighlight { border-radius: 4px; }

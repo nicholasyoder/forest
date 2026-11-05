@@ -1,0 +1,95 @@
+/* Biome window decorations and Alt-Tab switcher: shapes and sizes shared by
+   all themes. Radii live in base-rounded/base-circle, colours and icons in
+   base-dark/base-light. Selector contract: biome/docs/architecture-notes.md. */
+biome_decoration--DecorationFrame#biomeFrame {
+    background: transparent;
+}
+
+QWidget#biomeTitlebar {
+    border-style: solid;
+    border-width: 1px 1px 0px 1px;
+}
+
+QLabel#biomeTitle {
+    background: transparent;
+    font-size: 10pt;
+    padding: 0px 6px;
+}
+
+QWidget#biomeBorderLeft,
+QWidget#biomeBorderRight,
+QWidget#biomeBorderBottom {
+    border-style: solid;
+}
+QWidget#biomeBorderLeft   { min-width: 3px; border-width: 0px 0px 0px 1px; }
+QWidget#biomeBorderRight  { min-width: 3px; border-width: 0px 1px 0px 0px; }
+QWidget#biomeBorderBottom { min-height: 3px; border-width: 0px 1px 1px 1px; }
+
+/* Maximized: no border, no rounding. Beats the radius layers on specificity. */
+biome_decoration--DecorationFrame#biomeFrame[biomeMaximized="true"] QWidget#biomeTitlebar {
+    border: none;
+    border-top-left-radius: 0px;
+    border-top-right-radius: 0px;
+}
+biome_decoration--DecorationFrame#biomeFrame[biomeMaximized="true"] QWidget#biomeBorderLeft,
+biome_decoration--DecorationFrame#biomeFrame[biomeMaximized="true"] QWidget#biomeBorderRight {
+    min-width: 0px;
+    border: none;
+}
+biome_decoration--DecorationFrame#biomeFrame[biomeMaximized="true"] QWidget#biomeBorderBottom {
+    min-height: 0px;
+    border: none;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+}
+
+/* A QToolButton, not a DecorationButton, so qproperty-iconSize applies. */
+QToolButton#biomeTitleIcon {
+    background: transparent;
+    border: none;
+    padding: 0px;
+    margin: 0px 4px;
+    qproperty-iconSize: 16px 16px;
+}
+
+biome_decoration--DecorationButton {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 4px 8px;
+    margin-top: 2px;
+    margin-bottom: 2px;
+    qproperty-iconSize: 8px 8px;
+}
+biome_decoration--DecorationButton#biomeButtonClose {
+    margin-right: 2px;
+}
+
+QWidget#biomeSwitcherRoot,
+QWidget#biomeSwitcherHighlightRoot {
+    background: transparent;
+}
+
+QFrame#biomeSwitcherPanel {
+    border-style: solid;
+    border-width: 1px;
+    padding: 16px;
+}
+
+QToolButton#biomeSwitcherIcon {
+    background: transparent;
+    border: 1px solid transparent;
+    padding: 6px;
+    qproperty-iconSize: 48px 48px;
+}
+
+QLabel#biomeSwitcherTitleLabel {
+    background: transparent;
+    font-size: 10pt;
+    padding-top: 10px;
+    qproperty-alignment: AlignHCenter;
+}
+
+QFrame#biomeSwitcherHighlight {
+    border-style: solid;
+    border-width: 2px;
+}

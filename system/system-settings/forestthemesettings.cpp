@@ -48,5 +48,11 @@ void ForestThemeSettings::set_desktop_theme(QListWidgetItem *theme_item){
     QSettings settings("Forest", "Forest");
     settings.setValue("theme", new_theme);
     settings.sync();
+
+    // Biome watches its config and restyles decorations live.
+    QSettings biome_settings("Biome", "Biome");
+    biome_settings.setValue("Theme/name", new_theme);
+    biome_settings.sync();
+
     miscutills::call_dbus("forest/loadstylesheet");
 }
