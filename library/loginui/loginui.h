@@ -21,7 +21,7 @@ QPixmap circularAvatar(const QString &path, int size, const QString &fallback);
 // ~/.face, else the AccountsService icon; empty if neither exists.
 QString faceIconPath(const QString &username, const QString &homeDir);
 
-// The user's desktop wallpaper, scaled per target size (cached).
+// The system-wide login wallpaper (loginconfig.h), scaled per target size (cached).
 class Wallpaper {
 public:
     Wallpaper();

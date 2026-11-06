@@ -2,12 +2,14 @@ add_library(system-settings MODULE
     aboutpage.cpp
     cursorthemesettings.cpp
     forestthemesettings.cpp
+    loginsettings.cpp
     systemsettings.cpp
     displays/arrangementcanvas.cpp
     displays/displayspage.cpp
     aboutpage.h
     cursorthemesettings.h
     forestthemesettings.h
+    loginsettings.h
     systemsettings.h
     displays/arrangementcanvas.h
     displays/displayspage.h
