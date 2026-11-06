@@ -1,7 +1,7 @@
 # Login wallpaper — Plan
 
 Give `forest-greeter` and `forest-lockscreen` their own wallpaper instead of
-the desktop's `desktop/wallpaper`. Status: **proposed, not started**.
+the desktop's `desktop/wallpaper`. Status: **implemented** (settings page: Appearance → Lock Screen).
 
 It has to be system-wide (the greeter runs as `_greetd`), and the image has
 to be *copied*: home directories are `0700` on Debian, so `_greetd` can't

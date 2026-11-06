@@ -9,6 +9,7 @@
 #include "forestthemesettings.h"
 #include "cursorthemesettings.h"
 #include "displays/displayspage.h"
+#include "loginsettings.h"
 
 class SystemSettings : public QObject, settings_plugin_interface
 {
@@ -26,6 +27,7 @@ private:
     CursorThemeSettings *cursor_theme_settings = nullptr;
     ForestThemeSettings *forest_theme_settings = nullptr;
     DisplaysPage *displays_page = nullptr;
+    LoginSettings *login_settings = nullptr;
 };
 
 #endif // SYSTEMSETTINGS_H

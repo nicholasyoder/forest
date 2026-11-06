@@ -63,6 +63,7 @@ install(DIRECTORY usr/share/applications/ DESTINATION share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION share/forest USE_SOURCE_PERMISSIONS)
 install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION share/wallpapers/forest)
 install(DIRECTORY usr/share/themes/ DESTINATION share/themes)
+install(FILES usr/share/polkit-1/actions/org.forest.login.policy DESTINATION share/polkit-1/actions)
 install(DIRECTORY usr/lib/systemd/system/ DESTINATION lib/systemd/system COMPONENT greeter)
 # Last: non-root staging installs abort here, skipping any rule after.
 install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)

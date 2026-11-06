@@ -25,3 +25,4 @@ usr/share/forest/themes/*/settings.css
 usr/share/forest/themes/*/theme.conf
 usr/share/wallpapers/forest
 usr/share/themes
+usr/share/polkit-1/actions

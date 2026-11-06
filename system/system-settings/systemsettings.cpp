@@ -10,15 +10,17 @@ QList<settings_page*> SystemSettings::pages(){
     displays_page = new DisplaysPage;
     forest_theme_settings = new ForestThemeSettings;
     cursor_theme_settings = new CursorThemeSettings;
+    login_settings = new LoginSettings;
 
     return {about_page->get_settings_item(), displays_page->get_settings_item(),
-            forest_theme_settings->get_settings_item(), cursor_theme_settings->get_settings_item()};
+            forest_theme_settings->get_settings_item(), cursor_theme_settings->get_settings_item(), login_settings->get_settings_item()};
 }
 
 SystemSettings::~SystemSettings(){
     delete about_page;
     delete forest_theme_settings;
     delete cursor_theme_settings;
+    delete login_settings;
     delete displays_page;
 }
 

@@ -12,14 +12,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & settings
 
-### Compositor portability
-
-- **Login wallpaper setting.** Give the greeter and lockscreen their own
-  wallpaper instead of reusing the desktop one (`loginui::Wallpaper` reads
-  `desktop/wallpaper`). System-wide, so a copy of the image under
-  `/var/lib/forest` written by a `pkexec` helper. Plan:
-  `docs/login-wallpaper-plan.md`.
-
 ## 0.11.0 — desktop, hardware & system
 
 - **Desktop icons settings page.** No page for desktop icons yet (Desktop →

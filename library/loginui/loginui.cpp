@@ -14,6 +14,7 @@
 
 #include <memory>
 
+#include "loginconfig.h"
 #include "miscutills.h"
 
 namespace loginui {
@@ -70,9 +71,14 @@ QString faceIconPath(const QString &username, const QString &homeDir)
 
 Wallpaper::Wallpaper()
 {
-    QSettings settings("Forest", "Forest");
-    m_file = settings.value("desktop/wallpaper", "/usr/share/wallpapers/forest/forest.jpg").toString();
-    m_mode = settings.value("desktop/imagemode", Fill).toInt();
+    if (QFileInfo::exists(loginconfig::wallpaperFile)) {
+        QSettings settings(loginconfig::confFile, QSettings::IniFormat);
+        m_file = loginconfig::wallpaperFile;
+        m_mode = settings.value(loginconfig::modeKey, Fill).toInt();
+    } else {
+        m_file = loginconfig::defaultWallpaper;
+        m_mode = Fill;
+    }
 }
 
 QImage Wallpaper::scaled(QSize size)
