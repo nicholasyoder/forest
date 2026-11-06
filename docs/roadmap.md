@@ -12,16 +12,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.0 — displays & settings
 
-- **Unify settings app theme with the desktop theme** (#56). Only
-  `base/settings.css` exists, so the settings app ignores the selected theme.
-  Add per-variant `settings.css` overrides and reload on theme change.
-
-- **Night light setting.** Displays page control for screen colour
-  temperature (warm tint at night, like wlsunset): on/off, day/night
-  temperatures, schedule (sunrise/sunset or fixed times). Biome serves
-  `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
-  a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
-
 ### Compositor portability
 
 - **Login wallpaper setting.** Give the greeter and lockscreen their own
@@ -104,6 +94,14 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## Later (unscheduled)
 
+- **Unify settings app theme with the desktop theme** (#56). Only
+  `base/settings.css` exists, so the settings app ignores the selected theme.
+  Add per-variant `settings.css` overrides and reload on theme change.
+- **Night light setting.** Displays page control for screen colour
+  temperature (warm tint at night, like wlsunset): on/off, day/night
+  temperatures, schedule (sunrise/sunset or fixed times). Biome serves
+  `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
+  a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
 - **Task view.** Overview of open windows (and workspaces) with live
   thumbnails. Needs per-toplevel capture (`ext-image-copy-capture-v1` with a
   foreign-toplevel capture source), which needs Biome's wlroots bump past
