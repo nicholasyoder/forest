@@ -16,6 +16,12 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
 
+- **Night light setting.** Displays page control for screen colour
+  temperature (warm tint at night, like wlsunset): on/off, day/night
+  temperatures, schedule (sunrise/sunset or fixed times). Biome serves
+  `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
+  a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
+
 ### Compositor portability
 
 - **Login wallpaper setting.** Give the greeter and lockscreen their own
