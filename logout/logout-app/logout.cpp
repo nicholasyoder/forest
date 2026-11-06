@@ -66,7 +66,7 @@ logoutmanager::logoutmanager(){
     if (QScreen *primary = ScreenTracker::primary())
         windowHandle()->setScreen(primary);
 
-    overlays = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 128), LayerShellQt::Window::LayerTop, "forest-logout-dim");
+    overlays = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 128), layeroverlay::Layer::Top, "forest-logout-dim");
 }
 
 logoutmanager::~logoutmanager(){}
@@ -159,7 +159,7 @@ void logoutmanager::start_action(ActionType action){
     if (session_survives)
         close_overlays();
     else // Can't retarget a mapped surface's opacity; stack opaque overlays over the dim ones instead.
-        overlays += layeroverlay::showOnAllScreens(Qt::black, LayerShellQt::Window::LayerTop, "forest-logout-dim");
+        overlays += layeroverlay::showOnAllScreens(Qt::black, layeroverlay::Layer::Top, "forest-logout-dim");
 
     // Stay alive past the compositor's fade (~220ms) so the fade-out can finish.
     QTimer::singleShot(250, this, [this, action, session_survives](){
