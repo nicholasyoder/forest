@@ -100,7 +100,7 @@ void Locker::showDim()
     if (!m_dim.isEmpty())
         return;
     // Fades only if Biome's config lists this namespace.
-    m_dim = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 160), LayerShellQt::Window::LayerOverlay,
+    m_dim = layeroverlay::showOnAllScreens(QColor(0, 0, 0, 160), layeroverlay::Layer::Overlay,
                                            "forest-locker-dim", true);
 }
 
