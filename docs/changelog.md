@@ -2,13 +2,26 @@
 Changelog
 ============
 
-* Unreleased
+* Release 0.10.0 - 2026-11-09
   - Run the greeter on Biome instead of cage, with a window per monitor; the login card follows the focused monitor
   - Show a Caps Lock warning in the greeter
+  - Add a login and lock screen wallpaper setting
   - Rename themes' greeter.css to login.css, shared by the greeter and lockscreen
+  - Theme Biome's window decorations from Forest themes, restyling live on theme change
   - Add a Displays settings page: arrangement, resolution, refresh rate, scale, orientation and primary display, with a keep-or-revert prompt
   - Add display profiles, picked automatically when monitors are plugged in, with hotkeys to switch between them
+  - Keep idle-blanked displays dark when a monitor reconnects or is plugged in
+  - Rework the settings app: category tree, search, and a single window that raises when relaunched
+  - Move panel applet settings into the settings app, opened from each applet's menu
+  - Relaunching an app from the main menu, quicklaunch or panel raises its existing window
+  - Style the desktop switcher, sensor bars and CPU/memory graphs from the theme, and use theme icons for the battery monitor, so they draw cleanly at fractional scales
+  - Fix the CPU and memory monitor update interval setting, and swap always reading 0 when shown separately
+  - Add optional hold-to-repeat for hotkeys, on by default for volume and brightness
   - Add a Built-in action list and a D-Bus argument field to hotkey settings
+  - Fix global hotkeys not binding on punctuation keys
+  - Show browser notifications in Forest's popups: report capabilities, show action buttons and send close and action signals
+  - Give panel popups, desktop icons and the logout dialog keyboard focus through standard Wayland protocols instead of Biome exceptions
+  - Fix a stall when showing the logout dialog on 4K displays
   - Fix hotkey settings crashing when adding the first hotkey
   - Fix forest-locker crashing on wake after a monitor disconnected while dimmed
   - Fix the settings app crashing when a page rebuilds after being opened twice
