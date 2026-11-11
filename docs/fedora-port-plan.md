@@ -84,39 +84,39 @@ Branch off `develop` (e.g. `fedora-port`); one PR.
 
 ### 1. Build on Fedora
 
-- [ ] Install build deps; `cmake -B build/Desktop-Debug` and build. Qt Creator
+- [x] Install build deps; `cmake -B build/Desktop-Debug` and build. Qt Creator
       owns this dir on the old machine; on this machine create it fresh, and if
       Qt Creator is used here, let it adopt it.
-- [ ] Fix compile errors from Qt 6.8 → 6.11. Highest risk are the private-API
+- [x] Fix compile errors from Qt 6.8 → 6.11. Highest risk are the private-API
       users (rebuild-on-minor-bump comment in each): `library/sessionlock`,
       `library/activation` (`QWaylandWindow::wlSurface`), `library/layeroverlay`,
       `locker/locker-daemon`, `library/loginui`. The comments note
       `QWaylandScreen::output()` is public from Qt 6.9, so those
       `WaylandClientPrivate` uses can probably be dropped now.
-- [ ] Re-check `qt6_generate_wayland_protocol_client_sources` still works for
+- [x] Re-check `qt6_generate_wayland_protocol_client_sources` still works for
       `library/toplevels` and the vendored `protocol/` XMLs against
       wayland-protocols 1.50 (e.g. `ext-workspace`, `ext-foreign-toplevel-list`
       moved/renamed in staging?).
-- [ ] CMake 4.x: `cmake_minimum_required(VERSION 3.16)` still works but check
+- [x] CMake 4.x: `cmake_minimum_required(VERSION 3.16)` still works but check
       for policy warnings/errors in `cmake/ForestDeps.cmake`.
-- [ ] Qt 6.11 behaviour changes affecting QSS theming, `QMenu`/popup
+- [x] Qt 6.11 behaviour changes affecting QSS theming, `QMenu`/popup
       placement (`menuanchor`), layer-shell-qt 6.8 interaction, and
       high-DPI rounding — eyeball every theme after first run.
 
 ### 2. Run on Fedora (with Biome 0.2.1 build)
 
-- [ ] Run from a TTY / greetd; confirm session start, panel, desktop, tray,
+- [x] Run from a TTY / greetd; confirm session start, panel, desktop, tray,
       settings, hotkeys (GlobalShortcuts portal), notifications, locker.
-- [ ] Greeter on greetd (user, VT, PAM stack, SELinux AVCs via
+- [x] Greeter on greetd (user, VT, PAM stack, SELinux AVCs via
       `ausearch -m avc -ts recent`; `greetd-selinux` may be needed).
-- [ ] Screen locker auth works with the Fedora PAM stack.
-- [ ] Polkit agent, `pkexec forest-login-helper` (SELinux, polkit policy path).
-- [ ] Default apps launch (`lxterminal`, `pcmanfm-qt`, `brightnessctl`).
-- [ ] Check theme assets: Papirus icon path, `qtct.conf`, murrine GTK2 engine.
+- [x] Screen locker auth works with the Fedora PAM stack.
+- [x] Polkit agent, `pkexec forest-login-helper` (SELinux, polkit policy path).
+- [x] Default apps launch (`lxterminal`, `pcmanfm-qt`, `brightnessctl`).
+- [x] Check theme assets: Papirus icon path, `qtct.conf`, murrine GTK2 engine.
 
 ### 3. RPM packaging
 
-- [ ] `packaging/forest.spec` producing `forest` and `forest-greeter`
+- [x] `packaging/forest.spec` producing `forest` and `forest-greeter`
       subpackages (mirror `debian/control`/`*.install`): `BuildRequires` per the
       table; `Requires: biome >= 0.2.1` and the runtime deps listed above;
       `forest-greeter` `Requires: greetd, forest`; `Recommends:
@@ -125,11 +125,11 @@ Branch off `develop` (e.g. `fedora-port`); one PR.
       `pcmanfm-qt` Requires listed only `libfm-qt`, `desktop-backgrounds-compat`,
       kimageformats. Verify with a clean `dnf install` that no LXQt session
       entry appears in the greeter.
-- [ ] `%post`/`%preun` need nothing for greetd (still not auto-enabled); keep
+- [x] `%post`/`%preun` need nothing for greetd (still not auto-enabled); keep
       `/etc/forest` files `%config(noreplace)`, theme and `wallpapers` dirs
       in `%files`. Man pages from `debian/man`.
-- [ ] `%changelog` from `docs/changelog.md` (mirror `convert-changelog.sh`).
-- [ ] Clean `mock -r fedora-45-x86_64` build; `rpmlint` reviewed.
+- [x] `%changelog` from `docs/changelog.md` (mirror `convert-changelog.sh`).
+- [x] Clean `mock -r fedora-45-x86_64` build; `rpmlint` reviewed.
 
 ### 4. Release 0.10.1
 

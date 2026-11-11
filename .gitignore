@@ -15,3 +15,6 @@ debian/forest/
 debian/forest-greeter/
 debian/*.debhelper.log
 debian/*.substvars
+
+# rpmbuild output
+rpmbuild/

@@ -8,6 +8,19 @@ It requires the [Biome](https://github.com/nicholasyoder/biome) Wayland composit
 
 ## Installation
 
+### Fedora
+
+Build the RPMs (see [Packaging](#rpm-fedora)) and install them together with the
+[Biome](https://github.com/nicholasyoder/biome) RPM:
+
+```sh
+sudo dnf install ./biome-*.rpm ./forest-0*.rpm ./forest-greeter-*.rpm
+```
+
+`forest-greeter` is optional (login screen only).
+
+### Debian
+
 Download the latest `.deb` package from the [releases page](https://github.com/nicholasyoder/forest/releases) and install it:
 
 ```sh
@@ -46,6 +59,26 @@ sudo cmake --install build
 ```
 
 ## Packaging
+
+### RPM (Fedora)
+
+```sh
+sudo dnf install rpm-build rpmdevtools           # once
+sudo dnf builddep packaging/forest.spec          # once: installs the spec's BuildRequires
+mkdir -p rpmbuild/SOURCES
+git archive --prefix=forest-0.10.1/ -o rpmbuild/SOURCES/forest-0.10.1.tar.gz HEAD   # stands in for the release tarball the spec expects
+rpmbuild -ba --define "_topdir $PWD/rpmbuild" packaging/forest.spec
+```
+
+Run from the repo root; output lands in `rpmbuild/RPMS/` (gitignored) as `forest` and
+`forest-greeter` (plus debuginfo). To use the default `~/rpmbuild` instead, drop the
+`--define`, use `~/rpmbuild/SOURCES` for the tarball, and run `rpmdev-setuptree` once.
+For a clean-chroot build, run `mock -r fedora-45-x86_64` on the resulting `.src.rpm`.
+`forest` requires `biome >= 0.2.1`, so install the Biome RPM first or in the same command.
+Keep the spec's `Version` in step with `CMakeLists.txt`, and regenerate its `%changelog`
+from `docs/changelog.md` with `docs/convert-changelog-rpm.sh` at each release.
+
+### Debian
 
 Debian packages can be built from `debian/` with:
 
