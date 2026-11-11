@@ -27,7 +27,8 @@ Every build dependency exists on Fedora; none are missing.
 Runtime deps all exist: `qt6-qtwayland`, `xdg-desktop-portal`, `qt6ct`,
 `papirus-icon-theme`, `gtk-murrine-engine`, `brightnessctl`, `grim`, `slurp`,
 `wl-clipboard`, `libnotify`, `xdg-user-dirs`, `lxterminal`, `pcmanfm-qt`,
-`polkit` (pkexec is in it), `greetd`, `jetbrains-mono-fonts`. Check `glib2`
+`polkit` (pkexec is in it), `greetd`, `jetbrains-mono-fonts`,
+`dejavu-sans-fonts`, `dejavu-sans-mono-fonts` (default UI fonts). Check `glib2`
 for `gio`/`libglib2.0-bin`'s tools (`gio`, `gsettings`).
 
 ## Build dependencies

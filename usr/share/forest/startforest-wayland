@@ -33,7 +33,7 @@ if [ ! -f "$GTK2_CONF_FILE" ]; then
 
 gtk-theme-name="Forest"
 gtk-icon-theme-name="Papirus"
-gtk-font-name="Sans 10"
+gtk-font-name="DejaVu Sans 10"
 
 EOF
 fi
@@ -47,7 +47,7 @@ if [ ! -f "$GTK3_CONF_FILE" ]; then
 [Settings]
 gtk-theme-name=Adwaita
 gtk-icon-theme-name=Papirus
-gtk-font-name=Sans 10
+gtk-font-name=DejaVu Sans 10
 gtk-toolbar-style=GTK_TOOLBAR_BOTH_HORIZ
 gtk-toolbar-icon-size=GTK_ICON_SIZE_LARGE_TOOLBAR
 gtk-button-images=0
@@ -59,6 +59,16 @@ gtk-xft-hinting=1
 gtk-xft-hintstyle=hintmedium
 
 EOF
+fi
+
+# GTK3/GTK4/libadwaita and Chromium on Wayland read GSettings, which overrides
+# settings.ini. Set once so later font changes aren't overwritten.
+FONTS_MARKER="$XDG_CONFIG_HOME/Forest/.gsettings-fonts-set"
+if [ ! -f "$FONTS_MARKER" ] && command -v gsettings >/dev/null 2>&1; then
+	gsettings set org.gnome.desktop.interface font-name 'DejaVu Sans 10'
+	gsettings set org.gnome.desktop.interface document-font-name 'DejaVu Sans 10'
+	gsettings set org.gnome.desktop.interface monospace-font-name 'DejaVu Sans Mono 10'
+	mkdir -p "$XDG_CONFIG_HOME/Forest" && : > "$FONTS_MARKER"
 fi
 
 #export XDG_MENU_PREFIX="forest-"
