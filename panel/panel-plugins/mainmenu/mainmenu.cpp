@@ -4,6 +4,9 @@
 
 #include <QDBusConnection>
 #include <QTimer>
+#include <QDir>
+
+#include <qt6xdg/XdgDirs>
 
 mainmenu::mainmenu() : panelbutton(Icon) {
 
@@ -28,7 +31,14 @@ void mainmenu::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     loadUI();
 
     QStringList watchedDirs;
-    watchedDirs << "/usr/share/applications/" << QDir::home().absolutePath() + "/.local/share/applications/";
+    // XDG data dirs, so Flatpak exports are included.
+    QStringList dataDirs = XdgDirs::dataDirs();
+    dataDirs.prepend(XdgDirs::dataHome());
+    foreach (const QString &d, dataDirs) {
+        QString apps = QDir::cleanPath(d) + "/applications/";
+        if (QDir(apps).exists() && !watchedDirs.contains(apps))
+            watchedDirs << apps;
+    }
     appLdr = new apploader(watchedDirs);
     connect(appLdr, &apploader::appLoad, this, &mainmenu::reloadMenu);
     appLdr->load();
