@@ -17,4 +17,4 @@ forest_link_miscutills(panel-app)
 forest_link_layershellqt(panel-app)
 forest_link_activation(panel-app)
 
-install(TARGETS panel-app LIBRARY DESTINATION lib/forest)
+install(TARGETS panel-app LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest)

@@ -9,4 +9,4 @@ target_link_libraries(locker-settings PRIVATE Qt6::Widgets lockerconfig)
 forest_link_pluginutills(locker-settings)
 forest_link_settings_widgets(locker-settings)
 
-install(TARGETS locker-settings LIBRARY DESTINATION lib/forest/settings)
+install(TARGETS locker-settings LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/settings)

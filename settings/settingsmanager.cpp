@@ -56,7 +56,7 @@ protected:
     }
 };
 
-const QString plugin_dir = "/usr/lib/forest/settings";
+const QString plugin_dir = QString(FOREST_LIB_DIR) + "/settings";
 const int PageIdRole = Qt::UserRole;
 const int SearchTextRole = Qt::UserRole + 1; // title, category, keywords, row labels
 const int BaseSearchTextRole = Qt::UserRole + 2; // without row labels

@@ -11,7 +11,7 @@ pluginutills::pluginutills()
 
 QStringList pluginutills::get_plugin_paths(){
     QStringList paths;
-    QString plugin_base_path = "/usr/lib/forest/";
+    QString plugin_base_path = QString(FOREST_LIB_DIR) + "/";
     QSettings settings = QSettings("Forest","Forest");
     settings.beginGroup("plugins");
     foreach(QString key, settings.childGroups()){

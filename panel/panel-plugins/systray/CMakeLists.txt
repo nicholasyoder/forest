@@ -16,4 +16,4 @@ forest_link_panel_library(systray)
 forest_link_miscutills(systray)
 forest_link_dbusmenu(systray)
 
-install(TARGETS systray LIBRARY DESTINATION lib/forest/panel)
+install(TARGETS systray LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)

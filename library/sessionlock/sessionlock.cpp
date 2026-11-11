@@ -86,7 +86,7 @@ protected:
         if (!m_configured) {
             m_configured = true;
             applyConfigure();
-            window()->sendRecursiveExposeEvent();
+            window()->updateExposure();
         } else {
             applyConfigureWhenPossible();
         }

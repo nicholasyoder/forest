@@ -77,7 +77,7 @@ XDG_CONFIG_HOME=/tmp/biome-cfg WLR_BACKENDS=headless WLR_HEADLESS_OUTPUTS=2 \
 ```
 
 Headless sway takes the same `WLR_*` variables, and `swaymsg create_output`
-hotplugs another head. Plugin paths are hardcoded to `/usr/lib/forest`, so
+hotplugs another head. Plugin paths are baked in at build time (`FOREST_LIB_DIR`, `/usr/lib64/forest` on Fedora), so
 to test a fresh `libservices-app.so` without staging it, load it from a
 throwaway `QPluginLoader` program (register `org.forest` first, disable
 quit-on-last-window-closed) under `dbus-run-session`, and drive it with
@@ -113,7 +113,7 @@ traffic settles it far more reliably:
 4. Grep the trace for `get_toplevel` vs `get_popup` vs `get_layer_surface` /
    `set_anchor` / `set_size` — this settles "did it become a
    toplevel/popup/layer-surface" and "what size/anchors did it actually
-   negotiate". Always check the installed `dpkg -l` version of whatever Qt
+   negotiate". Always check the installed `rpm -q` version of whatever Qt
    library is in question and fetch the matching source tag, not
    `dev`/`master`, when cross-referencing behavior against source.
 

@@ -11,7 +11,7 @@ inline constexpr char wallpaperDir[] = "/var/lib/forest/login";
 inline constexpr char wallpaperFile[] = "/var/lib/forest/login/wallpaper"; // absent = default wallpaper
 inline constexpr char defaultWallpaper[] = "/usr/share/wallpapers/forest/forest.jpg";
 inline constexpr char modeKey[] = "wallpaper/imagemode"; // miscutills WALLPAPER_MODE
-inline constexpr char helperPath[] = "/usr/lib/forest/forest-login-helper";
+inline constexpr char helperPath[] = FOREST_LIB_DIR "/forest-login-helper";
 
 } // namespace loginconfig
 

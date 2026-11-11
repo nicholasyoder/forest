@@ -13,4 +13,3 @@ qt6_generate_wayland_protocol_client_sources(sessionlock FILES
 target_link_libraries(sessionlock PUBLIC Qt6::Gui PRIVATE Qt6::WaylandClient Qt6::WaylandClientPrivate)
 target_include_directories(sessionlock PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-install(TARGETS sessionlock ARCHIVE DESTINATION lib)

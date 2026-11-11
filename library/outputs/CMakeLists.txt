@@ -18,4 +18,3 @@ qt6_generate_wayland_protocol_client_sources(outputs FILES
 # PUBLIC so users including outputmanager.h find the generated qwayland-*.h.
 target_include_directories(outputs PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-install(TARGETS outputs ARCHIVE DESTINATION lib)

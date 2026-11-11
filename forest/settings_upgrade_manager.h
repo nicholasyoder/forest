@@ -18,6 +18,7 @@ private:
     void upgrade_0_7_9();
     void upgrade_0_9_0();
     void upgrade_0_10_0();
+    void upgrade_0_10_1();
 };
 
 #endif // SETTINGSUPGRADEMANAGER_H

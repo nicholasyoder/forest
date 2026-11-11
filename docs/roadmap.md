@@ -10,6 +10,18 @@ Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
+## 0.10.1 — Fedora port
+
+- **Theme-driven app palette (icon colours).** Qt 6.11 resolves SVG
+  `currentColor` (Papirus panel/status icons) from the app-wide `QPalette`
+  text colour, ignoring the icon's own CSS, so icons are black on dark panels
+  (QSS doesn't touch the app palette; qt6ct `custom_palette` didn't help).
+  Add a `theme.conf` key and set the palette's text colours when a theme is
+  applied, in every process that loads the stylesheet (`fstyleloader`):
+  light for dark themes, dark for light ones. Papirus also ships a dark
+  `actions/audio-volume-*` next to the light `panel/` one; Qt picks `actions/`
+  first, so volume may still need an explicit icon name.
+
 ## 0.11.0 — desktop, hardware & system
 
 - **Desktop icons settings page.** No page for desktop icons yet (Desktop →

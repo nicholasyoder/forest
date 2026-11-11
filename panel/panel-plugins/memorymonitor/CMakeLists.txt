@@ -10,7 +10,7 @@ target_link_libraries(memorymonitor PRIVATE Qt6::Widgets Qt6::DBus)
 forest_link_panel_library(memorymonitor)
 forest_link_miscutills(memorymonitor)
 
-install(TARGETS memorymonitor LIBRARY DESTINATION lib/forest/panel)
+install(TARGETS memorymonitor LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)
 
 forest_add_applet_settings(memorymonitor
     memorymonitorsettings.cpp

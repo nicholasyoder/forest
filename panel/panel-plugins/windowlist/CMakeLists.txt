@@ -22,7 +22,7 @@ forest_link_panel_library(windowlist)
 forest_link_miscutills(windowlist)
 forest_link_toplevels(windowlist)
 
-install(TARGETS windowlist LIBRARY DESTINATION lib/forest/panel)
+install(TARGETS windowlist LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)
 
 forest_add_applet_settings(windowlist
     windowlistsettings.cpp
