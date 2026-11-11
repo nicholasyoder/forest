@@ -46,6 +46,10 @@ sudo systemctl disable --now <existing-display-manager>.service
 sudo systemctl enable --now greetd.service
 ```
 
+greetd is started by `graphical.target`, so on a system that boots to
+`multi-user.target` (e.g. a Fedora Server or minimal install) also run
+`sudo systemctl set-default graphical.target`, or it will still boot to a text login.
+
 ## Building from Source
 
 **Dependencies Include:** CMake, Qt6, LayerShellQt, Qt6Xdg, libXcursor, xkbcommon, ALSA (libasound2), libsensors

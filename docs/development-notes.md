@@ -2,14 +2,20 @@
 
 ## Release packaging
 
-Building the `.deb`s is covered in the README's Packaging section. For a
-release:
+Building the RPMs and `.deb`s is covered in the README's Packaging section.
+For a release:
 
 1. Add a `* Release X.Y.Z - YYYY-MM-DD` entry to `docs/changelog.md` and bump
-   `project(... VERSION ...)` in `CMakeLists.txt`.
-2. Regenerate `debian/changelog` from it (don't edit it by hand):
-   `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`
-3. Build with `debuild -us -uc`, which runs lintian (it flags changelog lines
+   `project(... VERSION ...)` in `CMakeLists.txt` and `Version:` in
+   `packaging/forest.spec`.
+2. Regenerate the spec's `%changelog` (replace everything under `%changelog`):
+   `./docs/convert-changelog-rpm.sh docs/changelog.md`
+3. Build with `rpmbuild`, then a clean `mock -r fedora-45-x86_64` build, and
+   review `rpmlint` output.
+4. Optionally regenerate `debian/changelog` (kept until the Debian line is
+   dropped; don't edit it by hand):
+   `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`.
+   Build with `debuild -us -uc`, which runs lintian (it flags changelog lines
    over 80 columns).
 
 ## Include deb in repo
