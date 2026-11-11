@@ -122,7 +122,7 @@ install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
 %{_mandir}/man1/forest-greeter.1*
 
 %changelog
-* Tue Nov 10 2026 Nicholas Yoder <nicholasyoder@proton.me> - 0.10.1-1
+* Wed Nov 11 2026 Nicholas Yoder <nicholasyoder@proton.me> - 0.10.1-1
 - Port to Fedora and Qt 6.11; no functional changes
 - Plugins install to the distro libdir (/usr/lib64/forest on Fedora); stored panel applet paths are migrated
 

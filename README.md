@@ -10,8 +10,9 @@ It requires the [Biome](https://github.com/nicholasyoder/biome) Wayland composit
 
 ### Fedora
 
-Build the RPMs (see [Packaging](#rpm-fedora)) and install them together with the
-[Biome](https://github.com/nicholasyoder/biome) RPM:
+Forest targets Fedora 45 (Qt 6.11). Download the latest RPMs from the
+[releases page](https://github.com/nicholasyoder/forest/releases), along with the
+[Biome](https://github.com/nicholasyoder/biome/releases) RPM, and install them together:
 
 ```sh
 sudo dnf install ./biome-*.rpm ./forest-0*.rpm ./forest-greeter-*.rpm
@@ -19,9 +20,13 @@ sudo dnf install ./biome-*.rpm ./forest-0*.rpm ./forest-greeter-*.rpm
 
 `forest-greeter` is optional (login screen only).
 
-### Debian
+### Debian (no longer fully supported)
 
-Download the latest `.deb` package from the [releases page](https://github.com/nicholasyoder/forest/releases) and install it:
+Forest now targets Fedora. The last prebuilt `.deb` packages are from the
+[0.10.0 release](https://github.com/nicholasyoder/forest/releases/tag/v0.10.0) (Debian 13 "Trixie"); new releases
+won't have prebuilt `.deb`s. `debian/` is kept for now but is untested, and Biome
+0.2.1+ needs wlroots 0.20, which Trixie doesn't have, so a current Forest `.deb` won't
+install there. To install 0.10.0:
 
 ```sh
 sudo apt install ./forest_*.deb
@@ -52,9 +57,24 @@ greetd is started by `graphical.target`, so on a system that boots to
 
 ## Building from Source
 
-**Dependencies Include:** CMake, Qt6, LayerShellQt, Qt6Xdg, libXcursor, xkbcommon, ALSA (libasound2), libsensors
+**Dependencies Include:** CMake, Qt6, LayerShellQt, Qt6Xdg, libXcursor, xkbcommon, ALSA, libsensors, PAM
 
-All dependencies should be available in the Debian 13 (Trixie) official repositories. Compatibility with the library versions on other distros is not guaranteed.
+On Fedora 45:
+
+```sh
+sudo dnf builddep packaging/forest.spec
+```
+
+or, without the spec:
+
+```sh
+sudo dnf install gcc-c++ cmake pkgconf-pkg-config qt6-qtbase-devel qt6-qtbase-private-devel \
+  qt6-qtwayland-devel layer-shell-qt-devel libdbusmenu-lxqt-devel polkit-qt6-1-devel \
+  libqtxdg-devel libXcursor-devel alsa-lib-devel lm_sensors-devel pam-devel \
+  libxkbcommon-devel wayland-devel wayland-protocols-devel
+```
+
+Other distros aren't tested; Debian 13 (Trixie) built Forest through 0.10.0.
 
 ```sh
 cmake -B build
@@ -82,9 +102,9 @@ For a clean-chroot build, run `mock -r fedora-45-x86_64` on the resulting `.src.
 Keep the spec's `Version` in step with `CMakeLists.txt`, and regenerate its `%changelog`
 from `docs/changelog.md` with `docs/convert-changelog-rpm.sh` at each release.
 
-### Debian
+### Debian (no longer fully supported)
 
-Debian packages can be built from `debian/` with:
+`debian/` is kept for now but is untested, and no `.deb`s are published for new releases. Debian packages can be built from `debian/` with:
 
 ```sh
 sudo apt build-dep .            # once: installs debian/control's Build-Depends

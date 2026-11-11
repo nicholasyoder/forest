@@ -2,7 +2,7 @@
 Changelog
 ============
 
-* Release 0.10.1 - 2026-11-10
+* Release 0.10.1 - 2026-11-11
   - Port to Fedora and Qt 6.11; no functional changes
   - Plugins install to the distro libdir (/usr/lib64/forest on Fedora); stored panel applet paths are migrated
 
