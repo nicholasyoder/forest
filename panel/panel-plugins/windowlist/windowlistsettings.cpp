@@ -22,6 +22,12 @@ QList<settings_page*> WindowListSettings::pages()
     binder->bind(previews, windowlistconfig::showthumbnails, windowlistconfig::showthumbnails_default);
     page->add_child(new settings_widget("Window previews", "Show a thumbnail when hovering a button", previews));
 
+    QSpinBox *preview_size = new QSpinBox;
+    preview_size->setRange(100, 800);
+    preview_size->setSuffix(" px");
+    binder->bind(preview_size, windowlistconfig::previewsize, windowlistconfig::previewsize_default);
+    page->add_child(new settings_widget("Preview size", "Maximum width of the window preview", preview_size));
+
     QSpinBox *max_width = new QSpinBox;
     max_width->setRange(40, 1000);
     max_width->setSuffix(" px");

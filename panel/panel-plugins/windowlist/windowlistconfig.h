@@ -9,6 +9,8 @@ namespace windowlistconfig {
 constexpr char path[] = "desktop/panel/windowlist"; // must match windowlist.json's "settings"
 constexpr char showthumbnails[] = "showthumbnails";
 constexpr bool showthumbnails_default = true;
+constexpr char previewsize[] = "previewsize"; // max preview width, px
+constexpr int previewsize_default = 250;
 constexpr char maxbuttonsize[] = "maxbuttonsize";
 constexpr int maxbuttonsize_default = 170;
 

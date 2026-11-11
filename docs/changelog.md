@@ -2,6 +2,9 @@
 Changelog
 ============
 
+* Unreleased
+  - Show live window previews in the windowlist hover popup, including for minimized and other-workspace windows (needs Biome with per-window capture; otherwise the app icon is shown), with a preview size setting
+
 * Release 0.10.1 - 2026-11-11
   - Port to Fedora and Qt 6.11; no functional changes
   - Plugins install to the distro libdir (/usr/lib64/forest on Fedora); stored panel applet paths are migrated

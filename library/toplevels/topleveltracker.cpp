@@ -2,6 +2,8 @@
 
 #include "topleveltracker.h"
 
+#include "toplevelcapture.h"
+
 ToplevelTracker::ToplevelTracker(QObject *parent) : QObject(parent) {
     m_biomeWorkspaces = new BiomeWorkspaces(this);
     connect(m_biomeWorkspaces, &BiomeWorkspaces::windowWorkspacesChanged, this, &ToplevelTracker::workspaceMembershipChanged);
@@ -9,15 +11,16 @@ ToplevelTracker::ToplevelTracker(QObject *parent) : QObject(parent) {
     m_workspaceManager = new ExtWorkspaceManager(this);
     connect(m_workspaceManager, &ExtWorkspaceManager::workspacesChanged, this, &ToplevelTracker::workspaceMembershipChanged);
 
+    ToplevelCapture::preload();
+
     m_toplevelManager = new ForeignToplevelManager(this);
     connect(m_toplevelManager, &ForeignToplevelManager::toplevelCreated, this, &ToplevelTracker::onToplevelCreated);
 
-    // Identifiers only matter to org.biome.Workspaces. Bound together with
-    // m_toplevelManager so both replays line up for pairing.
-    if (m_biomeWorkspaces->isAvailable()) {
-        m_extToplevelList = new ExtForeignToplevelList(this);
-        connect(m_extToplevelList, &ExtForeignToplevelList::toplevelCreated, this, &ToplevelTracker::onExtToplevelCreated);
-    }
+    // Identifiers (org.biome.Workspaces) and capture sources both need the ext
+    // handle. Bound together with m_toplevelManager so both replays line up
+    // for pairing.
+    m_extToplevelList = new ExtForeignToplevelList(this);
+    connect(m_extToplevelList, &ExtForeignToplevelList::toplevelCreated, this, &ToplevelTracker::onExtToplevelCreated);
 }
 
 ToplevelTracker::~ToplevelTracker() {
@@ -76,10 +79,13 @@ void ToplevelTracker::tryPairPendingHandles() {
         QPointer<ForeignToplevelHandle> zwlrHandle = m_pendingZwlrHandles.takeFirst();
         QPointer<ExtForeignToplevelHandle> extHandle = m_pendingExtHandles.takeFirst();
         // QPointer: fail safe if a stale entry is ever re-queued.
-        if (zwlrHandle && extHandle)
+        // The ext handle stays alive (until its `closed`) for capture.
+        if (zwlrHandle && extHandle) {
             zwlrHandle->setIdentifier(extHandle->identifier());
-        if (extHandle)
+            zwlrHandle->setExtHandle(extHandle);
+        } else if (extHandle) {
             extHandle->deleteLater();
+        }
         paired = true;
     }
     if (paired)
