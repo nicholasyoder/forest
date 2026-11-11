@@ -37,7 +37,7 @@ void forest::setup(){
 }
 
 void forest::loadstylesheet(){
-    qApp->setStyleSheet(fstyleloader::loadstyle("forest"));
+    fstyleloader::apply("forest");
 }
 
 void forest::loadplugins(){
