@@ -30,8 +30,6 @@ public:
 private slots:
     void showpopup();
 
-    void state_change();
-
 private:
     panelbutton *p_button = nullptr;
     QMenu *p_menu = nullptr;

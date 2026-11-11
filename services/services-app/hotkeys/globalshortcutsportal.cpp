@@ -92,7 +92,9 @@ static void registerHostAppId() {
     auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(call));
     QObject::connect(watcher, &QDBusPendingCallWatcher::finished, [](QDBusPendingCallWatcher *w) {
         QDBusPendingReply<> reply = *w;
-        if (reply.isError()) qWarning() << "GlobalShortcutsPortal: app id registration failed:" << reply.error().message();
+        // Qt registers the same ID too; whichever loses gets "already associated".
+        if (reply.isError() && !reply.error().message().contains(QLatin1String("already associated")))
+            qWarning() << "GlobalShortcutsPortal: app id registration failed:" << reply.error().message();
         w->deleteLater();
     });
 }

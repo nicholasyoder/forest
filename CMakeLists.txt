@@ -16,6 +16,9 @@ set(CMAKE_AUTOMOC ON)
 set(CMAKE_AUTOUIC ON)
 set(CMAKE_AUTORCC ON)
 
+# Plugins are dlopen'd; an undefined symbol only fails at load (silently skipped) on distros that link with -z now.
+string(APPEND CMAKE_MODULE_LINKER_FLAGS " -Wl,--no-undefined")
+
 # Custom cmake modules
 list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(ForestDeps)
@@ -28,7 +31,7 @@ find_package(PkgConfig REQUIRED)
 pkg_check_modules(XCURSOR REQUIRED IMPORTED_TARGET xcursor)
 pkg_check_modules(ALSA REQUIRED IMPORTED_TARGET alsa)
 #pkg_check_modules(SENSORS REQUIRED IMPORTED_TARGET libsensors)
-pkg_check_modules(POLKIT_QT6 REQUIRED IMPORTED_TARGET polkit-qt6-agent-1)
+pkg_check_modules(POLKIT_QT6 REQUIRED IMPORTED_TARGET polkit-qt6-agent-1 polkit-qt6-core-1)
 pkg_check_modules(QT6XDG REQUIRED IMPORTED_TARGET Qt6Xdg)
 pkg_check_modules(XKBCOMMON REQUIRED IMPORTED_TARGET xkbcommon)
 
