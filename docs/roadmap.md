@@ -95,12 +95,10 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
   a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
 - **Task view.** Overview of open windows (and workspaces) with live
-  thumbnails. Needs per-toplevel capture (`ext-image-copy-capture-v1` with a
-  foreign-toplevel capture source), which needs Biome's wlroots bump past
-  0.18 (Biome roadmap, Later). Windowlist hover previews would come back with it.
+  thumbnails. Per-toplevel capture is available (`ToplevelCapture` in
+  `library/toplevels`, used by the windowlist previews).
 - **Native screenshot client.** Replaces the grim + slurp script under the
-  same `forest-screenshot` name, held until Biome's wlroots bump so it ships
-  with window capture rather than as a partial version. Screencopy for
+  same `forest-screenshot` name. Screencopy for
   full/region (region picker on a frozen capture via `layeroverlay`); window
   capture via `ext-image-copy-capture-v1` +
   `ext-foreign-toplevel-image-capture-source-v1`, finding the active window

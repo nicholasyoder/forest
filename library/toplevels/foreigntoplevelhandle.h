@@ -4,8 +4,10 @@
 #define FOREIGNTOPLEVELHANDLE_H
 
 #include <QObject>
+#include <QPointer>
 #include <QString>
 
+#include "extforeigntoplevelhandle.h"
 #include "qwayland-wlr-foreign-toplevel-management-unstable-v1.h"
 
 // Caches title/app_id/state and emits changed() on each `done`.
@@ -26,6 +28,10 @@ public:
     // until paired or when org.biome isn't available.
     QString identifier() const{return m_identifier;}
     void setIdentifier(const QString &identifier){m_identifier = identifier;}
+
+    // Paired ext handle, the capture-source key; null until paired or once closed.
+    ExtForeignToplevelHandle *extHandle() const{return m_extHandle;}
+    void setExtHandle(ExtForeignToplevelHandle *handle){m_extHandle = handle;}
 
     void activate();
     void setMaximized();
@@ -49,6 +55,7 @@ private:
     QString m_title;
     QString m_appId;
     QString m_identifier;
+    QPointer<ExtForeignToplevelHandle> m_extHandle;
     bool m_maximized = false;
     bool m_minimized = false;
     bool m_activated = false;

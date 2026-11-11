@@ -7,6 +7,7 @@ add_library(toplevels STATIC
     extworkspacemanager.cpp
     extworkspacehandle.cpp
     biomeworkspaces.cpp
+    toplevelcapture.cpp
     topleveltracker.h
     foreigntoplevelmanager.h
     foreigntoplevelhandle.h
@@ -15,17 +16,22 @@ add_library(toplevels STATIC
     extworkspacemanager.h
     extworkspacehandle.h
     biomeworkspaces.h
+    toplevelcapture.h
 )
 
 set_target_properties(toplevels PROPERTIES POSITION_INDEPENDENT_CODE ON)
 target_include_directories(toplevels PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 target_link_libraries(toplevels PUBLIC Qt6::Core Qt6::Gui Qt6::DBus Qt6::WaylandClient)
+# WaylandClientPrivate for the display's wl_shm.
+target_link_libraries(toplevels PRIVATE Qt6::WaylandClientPrivate)
 
 pkg_get_variable(WAYLAND_PROTOCOLS_DATADIR wayland-protocols pkgdatadir)
 qt6_generate_wayland_protocol_client_sources(toplevels FILES
     ${CMAKE_SOURCE_DIR}/protocol/wlr-foreign-toplevel-management-unstable-v1.xml
     "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-foreign-toplevel-list/ext-foreign-toplevel-list-v1.xml"
-    "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-workspace/ext-workspace-v1.xml")
+    "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-workspace/ext-workspace-v1.xml"
+    "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-image-capture-source/ext-image-capture-source-v1.xml"
+    "${WAYLAND_PROTOCOLS_DATADIR}/staging/ext-image-copy-capture/ext-image-copy-capture-v1.xml")
 # PUBLIC so users including the handle headers find the generated qwayland-*.h.
 target_include_directories(toplevels PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 

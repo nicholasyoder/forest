@@ -3,8 +3,16 @@
 #include "imagepopup.h"
 #include <QGraphicsDropShadowEffect>
 
+namespace { constexpr int labelMargin = 10; }
+
 imagepopup::imagepopup(QWidget *parentw){
     parentwidget = parentw;
+}
+
+// A fresh popup per shown preview: reusing one carried the previous window's
+// size and position over, so it resized or re-centered after it was visible.
+void imagepopup::buildPopup(const QPixmap &pix){
+    destroyPopup();
 
     popupglayout = new QGridLayout;
     popupglayout->setContentsMargins(QMargins(0,0,0,0));
@@ -19,14 +27,28 @@ imagepopup::imagepopup(QWidget *parentw){
     ds_effect->setOffset(0,0);
     ds_effect->setColor(Qt::black);
     scrshotlabel = new QLabel;
-    scrshotlabel->setStyleSheet("margin: 10px;");
+    scrshotlabel->setAlignment(Qt::AlignCenter);
     scrshotlabel->setGraphicsEffect(ds_effect);
+    // Margin leaves room for the drop shadow; setting it in the QSS instead
+    // would shrink the content rect and crop the pixmap.
+    scrshotlabel->setContentsMargins(labelMargin, labelMargin, labelMargin, labelMargin);
+    scrshotlabel->setFixedSize(pix.deviceIndependentSize().toSize() + QSize(2 * labelMargin, 2 * labelMargin));
+    scrshotlabel->setPixmap(pix);
     popupglayout->addWidget(scrshotlabel, 1,0, 1, 2);
+
     pbox = new popup(popupglayout, parentwidget, CenteredOnWidget, false);
     connect(cbt, &closebutton::clicked, pbox, &popup::closepopup);
     connect(cbt, &closebutton::clicked, this, &imagepopup::closewindow);
-
     connect(pbox, &popup::mousereleased, this, &imagepopup::raisewindow);
+}
+
+void imagepopup::destroyPopup(){
+    if (!pbox) return;
+    pbox->closepopup();
+    pbox->deleteLater();
+    pbox = nullptr;
+    scrshotlabel = nullptr;
+    popupglayout = nullptr;
 }
 
 void imagepopup::btmouseEnter(windowbutton *bt){
@@ -44,14 +66,7 @@ void imagepopup::btmouseEnter(windowbutton *bt){
         openptimer->start(450);
     }
     else {
-        QPixmap pix = get_window_image();
-
-        pbox->close();
-
-        scrshotlabel->resize(pix.size());
-        scrshotlabel->setPixmap(pix);
-        pbox->changelauncher(currentbt);
-        pbox->showpopup();
+        beginPreview();
     }
 }
 
@@ -62,19 +77,12 @@ void imagepopup::btmouseLeave(){
 
 void imagepopup::btclicked(){
     if (!currentbt) return;
-    if (pbox->isVisible()) closepopup();
+    if (pbox && pbox->isVisible()) closepopup();
     else deleteopenptimer();
 }
 
 void imagepopup::showpopup(){
     if (!currentbt) return;
-
-    QPixmap pix = get_window_image();
-
-    scrshotlabel->resize(pix.size());
-    scrshotlabel->setPixmap(pix);
-    pbox->changelauncher(currentbt);
-    pbox->showpopup();
 
     open = true;
 
@@ -85,6 +93,80 @@ void imagepopup::showpopup(){
     closeptimer = new QTimer;
     connect(closeptimer, &QTimer::timeout, this, &imagepopup::tryclosepopup);
     closeptimer->start(450);
+
+    beginPreview();
+}
+
+void imagepopup::beginPreview(){
+    endCapture();
+    previewShown = false;
+
+    ExtForeignToplevelHandle *ext = currentbt->toplevelHandle()->extHandle();
+    if (!ext || !ToplevelCapture::isSupported()){
+        presentPixmap(get_window_image());
+        return;
+    }
+
+    capture = new ToplevelCapture(ext, this);
+    connect(capture, &ToplevelCapture::frameReady, this, &imagepopup::onFrame);
+    connect(capture, &ToplevelCapture::failed, this, &imagepopup::onCaptureFailed);
+
+    // ~15 fps is plenty for a thumbnail and keeps the target app's cost low.
+    frameTimer = new QTimer(capture);
+    frameTimer->setSingleShot(true);
+    connect(frameTimer, &QTimer::timeout, capture, &ToplevelCapture::requestFrame);
+
+    // Don't leave the popup hanging if the first frame is slow.
+    firstFrameTimer = new QTimer(capture);
+    firstFrameTimer->setSingleShot(true);
+    connect(firstFrameTimer, &QTimer::timeout, this, [this]{
+        if (!previewShown) presentPixmap(get_window_image());
+    });
+    firstFrameTimer->start(250);
+
+    capture->start();
+    capture->requestFrame();
+}
+
+void imagepopup::endCapture(){
+    if (!capture) return;
+    capture->disconnect(this);
+    delete capture; // also deletes its timers
+    capture = nullptr;
+    firstFrameTimer = nullptr;
+    frameTimer = nullptr;
+}
+
+void imagepopup::presentPixmap(const QPixmap &pix){
+    if (!currentbt) return;
+    // Rebuild when switching windows or when the image's proportions change.
+    if (!previewShown || !scrshotlabel || scrshotlabel->pixmap().deviceIndependentSize() != pix.deviceIndependentSize()){
+        buildPopup(pix);
+        previewShown = true;
+        pbox->changelauncher(currentbt);
+        pbox->showpopup();
+    } else {
+        scrshotlabel->setPixmap(pix);
+    }
+}
+
+void imagepopup::onFrame(const QImage &image){
+    if (!currentbt || image.isNull()) return;
+
+    const QSize maxSize(preview_width, preview_width * 5 / 8);
+    const qreal dpr = parentwidget->devicePixelRatioF();
+    QImage scaled = image;
+    if (image.width() > maxSize.width() * dpr || image.height() > maxSize.height() * dpr)
+        scaled = image.scaled((QSizeF(maxSize) * dpr).toSize(), Qt::KeepAspectRatio, Qt::SmoothTransformation);
+    QPixmap pix = QPixmap::fromImage(scaled);
+    pix.setDevicePixelRatio(dpr);
+    presentPixmap(pix);
+
+    if (frameTimer) frameTimer->start(66);
+}
+
+void imagepopup::onCaptureFailed(){
+    if (!previewShown) presentPixmap(get_window_image());
 }
 
 void imagepopup::tryclosepopup(){
@@ -98,7 +180,7 @@ void imagepopup::tryclosepopup(){
     }
 
     // Not QCursor::pos(): on Wayland it goes stale once the pointer leaves our surfaces.
-    if (!(currentbt->underMouse() || pbox->underMouse()))
+    if (!(currentbt->underMouse() || (pbox && pbox->underMouse())))
         closepopup();
 }
 
@@ -112,10 +194,11 @@ void imagepopup::closepopup(){
         closeptimer = nullptr;
     }
 
+    endCapture();
+    previewShown = false;
     currentbt = nullptr;
 
-    scrshotlabel->setPixmap(QPixmap());
-    pbox->closepopup();
+    destroyPopup();
 }
 
 void imagepopup::deleteopenptimer(){
@@ -127,8 +210,5 @@ void imagepopup::deleteopenptimer(){
 }
 
 QPixmap imagepopup::get_window_image(){
-    // Icon-only for now - see the comment on this method's declaration in
-    // imagepopup.h for why (no protocol equivalent to the old X11 pixel
-    // capture exists).
     return currentbt->icon().pixmap(120, 120);
 }

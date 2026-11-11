@@ -8,7 +8,7 @@
 
 #include "qwayland-ext-foreign-toplevel-list-v1.h"
 
-// Only tracks `identifier`; title/app_id come from ForeignToplevelHandle.
+// Tracks `identifier` and is the capture-source key; title/app_id come from ForeignToplevelHandle.
 class ExtForeignToplevelHandle : public QObject, public QtWayland::ext_foreign_toplevel_handle_v1 {
     Q_OBJECT
 
@@ -30,8 +30,8 @@ protected:
 
 private:
     QString m_identifier;
-    // `done` repeats on every title/app_id change; ToplevelTracker deletes the
-    // handle after the first ready(), so it must only fire once.
+    // `done` repeats on every title/app_id change; ToplevelTracker pairs the
+    // handle on ready(), so it must only fire once.
     bool m_readySent = false;
 };
 

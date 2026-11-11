@@ -50,6 +50,7 @@ void windowlist::loadsettings(){
     QSettings settings("Forest", "Window List");
     settings.sync();
     ipopup->set_enabled(settings.value(windowlistconfig::showthumbnails, windowlistconfig::showthumbnails_default).toBool());
+    ipopup->set_preview_width(settings.value(windowlistconfig::previewsize, windowlistconfig::previewsize_default).toInt());
     maxbtsize = settings.value(windowlistconfig::maxbuttonsize, windowlistconfig::maxbuttonsize_default).toInt();
 }
 
