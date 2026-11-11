@@ -47,8 +47,6 @@ private slots:
     void onWindowChanged(ForeignToplevelHandle *handle);
 
     void onButtonMoved(windowbutton *wbt, bool left);
-    void onButtonEnter(windowbutton *wbt);
-    void onButtonLeave(windowbutton *);
 
     void refreshVisibility();
 

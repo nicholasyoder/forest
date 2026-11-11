@@ -148,7 +148,7 @@ void panel::addplugin(QString path){
             }
         }
     }
-    else { qDebug() << plugloader->errorString(); }
+    else { qWarning() << "Panel plugin failed to load:" << path << plugloader->errorString(); }
 }
 
 void panel::reloadappletsettings(const QString &settings_path){
