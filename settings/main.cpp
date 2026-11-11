@@ -29,7 +29,8 @@ int main(int argc, char *argv[])
         qWarning() << "Forwarding to running instance failed:" << reply.errorMessage();
     }
 
-    a.setStyleSheet(fstyleloader::loadstyle("settings"));
+    // settings.css is light-only for now (roadmap: unify with desktop theme), so force dark-on-light text.
+    fstyleloader::apply("settings", "light");
 
     SettingsManager w;
     w.set_initial_path(path);

@@ -4,9 +4,11 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Build Commands
 
-Qt Creator is configured to build this project into `build/Desktop-Debug`
-(not a bare `build/`) — always build there, and never `rm -rf` it, since
-Qt Creator owns it as a live, incrementally-updated build directory.
+Build into `build/Desktop-Debug` (not a bare `build/`) — always build there,
+and never `rm -rf` it (the user may use Qt Creator on it again). Building there
+and running the staging script below is pre-approved: do both whenever a change
+should be tested live, then ask the user to restart the session (never restart
+it yourself).
 
 ```sh
 cmake -B build/Desktop-Debug

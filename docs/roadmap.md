@@ -12,16 +12,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.10.1 — Fedora port
 
-- **Theme-driven app palette (icon colours).** Qt 6.11 resolves SVG
-  `currentColor` (Papirus panel/status icons) from the app-wide `QPalette`
-  text colour, ignoring the icon's own CSS, so icons are black on dark panels
-  (QSS doesn't touch the app palette; qt6ct `custom_palette` didn't help).
-  Add a `theme.conf` key and set the palette's text colours when a theme is
-  applied, in every process that loads the stylesheet (`fstyleloader`):
-  light for dark themes, dark for light ones. Papirus also ships a dark
-  `actions/audio-volume-*` next to the light `panel/` one; Qt picks `actions/`
-  first, so volume may still need an explicit icon name.
-
 ## 0.11.0 — desktop, hardware & system
 
 - **Desktop icons settings page.** No page for desktop icons yet (Desktop →
@@ -99,6 +89,8 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
+  Then drop the forced `"light"` scheme in `settings/main.cpp` (a temporary
+  hack so icons stay dark on the always-light settings window).
 - **Night light setting.** Displays page control for screen colour
   temperature (warm tint at night, like wlsunset): on/off, day/night
   temperatures, schedule (sunrise/sunset or fixed times). Biome serves
