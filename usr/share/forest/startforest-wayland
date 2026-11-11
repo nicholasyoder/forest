@@ -1,7 +1,5 @@
 #!/bin/sh
 
-export XDG_DATA_DIRS="/usr/local/share/:/usr/share/:/usr/share/gdm/:/var/lib/menu-xdg/"
-
 if [ -z "$XDG_CONFIG_HOME" ]; then
 	export XDG_CONFIG_HOME="$HOME/.config"
 fi
@@ -9,6 +7,9 @@ fi
 if [ -z "$XDG_DATA_HOME" ]; then
 	export XDG_DATA_HOME="$HOME/.local/share"
 fi
+
+# Flatpak exports first so Flatpak apps show up in the menu (greetd doesn't run profile.d).
+export XDG_DATA_DIRS="$XDG_DATA_HOME/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/usr/share/gdm/:/var/lib/menu-xdg/"
 
 # Set qt5ct settings
 QT5CT_CONF_DIR="$XDG_CONFIG_HOME/qt5ct"
