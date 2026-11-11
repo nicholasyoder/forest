@@ -15,30 +15,40 @@ class fstyleloader{
 public:
     fstyleloader(){}
 
-    // Sets the app stylesheet and palette from the current theme.
-    // forced_scheme overrides the theme's color_scheme.
-    static void apply(const QString &classname, const QString &forced_scheme = QString()){
+    // Sets the app palette, then stylesheet, from the current theme.
+    // palette_theme reads the palette from that theme instead of the current one.
+    // Palette first: QStyleSheetStyle snapshots widget palettes when it polishes.
+    static void apply(const QString &classname, const QString &palette_theme = QString()){
+        applypalette(palette_theme);
         qApp->setStyleSheet(loadstyle(classname));
-        applypalette(forced_scheme);
     }
 
     // QSS doesn't reach the app palette, which Qt resolves SVG currentColor
-    // (Papirus panel icons) from. Last `color_scheme` in the chain wins.
-    static void applypalette(const QString &forced_scheme = QString()){
-        QString scheme = forced_scheme;
-        if (scheme.isEmpty()) {
-            foreach (QString theme, themechain())
-                scheme = QSettings(themesdir() + theme + "/theme.conf", QSettings::IniFormat)
-                             .value("color_scheme", scheme).toString();
-        }
-        if (scheme != "dark" && scheme != "light")
-            return;
-
-        QColor text = scheme == "dark" ? QColor(223, 223, 223) : QColor(40, 40, 40);
+    // (Papirus panel icons) from; unstyled widgets draw from it too. Colours
+    // come from the themes' [Palette] group, later layers overriding earlier.
+    // (QStyleHints::setColorScheme didn't change the icons here.)
+    static void applypalette(const QString &palette_theme = QString()){
+        QStringList chain = palette_theme.isEmpty() ? themechain() : QStringList{palette_theme};
         QPalette pal = qApp->palette();
-        for (QPalette::ColorRole role : {QPalette::WindowText, QPalette::Text, QPalette::ButtonText})
-            pal.setColor(role, text);
-        qApp->setPalette(pal);
+        bool found = false;
+
+        foreach (QString theme, chain) {
+            QSettings conf(themesdir() + theme + "/theme.conf", QSettings::IniFormat);
+            conf.beginGroup("Palette");
+            for (const auto &entry : paletteroles()) {
+                if (!conf.contains(entry.key))
+                    continue;
+                QColor color(conf.value(entry.key).toString());
+                if (!color.isValid())
+                    continue;
+                for (QPalette::ColorRole role : entry.roles)
+                    pal.setColor(entry.group, role, color);
+                found = true;
+            }
+        }
+
+        if (found)
+            qApp->setPalette(pal);
     }
 
     static QString loadstyle(QString classname){
@@ -65,6 +75,35 @@ public:
     }
 
 private:
+    struct PaletteEntry {
+        const char *key;
+        QPalette::ColorGroup group;
+        QList<QPalette::ColorRole> roles;
+    };
+
+    // theme.conf [Palette] keys -> roles.
+    static const QList<PaletteEntry> &paletteroles(){
+        static const QList<PaletteEntry> entries = {
+            {"window", QPalette::All, {QPalette::Window}},
+            {"base", QPalette::All, {QPalette::Base}},
+            {"alternate_base", QPalette::All, {QPalette::AlternateBase}},
+            {"button", QPalette::All, {QPalette::Button}},
+            {"tooltip_base", QPalette::All, {QPalette::ToolTipBase}},
+            {"text", QPalette::All, {QPalette::WindowText, QPalette::Text, QPalette::ButtonText, QPalette::ToolTipText}},
+            {"disabled_text", QPalette::Disabled, {QPalette::WindowText, QPalette::Text, QPalette::ButtonText, QPalette::ToolTipText}},
+            {"placeholder_text", QPalette::All, {QPalette::PlaceholderText}},
+            {"highlight", QPalette::All, {QPalette::Highlight}},
+            {"highlighted_text", QPalette::All, {QPalette::HighlightedText}},
+            {"link", QPalette::All, {QPalette::Link}},
+            {"light", QPalette::All, {QPalette::Light}},
+            {"midlight", QPalette::All, {QPalette::Midlight}},
+            {"mid", QPalette::All, {QPalette::Mid}},
+            {"dark", QPalette::All, {QPalette::Dark}},
+            {"shadow", QPalette::All, {QPalette::Shadow}},
+        };
+        return entries;
+    }
+
     static QString themesdir(){ return "/usr/share/forest/themes/"; }
 
     // parent_themes in load order, then the current theme.
