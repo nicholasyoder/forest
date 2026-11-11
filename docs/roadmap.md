@@ -89,7 +89,7 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 - **Unify settings app theme with the desktop theme** (#56). Only
   `base/settings.css` exists, so the settings app ignores the selected theme.
   Add per-variant `settings.css` overrides and reload on theme change.
-  Then drop the forced `"light"` scheme in `settings/main.cpp` (a temporary
+  Then drop the forced `"base-light"` palette theme in `settings/main.cpp` (a temporary
   hack so icons stay dark on the always-light settings window).
 - **Night light setting.** Displays page control for screen colour
   temperature (warm tint at night, like wlsunset): on/off, day/night
