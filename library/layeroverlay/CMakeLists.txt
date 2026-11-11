@@ -20,4 +20,3 @@ target_compile_options(layeroverlay PRIVATE -include wayland-client-protocol.h)
 target_link_libraries(layeroverlay PUBLIC Qt6::Gui PRIVATE Qt6::WaylandClient Qt6::WaylandClientPrivate)
 target_include_directories(layeroverlay PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 
-install(TARGETS layeroverlay ARCHIVE DESTINATION lib)

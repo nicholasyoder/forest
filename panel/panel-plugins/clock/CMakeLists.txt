@@ -10,7 +10,7 @@ target_link_libraries(clock PRIVATE Qt6::Core Qt6::Gui Qt6::DBus Qt6::Widgets)
 forest_link_panel_library(clock)
 forest_link_miscutills(clock)
 
-install(TARGETS clock LIBRARY DESTINATION lib/forest/panel)
+install(TARGETS clock LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)
 
 forest_add_applet_settings(clock
     clocksettings.cpp

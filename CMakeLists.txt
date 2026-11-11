@@ -1,5 +1,14 @@
 cmake_minimum_required(VERSION 3.16)
-project(forest VERSION 0.10.0 LANGUAGES CXX C)
+project(forest VERSION 0.10.1 LANGUAGES CXX C)
+
+# Default to /usr: plugin paths are baked in at compile time, so /usr/local would be wrong.
+if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)
+    set(CMAKE_INSTALL_PREFIX /usr CACHE PATH "Install prefix" FORCE)
+endif()
+include(GNUInstallDirs)
+# Absolute plugin dir (/usr/lib64/forest on Fedora); staging installs relocate files, not this.
+set(FOREST_LIB_DIR "${CMAKE_INSTALL_FULL_LIBDIR}/forest")
+add_compile_definitions(FOREST_LIB_DIR="${FOREST_LIB_DIR}")
 
 set(CMAKE_CXX_STANDARD 17)
 set(CMAKE_CXX_STANDARD_REQUIRED ON)
@@ -12,7 +21,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(ForestDeps)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network WaylandClient)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network WaylandClient WaylandClientPrivate)
 
 # Find external dependencies
 find_package(PkgConfig REQUIRED)
@@ -63,10 +72,15 @@ install(DIRECTORY usr/share/applications/ DESTINATION share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION share/forest USE_SOURCE_PERMISSIONS)
 install(DIRECTORY usr/share/wallpapers/forest/ DESTINATION share/wallpapers/forest)
 install(DIRECTORY usr/share/themes/ DESTINATION share/themes)
-install(FILES usr/share/polkit-1/actions/org.forest.login.policy DESTINATION share/polkit-1/actions)
+configure_file(usr/share/polkit-1/actions/org.forest.login.policy.in
+               ${CMAKE_BINARY_DIR}/org.forest.login.policy @ONLY)
+install(FILES ${CMAKE_BINARY_DIR}/org.forest.login.policy DESTINATION share/polkit-1/actions)
 install(DIRECTORY usr/lib/systemd/system/ DESTINATION lib/systemd/system COMPONENT greeter)
+install(DIRECTORY usr/lib/systemd/user/ DESTINATION lib/systemd/user)
+configure_file(etc/forest/Panel.conf.in ${CMAKE_BINARY_DIR}/Panel.conf @ONLY)
 # Last: non-root staging installs abort here, skipping any rule after.
-install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE)
+install(DIRECTORY etc/forest/ DESTINATION /etc/forest PATTERN "greetd.toml" EXCLUDE PATTERN "Panel.conf.in" EXCLUDE)
+install(FILES ${CMAKE_BINARY_DIR}/Panel.conf DESTINATION /etc/forest)
 install(FILES etc/forest/greetd.toml DESTINATION /etc/forest COMPONENT greeter)
 install(FILES etc/pam.d/forest-locker DESTINATION /etc/pam.d)
 install(FILES etc/biome/conf.d/50-forest.conf DESTINATION /etc/biome/conf.d)

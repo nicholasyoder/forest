@@ -15,7 +15,7 @@ cmake --build build/Desktop-Debug
 
 `build/install_to_staging.sh` (gitignored, not part of the CMake build
 itself) installs a `build/Desktop-Debug` build into `/opt/forest-build/usr/`,
-which `/usr/bin/forest`, `/usr/lib/forest`, `/usr/share/forest`, and
+which `/usr/bin/forest`, `/usr/lib64/forest`, `/usr/share/forest`, and
 `/usr/share/wallpapers/forest` all symlink into — so it needs no `sudo`.
 Use it (run from `build/`, after a full build) to stage changes for testing
 rather than copying files into `/opt/forest-build` by hand. It always ends with
@@ -41,7 +41,7 @@ Same model in `forest` and `biome`:
 
 ## Architecture
 
-Forest is a Qt6/C++ desktop environment for Linux (targets Debian Trixie). All UI is styled via QSS (Qt Style Sheets) — there is no QML anywhere in the project.
+Forest is a Qt6/C++ desktop environment for Linux (targets Fedora; Debian Trixie through 0.10.0). All UI is styled via QSS (Qt Style Sheets) — there is no QML anywhere in the project.
 
 ### Process Model
 
@@ -51,11 +51,11 @@ The desktop session runs as several independent processes:
 - **`forest-session`** — session manager. Launches autostart entries and the `forest` main process. Forked by the Biome compositor (its `-s` flag) once Biome's Wayland socket is ready — Biome is the top-level process, exec'd by `startforest-wayland`, the wayland-sessions entry point.
 - **`forest-logout`** — standalone fullscreen dialog for power actions.
 - **`forest-locker`** — idle/lock daemon started by `forest-session`: dim, display power, logind lock/sleep, `org.freedesktop.ScreenSaver`. Runs **`forest-lockscreen`** (`ext-session-lock-v1` + PAM) to lock. Split in two (like swayidle + swaylock) so a crashing lock UI can't leave the session stuck locked or the displays dark; the daemon respawns it. Deliberately no `org.forest.Locker`: locking goes only through logind `Session.Lock`, `org.freedesktop.ScreenSaver` and `loginctl lock-session`, so other lockers work with Forest and vice versa.
-- **`forest-settings`** — standalone settings app. Loads every settings plugin in `/usr/lib/forest/settings/` and shows their pages in a category tree. Single instance: owns `org.forest.Settings`; later launches forward their path and `XDG_ACTIVATION_TOKEN` to `OpenPage` and exit.
+- **`forest-settings`** — standalone settings app. Loads every settings plugin in `<libdir>/forest/settings/` and shows their pages in a category tree. Single instance: owns `org.forest.Settings`; later launches forward their path and `XDG_ACTIVATION_TOKEN` to `OpenPage` and exit.
 
 There is a **two-tier plugin system** used by both `forest` and the panel.
 
-### App Plugins (MODULE libs → `/usr/lib/forest/`)
+### App Plugins (MODULE libs → `<libdir>/forest/`)
 
 Loaded by the `forest` main process at startup via `QPluginLoader`. Each implements `app_plugin_interface` (`library/pluginutills/app_plugin_interface.h`):
 
@@ -69,7 +69,7 @@ Current app plugins: `desktop-app`, `panel-app`, `services-app`.
 
 Which plugins are loaded is controlled by `QSettings("Forest","Forest")` under the `plugins/` group. Plugin `.so` files follow the naming pattern `lib<name>-app.so`.
 
-### Panel Plugins (MODULE libs → `/usr/lib/forest/panel/`)
+### Panel Plugins (MODULE libs → `<libdir>/forest/panel/`)
 
 Loaded by `panel-app` at runtime. Each implements `panelpluginterface` (`panel/panel-library/panelpluginterface.h`):
 
@@ -89,7 +89,7 @@ All menus are `QMenu`, styled by the theme's `QMenu` rules. Qt can't place popup
 
 ### Settings Plugins
 
-MODULE libs → `/usr/lib/forest/settings/`, all loaded (no config entry). Each implements `settings_plugin_interface` (`library/pluginutills/settings_plugin_interface.h`), returning a flat list of `settings_page`s. A page's path (`desktop/panel`) places it: the first segment is a category ID from the table in `settings/settingsmanager.cpp`, the rest its parent page. Paths double as deep links (`forest-settings desktop/panel`). Pages load/save controls with `SettingsBinder` (`settings/widgets`) against keys + defaults from a shared `<component>config.h`; rows follow their control's `setVisible` / `setEnabled`.
+MODULE libs → `<libdir>/forest/settings/`, all loaded (no config entry). Each implements `settings_plugin_interface` (`library/pluginutills/settings_plugin_interface.h`), returning a flat list of `settings_page`s. A page's path (`desktop/panel`) places it: the first segment is a category ID from the table in `settings/settingsmanager.cpp`, the rest its parent page. Paths double as deep links (`forest-settings desktop/panel`). Pages load/save controls with `SettingsBinder` (`settings/widgets`) against keys + defaults from a shared `<component>config.h`; rows follow their control's `setVisible` / `setEnabled`.
 
 ### Theming System
 
@@ -127,10 +127,9 @@ Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(ta
 
 Mirrors the final system layout under `build/`:
 - Executables → `usr/bin/`
-- App/service plugins → `usr/lib/forest/`
-- Panel plugins → `usr/lib/forest/panel/`
-- Settings plugins → `usr/lib/forest/settings/`
-- Static libs → `usr/lib/`
+- App/service plugins → `usr/lib64/forest/`
+- Panel plugins → `usr/lib64/forest/panel/`
+- Settings plugins → `usr/lib64/forest/settings/`
 - Config → `etc/forest/`
 - Data/themes/wallpapers → `usr/share/forest/`
 

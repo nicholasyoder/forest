@@ -6,7 +6,6 @@ usr/bin/forest-locker
 usr/bin/forest-lockscreen
 usr/bin/forest-screenshot
 usr/lib/forest
-usr/lib/*.a
 etc/forest/Forest.conf
 etc/forest/Panel.conf
 etc/forest/Quicklaunch.conf

@@ -23,4 +23,4 @@ forest_link_menuanchor(desktop-app)
 forest_link_fileops(desktop-app)
 forest_link_activation(desktop-app)
 
-install(TARGETS desktop-app LIBRARY DESTINATION lib/forest)
+install(TARGETS desktop-app LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest)

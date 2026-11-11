@@ -44,6 +44,7 @@ void SettingsUpgradeManager::perform_upgrades(){
         {{0,7,9}, [this](){ this->upgrade_0_7_9(); }},
         {{0,9,0}, [this](){ this->upgrade_0_9_0(); }},
         {{0,10,0}, [this](){ this->upgrade_0_10_0(); }},
+        {{0,10,1}, [this](){ this->upgrade_0_10_1(); }},
     };
 
     // Get version of existing settings
@@ -128,8 +129,20 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
     panel_settings.endGroup();
 }
 
+void SettingsUpgradeManager::upgrade_0_10_1(){
+    // Plugin dir moved from /usr/lib/forest to the build's libdir (/usr/lib64/forest on Fedora).
+    QSettings panel_settings("Forest", "Panel");
+    panel_settings.beginGroup("plugins");
+    foreach (QString child, panel_settings.childGroups()){
+        QString path = panel_settings.value(child + "/path").toString();
+        if (path.startsWith("/usr/lib/forest/"))
+            panel_settings.setValue(child + "/path", QString(FOREST_LIB_DIR) + path.mid(15));
+    }
+    panel_settings.endGroup();
+}
+
 void SettingsUpgradeManager::upgrade_0_10_0(){
-    // forest-settings loads every module in /usr/lib/forest/settings now.
+    // forest-settings loads every module in <libdir>/forest/settings now.
     settings->beginGroup("plugins");
     foreach (QString child, settings->childGroups())
         if (settings->value(child + "/settings-only", false).toBool())

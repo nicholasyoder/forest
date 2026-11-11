@@ -79,6 +79,8 @@ if [ -f "$INDEX_THEME" ]; then
 fi
 
 dbus-update-activation-environment --systemd --all
+# Fedora's xdg-desktop-portal.service Requisites graphical-session.target.
+systemctl --user start --no-block forest-session.target
 
 # Biome and everything it forks inherit this stderr; keep the previous session's log.
 # Same dir and .1 rotation as FLogger.

@@ -83,7 +83,22 @@ QDBusMessage portalCall(const QString &method) {
 
 } // namespace
 
+// xdg-desktop-portal >= 1.19 rejects GlobalShortcuts from host apps without an app ID (no flatpak/systemd app scope).
+// D-Bus keeps per-connection ordering, so sending this first is enough.
+static void registerHostAppId() {
+    QDBusMessage call = QDBusMessage::createMethodCall(kBusService, kObjectPath,
+        QStringLiteral("org.freedesktop.host.portal.Registry"), QStringLiteral("Register"));
+    call << QStringLiteral("org.forest.Forest") << QVariantMap();
+    auto *watcher = new QDBusPendingCallWatcher(QDBusConnection::sessionBus().asyncCall(call));
+    QObject::connect(watcher, &QDBusPendingCallWatcher::finished, [](QDBusPendingCallWatcher *w) {
+        QDBusPendingReply<> reply = *w;
+        if (reply.isError()) qWarning() << "GlobalShortcutsPortal: app id registration failed:" << reply.error().message();
+        w->deleteLater();
+    });
+}
+
 GlobalShortcutsPortal::GlobalShortcutsPortal(QObject *parent) : QObject(parent) {
+    registerHostAppId();
     qDBusRegisterMetaType<PortalShortcutSpec>();
     qDBusRegisterMetaType<QList<PortalShortcutSpec>>();
 
@@ -116,7 +131,10 @@ GlobalShortcutsPortal::GlobalShortcutsPortal(QObject *parent) : QObject(parent) 
                 request->finish(false);
             emit sessionLost();
         }
-        if (!newOwner.isEmpty()) emit portalAvailable();
+        if (!newOwner.isEmpty()) {
+            registerHostAppId();
+            emit portalAvailable();
+        }
     });
 }
 

@@ -1,0 +1,5 @@
+[Desktop Entry]
+Type=Application
+Name=Forest
+Exec=/usr/bin/forest
+NoDisplay=true

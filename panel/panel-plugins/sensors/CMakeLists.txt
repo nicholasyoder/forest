@@ -22,7 +22,7 @@ target_link_libraries(sensors PRIVATE ${SENSORS_LIBRARY})
 
 forest_link_miscutills(sensors)
 
-install(TARGETS sensors LIBRARY DESTINATION lib/forest/panel)
+install(TARGETS sensors LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)
 
 forest_add_applet_settings(sensors
     sensorssettings.cpp

@@ -29,4 +29,3 @@ qt6_generate_wayland_protocol_client_sources(toplevels FILES
 # PUBLIC so users including the handle headers find the generated qwayland-*.h.
 target_include_directories(toplevels PUBLIC ${CMAKE_CURRENT_BINARY_DIR})
 
-install(TARGETS toplevels ARCHIVE DESTINATION lib)

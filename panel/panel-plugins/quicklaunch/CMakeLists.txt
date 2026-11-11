@@ -12,4 +12,4 @@ forest_link_panel_library(quicklaunch)
 forest_link_miscutills(quicklaunch)
 forest_link_activation(quicklaunch)
 
-install(TARGETS quicklaunch LIBRARY DESTINATION lib/forest/panel)
+install(TARGETS quicklaunch LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)

@@ -2,6 +2,10 @@
 Changelog
 ============
 
+* Release 0.10.1 - 2026-11-10
+  - Port to Fedora and Qt 6.11; no functional changes
+  - Plugins install to the distro libdir (/usr/lib64/forest on Fedora); stored panel applet paths are migrated
+
 * Release 0.10.0 - 2026-11-09
   - Run the greeter on Biome instead of cage, with a window per monitor; the login card follows the focused monitor
   - Show a Caps Lock warning in the greeter

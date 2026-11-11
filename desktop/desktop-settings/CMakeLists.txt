@@ -11,4 +11,4 @@ target_link_libraries(desktop-settings PRIVATE
 forest_link_pluginutills(desktop-settings)
 forest_link_miscutills(desktop-settings)
 
-install(TARGETS desktop-settings LIBRARY DESTINATION lib/forest/settings)
+install(TARGETS desktop-settings LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/settings)

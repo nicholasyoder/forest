@@ -19,4 +19,4 @@ forest_link_settings_widgets(services-settings)
 forest_link_outputs(services-settings)
 forest_link_hotkeyconfig(services-settings)
 
-install(TARGETS services-settings LIBRARY DESTINATION lib/forest/settings)
+install(TARGETS services-settings LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/settings)

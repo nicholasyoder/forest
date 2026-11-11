@@ -16,4 +16,3 @@ target_link_libraries(panel-library PUBLIC Qt6::Core Qt6::Gui Qt6::Widgets Qt6::
 forest_link_miscutills(panel-library)
 target_link_libraries(panel-library PUBLIC menuanchor activation)
 
-install(TARGETS panel-library ARCHIVE DESTINATION lib)

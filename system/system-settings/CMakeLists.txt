@@ -26,4 +26,4 @@ forest_link_settings_widgets(system-settings)
 forest_link_miscutills(system-settings)
 forest_link_outputs(system-settings)
 
-install(TARGETS system-settings LIBRARY DESTINATION lib/forest/settings)
+install(TARGETS system-settings LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/settings)
