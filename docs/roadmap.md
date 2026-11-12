@@ -118,6 +118,14 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   shipped volume/brightness entries) and have `forest-lockscreen` run only
   flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
   commands unauthenticated. Parse actions with `library/hotkeyconfig`.
+- **Greeter theme.** The `greetd` user has no `Forest.conf`, so
+  `forest-greeter` always uses the default theme. Store the theme choice in
+  `/etc/forest/Login.conf` (like the login wallpaper) and write it through
+  `forest-login-helper` and its polkit action.
+- **Per-user lockscreen wallpaper.** The lockscreen always matches the
+  greeter's system-wide login wallpaper. Decide whether users should be able
+  to override it (it would have to live in the user's config, not
+  `/var/lib/forest/login`).
 - **Laptop lid switch.** Display profiles handle docking, but "lid closed ⇒
   disable the internal panel" needs logind lid events (`LidClosed`) feeding
   the displays service. Wait for a laptop target.
