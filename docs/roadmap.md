@@ -21,14 +21,10 @@ Pairs with Biome 0.3.0.
   Add per-variant `settings.css` overrides and reload on theme change.
   Then drop the forced `"base-light"` palette theme in `settings/main.cpp` (a temporary
   hack so icons stay dark on the always-light settings window).
-- **Native screenshot client.** Replaces the grim + slurp script under the
-  same `forest-screenshot` name (which can't do single-window shots). Screencopy for
-  full/region (region picker on a frozen capture via `layeroverlay`); window
-  capture via `ext-image-copy-capture-v1` +
-  `ext-foreign-toplevel-image-capture-source-v1`, finding the active window
-  with `ToplevelTracker`'s wlr↔ext handle pairing (`library/toplevels`). On
-  Wayland the clipboard empties when its owner exits, so copy via a forked
-  owner as `wl-copy` does.
+- **Native screenshot client.** A capture UI (main-menu item) for whole
+  workspace / monitor / active window / region, plus CLI flags for immediate
+  hotkey captures, replacing the grim + slurp `forest-screenshot` script. See
+  `docs/screenshot-plan.md`.
 - **Notification position setting.** Popups are anchored bottom-right
   (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
 - **Notification stacking.** Every popup anchors to the same corner with no
