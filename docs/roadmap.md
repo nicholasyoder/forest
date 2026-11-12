@@ -1,30 +1,63 @@
 # Forest Roadmap
 
-Forward-looking, Forest-specific work, grouped by target release. Release
-assignments are a plan, not a commitment: move items between releases freely
-as priorities change. Several items are blocked on protocol work that has to
-land in Biome first (see `biome/docs/roadmap.md`, which uses the same
-release-grouped layout; Biome releases usually ship alongside Forest's).
+Forward-looking, Forest-specific work, grouped by target release. Releases are
+meant to be small and frequent: one or two major items plus a few easy ones
+each, ordered by how urgently they're needed. Release assignments are a plan,
+not a commitment: move items between releases freely as priorities change.
+Several items are blocked on protocol work that has to land in Biome first
+(see `biome/docs/roadmap.md`, which uses the same release-grouped layout;
+Biome releases usually ship alongside Forest's, noted per heading below).
 
 Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.11.0 — desktop, hardware & system
+## 0.11.0 — settings theme, screenshots & notifications
 
-- **Desktop icons settings page.** No page for desktop icons yet (Desktop →
-  Icons is a placeholder). Icon size, grid spacing, sort/arrange, which
-  default icons show, etc.
-- **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
-  only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
-  Move the whole selection, keeping relative positions.
-- **Wallpaper slideshow mode** (#21). Cycle through a directory at a
-  configurable interval; also add a solid-colour background mode.
+Pairs with Biome 0.3.0.
+
+- **Unify settings app theme with the desktop theme** (#56). Only
+  `base/settings.css` exists, so the settings app ignores the selected theme.
+  Add per-variant `settings.css` overrides and reload on theme change.
+  Then drop the forced `"base-light"` palette theme in `settings/main.cpp` (a temporary
+  hack so icons stay dark on the always-light settings window).
+- **Native screenshot client.** Replaces the grim + slurp script under the
+  same `forest-screenshot` name (which can't do single-window shots). Screencopy for
+  full/region (region picker on a frozen capture via `layeroverlay`); window
+  capture via `ext-image-copy-capture-v1` +
+  `ext-foreign-toplevel-image-capture-source-v1`, finding the active window
+  with `ToplevelTracker`'s wlr↔ext handle pairing (`library/toplevels`). On
+  Wayland the clipboard empties when its owner exits, so copy via a forked
+  owner as `wl-copy` does.
 - **Notification position setting.** Popups are anchored bottom-right
   (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
 - **Notification stacking.** Every popup anchors to the same corner with no
   offset, so simultaneous notifications overlap. Stack them (layer-shell
   margins), reflowing as they close; do alongside the position setting.
+- **Login notification over the fade-in.** A notification shown right at
+  login, while Forest is still starting, appears on top of the dark fade-in
+  overlay instead of under it. Fix the layer ordering/timing (or hold
+  notifications until the fade finishes); related to the popup stacking above.
+- **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
+  only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
+  Move the whole selection, keeping relative positions.
+- **Main menu drag icon.** Dragging an app out of the main menu (e.g. onto
+  quicklaunch) shows nothing under the pointer: `itemhandler::doDrag` sets no
+  `QDrag` pixmap. Biome already renders client drag icons; use the app icon.
+
+## 0.12.0 — desktop & notification polish
+
+Pairs with Biome 0.4.0.
+
+- **Desktop icons settings page.** No page for desktop icons yet (Desktop →
+  Icons is a placeholder). Icon size, grid spacing, sort/arrange, which
+  default icons show, etc.
+- **Wallpaper slideshow mode** (#21). Cycle through a directory at a
+  configurable interval; also add a solid-colour background mode.
+- **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
+  placeholder). Needs a picker plus a decision on how the choice reaches
+  other toolkits (Qt platform theme, GTK via gsettings/`settings.ini`), not
+  just Forest's own processes.
 - **Notification `ActivationToken`.** Spec 1.2 signal sent before
   `ActionInvoked` so the client can raise its window via xdg-activation.
   Without it, clicking e.g. a browser notification may not focus the browser.
@@ -33,14 +66,19 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   paints plain text, so it needs rich-text rendering first), `urgency`
   (styling; critical shouldn't time out), `image-data` / `image-path`,
   `transient`, `category`/`desktop-entry` (better app icon/name lookup).
-- **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
-  placeholder). Needs a picker plus a decision on how the choice reaches
-  other toolkits (Qt platform theme, GTK via gsettings/`settings.ini`), not
-  just Forest's own processes.
-- **Network manager plugin.** `nmcontrol` is a stub (static icon, empty
-  popup; not on the default panel). Needs connection status, Wi-Fi
-  list/connect, wired/VPN toggles. Pick a backend first (NetworkManagerQt vs.
-  raw `org.freedesktop.NetworkManager` D-Bus).
+- **More hardware info on the About page** (#61). Machine vendor/model,
+  GPU, root-disk capacity, BIOS/firmware, boot mode, Secure Boot state,
+  motherboard. Maybe a separate "more details" page (lshw-gtk-like).
+- **Night light setting.** Displays page control for screen colour
+  temperature (warm tint at night, like wlsunset): on/off, day/night
+  temperatures, schedule (sunrise/sunset or fixed times). Biome serves
+  `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
+  a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
+
+## 0.13.0 — hardware & system
+
+Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
+
 - **Devices / mount manager panel plugin** (#37). Panel icon to
   mount/unmount/eject removable drives, plus remounting chosen drives at
   login. UDisks2 directly or via Solid; decide together with the battery
@@ -51,19 +89,28 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   `bash -c "brightnessctl …"`. Add a services D-Bus method (e.g. logind
   `Session.SetBrightness` on the backlight device, no setuid helper) and make
   it a built-in hotkey action; the lock-screen hotkeys item wants it too.
+- **Hotkeys on the lock screen.** Biome hotkeys are off while locked, so
+  volume/brightness keys do nothing there. Add a per-hotkey
+  `allow_on_lockscreen` flag (visible in hotkey settings, default on for the
+  shipped volume/brightness entries) and have `forest-lockscreen` run only
+  flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
+  commands unauthenticated. Parse actions with `library/hotkeyconfig`.
 - **System monitor popups** (#28). Popups for CPU/memory monitors with
   per-core and RAM/swap graphs, and per-sensor graphs for `sensors`.
-- **More hardware info on the About page** (#61). Machine vendor/model,
-  GPU, root-disk capacity, BIOS/firmware, boot mode, Secure Boot state,
-  motherboard. Maybe a separate "more details" page (lshw-gtk-like).
 - **Clipboard manager.** Clipboard history; needs Biome's data-control
-  support (Biome roadmap 0.2.0).
+  support (Biome 0.5.0).
 
-## 0.12.0 — panel & windows
+## 0.14.0 — panel
 
 - **Panel tooltips.** Themed tooltips on panel items (e.g. app name on
   quicklaunch hover). Needs QSS styling to match the theme and custom
   positioning so they open away from the panel edge, not over it.
+- **Directory menu.** Panel plugin that browses a folder as cascading menus.
+  Unblocked: panel menus are QMenus with real submenus.
+- **Hot corners.** Small layer-shell surfaces in the screen corners (a
+  client can't see the global pointer under Wayland), each with a
+  user-configurable action (show desktop, open menu, run command, task view
+  once it exists).
 - **Multiple panels** (#53). E.g. dock at the bottom + status bar at the
   top. `Panel.conf` and panel settings assume a single panel today.
 - **Vertical panels.** Left/right screen edges. Some plugins carry
@@ -72,39 +119,17 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   launchers that become window buttons when running (KDE icons-only task
   manager / Plank style). The hard part is matching toplevel `app_id`s to
   `.desktop` files reliably; windowlist's `iconresolver` is a starting point.
-- **Hot corners.** Small layer-shell surfaces in the screen corners (a
-  client can't see the global pointer under Wayland), each with a
-  user-configurable action (show desktop, open menu, run command, task view
-  once it exists).
-- **Main menu drag icon.** Dragging an app out of the main menu (e.g. onto
-  quicklaunch) shows nothing under the pointer: `itemhandler::doDrag` sets no
-  `QDrag` pixmap. Biome already renders client drag icons; use the app icon.
-- **Directory menu.** Panel plugin that browses a folder as cascading menus.
-  Unblocked: panel menus are QMenus with real submenus.
 
 ## Later (unscheduled)
 
-- **Unify settings app theme with the desktop theme** (#56). Only
-  `base/settings.css` exists, so the settings app ignores the selected theme.
-  Add per-variant `settings.css` overrides and reload on theme change.
-  Then drop the forced `"base-light"` palette theme in `settings/main.cpp` (a temporary
-  hack so icons stay dark on the always-light settings window).
-- **Night light setting.** Displays page control for screen colour
-  temperature (warm tint at night, like wlsunset): on/off, day/night
-  temperatures, schedule (sunrise/sunset or fixed times). Biome serves
-  `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
-  a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
+- **Network manager plugin.** `nmcontrol` is a stub (static icon, empty
+  popup; not on the default panel). Needs connection status, Wi-Fi
+  list/connect, wired/VPN toggles. Pick a backend first (NetworkManagerQt vs.
+  raw `org.freedesktop.NetworkManager` D-Bus). Low priority: `nm-applet`
+  works fine as is.
 - **Task view.** Overview of open windows (and workspaces) with live
   thumbnails. Per-toplevel capture is available (`ToplevelCapture` in
   `library/toplevels`, used by the windowlist previews).
-- **Native screenshot client.** Replaces the grim + slurp script under the
-  same `forest-screenshot` name. Screencopy for
-  full/region (region picker on a frozen capture via `layeroverlay`); window
-  capture via `ext-image-copy-capture-v1` +
-  `ext-foreign-toplevel-image-capture-source-v1`, finding the active window
-  with `ToplevelTracker`'s wlr↔ext handle pairing (`library/toplevels`). On
-  Wayland the clipboard empties when its owner exits, so copy via a forked
-  owner as `wl-copy` does.
 - **Desktop widgets** (#54). Windows 7-style gadgets (analog clock, resource
   monitor, weather) on a layer-shell surface, with a panel button to
   show/hide them.
@@ -112,12 +137,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
   logout. No standard Wayland protocol for this yet (session-management is
   still experimental), so the fallback is relaunching `.desktop` entries
   matched from foreign-toplevel `app_id`s, without window positions or app state.
-- **Hotkeys on the lock screen.** Biome hotkeys are off while locked, so
-  volume/brightness keys do nothing there. Add a per-hotkey
-  `allow_on_lockscreen` flag (visible in hotkey settings, default on for the
-  shipped volume/brightness entries) and have `forest-lockscreen` run only
-  flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
-  commands unauthenticated. Parse actions with `library/hotkeyconfig`.
 - **Greeter theme.** The `greetd` user has no `Forest.conf`, so
   `forest-greeter` always uses the default theme. Store the theme choice in
   `/etc/forest/Login.conf` (like the login wallpaper) and write it through
