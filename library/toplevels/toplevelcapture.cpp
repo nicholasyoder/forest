@@ -24,6 +24,12 @@ public:
     SourceManager() : QWaylandClientExtensionTemplate<SourceManager>(1) {}
 };
 
+class OutputSourceManager : public QWaylandClientExtensionTemplate<OutputSourceManager>,
+                            public QtWayland::ext_output_image_capture_source_manager_v1 {
+public:
+    OutputSourceManager() : QWaylandClientExtensionTemplate<OutputSourceManager>(1) {}
+};
+
 class CopyManager : public QWaylandClientExtensionTemplate<CopyManager>,
                     public QtWayland::ext_image_copy_capture_manager_v1 {
 public:
@@ -33,6 +39,11 @@ public:
 // Created once the QApplication exists; they bind on the first event-loop pass.
 SourceManager *sourceManager() {
     static SourceManager *m = new SourceManager;
+    return m;
+}
+
+OutputSourceManager *outputSourceManager() {
+    static OutputSourceManager *m = new OutputSourceManager;
     return m;
 }
 
@@ -79,6 +90,7 @@ class CaptureFrame;
 struct ToplevelCaptureData {
     ToplevelCapture *q = nullptr;
     QPointer<ExtForeignToplevelHandle> handle;
+    wl_output *output = nullptr;
     CaptureSession *session = nullptr;
     CaptureFrame *frame = nullptr;
 
@@ -248,8 +260,15 @@ ToplevelCapture::~ToplevelCapture() {
     delete d;
 }
 
+ToplevelCapture::ToplevelCapture(wl_output *output, QObject *parent)
+    : QObject(parent), d(new ToplevelCaptureData) {
+    d->q = this;
+    d->output = output;
+}
+
 void ToplevelCapture::preload() {
     sourceManager();
+    outputSourceManager();
     copyManager();
 }
 
@@ -257,10 +276,17 @@ bool ToplevelCapture::isSupported() {
     return sourceManager()->isActive() && copyManager()->isActive();
 }
 
+bool ToplevelCapture::isOutputSupported() {
+    return outputSourceManager()->isActive() && copyManager()->isActive();
+}
+
 void ToplevelCapture::start() {
-    if (d->started || !d->handle || !isSupported())
+    const bool forOutput = d->output != nullptr;
+    if (d->started || !(forOutput ? isOutputSupported() : (d->handle && isSupported())))
         return;
-    ::ext_image_capture_source_v1 *source = sourceManager()->create_source(d->handle->object());
+    ::ext_image_capture_source_v1 *source = forOutput
+        ? outputSourceManager()->create_source(d->output)
+        : sourceManager()->create_source(d->handle->object());
     if (!source) {
         emit failed();
         return;

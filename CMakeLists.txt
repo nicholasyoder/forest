@@ -67,6 +67,7 @@ add_subdirectory(logout)
 add_subdirectory(system)
 add_subdirectory(greeter)
 add_subdirectory(locker)
+add_subdirectory(screenshot)
 
 # Install config and data files
 install(PROGRAMS usr/bin/forest-screenshot DESTINATION bin)

@@ -8,6 +8,7 @@ add_library(toplevels STATIC
     extworkspacehandle.cpp
     biomeworkspaces.cpp
     toplevelcapture.cpp
+    screengrab.cpp
     topleveltracker.h
     foreigntoplevelmanager.h
     foreigntoplevelhandle.h
@@ -17,6 +18,7 @@ add_library(toplevels STATIC
     extworkspacehandle.h
     biomeworkspaces.h
     toplevelcapture.h
+    screengrab.h
 )
 
 set_target_properties(toplevels PROPERTIES POSITION_INDEPENDENT_CODE ON)
