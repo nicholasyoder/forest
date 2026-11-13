@@ -1,5 +1,5 @@
 cmake_minimum_required(VERSION 3.16)
-project(forest VERSION 0.10.1 LANGUAGES CXX C)
+project(forest VERSION 0.11.0 LANGUAGES CXX C)
 
 # Default to /usr: plugin paths are baked in at compile time, so /usr/local would be wrong.
 if(CMAKE_INSTALL_PREFIX_INITIALIZED_TO_DEFAULT)

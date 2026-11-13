@@ -41,6 +41,10 @@ Same model in `forest` and `biome`:
 - `master` only changes at a release (`develop` merged in and tagged by the user). Never commit to or PR against it.
 - **Commit once a change is settled, not on every edit.** If you've asked the user to verify something or answer a question that could change the edit, leave it uncommitted until they reply. Then fold the follow-up into the same commit.
 
+## Releases
+
+See `docs/release-checklist.md` for everything to update when preparing a Forest + Biome release.
+
 ## Debian Packaging
 
 `debian/` is kept in the repo for a possible return to Debian, but Fedora

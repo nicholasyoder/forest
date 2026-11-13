@@ -1,5 +1,5 @@
 Name:           forest
-Version:        0.10.1
+Version:        0.11.0
 Release:        1%{?dist}
 Summary:        Lightweight Qt-based desktop environment
 
@@ -26,7 +26,7 @@ BuildRequires:  wayland-devel
 BuildRequires:  wayland-protocols-devel >= 1.40
 BuildRequires:  systemd-rpm-macros
 
-Requires:       biome >= 0.2.1
+Requires:       biome >= 0.3.0
 Requires:       qt6-qtwayland
 Requires:       xdg-desktop-portal
 Requires:       dbus-tools
@@ -53,7 +53,7 @@ to encounter partially implemented features.
 Summary:        greetd greeter using the Forest theme system
 Requires:       %{name} = %{version}-%{release}
 Requires:       greetd
-Requires:       biome >= 0.2.1
+Requires:       biome >= 0.3.0
 Recommends:     xorg-x11-xinit
 Recommends:     xorg-x11-server-Xorg
 
@@ -132,6 +132,17 @@ install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
 %{_mandir}/man1/forest-greeter.1*
 
 %changelog
+* Fri Nov 13 2026 Nicholas Yoder <nicholasyoder@proton.me> - 0.11.0-1
+- Move theme loading (parent_themes chain, palette, per-layer CSS) into a header-only forest-theme library, installed with the new forest-theme-devel package so Biome can use it
+- Move menu styling into a per-theme shared.css, also loaded by Biome for its window menu; add arrow spacing for submenu items; call virtual desktops "workspaces" in the windowlist menu
+- Add a notification position setting (any screen corner), and stack simultaneous notifications instead of overlapping them, reflowing as they close
+- Hold notifications that arrive during login until the startup fade-in finishes, so they no longer draw over it
+- Theme the settings app from the selected desktop theme (light or dark), restyling live when the theme changes
+- Draw text box, spin box, checkbox and radio button outlines in a light color on dark themes
+- Replace the grim and slurp screenshot script with a native forest-screenshot: a capture dialog in the main menu (whole workspace, single monitor, active window or region, with a delay), plus --full, --monitor, --window and --region flags for hotkeys. A bare forest-screenshot now opens the dialog instead of capturing the whole screen; bind --full for that
+- Show live window previews in the windowlist hover popup, including for minimized and other-workspace windows (needs Biome with per-window capture; otherwise the app icon is shown), with a preview size setting
+- Drag a multi-icon selection on the desktop as a group, keeping the icons' relative positions
+
 * Wed Nov 11 2026 Nicholas Yoder <nicholasyoder@proton.me> - 0.10.1-1
 - Port to Fedora and Qt 6.11; no functional changes
 - Plugins install to the distro libdir (/usr/lib64/forest on Fedora); stored panel applet paths are migrated

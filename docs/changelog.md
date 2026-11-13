@@ -2,7 +2,7 @@
 Changelog
 ============
 
-* Unreleased
+* Release 0.11.0 - 2026-11-13
   - Move theme loading (parent_themes chain, palette, per-layer CSS) into a header-only forest-theme library, installed with the new forest-theme-devel package so Biome can use it
   - Move menu styling into a per-theme shared.css, also loaded by Biome for its window menu; add arrow spacing for submenu items; call virtual desktops "workspaces" in the windowlist menu
   - Add a notification position setting (any screen corner), and stack simultaneous notifications instead of overlapping them, reflowing as they close

@@ -12,10 +12,6 @@ Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.11.0 — settings theme & notifications
-
-Pairs with Biome 0.3.0.
-
 ## 0.12.0 — desktop & notification polish
 
 Pairs with Biome 0.4.0.
