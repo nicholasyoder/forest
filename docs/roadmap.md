@@ -16,10 +16,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 Pairs with Biome 0.3.0.
 
-- **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
-  only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
-  Move the whole selection, keeping relative positions.
-
 ## 0.12.0 — desktop & notification polish
 
 Pairs with Biome 0.4.0.

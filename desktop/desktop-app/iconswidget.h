@@ -54,6 +54,7 @@ protected:
 private slots:
     void handleiconselected(QString iconID);
     void handleicondragged(desktopicon *icon);
+    void handleicondragmoved(desktopicon *icon);
     void handleiconposchange();
     void handleicontextchanged(QString ID, QString newtext){emit icontextchanged(ID, newtext);}
     void tryhandleiconposchange();
@@ -87,6 +88,7 @@ private:
     dragbox *dbox = new dragbox;
 
     bool inmultiselectmode = false;
+    QHash<desktopicon*, QPoint> dragorigins;
     QString dropdir;
 };
 #endif // ICONSWIDGET_H
