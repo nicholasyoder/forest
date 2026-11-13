@@ -38,10 +38,10 @@ Existing behavior to preserve from the script: save to
 `Screenshot_YYYY-MM-DD_HH-MM-SS[_N].png`, copy as `image/png`, notify on
 success and on failure, Esc/cancel in the region picker exits 0 silently.
 
-**Breaking change:** a bare `forest-screenshot` used to mean "full screen" and
-now opens the UI. `etc/forest/Forest.conf` item-0011 becomes
-`forest-screenshot --full`; `forest/settings_upgrade_manager.cpp` already
-references screenshot, so check it and migrate users' existing configs.
+**Hotkey behavior:** a bare `forest-screenshot` used to mean "full screen" and
+now opens the UI, matching the original gnome-screenshot behavior on X11. Leave
+the existing `Forest.conf` hotkeys and users' configs alone (no `--full`
+migration). Keep `--region` working for its existing binding.
 
 ## Existing pieces
 
@@ -77,9 +77,10 @@ references screenshot, so check it and migrate users' existing configs.
   save checkboxes (last choices remembered), and a Capture button.
 - Before capturing, hide the UI and wait a couple of frames (plus the delay) so
   it never appears in the shot.
-- **Active-window gotcha:** while the UI is up, the active window is the UI
-  itself. Resolve the target after the UI hides and focus returns, or record the
-  last active non-self window at launch. Decide when implementing; test it.
+- **Active window:** resolve it only after the UI hides and the delay elapses,
+  so a delayed capture gets whichever window is active at the end of the delay
+  (while the UI is up, the active window is the UI itself). Test that focus has
+  returned to the previous window by then.
 
 ### Monitor and region pickers
 - Capture all outputs first, then show a frozen, dimmed overlay (Overlay layer,
@@ -94,8 +95,7 @@ references screenshot, so check it and migrate users' existing configs.
 
 1. **Library + CLI core.** Output source and one-shot grabs; capture core
    (compose, save, clipboard fork, notify); `--full`, `--monitor`, `--window`
-   working headless. Port the script's behavior, update the `Forest.conf`
-   hotkey and upgrade migration. Testable without interactive input.
+   working headless. Port the script's behavior. Testable without interactive input.
 2. **Frozen overlay.** Monitor and region pickers, `--region`, `--monitor`
    without a name. Needs manual testing of input and visual quality.
 3. **Launcher UI.** The dialog, delay, remembered options, hide-before-capture
