@@ -63,6 +63,15 @@ Forest theme system. Runs inside the Biome Wayland compositor on VT1.
 xorg-x11-xinit and xorg-x11-server-Xorg are only needed to start xsessions
 entries (see forest-greeter-xsession); Forest's own session is Wayland-only.
 
+%package theme-devel
+Summary:        Build-time theme loader library shared by Forest and Biome
+Requires:       cmake(Qt6Gui)
+
+%description theme-devel
+Header-only library (ForestTheme CMake package) that reads Forest's theme
+format: the parent_themes chain, the [Palette] group and per-layer CSS.
+Biome builds against it to style its decorations from Forest themes.
+
 %prep
 %autosetup
 
@@ -109,6 +118,10 @@ install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
 %{_mandir}/man1/forest-locker.1*
 %{_mandir}/man1/forest-lockscreen.1*
 %{_mandir}/man1/forest-screenshot.1*
+
+%files theme-devel
+%{_includedir}/forest-theme/
+%{_datadir}/cmake/ForestTheme/
 
 %files greeter
 %license LICENSE

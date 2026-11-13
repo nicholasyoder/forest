@@ -33,6 +33,12 @@ function(forest_link_flogger target)
     target_link_libraries(${target} PRIVATE flogger)
 endfunction()
 
+# forest_link_fstyleloader(target)
+# Links the header-only theme loader (fstyleloader + ForestTheme).
+function(forest_link_fstyleloader target)
+    target_link_libraries(${target} PRIVATE fstyleloader)
+endfunction()
+
 # forest_link_layershellqt(target)
 # Links the LayerShellQt (wlr-layer-shell-unstable-v1) interface library
 function(forest_link_layershellqt target)

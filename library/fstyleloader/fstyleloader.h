@@ -5,11 +5,9 @@
 
 #include <QString>
 #include <QSettings>
-#include <QFile>
-#include <QDir>
-#include <QDebug>
 #include <QApplication>
 #include <QPalette>
+#include <forest-theme/foresttheme.h>
 #include "forestoutlinestyle.h"
 
 class fstyleloader{
@@ -27,101 +25,30 @@ public:
         }
         applypalette(palette_theme);
         // shared.css is styling common to Forest and Biome (e.g. QMenu).
-        qApp->setStyleSheet(loadstyle(classname) + loadstyle("shared"));
+        qApp->setStyleSheet(foresttheme::stylesheet(themesdir(), themechain(), {classname, "shared"}));
     }
 
     // QSS doesn't reach the app palette, which Qt resolves SVG currentColor
-    // (Papirus panel icons) from; unstyled widgets draw from it too. Colours
-    // come from the themes' [Palette] group, later layers overriding earlier.
+    // (Papirus panel icons) from; unstyled widgets draw from it too.
     // (QStyleHints::setColorScheme didn't change the icons here.)
     static void applypalette(const QString &palette_theme = QString()){
-        QStringList chain = palette_theme.isEmpty() ? themechain() : QStringList{palette_theme};
-        QPalette pal = qApp->palette();
+        QStringList layers = palette_theme.isEmpty() ? themechain() : QStringList{palette_theme};
         bool found = false;
-
-        foreach (QString theme, chain) {
-            QSettings conf(themesdir() + theme + "/theme.conf", QSettings::IniFormat);
-            conf.beginGroup("Palette");
-            for (const auto &entry : paletteroles()) {
-                if (!conf.contains(entry.key))
-                    continue;
-                QColor color(conf.value(entry.key).toString());
-                if (!color.isValid())
-                    continue;
-                for (QPalette::ColorRole role : entry.roles)
-                    pal.setColor(entry.group, role, color);
-                found = true;
-            }
-        }
-
+        QPalette pal = foresttheme::palette(themesdir(), layers, qApp->palette(), &found);
         if (found)
             qApp->setPalette(pal);
     }
 
     static QString loadstyle(QString classname){
-        QString themes_dir = themesdir();
-        QStringList themes_to_load = themechain();
-
-        QString style = "";
-        foreach (QString theme, themes_to_load) {
-            QFile file(themes_dir + theme + "/" + classname + ".css");
-
-            if(!file.exists())
-                continue;  // Skip missing quietly as this layer may not include css files for all classnames
-
-            if (!file.open(QIODevice::ReadOnly | QIODevice::Text)){
-                qDebug() << file.errorString();
-                continue;  // Skip but log the error
-            }
-
-            style.append("\n" + file.readAll());
-            file.close();
-        }
-
-        return style;
+        return foresttheme::stylesheet(themesdir(), themechain(), {classname});
     }
 
 private:
-    struct PaletteEntry {
-        const char *key;
-        QPalette::ColorGroup group;
-        QList<QPalette::ColorRole> roles;
-    };
+    static QString themesdir(){ return foresttheme::defaultDir(); }
 
-    // theme.conf [Palette] keys -> roles.
-    static const QList<PaletteEntry> &paletteroles(){
-        static const QList<PaletteEntry> entries = {
-            {"window", QPalette::All, {QPalette::Window}},
-            {"base", QPalette::All, {QPalette::Base}},
-            {"alternate_base", QPalette::All, {QPalette::AlternateBase}},
-            {"button", QPalette::All, {QPalette::Button}},
-            {"tooltip_base", QPalette::All, {QPalette::ToolTipBase}},
-            {"text", QPalette::All, {QPalette::WindowText, QPalette::Text, QPalette::ButtonText, QPalette::ToolTipText}},
-            {"disabled_text", QPalette::Disabled, {QPalette::WindowText, QPalette::Text, QPalette::ButtonText, QPalette::ToolTipText}},
-            {"placeholder_text", QPalette::All, {QPalette::PlaceholderText}},
-            {"highlight", QPalette::All, {QPalette::Highlight}},
-            {"highlighted_text", QPalette::All, {QPalette::HighlightedText}},
-            {"link", QPalette::All, {QPalette::Link}},
-            {"light", QPalette::All, {QPalette::Light}},
-            {"midlight", QPalette::All, {QPalette::Midlight}},
-            {"mid", QPalette::All, {QPalette::Mid}},
-            {"dark", QPalette::All, {QPalette::Dark}},
-            {"shadow", QPalette::All, {QPalette::Shadow}},
-        };
-        return entries;
-    }
-
-    static QString themesdir(){ return "/usr/share/forest/themes/"; }
-
-    // parent_themes in load order, then the current theme.
     static QStringList themechain(){
         QSettings settings("Forest", "Forest");
-        QString current_theme = settings.value("theme",  "Round-Dark").toString();
-
-        QSettings theme_settings(themesdir() + current_theme + "/theme.conf", QSettings::IniFormat);
-        QStringList chain = theme_settings.value("parent_themes").toStringList();
-        chain.append(current_theme);
-        return chain;
+        return foresttheme::chain(themesdir(), settings.value("theme", "Round-Dark").toString());
     }
 };
 
