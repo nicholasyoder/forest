@@ -1,23 +1,59 @@
-.TH FOREST-SCREENSHOT 1 "October 2026" "forest" "Forest desktop environment"
+.TH FOREST-SCREENSHOT 1 "November 2026" "forest" "Forest desktop environment"
 .SH NAME
 forest-screenshot \- take a screenshot in the Forest desktop
 .SH SYNOPSIS
 .B forest-screenshot
-.RB [ \-\-region ]
+.RB [ \-\-full " | " \-\-monitor
+.RI [ NAME "] | " \-\-window " | " \-\-region ]
+.RB [ \-\-delay
+.IR N ]
+.RB [ \-\-no\-save ]
+.RB [ \-\-no\-clipboard ]
+.RB [ \-\-output
+.IR FILE ]
 .SH DESCRIPTION
+Without a capture mode,
 .B forest-screenshot
-captures all outputs, or with
-.B \-\-region
-an area selected with
-.BR slurp (1),
-using
-.BR grim (1).
+opens a small dialog with one button per mode. Its delay and save/clipboard
+choices are remembered.
+With a mode it captures immediately, for hotkeys and scripts.
+.PP
 The image is saved to
 .I Screenshots
-under the XDG pictures directory, copied to the clipboard, and announced
-with a desktop notification. It is bound to Meta+S and Ctrl+Meta+S by
-default.
+under the XDG pictures directory as
+.IR Screenshot_YYYY-MM-DD_HH-MM-SS.png ,
+copied to the clipboard as image/png, and announced with a desktop
+notification.
+.SH OPTIONS
+.TP
+.B \-\-full
+Capture all outputs, composited by position.
+.TP
+.BR \-\-monitor " [" \fINAME\fR ]
+Capture the named output, or pick one by clicking it.
+.TP
+.B \-\-window
+Capture the active window.
+.TP
+.B \-\-region
+Drag a rectangle on a frozen, dimmed copy of the screen. Enter or a
+double-click confirms; Esc cancels without error.
+.TP
+.BI \-\-delay " N"
+Wait N seconds before capturing.
+.TP
+.B \-\-no\-save
+Only copy to the clipboard.
+.TP
+.B \-\-no\-clipboard
+Only save the file.
+.TP
+.BI \-\-output " FILE"
+Save to FILE instead of the Screenshots directory.
+.SH BUGS
+On scaled outputs the compositor renders window captures at logical size, so
+.B \-\-window
+images are smaller than the other modes; capture the output and crop for full
+resolution.
 .SH SEE ALSO
-.BR forest (1),
-.BR grim (1),
-.BR slurp (1)
+.BR forest (1)

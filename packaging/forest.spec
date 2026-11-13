@@ -34,10 +34,6 @@ Requires:       gtk-murrine-engine
 Requires:       qt6ct
 Requires:       papirus-icon-theme
 Requires:       brightnessctl
-Requires:       grim
-Requires:       slurp
-Requires:       wl-clipboard
-Requires:       /usr/bin/notify-send
 Requires:       xdg-user-dirs
 Requires:       /usr/bin/gio
 Requires:       /usr/bin/gsettings
@@ -96,6 +92,7 @@ install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
 %config(noreplace) %{_sysconfdir}/pam.d/forest-locker
 %config(noreplace) %{_sysconfdir}/biome/conf.d/50-forest.conf
 %{_datadir}/wayland-sessions/Forest.desktop
+%{_datadir}/applications/forest-screenshot.desktop
 %{_datadir}/applications/forest-settings.desktop
 %{_datadir}/applications/org.forest.Forest.desktop
 %{_datadir}/forest/

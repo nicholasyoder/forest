@@ -17,5 +17,4 @@ forest_link_flogger(forest-screenshot)
 target_include_directories(forest-screenshot PRIVATE ${CMAKE_SOURCE_DIR}/library/fstyleloader)
 forest_link_layershellqt(forest-screenshot)
 
-# Not installed yet: usr/bin/forest-screenshot (the grim script) is still the
-# shipped one until the overlay pickers land (docs/screenshot-plan.md).
+install(TARGETS forest-screenshot DESTINATION bin)
