@@ -113,6 +113,7 @@ signals:
     void sigactivated(QString ID);
     void sigselected(QString ID);
     void sigdragged(desktopicon *icon);
+    void sigdragmoved(desktopicon *icon);
     void textchanged(QString ID, QString newtext);
 
 public slots:
@@ -144,6 +145,7 @@ private:
     QTimer *dragtimer = new QTimer;
 
     bool selected = false;
+    bool wasselectedonpress = false;
     bool ondoubleclick = false;
 
     QStackedWidget *stkwidget = new QStackedWidget;

@@ -55,10 +55,15 @@ void desktopicon::mousePressEvent(QMouseEvent *event){
     posB4drag = this->pos();
     dragpos = event->globalPos() - frameGeometry().topLeft();
 
+    wasselectedonpress = selected;
+    const bool ctrl = QGuiApplication::keyboardModifiers() & Qt::ControlModifier;
+
     if (selected == false || event->button() == Qt::LeftButton){
         selected = true;
         this->update();
-        emit sigselected(iconID);
+        // Pressing a selected icon keeps the selection so it can be dragged as a group.
+        if (!(wasselectedonpress && event->button() == Qt::LeftButton && !ctrl))
+            emit sigselected(iconID);
         raise();
     }
 
@@ -74,6 +79,7 @@ void desktopicon::mouseMoveEvent(QMouseEvent *event){
     if (allowdrag == true){
         this->move(event->globalPos() - dragpos);
         dragged = true;
+        emit sigdragmoved(this);
     }
 }
 
@@ -88,6 +94,9 @@ void desktopicon::mouseReleaseEvent(QMouseEvent *event){
     }
     else{
         allowdrag = false;
+        if (wasselectedonpress && event->button() == Qt::LeftButton
+            && !(QGuiApplication::keyboardModifiers() & Qt::ControlModifier))
+            emit sigselected(iconID);
     }
 
     if (event->button() == Qt::LeftButton){

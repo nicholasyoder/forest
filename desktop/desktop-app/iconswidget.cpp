@@ -25,6 +25,7 @@ void iconswidget::addicon(desktopicon *icon, int column, int row)
 
     connect(icon, &desktopicon::sigselected, this, &iconswidget::handleiconselected);
     connect(icon, &desktopicon::sigdragged, this, &iconswidget::handleicondragged);
+    connect(icon, &desktopicon::sigdragmoved, this, &iconswidget::handleicondragmoved);
     connect(icon, &desktopicon::textchanged, this, &iconswidget::handleicontextchanged);
 
     icon->setParent(this);
@@ -165,22 +166,63 @@ void iconswidget::handleiconselected(QString iconID)
     }
 }
 
+void iconswidget::handleicondragmoved(desktopicon *icon)
+{
+    if (dragorigins.isEmpty())
+    {
+        foreach (desktopicon *i, selectedicons())
+            dragorigins[i] = (i == icon) ? icon->getposB4drag() : i->pos();
+        dragorigins[icon] = icon->getposB4drag();
+    }
+
+    const QPoint delta = icon->pos() - icon->getposB4drag();
+    for (auto it = dragorigins.cbegin(); it != dragorigins.cend(); ++it)
+    {
+        if (it.key() != icon)
+        {
+            it.key()->move(it.value() + delta);
+            it.key()->raise();
+        }
+    }
+}
+
 void iconswidget::handleicondragged(desktopicon *icon)
 {
-    int c = x2column(icon->x() + icon->width()/2);
-    int r = y2row(icon->y() + icon->height()/2);
+    if (!dragorigins.contains(icon))
+        dragorigins[icon] = icon->getposB4drag();
+    const QHash<desktopicon*, QPoint> origins = dragorigins;
+    dragorigins.clear();
 
-    if (!hasiconat(c,r))
+    const int c = x2column(icon->x() + icon->width()/2);
+    const int r = y2row(icon->y() + icon->height()/2);
+    const QPoint delta = QPoint(column2x(c), row2y(r)) - origins.value(icon);
+
+    bool ok = true;
+    for (auto it = origins.cbegin(); ok && it != origins.cend(); ++it)
     {
-        icon->move(column2x(c), row2y(r));
-        iconXYposhash.remove(point2string(icon->getposB4drag()));
-        iconXYposhash.insert(point2string(icon->pos()), icon);
-        tryhandleiconposchange();
+        const QPoint target = it.value() + delta;
+        desktopicon *occupant = iconXYposhash.value(point2string(target));
+        if (occupant && !origins.contains(occupant))
+            ok = false;
+        if (origins.size() > 1 && !rect().contains(QRect(target, it.key()->size())))
+            ok = false;
     }
-    else
+
+    if (!ok)
     {
-        icon->canceldrag();
+        for (auto it = origins.cbegin(); it != origins.cend(); ++it)
+            it.key()->move(it.value());
+        return;
     }
+
+    for (auto it = origins.cbegin(); it != origins.cend(); ++it)
+        iconXYposhash.remove(point2string(it.value()));
+    for (auto it = origins.cbegin(); it != origins.cend(); ++it)
+    {
+        it.key()->move(it.value() + delta);
+        iconXYposhash.insert(point2string(it.key()->pos()), it.key());
+    }
+    tryhandleiconposchange();
 }
 
 void iconswidget::handleiconposchange()

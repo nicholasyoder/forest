@@ -11,6 +11,7 @@ Changelog
   - Draw text box, spin box, checkbox and radio button outlines in a light color on dark themes
   - Replace the grim and slurp screenshot script with a native forest-screenshot: a capture dialog in the main menu (whole workspace, single monitor, active window or region, with a delay), plus --full, --monitor, --window and --region flags for hotkeys. A bare forest-screenshot now opens the dialog instead of capturing the whole screen; bind --full for that
   - Show live window previews in the windowlist hover popup, including for minimized and other-workspace windows (needs Biome with per-window capture; otherwise the app icon is shown), with a preview size setting
+  - Drag a multi-icon selection on the desktop as a group, keeping the icons' relative positions
 
 * Release 0.10.1 - 2026-11-11
   - Port to Fedora and Qt 6.11; no functional changes
