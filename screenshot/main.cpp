@@ -3,6 +3,8 @@
 #include "capturecore.h"
 #include "clipboard.h"
 #include "flogger.h"
+#include "fstyleloader.h"
+#include "picker.h"
 
 #include "extforeigntoplevelhandle.h"
 #include "foreigntoplevelhandle.h"
@@ -11,7 +13,7 @@
 #include "topleveltracker.h"
 
 #include <QElapsedTimer>
-#include <QGuiApplication>
+#include <QApplication>
 #include <QScreen>
 #include <QTextStream>
 #include <QTimer>
@@ -76,8 +78,9 @@ int parse(const QStringList &a, Args *out) {
     return -1;
 }
 
-// Grabs every output in parallel; calls done with the composited image (null on failure).
-void grabScreens(const QList<QScreen *> &screens, QObject *ctx, std::function<void(const QImage &)> done) {
+// Grabs every output in parallel; calls done with the shots (empty on any failure).
+void grabShots(const QList<QScreen *> &screens, QObject *ctx,
+               std::function<void(const QList<capturecore::Shot> &)> done) {
     struct State {
         QList<capturecore::Shot> shots;
         int pending;
@@ -93,16 +96,38 @@ void grabScreens(const QList<QScreen *> &screens, QObject *ctx, std::function<vo
                 st->shots.append({screen, img});
             if (--st->pending > 0)
                 return;
-            QImage result = st->failed ? QImage() : capturecore::compose(st->shots);
+            QList<capturecore::Shot> shots = st->failed ? QList<capturecore::Shot>() : st->shots;
             delete st;
-            done(result);
+            done(shots);
         });
     }
+}
+
+void grabScreens(const QList<QScreen *> &screens, QObject *ctx, std::function<void(const QImage &)> done) {
+    grabShots(screens, ctx, [done](const QList<capturecore::Shot> &shots) {
+        done(shots.isEmpty() ? QImage() : capturecore::compose(shots));
+    });
 }
 
 void finish(const QImage &image, const capturecore::Options &opts) {
     // The clipboard helper is detached, so exiting right away is safe.
     QCoreApplication::exit(capturecore::deliver(image, opts));
+}
+
+// Freeze all outputs, then let the user pick; cancelling exits 0 silently.
+void pick(Picker::Mode mode, const capturecore::Options &opts) {
+    grabShots(QGuiApplication::screens(), qApp, [=](const QList<capturecore::Shot> &shots) {
+        if (shots.isEmpty()) {
+            capturecore::notify(QStringLiteral("Screenshot failed"), QStringLiteral("Could not capture the screen"), true);
+            QTextStream(stderr) << "forest-screenshot: could not capture the screen\n";
+            QCoreApplication::exit(1);
+            return;
+        }
+        auto *picker = new Picker(mode, shots, qApp);
+        QObject::connect(picker, &Picker::picked, qApp, [=](const QImage &img) { finish(img, opts); });
+        QObject::connect(picker, &Picker::cancelled, qApp, [] { QCoreApplication::exit(0); });
+        picker->show();
+    });
 }
 
 void capture(const Args &args, ToplevelTracker *tracker) {
@@ -120,7 +145,8 @@ void capture(const Args &args, ToplevelTracker *tracker) {
     case Mode::Monitor: {
         QScreen *target = nullptr;
         if (args.monitorName.isEmpty()) {
-            target = QGuiApplication::primaryScreen(); // picker comes with the overlay
+            pick(Picker::Mode::Monitor, args.opts);
+            break;
         } else {
             for (QScreen *s : QGuiApplication::screens())
                 if (s->name() == args.monitorName)
@@ -157,9 +183,11 @@ void capture(const Args &args, ToplevelTracker *tracker) {
         timer->start(50);
         break;
     }
+    case Mode::Region:
+        pick(Picker::Mode::Region, args.opts);
+        break;
     default:
-        err << "forest-screenshot: this mode is not implemented yet\n";
-        QCoreApplication::exit(2);
+        break;
     }
 }
 
@@ -170,8 +198,9 @@ int main(int argc, char *argv[]) {
     if (argc == 2 && QByteArrayView(argv[1]) == "--serve-clipboard")
         return clipboard::serve();
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
     FLogger::install("screenshot");
+    fstyleloader::applypalette(); // overlay colors come from the theme palette
 
     Args args;
     if (int rc = parse(app.arguments(), &args); rc >= 0)
