@@ -1,0 +1,7 @@
+[Desktop Entry]
+Exec=/usr/bin/forest-screenshot
+Icon=accessories-screenshot
+Type=Application
+Name=Screenshot
+Comment=Capture the screen, a window or a region
+Categories=Utility;Graphics;

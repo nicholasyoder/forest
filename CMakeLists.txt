@@ -70,7 +70,6 @@ add_subdirectory(locker)
 add_subdirectory(screenshot)
 
 # Install config and data files
-install(PROGRAMS usr/bin/forest-screenshot DESTINATION bin)
 install(DIRECTORY usr/share/wayland-sessions/ DESTINATION share/wayland-sessions)
 install(DIRECTORY usr/share/applications/ DESTINATION share/applications)
 install(DIRECTORY usr/share/forest/ DESTINATION share/forest USE_SOURCE_PERMISSIONS)

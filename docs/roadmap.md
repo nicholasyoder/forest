@@ -12,7 +12,7 @@ Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.11.0 — settings theme, screenshots & notifications
+## 0.11.0 — settings theme & notifications
 
 Pairs with Biome 0.3.0.
 
@@ -21,10 +21,6 @@ Pairs with Biome 0.3.0.
   Add per-variant `settings.css` overrides and reload on theme change.
   Then drop the forced `"base-light"` palette theme in `settings/main.cpp` (a temporary
   hack so icons stay dark on the always-light settings window).
-- **Native screenshot client.** A capture UI (main-menu item) for whole
-  workspace / monitor / active window / region, plus CLI flags for immediate
-  hotkey captures, replacing the grim + slurp `forest-screenshot` script. See
-  `docs/screenshot-plan.md`.
 - **Notification position setting.** Popups are anchored bottom-right
   (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
 - **Notification stacking.** Every popup anchors to the same corner with no
