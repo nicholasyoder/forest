@@ -26,7 +26,8 @@ public:
             style_set = true;
         }
         applypalette(palette_theme);
-        qApp->setStyleSheet(loadstyle(classname));
+        // shared.css is styling common to Forest and Biome (e.g. QMenu).
+        qApp->setStyleSheet(loadstyle(classname) + loadstyle("shared"));
     }
 
     // QSS doesn't reach the app palette, which Qt resolves SVG currentColor

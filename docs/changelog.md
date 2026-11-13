@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Move menu styling into a per-theme shared.css, also loaded by Biome for its window menu; add arrow spacing for submenu items; call virtual desktops "workspaces" in the windowlist menu
   - Add a notification position setting (any screen corner), and stack simultaneous notifications instead of overlapping them, reflowing as they close
   - Hold notifications that arrive during login until the startup fade-in finishes, so they no longer draw over it
   - Theme the settings app from the selected desktop theme (light or dark), restyling live when the theme changes

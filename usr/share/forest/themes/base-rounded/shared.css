@@ -1,0 +1,11 @@
+QMenu {
+    border: 1px solid lightgrey;
+    border-radius: 5px;
+    margin: 5px;
+    padding: 7px;
+}
+
+QMenu::item {
+    border: 1px solid transparent;
+    border-radius: 3px;
+}

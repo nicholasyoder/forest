@@ -21,7 +21,7 @@ windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, ExtWorkspaceMa
 
     pmenu = new QMenu;
     if (biome_workspaces->isAvailable())
-        desk_menu = pmenu->addMenu(QIcon::fromTheme("window-next"), "Move to desktop");
+        desk_menu = pmenu->addMenu(QIcon::fromTheme("window-next"), "Move to workspace");
 
     MenuItem pmenu_items[] = {
         {"Raise", "arrow-up", &windowbutton::raise_w},
@@ -120,7 +120,7 @@ void windowbutton::populateDeskMenu(){
 
     const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
     for (int index = 0; index < workspaces.length(); index++){
-        desk_menu->addAction("Desktop " + QString::number(index + 1), this, [this, index](){ moveToDesktop(index); });
+        desk_menu->addAction("Workspace " + QString::number(index + 1), this, [this, index](){ moveToDesktop(index); });
     }
 }
 
