@@ -1,17 +1,8 @@
 #SettingsWindow { padding: 0;}
 
-/*
-QTabWidget::pane { background: solid #ffffff; border: 1px solid #ffffff;  margin: 0;}
-QTabWidget::tab-bar { alignment: center; }
-QTabBar::tab { background : solid #eeeeee; min-width: 8ex; padding: 2px; border: 0px solid #ffffff; }
-QTabBar::tab:hover { background: solid #f7f7f7; }
-QTabBar::tab:selected { background: solid #ffffff; }
-QTabBar::scroller { width: 15px; }
-*/
-
 #ControlsScrollArea {
     border: none;
-    background: rgba(240,240,240, 100%);
+    background: palette(window);
 }
 
 #ControlsPane {
@@ -19,10 +10,9 @@ QTabBar::scroller { width: 15px; }
 }
 
 #Sidebar {
-    background: rgba(250,250,250, 100%);
-    border: 1px solid rgba(225,225,225, 100%);
-    border-left: none;
-    border-bottom: none;
+    background: palette(window);
+    border: none;
+    border-right: 1px solid palette(mid);
 }
 
 #SearchBox {
@@ -30,8 +20,8 @@ QTabBar::scroller { width: 15px; }
 }
 
 #SearchField {
-    background: #fdfdfd;
-    border: 1px solid rgba(180,180,180, 80%);
+    background: palette(base);
+    border: 1px solid palette(mid);
     border-radius: 3px;
     padding: 4px 6px;
     min-height: 20px;
@@ -57,18 +47,9 @@ QTabBar::scroller { width: 15px; }
     padding: 0px 3px;
     margin-bottom: 2px;
     min-height: 30px;
-    color: rgb(20,20,20);
+    color: palette(text);
 }
 
-#CategoryTree::item:hover {
-    background: rgba(255,255,255, 70%);
-    border: 1px solid rgba(160,160,160, 60%);
-}
-
-#CategoryTree::item:selected {
-    background: transparent;
-    border: 1px solid rgba(155,155,155, 80%);
-}
 
 #CategoryTree::branch, #CategoryTree::branch:selected, #CategoryTree::branch:hover {
     background: transparent;
@@ -83,7 +64,7 @@ QScrollBar:vertical {
     margin: 0;
 }
 QScrollBar::handle:vertical {
-    background: rgb(175,175,175);
+    background: palette(placeholder-text);
     border-radius: 2px;
     margin: 2px 2px 2px 0px;
     min-height: 20px;
@@ -113,8 +94,8 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 
 #ControlWidget {
-    background: #fdfdfd;
-    border: 1px solid rgba(180,180,180, 60%);
+    background: palette(base);
+    border: 1px solid palette(mid);
     border-radius: 4px;
     margin-bottom: 5px;
     padding: 12px;
@@ -122,8 +103,8 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #WidgetGroup {
-    background: rgba(255,255,255, 80%);
-    border: 1px solid rgba(180,180,180, 60%);
+    background: palette(base);
+    border: 1px solid palette(mid);
     border-radius: 3px;
     margin-bottom: 5px;
 }
@@ -138,7 +119,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: rgba(0,0,0,0%);
 
     border: none;
-    border-bottom: 1px solid rgba(180,180,180, 40%);
+    border-bottom: 1px solid palette(mid);
 }
 
 #WidgetGroup #ControlWidget[groupposition="middle"] {
@@ -146,7 +127,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
     background: rgba(0,0,0,0%);
 
     border: none;
-    border-bottom: 1px solid rgba(180,180,180, 40%);
+    border-bottom: 1px solid palette(mid);
 }
 
 #WidgetGroup #ControlWidget[groupposition="last"] {
@@ -167,14 +148,14 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #RowDescription {
-    color: #777;
+    color: palette(placeholder-text);
     font-size: 8pt;
     margin: 0px;
     padding: 0px;
 }
 
 #ControlWidget QLabel:disabled {
-    color: #aaa;
+    color: palette(placeholder-text);
 }
 
 /* Flashed rows; after the groupposition rules so they win at equal specificity. */
@@ -192,37 +173,37 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 
 #ControlWidget QListWidget {
-    background: #fdfdfd;
+    background: palette(base);
     border: none;
     outline: 0;
 }
 
 #ControlWidget QListWidget::item {
-    background: #fdfdfd;
+    background: palette(base);
     padding: 6px;
     border: 1px solid transparent;
     border-radius: 3px;
 }
 
 #ControlWidget QListWidget::item:selected {
-    background: #fdfdfd;
-    border: 1px solid #ccc;
-    color: black;
+    background: palette(base);
+    border: 1px solid palette(mid);
+    color: palette(text);
 }
 
 #ControlWidget QListWidget::indicator {
-    border: 1px solid #888;
+    border: 1px solid palette(placeholder-text);
     border-radius: 8px;
     width: 16px;
     height: 16px;
 }
 
 #ControlWidget QListWidget::indicator:checked {
-    background: #3e3;
+    background: palette(highlight);
 }
 
 #ControlWidget QListWidget::indicator:unchecked {
-    background: #eee;
+    background: palette(button);
 }
 
 #ControlWidget #AppletList::item {
@@ -239,11 +220,11 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #AppletSettingsButton:hover {
-    border-color: #ccc;
+    border-color: palette(mid);
 }
 
 #AppletSettingsButton:pressed {
-    background: #eee;
+    background: palette(button);
 }
 
 /* Plugin specific stuff - this should really be moved to be with the plugin itself somehow. Maybe? */
@@ -262,11 +243,11 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 
 #SystemInfoLabel {
-    color: #777;
+    color: palette(placeholder-text);
 }
 
 #SettingsNoteLabel {
-    color: #777;
+    color: palette(placeholder-text);
     font-style: italic;
 }
 
@@ -275,8 +256,8 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #DisplaysArea {
-    background: rgba(0,0,0, 10%);
-    border: 1px solid rgba(0,0,0, 30%);
+    background: palette(window);
+    border: 1px solid palette(mid);
     border-radius: 3px;
 }
 
@@ -285,7 +266,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #DisplaysSeparator {
-    background: rgba(0,0,0, 15%);
+    background: palette(mid);
     min-height: 1px;
     max-height: 1px;
 }
@@ -296,12 +277,12 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #DisplaysOutput {
-    background: #fdfdfd;
-    border: 1px solid rgba(0,0,0, 20%);
+    background: palette(button);
+    border: 1px solid palette(mid);
     border-radius: 4px;
     margin: 1px;
     padding: 4px;
-    color: black;
+    color: palette(text);
 }
 
 #DisplaysOutput:hover {
@@ -310,19 +291,18 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 
 #DisplaysOutput:checked {
     background: palette(highlight);
-    border-color: rgba(0,0,0, 30%);
     color: palette(highlighted-text);
 }
 
 #DisplaysOutput:disabled {
-    color: #777;
+    color: palette(placeholder-text);
 }
 
 #DisplaysDisabledList #DisplaysOutput {
     min-width: 110px;
     min-height: 25px;
     background: transparent;
-    border: 1px dashed rgba(0,0,0, 50%);
+    border: 1px dashed palette(placeholder-text);
 }
 
 #DisplaysDisabledList #DisplaysOutput:hover {
@@ -356,7 +336,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #DisplaysStatusState[status="inactive"], #DisplaysStatusState[status="waiting"], #DisplaysStatusDetail {
-    color: #777;
+    color: palette(placeholder-text);
 }
 
 #DisplaysErrorLabel {

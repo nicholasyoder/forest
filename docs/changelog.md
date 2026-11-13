@@ -3,6 +3,8 @@ Changelog
 ============
 
 * Unreleased
+  - Theme the settings app from the selected desktop theme (light or dark), restyling live when the theme changes
+  - Draw text box, spin box, checkbox and radio button outlines in a light color on dark themes
   - Replace the grim and slurp screenshot script with a native forest-screenshot: a capture dialog in the main menu (whole workspace, single monitor, active window or region, with a delay), plus --full, --monitor, --window and --region flags for hotkeys. A bare forest-screenshot now opens the dialog instead of capturing the whole screen; bind --full for that
   - Show live window previews in the windowlist hover popup, including for minimized and other-workspace windows (needs Biome with per-window capture; otherwise the app icon is shown), with a preview size setting
 
