@@ -20,6 +20,9 @@ Out (later):
 - Click-to-select-window (a "Select window" button in the UI, then click the
   target window). Deliberately not a window-picker/thumbnail grid. Needs window
   geometry or a hit-test the foreign-toplevel protocols don't give us.
+- Full-resolution window capture on scaled outputs: wlroots renders per-window
+  capture at scale 1, so `--window` shots are logical size there. Accepted;
+  capture the output and crop for full resolution.
 - Post-capture preview/annotate, a delay countdown overlay, pointer capture.
 
 ## CLI
