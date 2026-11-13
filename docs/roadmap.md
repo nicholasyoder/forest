@@ -28,9 +28,6 @@ Pairs with Biome 0.3.0.
 - **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
   only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
   Move the whole selection, keeping relative positions.
-- **Main menu drag icon.** Dragging an app out of the main menu (e.g. onto
-  quicklaunch) shows nothing under the pointer: `itemhandler::doDrag` sets no
-  `QDrag` pixmap. Biome already renders client drag icons; use the app icon.
 
 ## 0.12.0 — desktop & notification polish
 

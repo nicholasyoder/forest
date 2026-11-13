@@ -6,6 +6,7 @@
 #include <QScrollArea>
 #include <QDrag>
 #include <QMimeData>
+#include <QIcon>
 
 itemhandler::itemhandler()
 {
@@ -137,7 +138,8 @@ void itemhandler::showContextMenu(QWidget *anchor, QPoint pos){
 }
 
 void itemhandler::doDrag(){
-    QString dfilePath = appHash[currentItem].fileName();
+    const QUuid id = currentItem;
+    QString dfilePath = appHash[id].fileName();
 
     QDrag *drag = new QDrag(this);
     QMimeData *data = new QMimeData;
@@ -146,7 +148,18 @@ void itemhandler::doDrag(){
     urls << QUrl("file://"+dfilePath);
     data->setUrls(urls);
     drag->setMimeData(data);
-    drag->exec();
+    const int sz = 48;
+    QPixmap pm = appHash[id].icon().pixmap(sz, sz);
+    if(!pm.isNull()){
+        drag->setPixmap(pm);
+        drag->setHotSpot(QPoint(pm.width()/2, pm.height()/2) / pm.devicePixelRatio());
+    }
+    // Default is MoveAction, which made the desktop move the .desktop file
+    drag->exec(Qt::CopyAction);
+    // No release/leave reaches the item after a drag; clear its pressed/hover state
+    if(itemHash.contains(id))
+        itemHash[id]->resetAfterDrag();
+    currentItem = default_item_id;
 }
 
 void itemhandler::trySetAllowSelectByMouse(){

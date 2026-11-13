@@ -29,6 +29,7 @@ public slots:
     void setState(ITEM_STATE state);
     void setSelected(bool selected = true){itemSelected = selected; update();}
     QUuid uuid(){return itemID;}
+    void resetAfterDrag(){allowDrag = false; currentState = NORMAL; update();}
 
 protected:
     void paintEvent(QPaintEvent *);
