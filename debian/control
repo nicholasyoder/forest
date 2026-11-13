@@ -27,3 +27,11 @@ Description: greetd greeter using the Forest theme system
  Wayland compositor on VT1. xinit/xserver-xorg are only needed
  to start xsessions entries (see forest-greeter-xsession); Forest's
  own session is Wayland-only.
+
+Package: forest-theme-dev
+Architecture: all
+Depends: ${misc:Depends}, qt6-base-dev
+Description: Forest theme loader library (headers)
+ Header-only library (ForestTheme CMake package) that reads Forest's
+ theme format: the parent_themes chain, the [Palette] group and per-layer
+ CSS. Biome builds against it to style its decorations from Forest themes.

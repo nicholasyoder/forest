@@ -107,6 +107,8 @@ Themes live in `/usr/share/forest/themes/<ThemeName>/`. Each theme has:
 - `theme.conf` — declares `name`, `description`, `hidden`, and optionally `parent_themes` (comma-separated list)
 - Per-component CSS files: `forest.css`, `logout.css`, etc.
 
+Parsing the theme format (`parent_themes` chain, `[Palette]` → `QPalette`, per-layer CSS concatenation) lives in the header-only `library/forest-theme` (`foresttheme.h`), installed as the `ForestTheme` CMake package (`forest-theme-devel`) so Biome builds against the same code; add new palette keys there. `fstyleloader` wraps it with Forest's specifics (QSettings theme lookup, `ForestOutlineStyle`).
+
 `fstyleloader::loadstyle("componentname")` (in `library/fstyleloader/fstyleloader.h`) walks the `parent_themes` chain and concatenates each layer's CSS. The active theme is read from `QSettings("Forest","Forest")` key `theme`.
 
 Theme inheritance example — "Round-Dark" has `parent_themes=base,base-rounded,base-dark`, so it loads `base/forest.css` → `base-rounded/forest.css` → `base-dark/forest.css` → `Round-Dark/forest.css`. Adding a new component means adding a `<component>.css` to `base/` (and overrides in variant themes as needed).

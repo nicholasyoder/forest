@@ -10,6 +10,7 @@ target_compile_definitions(forest-logout PRIVATE QT_DEPRECATED_WARNINGS)
 
 target_link_libraries(forest-logout PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus)
 forest_link_flogger(forest-logout)
+forest_link_fstyleloader(forest-logout)
 forest_link_layershellqt(forest-logout)
 forest_link_layeroverlay(forest-logout)
 forest_link_miscutills(forest-logout)
