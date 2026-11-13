@@ -76,6 +76,6 @@ QToolButton#biomeSwitcherIcon[selected="true"] {
 QToolButton#biomeSwitcherIcon[urgent="true"] { border-color: rgb(200, 140, 40); }
 QLabel#biomeSwitcherTitleLabel { color: white; }
 QFrame#biomeSwitcherHighlight {
-    background: rgba(90, 150, 220, 15%);
-    border-color: rgb(90, 150, 220);
+    background: rgba(120, 200, 120, 15%);
+    border-color: rgb(120, 200, 120);
 }
