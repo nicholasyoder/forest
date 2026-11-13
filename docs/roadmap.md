@@ -16,15 +16,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 Pairs with Biome 0.3.0.
 
-- **Notification position setting.** Popups are anchored bottom-right
-  (`notifypopup.cpp`); add a corner choice to the Notifications settings page.
-- **Notification stacking.** Every popup anchors to the same corner with no
-  offset, so simultaneous notifications overlap. Stack them (layer-shell
-  margins), reflowing as they close; do alongside the position setting.
-- **Login notification over the fade-in.** A notification shown right at
-  login, while Forest is still starting, appears on top of the dark fade-in
-  overlay instead of under it. Fix the layer ordering/timing (or hold
-  notifications until the fade finishes); related to the popup stacking above.
 - **Desktop icon multi-drag.** Rubber-band multi-select works, but dragging
   only moves the grabbed icon (`desktopicon` / `iconswidget::handleicondragged`).
   Move the whole selection, keeping relative positions.

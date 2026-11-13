@@ -22,6 +22,8 @@
 
 #include <qt6xdg/XdgIcon>
 
+namespace LayerShellQt { class Window; }
+
 
 class ProgressIndicator : public QWidget {
     Q_OBJECT
@@ -233,7 +235,13 @@ class notifypopup : public QWidget
 public:
     notifypopup(QString app_name, QString summary, QString body, QString app_icon, const QStringList &actions, int timeout, uint id);
 
+    // Distance from the anchored screen edge, used to stack popups.
+    void set_stack_offset(int offset);
+    // QSS margin on the side facing the next popup in the stack.
+    int stack_overlap() const;
+
 signals:
+    void heightChanged();
     void readyToClose(uint id, uint reason);
     void actionInvoked(uint id, const QString &action_key);
 
@@ -243,6 +251,8 @@ private slots:
     void update_timeout_bar();
 
 protected:
+    void showEvent(QShowEvent *) override;
+    void resizeEvent(QResizeEvent *) override;
     void enterEvent(QEnterEvent *) override;
     void leaveEvent(QEvent *) override;
     void mouseReleaseEvent(QMouseEvent *event) override;
@@ -258,6 +268,10 @@ private:
     QTimer *timeout_timer = nullptr;
     int resume_timeout = 0;
     int full_timeout = 0;
+    bool started = false;
+    bool anchor_top = false;
+    bool anchor_left = false;
+    LayerShellQt::Window *layer_window = nullptr;
 };
 
 

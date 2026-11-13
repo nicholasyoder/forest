@@ -15,6 +15,8 @@ constexpr char default_timeout[] = "default_timeout";
 constexpr int default_timeout_default = 8;
 constexpr char height[] = "height"; // fraction of the screen
 constexpr double height_default = 0.7;
+constexpr char position[] = "position"; // top-left, top-right, bottom-left, bottom-right
+constexpr char position_default[] = "bottom-right";
 constexpr char width[] = "width";
 constexpr double width_default = 0.5;
 

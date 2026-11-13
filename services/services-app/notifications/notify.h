@@ -34,10 +34,17 @@ signals:
     void NotificationClosed(uint id, uint reason);
     void ActionInvoked(uint id, const QString &action_key);
 
+protected:
+    bool eventFilter(QObject *watched, QEvent *event) override;
+
 private:
     void remove_popup(uint id);
+    void restack();
+    void show_held();
 
     QHash<uint, notifypopup*> popuphash;
+    QList<notifypopup*> stack; // oldest first, nearest the screen corner
+    bool held = false; // forest's startup overlay is up; popups would map over it
     uint next_id = 1;
 };
 #endif // NOTIFY_H

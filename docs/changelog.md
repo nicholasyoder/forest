@@ -3,6 +3,8 @@ Changelog
 ============
 
 * Unreleased
+  - Add a notification position setting (any screen corner), and stack simultaneous notifications instead of overlapping them, reflowing as they close
+  - Hold notifications that arrive during login until the startup fade-in finishes, so they no longer draw over it
   - Theme the settings app from the selected desktop theme (light or dark), restyling live when the theme changes
   - Draw text box, spin box, checkbox and radio button outlines in a light color on dark themes
   - Replace the grim and slurp screenshot script with a native forest-screenshot: a capture dialog in the main menu (whole workspace, single monitor, active window or region, with a delay), plus --full, --monitor, --window and --region flags for hotkeys. A bare forest-screenshot now opens the dialog instead of capturing the whole screen; bind --full for that
