@@ -41,6 +41,14 @@ Same model in `forest` and `biome`:
 - `master` only changes at a release (`develop` merged in and tagged by the user). Never commit to or PR against it.
 - **Commit once a change is settled, not on every edit.** If you've asked the user to verify something or answer a question that could change the edit, leave it uncommitted until they reply. Then fold the follow-up into the same commit.
 
+## Debian Packaging
+
+`debian/` is kept in the repo for a possible return to Debian, but Fedora
+(`packaging/forest.spec`) is the real target. When a change affects packaging
+(new binaries or files, dependencies, man pages), update `debian/` alongside the
+spec, best effort. Don't build or test Debian packages; leave `debian/changelog`
+for release time.
+
 ## Architecture
 
 Forest is a Qt6/C++ desktop environment for Linux (targets Fedora; Debian Trixie through 0.10.0). All UI is styled via QSS (Qt Style Sheets) — there is no QML anywhere in the project.
