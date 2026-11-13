@@ -117,9 +117,14 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
 
     winId(); // force native window creation so windowHandle() is valid
     windowHandle()->setScreen(screen);
-    LayerShellQt::Window *layer_window = LayerShellQt::Window::get(windowHandle());
+    const QString position = settings.value(notificationsconfig::position, notificationsconfig::position_default).toString();
+    anchor_top = position.startsWith("top");
+    anchor_left = position.endsWith("left");
+    layer_window = LayerShellQt::Window::get(windowHandle());
     layer_window->setLayer(LayerShellQt::Window::LayerOverlay);
-    layer_window->setAnchors(LayerShellQt::Window::Anchors(LayerShellQt::Window::AnchorBottom | LayerShellQt::Window::AnchorRight));
+    layer_window->setAnchors(LayerShellQt::Window::Anchors(
+        (anchor_top ? LayerShellQt::Window::AnchorTop : LayerShellQt::Window::AnchorBottom)
+        | (anchor_left ? LayerShellQt::Window::AnchorLeft : LayerShellQt::Window::AnchorRight)));
     layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
     layer_window->setScope("forest-notification");
 
@@ -133,11 +138,49 @@ notifypopup::notifypopup(QString app_name, QString summary, QString body, QStrin
     timeout_timer = new QTimer(this);
     timeout_timer->setSingleShot(true);
     connect(timeout_timer, &QTimer::timeout, this, [this]{ closepopup(1); }); // spec reason: expired
-    timeout_timer->start(full_timeout);
 
     timeout_updater = new QTimer(this);
     connect(timeout_updater, &QTimer::timeout, this, &notifypopup::update_timeout_bar);
+}
+
+void notifypopup::set_stack_offset(int offset){
+    QMargins margins;
+    (anchor_top ? margins.setTop(offset) : margins.setBottom(offset));
+    layer_window->setMargins(margins);
+}
+
+int notifypopup::stack_overlap() const{
+    // Last matching rule wins; handles "margin: a [b [c [d]]]" and margin-top/bottom.
+    const QString side = anchor_top ? "bottom" : "top";
+    int overlap = 0;
+    QRegularExpression rule("#notifyPopup\\b[^{}]*\\{([^}]*)\\}");
+    QRegularExpressionMatchIterator it = rule.globalMatch(qApp->styleSheet());
+    while (it.hasNext()) {
+        for (const QString &decl : it.next().captured(1).split(';')) {
+            const QString key = decl.section(':', 0, 0).trimmed();
+            QStringList v = decl.section(':', 1).simplified().split(' ', Qt::SkipEmptyParts);
+            if (v.isEmpty()) continue;
+            if (key == "margin") { // top is the 1st value; bottom the 3rd, else the 1st/2nd
+                const int i = (side == "bottom" && v.size() > 2) ? 2 : 0;
+                overlap = v.value(i).remove("px").toInt();
+            } else if (key == "margin-" + side) {
+                overlap = v.first().remove("px").toInt();
+            }
+        }
+    }
+    return overlap;
+}
+
+// Timers start when mapped: popups can be held back during startup.
+void notifypopup::showEvent(QShowEvent *){
+    if (started) return;
+    started = true;
+    timeout_timer->start(full_timeout);
     timeout_updater->start(10);
+}
+
+void notifypopup::resizeEvent(QResizeEvent *){
+    emit heightChanged();
 }
 
 /* Load a QIcon from the icon string or app name provided in the notification message */

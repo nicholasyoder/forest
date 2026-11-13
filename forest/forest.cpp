@@ -19,6 +19,7 @@ void forest::setup(){
     SettingsUpgradeManager upgrade_manager(this);
     upgrade_manager.perform_upgrades();
 
+    qApp->setProperty("forestStartupOverlay", true); // read by the notification service
     const QList<QPointer<layeroverlay>> startup_overlays = layeroverlay::showOnAllScreens(Qt::black, layeroverlay::Layer::Overlay, "forest-startup");
 
     qApp->installEventFilter(new menuanchor::MenuFilter(this));
@@ -32,8 +33,11 @@ void forest::setup(){
 
     // The compositor fades the "forest-startup" namespace out on close,
     // revealing the already-rendered desktop at once.
-    for (layeroverlay *overlay : startup_overlays)
-        if (overlay) QTimer::singleShot(1000, overlay, &layeroverlay::close);
+    QTimer::singleShot(1000, this, [startup_overlays]{
+        for (layeroverlay *overlay : startup_overlays)
+            if (overlay) overlay->close();
+        qApp->setProperty("forestStartupOverlay", false);
+    });
 }
 
 void forest::loadstylesheet(){

@@ -4,6 +4,7 @@
 #include <QDBusConnection>
 #include <QDBusInterface>
 #include <QPushButton>
+#include <QComboBox>
 #include <QSpinBox>
 
 #include "../../notificationsconfig.h"
@@ -22,7 +23,7 @@ QSpinBox *spin(const QString &suffix, int max){
 
 NotificationsSettings::NotificationsSettings(){
     settings_item = new settings_page("notifications/notifications", "Notifications", "preferences-desktop-notifications");
-    settings_item->set_keywords({"popups", "timeout", "alerts"});
+    settings_item->set_keywords({"popups", "timeout", "alerts", "position", "corner"});
 
     // Popups read these when shown; nothing to reload.
     SettingsBinder *binder = new SettingsBinder("Forest", "Forest", notificationsconfig::group, this);
@@ -39,6 +40,16 @@ NotificationsSettings::NotificationsSettings(){
     QSpinBox *max_timeout = spin(" sec", 3600);
     binder->bind(max_timeout, notificationsconfig::max_timeout, notificationsconfig::max_timeout_default);
     timeout_group->add_child(new settings_widget("Maximum", "", max_timeout));
+
+    settings_widget_group *position_group = new settings_widget_group("Position");
+    settings_item->add_child(position_group);
+    QComboBox *position = new QComboBox;
+    position->addItem("Top left", "top-left");
+    position->addItem("Top right", "top-right");
+    position->addItem("Bottom left", "bottom-left");
+    position->addItem("Bottom right", "bottom-right");
+    binder->bind(position, notificationsconfig::position, notificationsconfig::position_default, SettingsBinder::item_data(position));
+    position_group->add_child(new settings_widget("Screen corner", "Simultaneous notifications stack inward from it", position));
 
     settings_widget_group *size_group = new settings_widget_group("Size");
     settings_item->add_child(size_group);
