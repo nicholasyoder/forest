@@ -6,6 +6,7 @@
 #include <QSettings>
 
 #include "miscutills.h"
+#include "../../library/fstyleloader/fstyleloader.h"
 
 ForestThemeSettings::ForestThemeSettings(){
     settings_item = new settings_page("appearance/theme", "Theme", "preferences-desktop-color");
@@ -55,4 +56,5 @@ void ForestThemeSettings::set_desktop_theme(QListWidgetItem *theme_item){
     biome_settings.sync();
 
     miscutills::call_dbus("forest/loadstylesheet");
+    fstyleloader::apply("settings"); // this page runs inside forest-settings
 }

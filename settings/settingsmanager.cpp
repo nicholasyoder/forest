@@ -7,6 +7,7 @@
 #include <QDebug>
 #include <QDir>
 #include <QHoverEvent>
+#include <QMouseEvent>
 #include <QIconEngine>
 #include <QPainter>
 #include <QHBoxLayout>
@@ -53,6 +54,30 @@ protected:
         QStyledItemDelegate::initStyleOption(option, index);
         if (!option->icon.isNull())
             option->icon = QIcon(new UntintedIconEngine(option->icon));
+    }
+};
+
+// indexAt() also matches the indent area left of nested rows; only the item cell counts.
+QModelIndex item_at(const QTreeView *tree, const QPoint &pos){
+    QModelIndex index = tree->indexAt(pos);
+    return index.isValid() && tree->visualRect(index).contains(pos) ? index : QModelIndex();
+}
+
+// Paints only the item cell: with a styled ::item background, QTreeView also fills the
+// indent area left of nested rows (background only, no border).
+class CategoryTreeView : public QTreeView {
+public:
+    using QTreeView::QTreeView;
+protected:
+    void drawRow(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override {
+        QStyleOptionViewItem opt = option;
+        opt.rect = visualRect(index);
+        opt.state &= ~(QStyle::State_Selected | QStyle::State_MouseOver | QStyle::State_HasFocus);
+        if (selectionModel()->isSelected(index)) opt.state |= QStyle::State_Selected;
+        if (item_at(this, viewport()->mapFromGlobal(QCursor::pos())) == index) opt.state |= QStyle::State_MouseOver;
+        if (hasFocus() && currentIndex() == index) opt.state |= QStyle::State_HasFocus;
+        opt.viewItemPosition = QStyleOptionViewItem::OnlyOne;
+        itemDelegateForIndex(index)->paint(painter, opt, index);
     }
 };
 
@@ -198,7 +223,7 @@ SettingsManager::SettingsManager(){
         search_field->selectAll();
     });
 
-    tree = new QTreeView;
+    tree = new CategoryTreeView;
     tree->setObjectName("CategoryTree");
     tree->setModel(proxy);
     tree->setHeaderHidden(true);
@@ -249,11 +274,18 @@ bool SettingsManager::eventFilter(QObject *watched, QEvent *event){
     // At fractional scales the hover border bleeds past the row's update rect and leaves lines behind.
     if (watched == tree->viewport() && (event->type() == QEvent::HoverMove || event->type() == QEvent::HoverLeave)) {
         QModelIndex index = event->type() == QEvent::HoverMove
-            ? tree->indexAt(static_cast<QHoverEvent*>(event)->position().toPoint()) : QModelIndex();
+            ? item_at(tree, static_cast<QHoverEvent*>(event)->position().toPoint()) : QModelIndex();
         if (index != hovered_index) {
             hovered_index = index;
             tree->viewport()->update();
         }
+    }
+    if (watched == tree->viewport()
+        && (event->type() == QEvent::MouseButtonPress || event->type() == QEvent::MouseButtonRelease
+            || event->type() == QEvent::MouseButtonDblClick)) {
+        QPoint pos = static_cast<QMouseEvent*>(event)->position().toPoint();
+        if (tree->indexAt(pos).isValid() && !item_at(tree, pos).isValid())
+            return true; // indent area of a nested row
     }
     return QFrame::eventFilter(watched, event);
 }

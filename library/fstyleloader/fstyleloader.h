@@ -10,6 +10,7 @@
 #include <QDebug>
 #include <QApplication>
 #include <QPalette>
+#include "forestoutlinestyle.h"
 
 class fstyleloader{
 public:
@@ -19,6 +20,11 @@ public:
     // palette_theme reads the palette from that theme instead of the current one.
     // Palette first: QStyleSheetStyle snapshots widget palettes when it polishes.
     static void apply(const QString &classname, const QString &palette_theme = QString()){
+        static bool style_set = false;
+        if (!style_set) {
+            qApp->setStyle(new ForestOutlineStyle); // resets the palette, so before applypalette
+            style_set = true;
+        }
         applypalette(palette_theme);
         qApp->setStyleSheet(loadstyle(classname));
     }

@@ -1,0 +1,11 @@
+#CategoryTree::item:hover, #CategoryTree::item:selected {
+    background: rgba(255,255,255, 100%);
+    border-top: 1px solid rgba(160,160,160, 30%);
+    border-right: 1px solid rgba(160,160,160, 35%);
+    border-bottom: 1px solid rgba(160,160,160, 40%);
+    border-left: 1px solid rgba(160,160,160, 30%);
+}
+
+#CategoryTree::item:selected:pressed, #CategoryTree::item:hover:pressed {
+    background: rgba(245,245,245, 100%);
+}
