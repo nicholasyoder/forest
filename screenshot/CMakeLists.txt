@@ -3,9 +3,11 @@ add_executable(forest-screenshot
     capturecore.cpp
     clipboard.cpp
     picker.cpp
+    launcher.cpp
     capturecore.h
     clipboard.h
     picker.h
+    launcher.h
 )
 
 target_link_libraries(forest-screenshot PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus Qt6::WaylandClient Qt6::WaylandClientPrivate toplevels)

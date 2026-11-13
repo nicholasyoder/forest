@@ -3,6 +3,7 @@
 #include "capturecore.h"
 #include "clipboard.h"
 #include "flogger.h"
+#include "launcher.h"
 #include "fstyleloader.h"
 #include "picker.h"
 
@@ -165,7 +166,7 @@ void capture(const Args &args, ToplevelTracker *tracker) {
         QObject::connect(timer, &QTimer::timeout, qApp, [=] {
             ExtForeignToplevelHandle *ext = nullptr;
             for (ForeignToplevelHandle *h : tracker->toplevels())
-                if (h->isActivated() && h->extHandle())
+                if (h->isActivated() && h->extHandle() && h->appId() != qApp->applicationName())
                     ext = h->extHandle();
             if (!ext && clock->elapsed() < 2000)
                 return;
@@ -205,10 +206,31 @@ int main(int argc, char *argv[]) {
     Args args;
     if (int rc = parse(app.arguments(), &args); rc >= 0)
         return rc;
-    if (args.mode == Mode::None)
-        return usage("the capture UI is not implemented yet; pass a mode");
 
     ToplevelCapture::preload();
+    if (args.mode == Mode::None) {
+        // Hidden-launcher/picker windows must not end the app; exit is explicit.
+        app.setQuitOnLastWindowClosed(false);
+        auto *tracker = new ToplevelTracker(&app);
+        auto *launcher = new Launcher;
+        QObject::connect(launcher, &Launcher::rejected, &app, [] { QCoreApplication::exit(0); });
+        QObject::connect(launcher, &Launcher::captureRequested, &app,
+                         [&app, tracker](int mode, int delay, bool save, bool clipboard) {
+            static constexpr Mode modes[] = {Mode::Full, Mode::Monitor, Mode::Window, Mode::Region};
+            Args a;
+            a.mode = modes[mode];
+            a.opts.save = save;
+            a.opts.clipboard = clipboard;
+            // The unmap reaches the compositor before our capture requests (same
+            // connection), so only a flush margin is needed. For Window the
+            // active window is resolved after the delay.
+            QTimer::singleShot(50 + delay * 1000, &app, [a, tracker] { capture(a, tracker); });
+        });
+        launcher->show();
+        return app.exec();
+    }
+
+    app.setQuitOnLastWindowClosed(false);
     ToplevelTracker *tracker = args.mode == Mode::Window ? new ToplevelTracker(&app) : nullptr;
     // One pass lets the capture globals bind before the first isSupported().
     QTimer::singleShot(args.delay * 1000 + 100, &app, [&] { capture(args, tracker); });
