@@ -217,8 +217,10 @@ void trayicon::onRightClicked()
 {
     if (!m_menuPath.isEmpty() && m_menuPath != QLatin1String("/")) {
         if (menuImporter) {
+            // Queued: updateMenu() spins a nested event loop that can delete this
+            // icon (item unregistered), and panelbutton still uses it after this slot.
             if (!menuClosedByLauncherClick(menuImporter->menu(), this))
-                menuImporter->updateMenu();
+                QMetaObject::invokeMethod(menuImporter, &DBusMenuImporter::updateMenu, Qt::QueuedConnection);
             return;
         }
         // DBusMenuImporter's ctor introspects synchronously, so only create it
