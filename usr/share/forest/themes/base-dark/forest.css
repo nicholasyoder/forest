@@ -26,12 +26,12 @@ QWidget[FSS-widget-type="pane"] {
 }
 
 #deskButton[active="true"] {
-    border-color: rgb(100,170,100);
+    border-color: palette(highlight);
     background: rgba(255,255,255, 10%);
 }
 
 #deskButton[active="true"] #deskWindow {
-    border-color: rgb(100,170,100);
+    border-color: palette(highlight);
 }
 
 #panelButton {
