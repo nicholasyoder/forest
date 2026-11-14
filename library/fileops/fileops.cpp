@@ -39,15 +39,20 @@ QString itemsText(const QStringList &paths)
 QMessageBox *askConflict(FileJob *job, const QString &src, const QString &dst)
 {
     const QFileInfo s(src), d(dst);
-    const bool merge = s.isDir() && !s.isSymLink() && d.isDir() && !d.isSymLink();
+    const bool srcFolder = s.isDir() && !s.isSymLink(), dstFolder = d.isDir() && !d.isSymLink();
+    const bool merge = srcFolder && dstFolder;
+    // The job never replaces a folder with a file, so don't offer it.
+    const bool canReplace = srcFolder || !dstFolder;
 
     auto *box = new QMessageBox(QMessageBox::Question,
-                                merge ? QStringLiteral("Folder already exists") : QStringLiteral("File already exists"),
+                                dstFolder ? QStringLiteral("Folder already exists") : QStringLiteral("File already exists"),
                                 QStringLiteral("“%1” already exists in “%2”.").arg(d.fileName(), d.absolutePath()));
     box->setInformativeText(merge ? QStringLiteral("Merge the folders, replacing files with the same name?")
-                                  : QStringLiteral("Replace it?"));
-    QAbstractButton *overwrite = box->addButton(merge ? QStringLiteral("Merge") : QStringLiteral("Replace"),
-                                                QMessageBox::DestructiveRole);
+                            : canReplace ? QStringLiteral("Replace it?")
+                                         : QStringLiteral("A folder can't be replaced by a file."));
+    QAbstractButton *overwrite = canReplace
+        ? box->addButton(merge ? QStringLiteral("Merge") : QStringLiteral("Replace"), QMessageBox::DestructiveRole)
+        : nullptr;
     QAbstractButton *rename = box->addButton(QStringLiteral("Keep both"), QMessageBox::AcceptRole);
     QAbstractButton *skip = box->addButton(QStringLiteral("Skip"), QMessageBox::RejectRole);
     box->addButton(QMessageBox::Cancel);
@@ -62,7 +67,7 @@ QMessageBox *askConflict(FileJob *job, const QString &src, const QString &dst)
         if (!guard)
             return;
         QAbstractButton *b = box->clickedButton();
-        const Resolution r = b == overwrite ? Resolution::Overwrite
+        const Resolution r = overwrite && b == overwrite ? Resolution::Overwrite
                            : b == rename ? Resolution::Rename
                            : b == skip ? Resolution::Skip
                            : Resolution::Cancel;
