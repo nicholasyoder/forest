@@ -56,9 +56,11 @@ void AutostartSettings::load_settings() {
         connect(remove_bt, &QPushButton::clicked, item, &AutostartSettingItem::remove);
         h_layout->addWidget(remove_bt);
 
+        // Dies with the row: a rebuild renumbers the items, so a late save would hit the wrong one.
         RunOnce *runner = new RunOnce(1000);
+        runner->setParent(cmd_edit);
         connect(cmd_edit, &QLineEdit::textChanged, runner, &RunOnce::try_activate);
-        connect(runner, &RunOnce::activated, this, [item, cmd_edit](){
+        connect(runner, &RunOnce::activated, cmd_edit, [item, cmd_edit](){
             item->save(cmd_edit->text());
         });
 
