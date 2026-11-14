@@ -6,6 +6,7 @@ Changelog
   - Fix a possible panel crash when a window resizes while its live preview is showing in the windowlist popup
   - Fix a possible panel crash when a tray app exits while its menu is being opened
   - Fix a possible settings crash, or an autostart command saved over another entry, when removing or adding an autostart entry right after typing in one
+  - Fix copying or moving a file onto a same-named folder deleting the whole folder when Replace (or Replace with Apply to all) was chosen; a folder is now never replaced by a file
 
 * Release 0.11.0 - 2026-11-13
   - Move theme loading (parent_themes chain, palette, per-layer CSS) into a header-only forest-theme library, installed with the new forest-theme-devel package so Biome can use it

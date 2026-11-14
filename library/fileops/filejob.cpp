@@ -164,9 +164,10 @@ private:
         return n;
     }
 
-    Resolution ask(const QString &src, const QString &dst)
+    // noOverwrite: a remembered Overwrite doesn't apply, so the user is asked again.
+    Resolution ask(const QString &src, const QString &dst, bool noOverwrite)
     {
-        if (m_remembered)
+        if (m_remembered && !(noOverwrite && *m_remembered == Resolution::Overwrite))
             return *m_remembered;
         if (cancelled())
             return Resolution::Cancel;
@@ -196,7 +197,9 @@ private:
             fail(src, QStringLiteral("would replace a folder containing it"));
             return Plan::Fail;
         }
-        switch (ask(src, dst)) {
+        // Never replace a folder with a non-folder: that would delete its whole tree.
+        const bool dstIsFolder = isRealDir(d);
+        switch (ask(src, dst, dstIsFolder && !srcIsDir)) {
         case Resolution::Skip:
             return Plan::Skip;
         case Resolution::Cancel:
@@ -206,8 +209,12 @@ private:
             dst = uniquePath(d.absolutePath(), d.fileName(), QString());
             return Plan::Write;
         case Resolution::Overwrite:
-            if (srcIsDir && isRealDir(d))
-                return Plan::Merge;
+            if (dstIsFolder) {
+                if (srcIsDir)
+                    return Plan::Merge;
+                fail(src, QStringLiteral("a folder with the same name already exists"));
+                return Plan::Fail;
+            }
             return removeEntry(dst, false) ? Plan::Write : Plan::Fail;
         }
         return Plan::Fail;
