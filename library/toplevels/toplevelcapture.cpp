@@ -135,30 +135,8 @@ protected:
         if (rank > 0 && (d->pendingFormat < 0 || rank > shmRank(uint32_t(d->pendingFormat), &best)))
             d->pendingFormat = int(wlFormat);
     }
-    void ext_image_copy_capture_session_v1_done() override {
-        if (d->pendingFormat < 0 || d->pendingWidth <= 0 || d->pendingHeight <= 0) {
-            d->fail();
-            return;
-        }
-        if (d->buffer && d->width == d->pendingWidth && d->height == d->pendingHeight && d->format == d->pendingFormat) {
-            d->constraintsDone = true;
-        } else {
-            // A frame in flight holds the old buffer; drop it before freeing.
-            delete d->frame;
-            d->frame = nullptr;
-            d->freeBuffer();
-            d->width = d->pendingWidth;
-            d->height = d->pendingHeight;
-            d->format = d->pendingFormat;
-            if (!d->allocateBuffer()) {
-                d->fail();
-                return;
-            }
-            d->constraintsDone = true;
-        }
-        if (d->wantFrame)
-            d->issueFrame();
-    }
+    // Out of line: deleting the frame needs CaptureFrame's destructor.
+    void ext_image_copy_capture_session_v1_done() override;
     void ext_image_copy_capture_session_v1_stopped() override { d->fail(); }
 
 private:
@@ -197,6 +175,31 @@ protected:
 private:
     ToplevelCaptureData *d;
 };
+
+void CaptureSession::ext_image_copy_capture_session_v1_done() {
+    if (d->pendingFormat < 0 || d->pendingWidth <= 0 || d->pendingHeight <= 0) {
+        d->fail();
+        return;
+    }
+    if (d->buffer && d->width == d->pendingWidth && d->height == d->pendingHeight && d->format == d->pendingFormat) {
+        d->constraintsDone = true;
+    } else {
+        // A frame in flight holds the old buffer; drop it before freeing.
+        delete d->frame;
+        d->frame = nullptr;
+        d->freeBuffer();
+        d->width = d->pendingWidth;
+        d->height = d->pendingHeight;
+        d->format = d->pendingFormat;
+        if (!d->allocateBuffer()) {
+            d->fail();
+            return;
+        }
+        d->constraintsDone = true;
+    }
+    if (d->wantFrame)
+        d->issueFrame();
+}
 
 void ToplevelCaptureData::freeBuffer() {
     if (buffer)
