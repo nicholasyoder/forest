@@ -41,6 +41,9 @@ Pairs with Biome 0.4.0.
   temperatures, schedule (sunrise/sunset or fixed times). Biome serves
   `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
   a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
+- **Custom accent colour.** Let the user override the theme's `highlight`
+  palette colour from the settings UI (Themes page). Hardcoded greens in
+  theme CSS need to move to `palette(highlight)` first.
 
 ## 0.13.0 — hardware & system
 
@@ -115,8 +118,6 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
 - **Laptop lid switch.** Display profiles handle docking, but "lid closed ⇒
   disable the internal panel" needs logind lid events (`LidClosed`) feeding
   the displays service. Wait for a laptop target.
-- **Theme editor.** Customize accent/highlight colours on top of a theme,
-  up to a full theme editor.
 - **Workspaces beyond Biome's model** (decoupling). deskswitch/windowlist
   assume one ext-workspace group (a single active workspace); a compositor
   with per-output groups would need per-group handling. The window ->
