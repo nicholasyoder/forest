@@ -12,7 +12,7 @@ Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.11.1 — security, session & hotkeys
+## 0.11.1 — security, session, hotkeys & file safety
 
 Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
 Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
@@ -22,8 +22,6 @@ Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
 - **Hotkey trigger rework** ([detail](review-2026-11.md#hotkey-triggers)). Capture real
   keysyms (F-keys, media keys), migrate stored hotkeys, fix Caps Lock and
   Shift+letter, report triggers the portal refused.
-
-## 0.11.2 — file safety, leaks & packaging
 
 - **Transactional replace in file operations** ([detail](review-2026-11.md#fileops-replace)).
   A failed or cancelled Replace currently loses both files.
@@ -37,7 +35,7 @@ Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
   (`qt6-qtwayland`), JetBrains Mono + qterminal defaults, ForestTheme
   version file, stop `forest-session.target` at logout.
 
-## 0.11.3 — applet, settings & login fixes
+## 0.11.2 — applet, settings & login fixes
 
 - **Notification popup fixes** ([detail](review-2026-11.md#notification-popups)). Never-expire
   timeout, plain text, in-place replace, no 100 Hz repaint.
@@ -152,7 +150,7 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
 ## Later (unscheduled)
 
 - **Network manager plugin.** The old `nmcontrol` stub is being removed
-  (0.11.3); a real plugin would start fresh. Needs connection status, Wi-Fi
+  (0.11.2); a real plugin would start fresh. Needs connection status, Wi-Fi
   list/connect, wired/VPN toggles. Pick a backend first (NetworkManagerQt vs.
   raw `org.freedesktop.NetworkManager` D-Bus). Low priority: `nm-applet`
   works fine as is.
