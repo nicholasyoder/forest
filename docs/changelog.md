@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Make the screen locker fail safe: it keeps respawning the lockscreen once Biome holds a lock, shows a notification when a lock fails, no longer drops a lock requested (e.g. on suspend) just after unlocking, ignores SimulateUserActivity while locked, and can no longer hang on exit when the lock is refused
   - Rewrite the polkit authentication dialog: the typed password now goes to the selected user (current user preselected) instead of looping on the wrong one with two admin accounts, Cancel closes the dialog and completes the request, concurrent requests are queued instead of hanging, and PAM messages show inline
   - Fix a possible panel crash when a window resizes while its live preview is showing in the windowlist popup
   - Fix a possible panel crash when a tray app exits while its menu is being opened

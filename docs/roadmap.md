@@ -17,9 +17,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
 Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
 
-- **Locker fail-safe fixes** ([detail](review-2026-11.md#lock-robustness)). Don't give up on
-  a lock Biome already holds, show failed locks, blank only once locked,
-  close the unlock→reap race.
 - **Restart `forest` on crash** ([detail](review-2026-11.md#supervise-forest)). Supervise
   it like the locker; second instance exits; safer first-run defaults.
 - **Hotkey trigger rework** ([detail](review-2026-11.md#hotkey-triggers)). Capture real

@@ -28,6 +28,8 @@ private:
     void applySettings();
     void idled(IdleWatcher::Threshold threshold);
     void resumed();
+    void activitySimulated();
+    void lockFailed();
     void lockStateChanged(LockSupervisor::State state);
     void prepareForSleep(bool start);
     void finishSleepLock();
