@@ -2,6 +2,9 @@
 
 #include "sessionapp.h"
 
+#include <QDBusConnection>
+#include <QDBusMessage>
+#include <QDBusPendingCall>
 #include <QProcess>
 #include <QDebug>
 #include <QTimer>
@@ -24,6 +27,11 @@ void SessionApp::startSession(){
     // startforest-wayland's update runs before Biome creates the socket; push it before anything D-Bus-activates.
     if (QProcess::execute("dbus-update-activation-environment", {"--systemd", "WAYLAND_DISPLAY"}) != 0)
         qWarning() << "Failed to export WAYLAND_DISPLAY to the activation environment";
+    // The PAM-started keyring daemon exits after a few idle minutes; activating
+    // org.freedesktop.secrets now makes a daemon attach to it and keep it unlocked.
+    QDBusConnection::sessionBus().asyncCall(QDBusMessage::createMethodCall(
+        "org.freedesktop.secrets", "/org/freedesktop/secrets", "org.freedesktop.DBus.Peer", "Ping"));
+
     // Setup Keyboard
 
     // Setup Mouse

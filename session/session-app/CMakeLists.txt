@@ -5,7 +5,7 @@ add_executable(forest-session
 )
 
 
-target_link_libraries(forest-session PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6Xdg)
+target_link_libraries(forest-session PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus Qt6Xdg)
 forest_link_flogger(forest-session)
 
 install(TARGETS forest-session RUNTIME DESTINATION bin)
