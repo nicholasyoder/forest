@@ -2,96 +2,129 @@
 
 #include "polkitagent.h"
 
+#include <unistd.h>
+
 using namespace PolkitQt1;
 using namespace Agent;
 
-polkitagent::polkitagent(QObject *parent) : PolkitQt1::Agent::Listener(parent), auth_in_progress(false){
+polkitagent::polkitagent(QObject *parent) : PolkitQt1::Agent::Listener(parent){
     UnixSessionSubject session(getpid());
-    registerListener(session, "/org/forest/PolicyKit1/AuthenticationAgent");
+    if (!registerListener(session, "/org/forest/PolicyKit1/AuthenticationAgent"))
+        qWarning() << "polkit: failed to register authentication agent";
 }
 
 polkitagent::~polkitagent(){
-    if (pkwidget){
-        pkwidget->blockSignals(true);
-        pkwidget->deleteLater();
-    }
+    pending_.clear();
+    if (result_) finish();
 }
 
 void polkitagent::initiateAuthentication(
         const QString &actionId, const QString &message, const QString &iconName, const Details &details, const QString &cookie,
         const Identity::List &identities, AsyncResult *result){
 
-    if (auth_in_progress){
-        QMessageBox::information(nullptr, "Authentication", "Authentication is already in progress. Please try again later.");
+    if (identities.isEmpty()){
+        result->setError("No identities to authenticate as");
         return;
     }
-    auth_in_progress = true;
+    Request request{actionId, message, iconName, cookie, details, identities, result};
+    if (result_) pending_.enqueue(request);
+    else begin(request);
+}
 
-    if (pkwidget){delete pkwidget;}
-    pkwidget = new polkitdialog(actionId, message, iconName, details, identities);
+void polkitagent::begin(const Request &request){
+    cookie_ = request.cookie;
+    result_ = request.result;
+    identities_ = request.identities;
 
-    auth_cookie = cookie;
-    auth_result = result;
+    // Preselect the current user, else the first identity
+    int selected = 0;
+    const QString self = UnixUserIdentity(getuid()).toString();
+    for (int i = 0; i < identities_.size(); i++){
+        if (identities_[i].toString() == self){selected = i; break;}
+    }
 
-    foreach (Identity i, identities) initiate_session(i);
+    dialog_ = new polkitdialog(request.actionId, request.message, request.iconName, request.details, identities_, selected);
+    connect(dialog_, &polkitdialog::submitted, this, &polkitagent::passwordSubmitted);
+    connect(dialog_, &polkitdialog::identityChanged, this, &polkitagent::identitySelected);
+    connect(dialog_, &polkitdialog::rejected, this, &polkitagent::dialogCancelled);
+    dialog_->show();
+    dialog_->raise();
+    dialog_->activateWindow();
+
+    startSession(selected);
 }
 
 bool polkitagent::initiateAuthenticationFinish(){
-    auth_in_progress = false;
     return true;
 }
 
 void polkitagent::cancelAuthentication(){
-    auth_in_progress = false;
+    // polkit-qt doesn't say which request was cancelled; only act when it can't be a queued one
+    if (result_ && pending_.isEmpty()) finish();
 }
 
-void polkitagent::request(const QString &request, bool echo){
-    Session *session = qobject_cast<Session *>(sender());
-    Identity identity = session_identities[session];
-    pkwidget->setPrompt(identity, request, echo);
-    if (pkwidget->exec()){
-        session->setResponse(pkwidget->response());
+void polkitagent::startSession(int identityIndex){
+    dropSession();
+    session_ = new Session(identities_[identityIndex], cookie_, result_, this);
+    connect(session_, &Session::request, this, &polkitagent::sessionRequest);
+    connect(session_, &Session::completed, this, &polkitagent::sessionCompleted);
+    connect(session_, &Session::showError, this, [this](const QString &text){if (dialog_) dialog_->setError(text);});
+    connect(session_, &Session::showInfo, this, [this](const QString &text){if (dialog_) dialog_->setInfo(text);});
+    session_->initiate();
+}
+
+void polkitagent::dropSession(){
+    if (!session_) return;
+    Session *s = session_;
+    session_ = nullptr;
+    s->disconnect(this);
+    s->cancel();
+    s->deleteLater();
+}
+
+void polkitagent::sessionRequest(const QString &prompt, bool echo){
+    if (dialog_) dialog_->setPrompt(prompt, echo);
+}
+
+void polkitagent::sessionCompleted(bool gainedAuthorization){
+    if (gainedAuthorization){
+        finish();
         return;
     }
-    auth_canceled = true;
-    session->cancel();
-}
-
-void polkitagent::completed(bool gainedAuthorization){
-    Session *session = qobject_cast<Session *>(sender());
-    if (!gainedAuthorization && !auth_canceled){
-        pkwidget->setError("Authentication failed. Please try again.");
-        initiate_session(session_identities[session]);
-        return;
+    // Wrong password: new PAM conversation for the same identity, waits for user input
+    if (dialog_){
+        dialog_->setError(tr("Authentication failed. Please try again."));
+        startSession(dialog_->identityIndex());
     }
-    session->result()->setCompleted();
-    session->disconnect();
-    foreach (Session *s, session_identities.keys()){
-        if (!s) continue;
-        s->disconnect();
-        s->deleteLater();
+    else finish();
+}
+
+void polkitagent::identitySelected(int index){
+    if (result_ && index >= 0 && index < identities_.size()) startSession(index);
+}
+
+void polkitagent::passwordSubmitted(const QString &password){
+    if (session_) session_->setResponse(password);
+}
+
+void polkitagent::dialogCancelled(){
+    if (result_) finish();
+}
+
+void polkitagent::finish(){
+    if (cancelling_) return;
+    cancelling_ = true;
+    dropSession();
+    if (dialog_){
+        dialog_->disconnect(this);  // close() would otherwise emit rejected
+        dialog_->close();
+        dialog_->deleteLater();
     }
-    session_identities.clear();
-    auth_in_progress = false;
-    auth_canceled = false;
-    auth_cookie = "";
-    auth_result = nullptr;
-}
-
-void polkitagent::showError(const QString &text){
-    QMessageBox::warning(nullptr, tr("PolicyKit Error"), text);
-}
-
-void polkitagent::showInfo(const QString &text){
-    QMessageBox::information(nullptr, tr("PolicyKit Information"), text);
-}
-
-void polkitagent::initiate_session(Identity session_identity){
-    Session *session = new Session(session_identity, auth_cookie, auth_result);
-    session_identities[session] = session_identity;
-    connect(session, SIGNAL(request(QString, bool)), this, SLOT(request(QString, bool)));
-    connect(session, SIGNAL(completed(bool)), this, SLOT(completed(bool)));
-    connect(session, SIGNAL(showError(QString)), this, SLOT(showError(QString)));
-    connect(session, SIGNAL(showInfo(QString)), this, SLOT(showInfo(QString)));
-    session->initiate();
+    AsyncResult *result = result_;
+    result_ = nullptr;
+    cookie_.clear();
+    identities_.clear();
+    cancelling_ = false;
+    if (result) result->setCompleted();
+    if (!pending_.isEmpty()) begin(pending_.dequeue());
 }

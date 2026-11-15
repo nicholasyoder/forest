@@ -3,9 +3,8 @@
 #ifndef POLKITAGENT_H
 #define POLKITAGENT_H
 
-#include <QWidget>
-#include <QMessageBox>
-#include <QDebug>
+#include <QPointer>
+#include <QQueue>
 
 #include <polkit-qt6-1/polkitqt1-agent-session.h>
 #include <polkit-qt6-1/polkitqt1-identity.h>
@@ -29,21 +28,34 @@ public slots:
     bool initiateAuthenticationFinish();
     void cancelAuthentication();
 
-    void request(const QString &request, bool echo);
-    void completed(bool gainedAuthorization);
-    void showError(const QString &text);
-    void showInfo(const QString &text);
-
 private slots:
-    void initiate_session(PolkitQt1::Identity session_identity);
+    void sessionRequest(const QString &prompt, bool echo);
+    void sessionCompleted(bool gainedAuthorization);
+    void identitySelected(int index);
+    void passwordSubmitted(const QString &password);
+    void dialogCancelled();
 
 private:
-    bool auth_in_progress = false;
-    bool auth_canceled = false;
-    QString auth_cookie;
-    PolkitQt1::Agent::AsyncResult *auth_result = nullptr;
-    QHash<PolkitQt1::Agent::Session*, PolkitQt1::Identity> session_identities;
-    polkitdialog * pkwidget = nullptr;
+    struct Request{
+        QString actionId, message, iconName, cookie;
+        PolkitQt1::Details details;
+        PolkitQt1::Identity::List identities;
+        PolkitQt1::Agent::AsyncResult *result = nullptr;
+    };
+
+    void begin(const Request &request);
+    void startSession(int identityIndex);
+    void dropSession();
+    void finish();  // Tears down the active request and completes its result
+
+    // State of the single active request; result == nullptr means idle.
+    QQueue<Request> pending_;  // Requests waiting for the active one
+    QString cookie_;
+    PolkitQt1::Agent::AsyncResult *result_ = nullptr;
+    PolkitQt1::Identity::List identities_;
+    PolkitQt1::Agent::Session *session_ = nullptr;
+    QPointer<polkitdialog> dialog_;
+    bool cancelling_ = false;
 };
 
 #endif // POLKITAGENT_H

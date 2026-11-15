@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Rewrite the polkit authentication dialog: the typed password now goes to the selected user (current user preselected) instead of looping on the wrong one with two admin accounts, Cancel closes the dialog and completes the request, concurrent requests are queued instead of hanging, and PAM messages show inline
   - Fix a possible panel crash when a window resizes while its live preview is showing in the windowlist popup
   - Fix a possible panel crash when a tray app exits while its menu is being opened
   - Fix a possible settings crash, or an autostart command saved over another entry, when removing or adding an autostart entry right after typing in one
