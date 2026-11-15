@@ -12,10 +12,56 @@ Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
+## 0.11.1 — security, session & hotkeys
+
+Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
+Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
+
+- **Polkit agent rewrite** ([detail](review-2026-11.md#polkit-agent)). With two admin users
+  the typed password goes to the wrong PAM session in a loop; cancel leaves
+  the dialog up; concurrent requests hang.
+- **Locker fail-safe fixes** ([detail](review-2026-11.md#lock-robustness)). Don't give up on
+  a lock Biome already holds, show failed locks, blank only once locked,
+  close the unlock→reap race.
+- **Restart `forest` on crash** ([detail](review-2026-11.md#supervise-forest)). Supervise
+  it like the locker; second instance exits; safer first-run defaults.
+- **Hotkey trigger rework** ([detail](review-2026-11.md#hotkey-triggers)). Capture real
+  keysyms (F-keys, media keys), migrate stored hotkeys, fix Caps Lock and
+  Shift+letter, report triggers the portal refused.
+
+## 0.11.2 — file safety, leaks & packaging
+
+- **Transactional replace in file operations** ([detail](review-2026-11.md#fileops-replace)).
+  A failed or cancelled Replace currently loses both files.
+- **Desktop launcher trust** ([detail](review-2026-11.md#launcher-trust)). `.desktop` files on
+  the desktop need `+x` or a "Trust and launch?" prompt.
+- **Wallpaper by value, mode by name** ([detail](review-2026-11.md#wallpaper-by-value)).
+  Fixes a large per-change memory leak in `forest`; drops Tile mode.
+- **Applet reload leaks** ([detail](review-2026-11.md#applet-teardown)). Every applet edit
+  leaks running timers and popups.
+- **Packaging cleanup** ([detail](review-2026-11.md#packaging)). Drop stale deps
+  (`qt6-qtwayland`), JetBrains Mono + qterminal defaults, ForestTheme
+  version file, stop `forest-session.target` at logout.
+
+## 0.11.3 — applet, settings & login fixes
+
+- **Notification popup fixes** ([detail](review-2026-11.md#notification-popups)). Never-expire
+  timeout, plain text, in-place replace, no 100 Hz repaint.
+- **Main menu interaction fixes** ([detail](review-2026-11.md#mainmenu-fixes)).
+- **Monitor, tray, quicklaunch and volume fixes** ([detail](review-2026-11.md#applet-fixes)).
+  Incl. no battery warning while charging, working mute toggle.
+- **Settings and displays fixes** ([detail](review-2026-11.md#settings-fixes)).
+- **Greeter, logout and session fixes** ([detail](review-2026-11.md#login-fixes)).
+- **Screenshot fixes, ext-data-control clipboard** ([detail](review-2026-11.md#screenshot-fixes)).
+- **Dead-code sweep** ([detail](review-2026-11.md#dead-code)). Removes the `nmcontrol` stub.
+
 ## 0.12.0 — desktop & notification polish
 
 Pairs with Biome 0.4.0.
 
+- **Desktop icon view rework** ([detail](review-2026-11.md#desktop-icon-view)). Incremental
+  updates, cached label shadows, no ghost icons, grid sized to the usable
+  area. Do before the settings page.
 - **Desktop icons settings page.** No page for desktop icons yet (Desktop →
   Icons is a placeholder). Icon size, grid spacing, sort/arrange, which
   default icons show, etc.
@@ -41,6 +87,10 @@ Pairs with Biome 0.4.0.
   temperatures, schedule (sunrise/sunset or fixed times). Biome serves
   `wlr-gamma-control-unstable-v1`; Forest needs a small client (own daemon or
   a managed `wlsunset`). Scope beyond temperature (brightness, gamma) TBD.
+- **Theme CSS consolidation** ([detail](review-2026-11.md#theme-css)). Shared rules into
+  `base`, colours via `palette()`, icon sizes via `qproperty`. Do before the
+  accent colour; Biome regenerates `builtin.qss` after.
+- **Key workspaces on ext-workspace `id`** ([detail](review-2026-11.md#workspace-ids)).
 - **Custom accent colour.** Let the user override the theme's `highlight`
   palette colour from the settings UI (Themes page). Hardcoded greens in
   theme CSS need to move to `palette(highlight)` first.
@@ -53,6 +103,10 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
   mount/unmount/eject removable drives, plus remounting chosen drives at
   login. UDisks2 directly or via Solid; decide together with the battery
   monitor's backend (#38) so both use the same one.
+- **UPower battery backend** ([detail](review-2026-11.md#battery-backend)). Event-driven
+  level and warnings; settle #38's thresholds against it.
+- **libpulse volume backend** ([detail](review-2026-11.md#volume-backend)). Works through
+  PipeWire, follows the default sink; volume keys move to services-app.
 - **Battery monitor: configurable low-battery notifications** (#38).
   Thresholds and actions (warn / suspend / hibernate) in settings.
 - **Native brightness control.** The shipped brightness hotkeys shell out to
@@ -65,13 +119,24 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
   shipped volume/brightness entries) and have `forest-lockscreen` run only
   flagged hotkeys. Opt-in, since a remapped key could otherwise run arbitrary
   commands unauthenticated. Parse actions with `library/hotkeyconfig`.
+- **Shared monitor base** ([detail](review-2026-11.md#graph-monitor)). One `GraphMonitor`
+  for cpu/memory, one colour format. Before #28.
 - **System monitor popups** (#28). Popups for CPU/memory monitors with
   per-core and RAM/swap graphs, and per-sensor graphs for `sensors`.
 - **Clipboard manager.** Clipboard history; needs Biome's data-control
   support (Biome 0.5.0).
+- **Deliberate `org.forest` API** ([detail](review-2026-11.md#forest-dbus)). Scriptable
+  slots only, interface names, shared constants, async calls.
+- **Forest-owned portal config** ([detail](review-2026-11.md#portal-config)). Enables
+  screen sharing via xdg-desktop-portal-wlr. Pairs with Biome 0.5.0.
 
 ## 0.14.0 — panel
 
+- **Multi-instance applet API** ([detail](review-2026-11.md#applet-api-v4)). Applet factory,
+  applet names in `Panel.conf`, "Add applet", host-owned context menus.
+  Prerequisite for multiple panels.
+- **Main menu app index** ([detail](review-2026-11.md#app-index)). XDG desktop-ID precedence,
+  parse once, debounced. Prerequisite for the combined taskbar.
 - **Panel tooltips.** Themed tooltips on panel items (e.g. app name on
   quicklaunch hover). Needs QSS styling to match the theme and custom
   positioning so they open away from the panel edge, not over it.
@@ -92,8 +157,8 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
 
 ## Later (unscheduled)
 
-- **Network manager plugin.** `nmcontrol` is a stub (static icon, empty
-  popup; not on the default panel). Needs connection status, Wi-Fi
+- **Network manager plugin.** The old `nmcontrol` stub is being removed
+  (0.11.3); a real plugin would start fresh. Needs connection status, Wi-Fi
   list/connect, wired/VPN toggles. Pick a backend first (NetworkManagerQt vs.
   raw `org.freedesktop.NetworkManager` D-Bus). Low priority: `nm-applet`
   works fine as is.
@@ -136,3 +201,13 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
   over PackageKit (`libpackagekitqt6`), a native Wayland alternative to
   root-run GUI package managers (GNOME Software is the stopgap). Browse/search,
   install/remove, and updates may outgrow a single settings page.
+- **Library and CMake cleanup** ([detail](review-2026-11.md#library-cleanup)). Wayland
+  extension teardown, break up `miscutills`, CMake helpers. Best before the
+  applet API change.
+- **Record lists as QSettings arrays** ([detail](review-2026-11.md#record-lists)). Hotkeys,
+  autostart, quicklaunch, panel.
+- **Session services outside the applet process** (needs decision;
+  [detail](review-2026-11.md#services-process)).
+- **Fingerprint unlock** (low priority). The lockscreen runs one PAM stack;
+  `pam_fprintd` blocks typing until it times out. Parallel password and
+  fingerprint conversations, as GDM does.

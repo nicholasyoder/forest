@@ -1,32 +1,16 @@
 # Development Notes
 
-## Release packaging
+## Releases
 
-Building the RPMs and `.deb`s is covered in the README's Packaging section.
-For a release:
-
-1. Add a `* Release X.Y.Z - YYYY-MM-DD` entry to `docs/changelog.md` and bump
-   `project(... VERSION ...)` in `CMakeLists.txt` and `Version:` in
-   `packaging/forest.spec`.
-2. Regenerate the spec's `%changelog` (replace everything under `%changelog`):
-   `./docs/convert-changelog-rpm.sh docs/changelog.md`
-3. Build with `rpmbuild`, then a clean `mock -r fedora-45-x86_64` build, and
-   review `rpmlint` output.
-4. Optionally regenerate `debian/changelog` (kept until the Debian line is
-   dropped; don't edit it by hand):
-   `./docs/convert-changelog.sh ./docs/changelog.md ./debian/changelog`.
-   Build with `debuild -us -uc`, which runs lintian (it flags changelog lines
-   over 80 columns).
-
-## Include deb in repo
-
-`reprepro includedeb forest /path/to/forest_0.7.8-1_amd64.deb`
+See `docs/release-checklist.md`.
 
 ## Recovering from a stuck lock
 
-If `forest-lockscreen` hangs while testing, switch to another VT and run
-`swaylock` against Biome's `WAYLAND_DISPLAY`; Biome lets it take over the
-lock, then unlock with it.
+From another VT, `pkill -KILL forest-lockscreen`: forest-locker respawns
+one, which takes over Biome's abandoned lock. Biome only accepts a new lock
+client once the old one is gone, so `swaylock` alone fails while a hung
+`forest-lockscreen` is still alive; to use it, `pkill -STOP forest-locker`
+and kill the lockscreen first.
 
 ## Display settings
 
@@ -67,7 +51,7 @@ Behaviour worth knowing:
   the heads that are still connected.
 - **Biome persists every successful protocol apply** (from any client) to
   `[Outputs]` in `~/.config/Biome/Biome.conf` and restores it at startup.
-  Forest never writes `Biome.conf`.
+  Forest's only write to that file is `[Theme] name` (theme page).
 - **Profile hotkeys** are ordinary `[hotkeys]` entries with
   `DBUS:…,method=applyProfile,arg=<profile id>` (or `nextProfile`),
   parsed/formatted by `library/hotkeyconfig`. Renaming a profile updates

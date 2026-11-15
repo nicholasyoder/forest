@@ -25,7 +25,11 @@ a `file INSTALL cannot set permissions on "/etc/forest"` error: that step needs
 root and runs last, so it's expected and harmless unless something under
 `etc/forest/` or `etc/pam.d/` actually changed (then the user has to install
 that part manually). Keep new `install()` rules above the `/etc` ones in the
-top-level `CMakeLists.txt`, with prefix-relative destinations.
+top-level `CMakeLists.txt`, with prefix-relative destinations. Systemd units and
+the polkit policy reach the live system only through hand-made symlinks
+(`/usr/lib/systemd/user/forest-session.target`,
+`/usr/share/polkit-1/actions/org.forest.login.policy`); a new file there needs
+one too.
 
 There are no tests. Build a single target with:
 ```sh
@@ -77,7 +81,7 @@ Loaded by the `forest` main process at startup via `QPluginLoader`. Each impleme
 virtual void setupPlug() = 0;
 ```
 
-Declare with `Q_DECLARE_INTERFACE(app_plugin_interface, "forest.app.plugin.interface")` and `Q_PLUGIN_METADATA(IID "forest.app.plugin.interface")`.
+The interface is declared as `"forest.app.plugin.interface"`; each plugin's `Q_PLUGIN_METADATA` IID is currently its own string (`forest.app.panel.plugin`, …), so loaders identify plugins by `qobject_cast`, not IID.
 
 Current app plugins: `desktop-app`, `panel-app`, `services-app`.
 
@@ -108,34 +112,41 @@ MODULE libs → `<libdir>/forest/settings/`, all loaded (no config entry). Each 
 ### Theming System
 
 Themes live in `/usr/share/forest/themes/<ThemeName>/`. Each theme has:
-- `theme.conf` — declares `name`, `description`, `hidden`, and optionally `parent_themes` (comma-separated list)
-- Per-component CSS files: `forest.css`, `logout.css`, etc.
+- `theme.conf` — declares `name`, `description`, `hidden`, optionally `parent_themes` (comma-separated list), and a `[Palette]` group
+- Per-component CSS files: `forest.css` (the `forest` process), `settings.css`, `login.css` (greeter + lockscreen), `logout.css`, `biome.css` (Biome decorations/switcher), plus `shared.css`, appended for every Forest process and Biome (menus etc.)
 
 Parsing the theme format (`parent_themes` chain, `[Palette]` → `QPalette`, per-layer CSS concatenation) lives in the header-only `library/forest-theme` (`foresttheme.h`), installed as the `ForestTheme` CMake package (`forest-theme-devel`) so Biome builds against the same code; add new palette keys there. `fstyleloader` wraps it with Forest's specifics (QSettings theme lookup, `ForestOutlineStyle`).
 
-`fstyleloader::loadstyle("componentname")` (in `library/fstyleloader/fstyleloader.h`) walks the `parent_themes` chain and concatenates each layer's CSS. The active theme is read from `QSettings("Forest","Forest")` key `theme`.
+`fstyleloader::apply("componentname")` (in `library/fstyleloader/fstyleloader.h`) sets `ForestOutlineStyle`, the palette, and the concatenated `<component>.css` + `shared.css`. The active theme is read from `QSettings("Forest","Forest")` key `theme`. `forest-screenshot` applies only the palette (`applypalette()`), no QSS.
 
-Theme inheritance example — "Round-Dark" has `parent_themes=base,base-rounded,base-dark`, so it loads `base/forest.css` → `base-rounded/forest.css` → `base-dark/forest.css` → `Round-Dark/forest.css`. Adding a new component means adding a `<component>.css` to `base/` (and overrides in variant themes as needed).
+Theme inheritance example — "Round-Dark" has `parent_themes=base,base-rounded,base-dark`, so it loads `base/forest.css` → `base-rounded/forest.css` → `base-dark/forest.css` → `Round-Dark/forest.css`, then `base/shared.css` → … → `Round-Dark/shared.css`. Files are the outer loop, so every layer's `shared.css` comes after every layer's component CSS: a later layer can't override a parent's `shared.css` rule from its component file. Adding a new component means adding a `<component>.css` to `base/` (and overrides in variant themes as needed).
+
+Biome reads the same layers (`biome.css` + `shared.css`) through `etc/biome/conf.d/50-forest.conf` (`[Theme] dir/name`); the theme page also writes `[Theme] name` to the user's `Biome.conf` so decorations follow live.
 
 Themes are selected from user-visible themes (those without `hidden=True`): `Circle-Dark`, `Circle-Light`, `Round-Dark`, `Round-Light`.
 
 ### DBus
 
-`forest` registers `org.forest` / `/org/forest` on the session bus and exports all slots. Other components trigger actions (e.g. stylesheet reload) via `miscutills::call_dbus("forest/<slot-name>")`.
+`forest` owns `org.forest` on the session bus. `forest` and its plugins register objects under it: `/org/forest` (`loadstylesheet`), `/org/forest/panel` (+ `/mainmenu`, `/quicklaunch`, `/volume` from applets), `/org/forest/desktop`, `/org/forest/hotkeys`, `/org/forest/showdesktop`, `/org/forest/displays` (interface `org.forest.displays`). Most use `ExportAllSlots`, so inherited `QWidget` slots are exported too; treat only the slots callers use as API. Settings pages call them via `miscutills::call_dbus("forest/panel/reloadplugins")` (object `/org/forest/panel`, slot `reloadplugins`; blocking).
 
 ### Shared Libraries (static, built first)
 
-All in `library/`:
+All in `library/` (except `panel-library`). They're linked into each plugin module separately, so a "singleton" in one is one per module, not per process:
+- **`forest-theme`** — header-only theme format parser, installed for Biome (see Theming System)
 - **`fstyleloader`** — theme CSS loading (header-only implementation in `.h`)
 - **`flogger`** — logging setup; call `FLogger::install("appname")` at startup
 - **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
 - **`pluginutills`** — app plugin path resolution, settings plugin interface
 - **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
-- **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `BiomeWorkspaces`, and `ToplevelTracker` (open windows + which are on the active workspace)
+- **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `BiomeWorkspaces`, `ToplevelTracker` (open windows + which are on the active workspace), and `ToplevelCapture`/`ScreenGrab` (ext-image-copy-capture window and output capture)
 - **`activation`** — xdg-activation client (`XdgActivation`): launch programs with a token so they can raise an existing window. `QMenu` actions need `watch()`; custom popups call `request()` before hiding. Create the instance at startup (binds asynchronously)
 - **`outputs`** — wlr-output-management client (`OutputManager`), display profiles (`DisplayProfiles`, `Displays.conf`) and layout fixups; see `docs/development-notes.md` → Display settings
 - **`hotkeyconfig`** — parse/format of `[hotkeys]` `DBUS:` actions, plus the Hotkeys page's built-in actions
-- **`panel-library`** — shared widgets and interfaces for panel plugins (`panelpluginterface`, `panelbutton`, `graphwidget`)
+- **`layeroverlay`** — solid-colour layer-shell overlays (startup black, locker/logout dim) without a `QWindow`
+- **`sessionlock`** — ext-session-lock-v1 shell integration (lockscreen)
+- **`loginui`** — greeter/lockscreen widgets (`PasswordForm`, `ScreenSet`, wallpaper, avatar)
+- **`fileops`** — threaded copy/move/delete/trash with conflict dialogs (desktop)
+- **`panel-library`** (`panel/panel-library`) — shared widgets and interfaces for panel plugins (`panelpluginterface`, `panelbutton`, `popup`, `panelanchor`, `graphwidget`)
 
 Helper CMake functions in `cmake/ForestDeps.cmake` (e.g. `forest_link_flogger(target)`) link these static libs.
 

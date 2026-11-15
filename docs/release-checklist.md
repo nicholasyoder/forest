@@ -57,6 +57,8 @@ builds packages.
 `forest-theme-devel` (built from the forest spec) must be installed before
 building Biome (`BuildRequires: cmake(ForestTheme)`). So: build forest RPMs,
 install `forest-theme-devel`, build biome, then install all on a test VM.
+For each spec, also do a clean `mock -r fedora-45-x86_64` build of the `.src.rpm`
+and review `rpmlint` output.
 
 ## Commits
 

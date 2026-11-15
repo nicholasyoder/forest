@@ -94,8 +94,8 @@ git archive --prefix=forest-0.11.0/ -o rpmbuild/SOURCES/forest-0.11.0.tar.gz HEA
 rpmbuild -ba --define "_topdir $PWD/rpmbuild" packaging/forest.spec
 ```
 
-Run from the repo root; output lands in `rpmbuild/RPMS/` (gitignored) as `forest` and
-`forest-greeter` (plus debuginfo). To use the default `~/rpmbuild` instead, drop the
+Run from the repo root; output lands in `rpmbuild/RPMS/` (gitignored) as `forest`,
+`forest-greeter` and `forest-theme-devel` (plus debuginfo). To use the default `~/rpmbuild` instead, drop the
 `--define`, use `~/rpmbuild/SOURCES` for the tarball, and run `rpmdev-setuptree` once.
 For a clean-chroot build, run `mock -r fedora-45-x86_64` on the resulting `.src.rpm`.
 `forest` requires `biome >= 0.3.0`, so install the Biome RPM first or in the same command.
@@ -111,7 +111,7 @@ sudo apt build-dep .            # once: installs debian/control's Build-Depends
 dpkg-buildpackage -us -uc -b    # or `debuild -us -uc` (devscripts) to also run lintian
 ```
 
-This produces `../forest_<version>_amd64.deb` and `../forest-greeter_<version>_amd64.deb` (plus a `-dbgsym` package for each); it doesn't install anything locally. The version comes from the top entry of `debian/changelog`. For cutting a release, see [docs/development-notes.md](docs/development-notes.md#release-packaging).
+This produces `../forest_<version>_amd64.deb` and `../forest-greeter_<version>_amd64.deb` (plus a `-dbgsym` package for each); it doesn't install anything locally. The version comes from the top entry of `debian/changelog`. For cutting a release, see [docs/release-checklist.md](docs/release-checklist.md).
 
 It builds the working tree as-is, uncommitted changes included.
 
