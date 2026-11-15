@@ -17,9 +17,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
 Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
 
-- **Polkit agent rewrite** ([detail](review-2026-11.md#polkit-agent)). With two admin users
-  the typed password goes to the wrong PAM session in a loop; cancel leaves
-  the dialog up; concurrent requests hang.
 - **Locker fail-safe fixes** ([detail](review-2026-11.md#lock-robustness)). Don't give up on
   a lock Biome already holds, show failed locks, blank only once locked,
   close the unlock→reap race.

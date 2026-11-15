@@ -16,12 +16,17 @@ class polkitdialog : public QDialog{
     Q_OBJECT
 
 public:
-    polkitdialog(const QString &actionId, const QString &message, const QString &iconName, const PolkitQt1::Details &details, const PolkitQt1::Identity::List &identities);
+    polkitdialog(const QString &actionId, const QString &message, const QString &iconName, const PolkitQt1::Details &details, const PolkitQt1::Identity::List &identities, int selected = 0);
     ~polkitdialog();
 
-    void setPrompt(const PolkitQt1::Identity &identity, const QString &text, bool echo);
-    void setError(QString error);
-    QString response();
+    void setPrompt(const QString &text, bool echo);
+    void setError(const QString &error);
+    void setInfo(const QString &info);
+    int identityIndex() const;
+
+signals:
+    void submitted(const QString &password);
+    void identityChanged(int index);
 
 private:
     Ui::polkitdialog *ui;
