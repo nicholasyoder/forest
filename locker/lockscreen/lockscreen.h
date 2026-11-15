@@ -26,7 +26,6 @@ private:
     loginui::PasswordForm *m_form;
     loginui::ScreenSet *m_screens;
     PamAuth m_pam;
-    bool m_unlockRequested = false;
-};
+    bool m_unlockRequested = false;};
 
 #endif // LOCKSCREEN_H

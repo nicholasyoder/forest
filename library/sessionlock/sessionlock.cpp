@@ -148,6 +148,10 @@ bool Lock::lock()
         m_manager = manager;
     }
     m_lock = std::make_unique<LockObject>(this, m_manager->lock());
+    // Returns once the compositor has received the request.
+    auto *app = qGuiApp->nativeInterface<QNativeInterface::QWaylandApplication>();
+    if (app && app->display())
+        wl_display_roundtrip(app->display());
     return true;
 }
 

@@ -4,6 +4,10 @@
 
 #include "layeroverlay.h"
 
+#include <QDBusConnection>
+#include <QDBusMessage>
+#include <QDBusPendingCall>
+
 Locker::Locker(QObject *parent)
     : QObject(parent)
 {
@@ -16,9 +20,10 @@ Locker::Locker(QObject *parent)
     connect(&m_idle, &IdleWatcher::resumed, this, &Locker::resumed);
     connect(&m_supervisor, &LockSupervisor::stateChanged, this, &Locker::lockStateChanged);
     connect(&m_supervisor, &LockSupervisor::lockFailed, this, &Locker::finishSleepLock);
+    connect(&m_supervisor, &LockSupervisor::lockFailed, this, &Locker::lockFailed);
     connect(&m_screenSaver, &ScreenSaver::lockRequested, &m_supervisor, &LockSupervisor::lock);
     connect(&m_screenSaver, &ScreenSaver::inhibitedChanged, &m_idle, &IdleWatcher::setInhibited);
-    connect(&m_screenSaver, &ScreenSaver::activitySimulated, &m_idle, &IdleWatcher::rearm);
+    connect(&m_screenSaver, &ScreenSaver::activitySimulated, this, &Locker::activitySimulated);
 }
 
 void Locker::start()
@@ -51,6 +56,22 @@ void Locker::idled(IdleWatcher::Threshold threshold)
     if (threshold == IdleWatcher::DisplayOff && m_settings.config().lockOnDisplayOff)
         m_supervisor.lock();
     m_power.setAll(false);
+}
+
+void Locker::activitySimulated()
+{
+    // Otherwise a media player's keep-awake pings would light a locked screen.
+    if (m_supervisor.state() == LockSupervisor::Unlocked)
+        m_idle.rearm();
+}
+
+void Locker::lockFailed()
+{
+    QDBusMessage msg = QDBusMessage::createMethodCall("org.freedesktop.Notifications", "/org/freedesktop/Notifications",
+                                                      "org.freedesktop.Notifications", "Notify");
+    msg << "Forest Locker" << uint(0) << "dialog-error" << "Couldn't lock the screen"
+        << "The session is still unlocked. See the forest-locker log." << QStringList() << QVariantMap() << 0;
+    QDBusConnection::sessionBus().asyncCall(msg);
 }
 
 void Locker::resumed()

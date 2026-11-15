@@ -18,6 +18,7 @@
 namespace {
 
 constexpr int NoPromptRetryMs = 2000;
+constexpr int LockedWarnMs = 5000;
 
 } // namespace
 
@@ -53,7 +54,9 @@ LockScreen::LockScreen(QObject *parent)
     });
     connect(lock, &sessionlock::Lock::finished, this, [] {
         qWarning() << "Session lock refused or revoked by the compositor";
-        QCoreApplication::exit(1);
+        // Not exit(): ~PamAuth can hang on a module blocked outside the conversation.
+        fflush(nullptr);
+        _exit(1);
     });
 
     connect(&m_pam, &PamAuth::prompt, m_form, &loginui::PasswordForm::setPrompt);
@@ -74,8 +77,15 @@ bool LockScreen::start()
 {
     if (!sessionlock::Lock::instance()->lock())
         return false;
+    // Tells forest-locker the compositor has the request, so it never abandons a held lock.
+    fputs("locking\n", stdout);
+    fflush(stdout);
 
     m_screens->showOnAllScreens();
+    QTimer::singleShot(LockedWarnMs, this, [] {
+        if (!sessionlock::Lock::instance()->isLocked())
+            qWarning() << "Compositor hasn't confirmed the session lock after" << LockedWarnMs << "ms";
+    });
 
     m_pam.start();
     return true;

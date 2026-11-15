@@ -41,12 +41,17 @@ void LockSupervisor::restore()
         return;
     }
     qInfo() << "Previous forest-locker exited while locked: relocking";
+    m_requested = true; // the compositor may still hold the abandoned lock
     lock();
 }
 
 void LockSupervisor::lock()
 {
     m_unlockPending = false;
+    if (m_state == Unlocking) {
+        m_relockPending = true;
+        return;
+    }
     if (m_state != Unlocked)
         return;
     setState(Locking);
@@ -55,14 +60,21 @@ void LockSupervisor::lock()
 
 void LockSupervisor::unlock()
 {
-    if (m_state == Unlocked)
+    if (m_state == Unlocked || m_state == Unlocking)
         return;
+    m_relockPending = false;
     // Only this process's own `locked` counts: a respawned one may not hold the lock yet,
     // and SIGUSR1 would kill it before main() blocks the signal.
     if (m_processLocked && m_process && m_process->state() == QProcess::Running)
-        kill(m_process->processId(), SIGUSR1);
+        sendUnlock();
     else
         m_unlockPending = true;
+}
+
+void LockSupervisor::sendUnlock()
+{
+    kill(m_process->processId(), SIGUSR1);
+    setState(Unlocking);
 }
 
 void LockSupervisor::spawn()
@@ -93,13 +105,18 @@ void LockSupervisor::spawn()
 void LockSupervisor::readOutput()
 {
     while (m_process->canReadLine()) {
-        if (m_process->readLine().trimmed() != "locked")
+        const QByteArray line = m_process->readLine().trimmed();
+        if (line == "locking") {
+            m_requested = true;
+            continue;
+        }
+        if (line != "locked")
             continue;
         m_processLocked = true;
         setState(Locked);
         if (m_unlockPending) {
             m_unlockPending = false;
-            kill(m_process->processId(), SIGUSR1);
+            sendUnlock();
         }
     }
 }
@@ -112,6 +129,14 @@ void LockSupervisor::finished(int exitCode, QProcess::ExitStatus status)
     if (status == QProcess::NormalExit && exitCode == 0) {
         m_crashes = 0;
         m_unlockPending = false;
+        m_requested = false;
+        if (m_relockPending) {
+            // A lock arrived while unlocking: go straight to Locking, no Unlocked in between.
+            m_relockPending = false;
+            setState(Locking);
+            spawn();
+            return;
+        }
         setState(Unlocked);
         return;
     }
@@ -121,10 +146,10 @@ void LockSupervisor::finished(int exitCode, QProcess::ExitStatus status)
         return;
     }
 
-    // Never locked: the session is still open, so give up rather than retry forever.
-    // Once locked, keep trying: the compositor holds the abandoned lock until a lockscreen unlocks it.
+    // Request never reached the compositor: the session is still open, so give up.
+    // Otherwise keep trying: the compositor holds the abandoned lock until a lockscreen unlocks it.
     const int attempts = int(std::size(kRespawnDelaysMs));
-    if (m_state == Locking && m_crashes >= attempts) {
+    if (m_state == Locking && !m_requested && m_crashes >= attempts) {
         qWarning() << "forest-lockscreen died" << attempts + 1 << "times without locking, giving up";
         fail();
         return;
@@ -139,6 +164,8 @@ void LockSupervisor::fail()
 {
     m_crashes = 0;
     m_unlockPending = false;
+    m_relockPending = false;
+    m_requested = false;
     setState(Unlocked);
     emit lockFailed();
 }
