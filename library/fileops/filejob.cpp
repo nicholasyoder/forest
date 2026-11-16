@@ -327,19 +327,22 @@ private:
         QByteArray buf(ChunkSize, Qt::Uninitialized);
         for (;;) {
             if (cancelled()) {
-                out.remove();
+                out.close();
+                ::unlink(QFile::encodeName(dst).constData());
                 return Partial;
             }
             const qint64 n = in.read(buf.data(), buf.size());
             if (n == 0)
                 break;
             if (n < 0) {
-                out.remove();
+                out.close();
+                ::unlink(QFile::encodeName(dst).constData());
                 return fail(src, in.errorString());
             }
             if (out.write(buf.constData(), n) != n) {
                 const QString why = out.errorString();
-                out.remove();
+                out.close();
+                ::unlink(QFile::encodeName(dst).constData());
                 return fail(dst, why);
             }
             m_done += n;
