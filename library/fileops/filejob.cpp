@@ -20,6 +20,7 @@
 #include <fcntl.h>
 #include <optional>
 #include <sys/stat.h>
+#include <unistd.h>
 
 namespace fileops {
 namespace {
@@ -101,7 +102,7 @@ public:
 
 private:
     enum Result { Ok, Partial, Failed }; // ordered by severity; Partial = skipped or cancelled
-    enum class Plan { Write, Merge, Skip, Fail, Done };
+    enum class Plan { Write, Replace, Merge, Skip, Fail, Done }; // Replace: dst is a non-folder to swap atomically
 
     void run()
     {
@@ -180,7 +181,7 @@ private:
         return m_answer;
     }
 
-    // Settles an existing dst: may rename it (Rename) or remove it (Overwrite).
+    // Settles an existing dst: may pick a new name (Rename) or ask to replace it (Overwrite).
     Plan prepareDest(const QString &src, QString &dst, bool srcIsDir)
     {
         const QFileInfo d(dst);
@@ -215,7 +216,10 @@ private:
                 fail(src, QStringLiteral("a folder with the same name already exists"));
                 return Plan::Fail;
             }
-            return removeEntry(dst, false) ? Plan::Write : Plan::Fail;
+            // A folder can't be renamed over a file, so that case still removes first.
+            if (srcIsDir)
+                return removeEntry(dst, false) ? Plan::Write : Plan::Fail;
+            return Plan::Replace;
         }
         return Plan::Fail;
     }
@@ -246,24 +250,53 @@ private:
         case Plan::Skip: return Partial;
         case Plan::Fail: return Failed;
         case Plan::Done: return Ok;
-        case Plan::Write: case Plan::Merge: break;
+        case Plan::Write: case Plan::Merge: return copyPrepared(src, dst, false);
+        case Plan::Replace: return copyPrepared(src, dst, true);
         }
+        return Failed;
+    }
 
+    // dst is settled; replace: it exists as a non-folder and is swapped in only on success.
+    Result copyPrepared(const QString &src, const QString &dst, bool replace)
+    {
+        const QFileInfo fi(src);
         if (fi.isSymLink()) {
-            if (!QFile::link(fi.readSymLink(), dst))
+            const QString tmp = replace ? tempSibling(dst) : dst;
+            if (!QFile::link(fi.readSymLink(), tmp))
                 return fail(dst, QStringLiteral("couldn't create link"));
-            return Ok;
+            return replace ? commitReplace(tmp, dst) : Ok;
         }
         if (fi.isDir())
             return copyDir(src, dst, fi);
         if (!fi.isFile())
             return fail(src, QStringLiteral("special files can't be copied"));
-        return copyFile(src, dst, fi);
+        return copyFile(src, dst, fi, replace);
+    }
+
+    // Hidden temp name next to dst, so the final rename stays on one filesystem.
+    static QString tempSibling(const QString &dst)
+    {
+        const QFileInfo d(dst);
+        QString p;
+        for (int i = 0; entryExists(QFileInfo(p = d.absolutePath() + QStringLiteral("/.%1.%2.part").arg(d.fileName()).arg(i))); ++i) {}
+        return p;
+    }
+
+    Result commitReplace(const QString &tmp, const QString &dst)
+    {
+        const QByteArray t = QFile::encodeName(tmp), d = QFile::encodeName(dst);
+        if (::rename(t.constData(), d.constData()) == 0)
+            return Ok;
+        const QString why = QString::fromLocal8Bit(std::strerror(errno));
+        ::unlink(t.constData());
+        return fail(dst, why);
     }
 
     Result copyDir(const QString &src, const QString &dst, const QFileInfo &fi)
     {
-        if (!QFileInfo(dst).isDir() && !QDir().mkdir(dst))
+        // Merging into an existing folder keeps its mode; a new one starts private.
+        const bool created = !QFileInfo(dst).isDir();
+        if (created && ::mkdir(QFile::encodeName(dst).constData(), 0700) != 0)
             return fail(dst, QStringLiteral("couldn't create folder"));
         Result r = Ok;
         for (const QString &name : QDir(src).entryList(AllEntries)) {
@@ -272,16 +305,23 @@ private:
             r = std::max(r, copyEntry(src + QLatin1Char('/') + name, dst + QLatin1Char('/') + name));
         }
         // After the children, so a read-only source folder doesn't block them.
-        QFile::setPermissions(dst, fi.permissions());
+        if (created)
+            QFile::setPermissions(dst, fi.permissions());
         return r;
     }
 
-    Result copyFile(const QString &src, const QString &dst, const QFileInfo &fi)
+    Result copyFile(const QString &src, const QString &finalDst, const QFileInfo &fi, bool replace)
     {
-        QFile in(src), out(dst);
+        const QString dst = replace ? tempSibling(finalDst) : finalDst;
+        QFile in(src), out;
         if (!in.open(QIODevice::ReadOnly))
             return fail(src, in.errorString());
-        if (!out.open(QIODevice::WriteOnly | QIODevice::NewOnly | QIODevice::Unbuffered))
+        // Owner-only until the data is in; final mode is set at the end.
+        const int fd = ::open(QFile::encodeName(dst).constData(), O_WRONLY | O_CREAT | O_EXCL | O_CLOEXEC, 0600);
+        if (fd < 0)
+            return fail(dst, QString::fromLocal8Bit(std::strerror(errno)));
+        out.setFileName(dst);
+        if (!out.open(fd, QIODevice::WriteOnly | QIODevice::Unbuffered, QFileDevice::AutoCloseHandle))
             return fail(dst, out.errorString());
 
         QByteArray buf(ChunkSize, Qt::Uninitialized);
@@ -307,7 +347,8 @@ private:
         }
         out.setPermissions(fi.permissions());
         out.setFileTime(fi.lastModified(), QFileDevice::FileModificationTime);
-        return Ok;
+        out.close();
+        return replace ? commitReplace(dst, finalDst) : Ok;
     }
 
     void moveTop(const QString &src)
@@ -331,11 +372,12 @@ private:
         if (cancelled())
             return Partial;
         const QFileInfo fi(src);
-        switch (prepareDest(src, dst, isRealDir(fi))) {
+        const Plan plan = prepareDest(src, dst, isRealDir(fi));
+        switch (plan) {
         case Plan::Skip: return Partial;
         case Plan::Fail: return Failed;
         case Plan::Done: return Ok;
-        case Plan::Write: break;
+        case Plan::Write: case Plan::Replace: break;
         case Plan::Merge: {
             Result r = Ok;
             for (const QString &name : QDir(src).entryList(AllEntries)) {
@@ -352,7 +394,9 @@ private:
         // QDir::rename hides errno, and QFile::rename silently falls back to an uncancellable copy.
         const QByteArray s = QFile::encodeName(src), d = QFile::encodeName(dst);
         int rc = ::renameat2(AT_FDCWD, s.constData(), AT_FDCWD, d.constData(), RENAME_NOREPLACE);
-        if (rc != 0 && errno == EINVAL) // filesystem without RENAME_NOREPLACE; dst was checked above
+        if (plan == Plan::Replace)
+            rc = ::rename(s.constData(), d.constData()); // atomic over the old file
+        else if (rc != 0 && errno == EINVAL) // filesystem without RENAME_NOREPLACE; dst was checked above
             rc = ::rename(s.constData(), d.constData());
         if (rc == 0) {
             report(fi.fileName());
@@ -361,7 +405,7 @@ private:
         if (errno != EXDEV)
             return fail(src, QString::fromLocal8Bit(std::strerror(errno)));
 
-        const Result r = copyEntry(src, dst);
+        const Result r = copyPrepared(src, dst, plan == Plan::Replace);
         if (r != Ok)
             return r;
         if (removeEntry(src, false))
