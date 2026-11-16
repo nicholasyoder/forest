@@ -302,6 +302,21 @@ QString uniquePath(const QString &dir, const QString &name, const QString &tag)
     }
 }
 
+bool installLauncher(const QString &src, const QString &destDir)
+{
+    QString dest = destDir + QLatin1Char('/') + QFileInfo(src).fileName();
+    if (QFileInfo::exists(dest) || QFileInfo(dest).isSymLink())
+        dest = uniquePath(destDir, QFileInfo(src).fileName(), QStringLiteral("copy"));
+    QFile f(src);
+    if (!f.copy(dest)) {
+        showErrors(QStringLiteral("Couldn't add the launcher to the desktop."), {dest + QStringLiteral(": ") + f.errorString()});
+        return false;
+    }
+    QFile d(dest);
+    d.setPermissions(d.permissions() | QFileDevice::ExeOwner);
+    return true;
+}
+
 void showErrors(const QString &text, const QStringList &errors)
 {
     constexpr int Shown = 5;

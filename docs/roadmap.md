@@ -17,8 +17,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
 Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
 
-- **Desktop launcher trust** ([detail](review-2026-11.md#launcher-trust)). `.desktop` files on
-  the desktop need `+x` or a "Trust and launch?" prompt.
 - **Wallpaper by value, mode by name** ([detail](review-2026-11.md#wallpaper-by-value)).
   Fixes a large per-change memory leak in `forest`; drops Tile mode.
 - **Applet reload leaks** ([detail](review-2026-11.md#applet-teardown)). Every applet edit

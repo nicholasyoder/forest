@@ -7,6 +7,10 @@
 #include <QMenu>
 #include <QtDBus>
 #include <qt6xdg/XdgIcon>
+#include <qt6xdg/XdgDirs>
+#include <QFile>
+#include <QFileInfo>
+#include "fileops.h"
 
 contextmenu::contextmenu()
 {
@@ -42,7 +46,7 @@ void contextmenu::add2Quicklaunch(){
 }
 
 void contextmenu::showOnDesktop(){
-    QFile::copy(currentDeskFile.fileName(), QDir::homePath() + "/Desktop/" + currentDeskFile.fileName().split("/").last());
+    fileops::installLauncher(currentDeskFile.fileName(), XdgDirs::userDir(XdgDirs::Desktop));
 }
 
 void contextmenu::runAsRoot(){

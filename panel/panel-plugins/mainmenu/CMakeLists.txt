@@ -25,5 +25,6 @@ target_link_libraries(mainmenu PRIVATE Qt6::Core Qt6::Gui Qt6::DBus Qt6::Widgets
 forest_link_panel_library(mainmenu)
 forest_link_miscutills(mainmenu)
 forest_link_activation(mainmenu)
+forest_link_fileops(mainmenu)
 
 install(TARGETS mainmenu LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/panel)

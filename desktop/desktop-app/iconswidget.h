@@ -28,7 +28,7 @@ signals:
     void iconposchange(QHash<QString, QString> poshash);
     void icontextchanged(QString ID, QString newtext);
     void refreshrequest();
-    void filesdropped(QStringList paths, Qt::DropAction action);
+    void filesdropped(QStringList paths, Qt::DropAction action, bool trusted);
     void keypressed(QKeyEvent *event);
 
 public slots:

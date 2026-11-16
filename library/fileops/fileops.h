@@ -29,6 +29,11 @@ QStringList localPaths(const QList<QUrl> &urls);
 bool sameDevice(const QString &path, const QString &dir);
 // Free "name (tag).ext" path in dir; numbered "(2)", "(3)"... if tag is empty.
 QString uniquePath(const QString &dir, const QString &name, const QString &tag);
+// Copies a .desktop file into destDir under a free name and marks it executable
+// (trusted). Synchronous; shows an error dialog on failure.
+bool installLauncher(const QString &src, const QString &destDir);
+// Drag mime type set by the main menu: the dropped .desktop files are trusted.
+inline const char *trustedLauncherMime = "application/x-forest-trusted-launcher";
 void showErrors(const QString &text, const QStringList &errors);
 
 }
