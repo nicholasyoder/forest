@@ -3,8 +3,10 @@
 #ifndef LOGINSETTINGS_H
 #define LOGINSETTINGS_H
 
+#include <QImage>
 #include <QObject>
 
+#include "miscutills.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
 class QComboBox;
@@ -39,7 +41,9 @@ private:
     QProcess *process = nullptr;
 
     bool installed_custom = false; // a custom image is installed
-    int installed_mode = 0;
+    WALLPAPER_MODE installed_mode = Fill;
+    QImage preview_image;
+    QString preview_path;
     QString pending_image;          // newly chosen file, not yet installed
 };
 

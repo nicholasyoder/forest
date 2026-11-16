@@ -73,27 +73,20 @@ Wallpaper::Wallpaper()
 {
     if (QFileInfo::exists(loginconfig::wallpaperFile)) {
         QSettings settings(loginconfig::confFile, QSettings::IniFormat);
-        m_file = loginconfig::wallpaperFile;
-        m_mode = settings.value(loginconfig::modeKey, Fill).toInt();
-    } else {
-        m_file = loginconfig::defaultWallpaper;
+        m_source = QImage(loginconfig::wallpaperFile);
+        m_mode = miscutills::wallpaper_mode_from_setting(settings.value(loginconfig::modeKey));
+    }
+    if (m_source.isNull()) { // absent or unreadable custom image
+        m_source = QImage(loginconfig::defaultWallpaper);
         m_mode = Fill;
     }
 }
 
 QImage Wallpaper::scaled(QSize size)
 {
-    if (m_file.isEmpty() || size.isEmpty())
-        return {};
-    quint64 key = (quint64(size.width()) << 32) | quint32(size.height());
-    auto it = m_cache.constFind(key);
-    if (it != m_cache.constEnd())
-        return *it;
-
-    std::unique_ptr<QImage> img(miscutills::get_wallpaper_scaled(m_file, WALLPAPER_MODE(m_mode), size));
-    QImage result = img ? *img : QImage();
-    m_cache.insert(key, result);
-    return result;
+    if (m_scaled.size() != size)
+        m_scaled = miscutills::get_wallpaper_scaled(m_source, m_mode, size);
+    return m_scaled;
 }
 
 Card::Card(QWidget *parent)
@@ -138,11 +131,15 @@ ScreenBackground::ScreenBackground(QWidget *parent)
 void ScreenBackground::paintEvent(QPaintEvent *)
 {
     QPainter painter(this);
-    QImage img = m_wallpaper.scaled(size());
-    if (img.isNull())
+    if (m_scaled.isNull())
         painter.fillRect(rect(), QColor(30, 30, 30));
     else
-        painter.drawImage(rect(), img);
+        painter.drawImage(rect(), m_scaled);
+}
+
+void ScreenBackground::resizeEvent(QResizeEvent *)
+{
+    m_scaled = m_wallpaper.scaled(size());
 }
 
 } // namespace loginui

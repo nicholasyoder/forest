@@ -16,26 +16,25 @@ class wallpaperwidget : public QWidget
 {
     Q_OBJECT
 public:
-    wallpaperwidget(QImage *image, WALLPAPER_MODE imode, QScreen *screen, bool hasicons);
+    wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScreen *screen, bool hasicons);
 
 public slots:
-    void setwallpaper(QImage *image){ wallpaper = image; setup_wallpaper(); }
-    void setimagemode(WALLPAPER_MODE imode){ imagemode = imode; setup_wallpaper(); }
+    void setwallpaper(const QImage &image, WALLPAPER_MODE imode){ wallpaper = image; imagemode = imode; setup_wallpaper(); }
     void setcontextmenu(QMenu *contextmenu){ cmenu = contextmenu;}
 
 protected:
     void paintEvent(QPaintEvent *);
     void mouseReleaseEvent(QMouseEvent *event);
-    void resizeEvent(QResizeEvent *){ setup_wallpaper(); }
+    void resizeEvent(QResizeEvent *){ if (size() != scaledwallpaper.size()) setup_wallpaper(); }
 
 private slots:
     void setup_wallpaper();
 
 private:
-    QImage *wallpaper = new QImage();
-    QImage *scaledwallpaper = new QImage();
+    QImage wallpaper;
+    QImage scaledwallpaper;
     QMenu *cmenu = nullptr;
-    WALLPAPER_MODE imagemode;
+    WALLPAPER_MODE imagemode = Fill;
 };
 
 #endif // WALLPAPERWIDGET_H

@@ -3,6 +3,7 @@
 // Root helper run through pkexec by the Login Screen settings page.
 //   set-wallpaper <mode>   image on stdin
 //   set-mode <mode>        keep the installed image
+// <mode> is Fill, Fit, Stretch or Center.
 // Takes the image on stdin, never a path, so root never opens a user-chosen file.
 
 #include <QBuffer>
@@ -30,16 +31,15 @@ constexpr qint64 MaxPixels = 40'000'000; // above 8K; also keeps decode under Qt
     exit(1);
 }
 
-int parseMode(const QString &arg)
+QString parseMode(const QString &arg)
 {
-    bool ok = false;
-    int mode = arg.toInt(&ok);
-    if (!ok || mode < 0 || mode > 4) // miscutills WALLPAPER_MODE
+    static const QStringList names{"Fill", "Fit", "Stretch", "Center"};
+    if (!names.contains(arg))
         fail("invalid mode");
-    return mode;
+    return arg;
 }
 
-void writeMode(int mode)
+void writeMode(const QString &mode)
 {
     QDir().mkpath("/etc/forest");
     QSettings settings(loginconfig::confFile, QSettings::IniFormat);
@@ -52,7 +52,8 @@ void writeMode(int mode)
 void installImage()
 {
     QFile in;
-    in.open(stdin, QIODevice::ReadOnly);
+    if (!in.open(stdin, QIODevice::ReadOnly))
+        fail("cannot read stdin");
     QByteArray data = in.readAll(); // loops to EOF; a single read() stops at the pipe buffer
     if (data.isEmpty() || data.size() > MaxBytes)
         fail("image is empty or too large");
@@ -87,7 +88,7 @@ int main(int argc, char *argv[])
 
     const QStringList args = app.arguments().mid(1);
     if (args.value(0) == "set-wallpaper" && args.size() == 2) {
-        int mode = parseMode(args[1]);
+        const QString mode = parseMode(args[1]);
         installImage();
         writeMode(mode);
     } else if (args.value(0) == "set-mode" && args.size() == 2) {

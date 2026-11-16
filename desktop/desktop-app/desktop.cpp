@@ -39,8 +39,7 @@ void desktop::setupPlug(){
 void desktop::reloadwallpaper(){
     GS::load();
     foreach (wallpaperwidget *wallwidget, wallwidgetlist){
-        wallwidget->setwallpaper(GS::WALLPAPER);
-        wallwidget->setimagemode(GS::IMAGE_MODE);
+        wallwidget->setwallpaper(GS::WALLPAPER, GS::IMAGE_MODE);
     }
 }
 

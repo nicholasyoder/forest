@@ -48,7 +48,8 @@ LoginSettings::LoginSettings(){
         browse_button));
 
     mode_box = new QComboBox;
-    mode_box->addItems({"Fill", "Fit", "Stretch", "Tile", "Center"}); // miscutills WALLPAPER_MODE order
+    for (WALLPAPER_MODE m : {Fill, Fit, Stretch, Center})
+        mode_box->addItem(miscutills::wallpaper_mode_name(m), int(m));
     connect(mode_box, &QComboBox::currentIndexChanged, this, &LoginSettings::update_ui);
     settings_item->add_child(new settings_widget("Display Mode", "", mode_box));
 
@@ -74,12 +75,12 @@ LoginSettings::LoginSettings(){
 void LoginSettings::load(){
     installed_custom = QFileInfo::exists(loginconfig::wallpaperFile);
     QSettings conf(loginconfig::confFile, QSettings::IniFormat);
-    installed_mode = installed_custom ? conf.value(loginconfig::modeKey, 0).toInt() : 0;
+    installed_mode = installed_custom ? miscutills::wallpaper_mode_from_setting(conf.value(loginconfig::modeKey)) : Fill;
     pending_image.clear();
     status->hide();
     {
         const QSignalBlocker blocker(mode_box);
-        mode_box->setCurrentIndex(installed_mode);
+        mode_box->setCurrentIndex(mode_box->findData(int(installed_mode)));
     }
     update_ui();
 }
@@ -106,17 +107,21 @@ void LoginSettings::update_ui(){
     // Mode only applies to a custom image; the default is always shown Fill.
     bool custom = installed_custom || !pending_image.isEmpty();
     mode_box->setEnabled(custom);
-    int mode = custom ? mode_box->currentIndex() : 0;
+    WALLPAPER_MODE mode = custom ? WALLPAPER_MODE(mode_box->currentData().toInt()) : Fill;
 
-    std::unique_ptr<QImage> scaled(miscutills::get_wallpaper_scaled(preview_source(), WALLPAPER_MODE(mode), PreviewSize));
-    preview->setPixmap(scaled ? QPixmap::fromImage(*scaled) : QPixmap());
+    const QString source = preview_source();
+    if (source != preview_path) { // decode only when the file changes
+        preview_path = source;
+        preview_image = QImage(source);
+    }
+    preview->setPixmap(QPixmap::fromImage(miscutills::get_wallpaper_scaled(preview_image, mode, PreviewSize)));
 
     bool changed = !pending_image.isEmpty() || (installed_custom && mode != installed_mode);
     apply_button->setEnabled(changed && process->state() == QProcess::NotRunning);
 }
 
 void LoginSettings::apply(){
-    int mode = mode_box->currentIndex();
+    const QString mode = mode_box->currentText();
     QStringList args;
     QByteArray image;
     if (!pending_image.isEmpty()) {
@@ -127,9 +132,9 @@ void LoginSettings::apply(){
             return;
         }
         image = file.readAll();
-        args << "set-wallpaper" << QString::number(mode);
+        args << "set-wallpaper" << mode;
     } else {
-        args << "set-mode" << QString::number(mode);
+        args << "set-mode" << mode;
     }
 
     status->hide();

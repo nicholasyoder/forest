@@ -9,6 +9,7 @@ target_link_libraries(desktop-settings PRIVATE
     Qt6::Widgets Qt6::DBus
 )
 forest_link_pluginutills(desktop-settings)
+forest_link_settings_widgets(desktop-settings)
 forest_link_miscutills(desktop-settings)
 
 install(TARGETS desktop-settings LIBRARY DESTINATION ${CMAKE_INSTALL_LIBDIR}/forest/settings)

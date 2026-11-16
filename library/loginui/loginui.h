@@ -12,6 +12,8 @@
 #include <QString>
 #include <QWidget>
 
+#include "miscutills.h"
+
 // UI pieces shared by forest-greeter and forest-lockscreen.
 namespace loginui {
 
@@ -21,16 +23,16 @@ QPixmap circularAvatar(const QString &path, int size, const QString &fallback);
 // ~/.face, else the AccountsService icon; empty if neither exists.
 QString faceIconPath(const QString &username, const QString &homeDir);
 
-// The system-wide login wallpaper (loginconfig.h), scaled per target size (cached).
+// The system-wide login wallpaper (loginconfig.h): decoded once, scaled when the size changes.
 class Wallpaper {
 public:
     Wallpaper();
     QImage scaled(QSize size);
 
 private:
-    QString m_file;
-    int m_mode;
-    QHash<quint64, QImage> m_cache;
+    QImage m_source;
+    QImage m_scaled;
+    WALLPAPER_MODE m_mode = Fill;
 };
 
 // The themed frame around a login UI.
@@ -59,9 +61,11 @@ public:
 
 protected:
     void paintEvent(QPaintEvent *event) override;
+    void resizeEvent(QResizeEvent *event) override;
 
 private:
     Wallpaper m_wallpaper;
+    QImage m_scaled;
 };
 
 } // namespace loginui

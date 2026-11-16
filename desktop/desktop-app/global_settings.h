@@ -11,7 +11,8 @@
 class GS {
 
 public:
-    static QImage * WALLPAPER;
+    static QImage WALLPAPER; // decoded only when the path changes
+    static QString WALLPAPER_PATH;
     static WALLPAPER_MODE IMAGE_MODE;
     static int ICON_SIZE;
 
