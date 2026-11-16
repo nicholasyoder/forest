@@ -65,10 +65,10 @@ Forest is a Qt6/C++ desktop environment for Linux (targets Fedora; Debian Trixie
 
 The desktop session runs as several independent processes:
 
-- **`forest`** — the main process. Loads app plugins at startup, registers `org.forest` on DBus, and applies the global stylesheet.
-- **`forest-session`** — session manager. Launches autostart entries and the `forest` main process. Forked by the Biome compositor (its `-s` flag) once Biome's Wayland socket is ready — Biome is the top-level process, exec'd by `startforest-wayland`, the wayland-sessions entry point.
+- **`forest`** — the main process. Claims `org.forest` first (exits 0 if already owned), then loads app plugins and applies the global stylesheet. Restarted by `forest-session` (`SupervisedProcess`, backoff, min delay 1 s) unless it exits 0.
+- **`forest-session`** — session manager. Launches autostart entries, and supervises `forest` and `forest-locker`. Forked by the Biome compositor (its `-s` flag) once Biome's Wayland socket is ready — Biome is the top-level process, exec'd by `startforest-wayland`, the wayland-sessions entry point.
 - **`forest-logout`** — standalone fullscreen dialog for power actions.
-- **`forest-locker`** — idle/lock daemon started by `forest-session`: dim, display power, logind lock/sleep, `org.freedesktop.ScreenSaver`. Runs **`forest-lockscreen`** (`ext-session-lock-v1` + PAM) to lock. Split in two (like swayidle + swaylock) so a crashing lock UI can't leave the session stuck locked or the displays dark; the daemon respawns it. Deliberately no `org.forest.Locker`: locking goes only through logind `Session.Lock`, `org.freedesktop.ScreenSaver` and `loginctl lock-session`, so other lockers work with Forest and vice versa.
+- **`forest-locker`** — idle/lock daemon supervised by `forest-session`: dim, display power, logind lock/sleep, `org.freedesktop.ScreenSaver`. Runs **`forest-lockscreen`** (`ext-session-lock-v1` + PAM) to lock. Split in two (like swayidle + swaylock) so a crashing lock UI can't leave the session stuck locked or the displays dark; the daemon respawns it. Deliberately no `org.forest.Locker`: locking goes only through logind `Session.Lock`, `org.freedesktop.ScreenSaver` and `loginctl lock-session`, so other lockers work with Forest and vice versa.
 - **`forest-settings`** — standalone settings app. Loads every settings plugin in `<libdir>/forest/settings/` and shows their pages in a category tree. Single instance: owns `org.forest.Settings`; later launches forward their path and `XDG_ACTIVATION_TOKEN` to `OpenPage` and exit.
 
 There is a **two-tier plugin system** used by both `forest` and the panel.
