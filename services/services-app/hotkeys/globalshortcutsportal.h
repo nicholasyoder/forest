@@ -20,7 +20,9 @@ public:
     explicit GlobalShortcutsPortal(QObject *parent = nullptr);
 
     void createSession(std::function<void(bool ok)> onReady);
-    void bindShortcuts(const QList<globalhotkey *> &hotkeys, std::function<void(bool ok)> onDone);
+    // `unbound` lists the ids that ended up with no trigger (refused or already taken).
+    void bindShortcuts(const QList<globalhotkey *> &hotkeys,
+        std::function<void(bool ok, const QStringList &unbound)> onDone);
     // onClosed runs once the Close call returns, whatever its result.
     void closeSession(std::function<void()> onClosed);
 
@@ -41,7 +43,8 @@ private slots:
 private:
     // Subscribes to the Request's Response *before* sending `call`: the
     // Response can otherwise arrive before the match rule exists.
-    void sendRequest(const QDBusMessage &call, const QString &handleToken, std::function<void(bool ok)> then);
+    void sendRequest(const QDBusMessage &call, const QString &handleToken,
+        std::function<void(bool ok, const QVariantMap &results)> then);
 
     // Also moves the Session::Closed subscription to the new handle.
     void setSessionHandle(const QDBusObjectPath &handle);

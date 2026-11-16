@@ -3,7 +3,9 @@
 #ifndef HOTKEYCONFIG_H
 #define HOTKEYCONFIG_H
 
+#include <QKeySequence>
 #include <QList>
+#include <QSettings>
 #include <QString>
 
 #include <optional>
@@ -36,6 +38,24 @@ namespace hotkeyconfig {
 inline constexpr char kRepeatKey[] = "repeat";
 inline constexpr char kRepeatIntervalKey[] = "repeat_interval";
 inline constexpr int kDefaultRepeatIntervalMs = 100;
+
+// Per-hotkey key under [hotkeys]/<item>: shortcuts-spec trigger, modifiers in
+// caps and the keysym name lowercased ("CTRL+escape", "xf86audiomute"); "LOGO"
+// alone is a bare Meta tap. Replaces the old Qt-style "keysequence".
+inline constexpr char kTriggerKey[] = "trigger";
+inline constexpr char kLegacyKeysequenceKey[] = "keysequence";
+
+// Trigger for a captured key (xkb keysym, e.g. QKeyEvent::nativeVirtualKey());
+// empty if the keysym has no name.
+QString triggerFromKeysym(Qt::KeyboardModifiers mods, quint32 keysym);
+// Converts an old "keysequence" value; empty if it can't be resolved.
+QString triggerFromLegacy(const QString &keysequence);
+// "CTRL+xf86audiomute" -> "Ctrl+XF86AudioMute".
+QString triggerDisplay(const QString &trigger);
+// Why Biome would refuse `trigger` (empty parts, bare key); empty if it's fine.
+QString triggerRefusal(const QString &trigger);
+// The current group's trigger, falling back to a converted "keysequence".
+QString readTrigger(const QSettings &settings);
 
 // nullopt if `action` isn't a DBUS: action.
 std::optional<DBusHotkeyAction> parseDBusAction(const QString &action);

@@ -11,30 +11,30 @@ constexpr char kRequestIface[] = "org.freedesktop.portal.Request";
 constexpr char kSessionIface[] = "org.freedesktop.portal.Session";
 
 // QDBusConnection::connect() needs a real slot; this forwards one Request's
-// outcome to a callback, exactly once. Its bus match goes away with it.
+// outcome (and results) to a callback, exactly once. Its bus match goes away with it.
 class PortalRequest : public QObject {
     Q_OBJECT
 
 public:
-    explicit PortalRequest(std::function<void(bool)> callback, QObject *parent = nullptr)
+    explicit PortalRequest(std::function<void(bool, const QVariantMap &)> callback, QObject *parent = nullptr)
         : QObject(parent), m_callback(std::move(callback)) {
     }
 
-    void finish(bool ok) {
+    void finish(bool ok, const QVariantMap &results = {}) {
         if (m_done) return;
         m_done = true;
-        m_callback(ok);
+        m_callback(ok, results);
         deleteLater();
     }
 
 public slots:
-    void onResponse(uint code, const QVariantMap &) {
+    void onResponse(uint code, const QVariantMap &results) {
         if (code != 0) qWarning() << "GlobalShortcutsPortal: request failed, response code" << code;
-        finish(code == 0);
+        finish(code == 0, results);
     }
 
 private:
-    std::function<void(bool)> m_callback;
+    std::function<void(bool, const QVariantMap &)> m_callback;
     bool m_done = false;
 };
 
@@ -154,7 +154,7 @@ void GlobalShortcutsPortal::setSessionHandle(const QDBusObjectPath &handle) {
 }
 
 void GlobalShortcutsPortal::sendRequest(const QDBusMessage &call, const QString &handleToken,
-        std::function<void(bool ok)> then) {
+        std::function<void(bool ok, const QVariantMap &results)> then) {
     const QString path = QStringLiteral("/org/freedesktop/portal/desktop/request/%1/%2")
         .arg(escapedSender(), handleToken);
 
@@ -195,20 +195,28 @@ void GlobalShortcutsPortal::createSession(std::function<void(bool ok)> onReady) 
 
     QDBusMessage call = portalCall(QStringLiteral("CreateSession"));
     call << options;
-    sendRequest(call, handleToken, [this, onReady](bool ok) {
+    sendRequest(call, handleToken, [this, onReady](bool ok, const QVariantMap &) {
         if (!ok) setSessionHandle(QDBusObjectPath());
         onReady(ok);
     });
 }
 
-void GlobalShortcutsPortal::bindShortcuts(const QList<globalhotkey *> &hotkeys, std::function<void(bool ok)> onDone) {
+void GlobalShortcutsPortal::bindShortcuts(const QList<globalhotkey *> &hotkeys,
+        std::function<void(bool ok, const QStringList &unbound)> onDone) {
     QList<PortalShortcutSpec> shortcuts;
+    QStringList unbound; // refused here, before the portal sees them
+    QStringList requested;
     for (globalhotkey *item : hotkeys) {
-        const QString trigger = item->triggerString();
-        qInfo() << "GlobalShortcutsPortal: binding" << item->id() << "->" << trigger;
-        if (trigger.isEmpty()) {
-            continue; // triggerString() already logged why
+        const QString trigger = item->trigger();
+        const QString refusal = hotkeyconfig::triggerRefusal(trigger);
+        if (trigger.isEmpty() || !refusal.isEmpty()) {
+            qWarning() << "GlobalShortcutsPortal:" << item->id() << "has no usable trigger:"
+                       << (trigger.isEmpty() ? QStringLiteral("none set") : refusal);
+            unbound << item->id();
+            continue;
         }
+        qInfo() << "GlobalShortcutsPortal: binding" << item->id() << "->" << trigger;
+        requested << item->id();
         PortalShortcutSpec spec;
         spec.id = item->id();
         spec.options.insert(QStringLiteral("description"), item->description());
@@ -222,7 +230,19 @@ void GlobalShortcutsPortal::bindShortcuts(const QList<globalhotkey *> &hotkeys, 
 
     QDBusMessage call = portalCall(QStringLiteral("BindShortcuts"));
     call << QVariant::fromValue(m_sessionHandle) << QVariant::fromValue(shortcuts) << QString() << options;
-    sendRequest(call, handleToken, std::move(onDone));
+    sendRequest(call, handleToken, [requested, unbound, onDone](bool ok, const QVariantMap &results) mutable {
+        if (ok) {
+            QSet<QString> bound;
+            const auto reported = qdbus_cast<QList<PortalShortcutSpec>>(results.value(QStringLiteral("shortcuts")));
+            for (const PortalShortcutSpec &spec : reported) bound.insert(spec.id);
+            for (const QString &id : std::as_const(requested)) {
+                if (bound.contains(id)) continue;
+                qWarning() << "GlobalShortcutsPortal: the portal did not bind" << id;
+                unbound << id;
+            }
+        }
+        onDone(ok, unbound);
+    });
 }
 
 void GlobalShortcutsPortal::closeSession(std::function<void()> onClosed) {

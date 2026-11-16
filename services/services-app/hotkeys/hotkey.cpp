@@ -1,15 +1,16 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "hotkey.h"
-#include "keysym_table.h"
 
-#include <xkbcommon/xkbcommon.h>
-
-globalhotkey::globalhotkey(const QString &id, const QString &description, const QKeySequence &sequence, HK_Type type)
-    : hotkey_id(id), hotkey_description(description), keyseq(sequence), hotkey_type(type) {
-    qDebug() << "Add Global Hotkey:" << id << sequence.toString();
+globalhotkey::globalhotkey(const QString &id, const QString &description, const QString &trigger, HK_Type type)
+    : hotkey_id(id), hotkey_description(description), hotkey_trigger(trigger), hotkey_type(type) {
+    qDebug() << "Add Global Hotkey:" << id << trigger;
     // Repeats run without a token: tokens are single-use.
     connect(&repeatTimer, &QTimer::timeout, this, [this]() { exec(); });
+    // A lost Deactivated must not leave the action repeating forever.
+    repeatCap.setSingleShot(true);
+    repeatCap.setInterval(kMaxRepeatMs);
+    connect(&repeatCap, &QTimer::timeout, this, &globalhotkey::release);
 }
 
 void globalhotkey::setRepeatInterval(int intervalMs){
@@ -19,11 +20,15 @@ void globalhotkey::setRepeatInterval(int intervalMs){
 
 void globalhotkey::press(const QString &activationToken){
     exec(activationToken);
-    if (repeatTimer.interval() > 0) repeatTimer.start();
+    if (repeatTimer.interval() > 0) {
+        repeatTimer.start();
+        repeatCap.start();
+    }
 }
 
 void globalhotkey::release(){
     repeatTimer.stop();
+    repeatCap.stop();
 }
 
 void globalhotkey::exec(const QString &activationToken){
@@ -53,66 +58,4 @@ void globalhotkey::exec(const QString &activationToken){
             w->deleteLater();
         });
     }
-}
-
-QString globalhotkey::triggerString() const {
-    if (keyseq.isEmpty()) {
-        return QString();
-    }
-
-    const QKeyCombination combo = keyseq[0];
-    const Qt::KeyboardModifiers mods = combo.keyboardModifiers();
-    const Qt::Key key = combo.key();
-
-    // Bare-Meta tap ("Meta" in Forest.conf). Not in the shortcuts spec;
-    // Biome accepts a lone modifier name as an extension.
-    if (key == Qt::Key_Meta && mods == Qt::NoModifier) {
-        return QStringLiteral("LOGO");
-    }
-
-    QStringList parts;
-    if (mods & Qt::ControlModifier) parts << QStringLiteral("CTRL");
-    if (mods & Qt::AltModifier) parts << QStringLiteral("ALT");
-    if (mods & Qt::ShiftModifier) parts << QStringLiteral("SHIFT");
-    if (mods & Qt::MetaModifier) parts << QStringLiteral("LOGO");
-
-    xkb_keysym_t keysym = XKB_KEY_NoSymbol;
-
-    // Printable Latin-1 keys (letters, digits, punctuation): Qt::Key and xkb
-    // keysym values are both defined to equal the Unicode/Latin-1 code point
-    // here, so resolve directly. KeyTbl isn't safe for these: it's a reverse
-    // lookup of Qt's xkb-keysym -> Qt::Key table, which isn't 1:1 (e.g.
-    // Qt::Key_Equal only appears there mapped from XKB_KEY_KP_Equal, so a
-    // main-row "=" would otherwise resolve to the numpad keysym).
-    if (key >= 0x20 && key <= 0xff) {
-        // Qt::Key is always upper-case for a letter regardless of Shift, but
-        // xkb's unshifted/canonical keysym for a letter press is lower-case.
-        keysym = (key >= Qt::Key_A && key <= Qt::Key_Z) ? static_cast<xkb_keysym_t>(key + 0x20)
-                                                          : static_cast<xkb_keysym_t>(key);
-    } else {
-        // Media/brightness/function/navigation keys: table maps Qt::Key to
-        // xkb keysyms (same values as libxkbcommon's), so a cast is enough.
-        int i = 0;
-        while (KeyTbl[i]) {
-            if (KeyTbl[i + 1] == static_cast<uint>(key)) {
-                keysym = static_cast<xkb_keysym_t>(KeyTbl[i]);
-                break;
-            }
-            i += 2;
-        }
-    }
-
-    if (keysym == XKB_KEY_NoSymbol) {
-        qWarning() << "globalhotkey: could not resolve a keysym for" << keyseq.toString();
-        return QString();
-    }
-
-    char name[64];
-    if (xkb_keysym_get_name(keysym, name, sizeof(name)) < 0) {
-        qWarning() << "globalhotkey: xkb_keysym_get_name failed for keysym" << keysym;
-        return QString();
-    }
-
-    parts << QString::fromUtf8(name);
-    return parts.join('+');
 }

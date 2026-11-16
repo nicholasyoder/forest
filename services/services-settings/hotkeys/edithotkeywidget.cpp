@@ -6,23 +6,42 @@
 #include "displayprofiles.h"
 #include "hotkeyconfig.h"
 
+#include <QApplication>
+#include <QMessageBox>
+
 namespace {
 constexpr int kActionRole = Qt::UserRole;
 constexpr int kDescriptionRole = Qt::UserRole + 1;
 }
 
-edithotkeywidget::edithotkeywidget(QWidget *parent) : QWidget(parent), ui(new Ui::edithotkeywidget){
+edithotkeywidget::edithotkeywidget(QWidget *parent) : QDialog(parent), ui(new Ui::edithotkeywidget){
     ui->setupUi(this);
+    setModal(true);
     ui->commandRbt->setChecked(true);
     connect(ui->repeatCbox, &QCheckBox::toggled, ui->repeatIntervalSbox, &QSpinBox::setEnabled);
+    connect(ui->okbt, &QPushButton::clicked, this, &edithotkeywidget::accept_data);
+    connect(ui->cancelbt, &QPushButton::clicked, this, &QDialog::reject);
+    connect(ui->shortcutbt, &QPushButton::clicked, this, &edithotkeywidget::start_capture);
+    connect(ui->commandRbt, &QRadioButton::toggled, this, [this](bool on){ if (on) ui->stackedWidget->setCurrentIndex(0); });
+    connect(ui->customdbusRbt, &QRadioButton::toggled, this, [this](bool on){ if (on) ui->stackedWidget->setCurrentIndex(1); });
+    connect(ui->builtindbusRbt, &QRadioButton::toggled, this, [this](bool on){ if (on) ui->stackedWidget->setCurrentIndex(2); });
+    connect(ui->builtindbusLwidget, &QListWidget::currentItemChanged, this, &edithotkeywidget::builtin_item_changed);
 }
 
+// Also runs from the destructor path via done(): hotkeys never stay paused.
 edithotkeywidget::~edithotkeywidget(){
+    end_capture();
     delete ui;
 }
 
+void edithotkeywidget::done(int result){
+    end_capture();
+    QDialog::done(result);
+}
+
 void edithotkeywidget::set_data(const HotkeyData& data){
-    ui->shortcutbt->setText(data.shortcut);
+    trigger = data.trigger;
+    show_trigger();
     ui->descriptionTbox->setText(data.description);
     ui->repeatCbox->setChecked(data.repeat);
     ui->repeatIntervalSbox->setEnabled(data.repeat);
@@ -75,17 +94,105 @@ QListWidgetItem *edithotkeywidget::find_builtin(const QString &action) const{
     if (!parsed) return nullptr;
     for (int i = 0; i < ui->builtindbusLwidget->count(); i++){
         QListWidgetItem *item = ui->builtindbusLwidget->item(i);
-        if (hotkeyconfig::parseDBusAction(item->data(kActionRole).toString())->sameTarget(*parsed))
+        const auto candidate = hotkeyconfig::parseDBusAction(item->data(kActionRole).toString());
+        if (candidate && candidate->sameTarget(*parsed))
             return item;
     }
     return nullptr;
 }
 
 // Follows the selection unless the user wrote their own description.
-void edithotkeywidget::on_builtindbusLwidget_currentItemChanged(QListWidgetItem *current, QListWidgetItem *previous){
+void edithotkeywidget::builtin_item_changed(QListWidgetItem *current, QListWidgetItem *previous){
     const QString description = ui->descriptionTbox->text();
     if (current && (description.isEmpty() || (previous && description == previous->data(kDescriptionRole).toString())))
         ui->descriptionTbox->setText(current->data(kDescriptionRole).toString());
+}
+
+static bool is_meta_key(int key){
+    return key == Qt::Key_Meta || key == Qt::Key_Super_L || key == Qt::Key_Super_R;
+}
+
+static bool is_modifier_key(int key){
+    return is_meta_key(key) || key == Qt::Key_Control || key == Qt::Key_Shift || key == Qt::Key_Alt
+        || key == Qt::Key_AltGr || key == Qt::Key_CapsLock || key == Qt::Key_NumLock
+        || key == Qt::Key_ScrollLock || key == Qt::Key_Hyper_L || key == Qt::Key_Hyper_R;
+}
+
+void edithotkeywidget::show_trigger(){
+    ui->shortcutbt->setText(trigger.isEmpty() ? QStringLiteral("Click to set")
+                                              : hotkeyconfig::triggerDisplay(trigger));
+}
+
+void edithotkeywidget::start_capture(){
+    if (waitingforkeys) return;
+    ui->shortcutbt->setText("Press keys (Esc cancels)");
+    meta_pending.clear();
+    waitingforkeys = true;
+    qApp->installEventFilter(this);
+    set_hotkeys_paused(true);
+}
+
+void edithotkeywidget::end_capture(){
+    if (waitingforkeys){
+        waitingforkeys = false;
+        qApp->removeEventFilter(this);
+        show_trigger();
+    }
+    set_hotkeys_paused(false);
+}
+
+bool edithotkeywidget::eventFilter(QObject *watched, QEvent *event){
+    if (waitingforkeys && (event->type() == QEvent::KeyPress || event->type() == QEvent::KeyRelease)){
+        // Other windows' keys (none while modal) aren't ours to eat.
+        if (auto *widget = qobject_cast<QWidget *>(watched); widget && widget->window() != this) return false;
+        auto *key_event = static_cast<QKeyEvent *>(event);
+        if (event->type() == QEvent::KeyPress) handle_capture_press(key_event);
+        else handle_capture_release(key_event);
+        return true;
+    }
+    return QDialog::eventFilter(watched, event);
+}
+
+// Records the key's xkb keysym (nativeVirtualKey) so F-keys, media keys etc. work.
+void edithotkeywidget::handle_capture_press(QKeyEvent *event){
+    if (event->isAutoRepeat()) return;
+    const int key = event->key();
+    if (is_meta_key(key)){
+        meta_pending = QStringLiteral("LOGO");
+        return;
+    }
+    if (is_modifier_key(key)){
+        meta_pending.clear(); // Meta+Shift etc. is not a bare tap
+        return;
+    }
+
+    const Qt::KeyboardModifiers mods = event->keyCombination().keyboardModifiers();
+    if (key == Qt::Key_Escape && mods == Qt::NoModifier){
+        end_capture(); // restores the previous shortcut
+        return;
+    }
+
+    const QString candidate = hotkeyconfig::triggerFromKeysym(mods, event->nativeVirtualKey());
+    if (candidate.isEmpty()){
+        ui->shortcutbt->setText("Unsupported key, try again");
+        return;
+    }
+    if (const QString refusal = hotkeyconfig::triggerRefusal(candidate); !refusal.isEmpty()){
+        ui->shortcutbt->setText("Needs Ctrl, Alt or Meta, try again");
+        ui->shortcutbt->setToolTip(refusal);
+        return;
+    }
+    ui->shortcutbt->setToolTip(QString());
+    trigger = candidate;
+    end_capture();
+}
+
+// A lone Meta tap is a bare "LOGO" trigger.
+void edithotkeywidget::handle_capture_release(QKeyEvent *event){
+    if (!event->isAutoRepeat() && is_meta_key(event->key()) && meta_pending == "LOGO"){
+        trigger = meta_pending;
+        end_capture();
+    }
 }
 
 void edithotkeywidget::set_hotkeys_paused(bool pause){
@@ -95,49 +202,13 @@ void edithotkeywidget::set_hotkeys_paused(bool pause){
                                 : "forest/hotkeys/resumeHotkeys");
 }
 
-static bool is_meta_key(int key){
-    return key == Qt::Key_Meta || key == Qt::Key_Super_L || key == Qt::Key_Super_R;
-}
-
-void edithotkeywidget::keyPressEvent(QKeyEvent *event){
-    if (waitingforkeys == true){
-        if (event->isAutoRepeat()) return;
-        if (event->key()==Qt::Key_AltGr||event->key()==Qt::Key_Print||event->key()==Qt::Key_CapsLock||event->key()==Qt::Key_NumLock||
-                event->key()==Qt::Key_Return||event->key()==Qt::Key_Enter) { return; }
-        else if (event->key()==Qt::Key_Control){ keys = keys + "Ctrl+"; return; }
-        else if (event->key()==Qt::Key_Shift){ keys = keys + "Shift+"; return; }
-        else if (event->key()==Qt::Key_Alt) { keys = keys + "Alt+"; return; }
-        else if (is_meta_key(event->key())){ keys = keys + "Meta+"; return; }
-
-        QKeySequence key = event->key();
-        keys = keys + key.toString();
-        finish_capture();
+void edithotkeywidget::accept_data(){
+    if (trigger.isEmpty()){
+        QMessageBox::information(this, "Hotkey", "Click the shortcut button and press the keys to use.");
+        return;
     }
-}
-
-// A lone Meta tap: "Meta" is the value foresthotkeys maps to a bare LOGO trigger.
-void edithotkeywidget::keyReleaseEvent(QKeyEvent *event){
-    if (waitingforkeys && !event->isAutoRepeat() && is_meta_key(event->key()) && keys == "Meta+"){
-        keys = "Meta";
-        finish_capture();
-    }
-}
-
-void edithotkeywidget::finish_capture(){
-    waitingforkeys = false;
-    set_hotkeys_paused(false);
-    ui->shortcutbt->setText(keys);
-    keys = "";
-}
-
-void edithotkeywidget::closeEvent(QCloseEvent *event){
-    set_hotkeys_paused(false);
-    QWidget::closeEvent(event);
-}
-
-void edithotkeywidget::on_okbt_clicked(){
     HotkeyData data;
-    data.shortcut = ui->shortcutbt->text();
+    data.trigger = trigger;
     data.description = ui->descriptionTbox->text();
     data.repeat = ui->repeatCbox->isChecked();
     data.repeatInterval = ui->repeatIntervalSbox->value();
@@ -163,31 +234,5 @@ void edithotkeywidget::on_okbt_clicked(){
     }
 
     emit data_updated(data);
-    this->close();
-}
-
-void edithotkeywidget::on_cancelbt_clicked(){
-    this->close();
-}
-
-void edithotkeywidget::on_commandRbt_toggled(bool checked){
-    if (checked == true)
-        ui->stackedWidget->setCurrentIndex(0);
-}
-
-void edithotkeywidget::on_customdbusRbt_toggled(bool checked){
-    if (checked == true)
-        ui->stackedWidget->setCurrentIndex(1);
-}
-
-void edithotkeywidget::on_builtindbusRbt_toggled(bool checked){
-    if (checked == true)
-        ui->stackedWidget->setCurrentIndex(2);
-}
-
-void edithotkeywidget::on_shortcutbt_clicked(){
-    ui->shortcutbt->setText("Press Keys");
-    keys.clear();
-    waitingforkeys = true;
-    set_hotkeys_paused(true);
+    accept();
 }
