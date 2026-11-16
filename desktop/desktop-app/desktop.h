@@ -63,7 +63,7 @@ private slots:
     void opendesktopfolder(){openfile(desktopdir());}
 
     void handlekeypressed(QKeyEvent *event);
-    void handlefilesdropped(QStringList paths, Qt::DropAction action);
+    void handlefilesdropped(QStringList paths, Qt::DropAction action, bool trusted);
     void handleicontextchanged(QString ID, QString newtext);
 
     void openselected();
@@ -79,7 +79,7 @@ private slots:
 
 private:
     static QString desktopdir(){ return XdgDirs::userDir(XdgDirs::Desktop); }
-    static void openfile(const QString &file);
+    void openfile(const QString &file);
     QStringList selectedpaths();
 
     bool updatepaused = false;

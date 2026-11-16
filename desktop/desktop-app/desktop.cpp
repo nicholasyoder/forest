@@ -4,6 +4,8 @@
 #include "xdgactivation.h"
 
 #include <QWindow>
+#include <QMessageBox>
+#include <QPushButton>
 
 desktop::desktop(){
 
@@ -159,12 +161,20 @@ void desktop::loadicon(QString file){
     XdgDesktopFile dfile;
     desktopicon *icon;
 
-    if (mime.mimeType() == "application/x-desktop" && dfile.load(file))
-        icon = new desktopicon(dfile.name(), dfile.icon(), file, iconmenu);
+    if (mime.mimeType() == "application/x-desktop" && dfile.load(file)){
+        // Untrusted launchers show their real filename, not a self-chosen Name/Icon.
+        if (QFileInfo(file).isExecutable())
+            icon = new desktopicon(dfile.name(), dfile.icon(), file, iconmenu);
+        else
+            icon = new desktopicon(file.split("/").last(), mime.icon(), file, iconmenu);
+    }
     else
         icon = new desktopicon(file.split("/").last(), mime.icon(), file, iconmenu);
 
-    connect(icon, &desktopicon::sigactivated, this, &desktop::handleiconactivated);
+    connect(icon, &desktopicon::sigactivated, this, [this](QString id){
+        XdgActivation::instance()->request(iwidget); // token must be requested inside the input event
+        handleiconactivated(id);
+    });
 
     QString gridpos = settings->value("desktopicons/" + file).toString();
 
@@ -218,8 +228,13 @@ void desktop::handlekeypressed(QKeyEvent *event){
     }
 }
 
-void desktop::handlefilesdropped(QStringList paths, Qt::DropAction action){
-    if (action == Qt::MoveAction)
+void desktop::handlefilesdropped(QStringList paths, Qt::DropAction action, bool trusted){
+    if (trusted){
+        for (const QString &path : paths)
+            fileops::installLauncher(path, desktopdir());
+        updateicons();
+    }
+    else if (action == Qt::MoveAction)
         fileops::move(paths, desktopdir());
     else
         fileops::copy(paths, desktopdir());
@@ -346,9 +361,28 @@ void desktop::openfile(const QString &file){
     XdgDesktopFile dfile;
 
     if (QFileInfo(file).isDir())
-        QProcess::startDetached("pcmanfm-qt", {"-n", file}, QDir::homePath());
-    else if (mime.inherits("application/x-desktop") && dfile.load(file))
-        dfile.startDetached();
+        XdgActivation::instance()->launch("xdg-open", {file});
+    else if (mime.inherits("application/x-desktop") && dfile.load(file)){
+        if (!QFileInfo(file).isExecutable()){
+            QMessageBox box(QMessageBox::Warning, "Trust and launch?",
+                            QString("\"%1\" is not marked as executable.").arg(QFileInfo(file).fileName()));
+            box.setInformativeText("It would run:\n" + dfile.localizedValue("Exec").toString()
+                                   + "\n\nOnly continue if you trust where this file came from.");
+            QPushButton *trust = box.addButton("Trust and launch", QMessageBox::AcceptRole);
+            box.addButton(QMessageBox::Cancel);
+            box.setDefaultButton(QMessageBox::Cancel);
+            box.exec();
+            if (box.clickedButton() != trust)
+                return;
+            QFile f(file);
+            if (!f.setPermissions(f.permissions() | QFileDevice::ExeOwner)){
+                fileops::showErrors("Couldn't mark the launcher as executable.", {file});
+                return;
+            }
+            updateicons();
+        }
+        XdgActivation::instance()->launch([dfile]() mutable { dfile.startDetached(); });
+    }
     else
         QProcess::startDetached("xdg-open", {file}, QDir::homePath());
 }

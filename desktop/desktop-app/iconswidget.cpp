@@ -151,7 +151,8 @@ void iconswidget::dragMoveEvent(QDragMoveEvent *event)
 void iconswidget::dropEvent(QDropEvent *event)
 {
     if (acceptdrop(event))
-        emit filesdropped(fileops::localPaths(event->mimeData()->urls()), event->dropAction());
+        emit filesdropped(fileops::localPaths(event->mimeData()->urls()), event->dropAction(),
+                          event->mimeData()->hasFormat(fileops::trustedLauncherMime));
 }
 
 void iconswidget::handleiconselected(QString iconID)

@@ -6,6 +6,7 @@
 #include <QScrollArea>
 #include <QDrag>
 #include <QMimeData>
+#include "fileops.h"
 #include <QIcon>
 
 itemhandler::itemhandler()
@@ -147,6 +148,7 @@ void itemhandler::doDrag(){
     QList<QUrl> urls;
     urls << QUrl("file://"+dfilePath);
     data->setUrls(urls);
+    data->setData(fileops::trustedLauncherMime, QByteArray());
     drag->setMimeData(data);
     const int sz = 48;
     QPixmap pm = appHash[id].icon().pixmap(sz, sz);

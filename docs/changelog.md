@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Require `.desktop` launchers on the desktop to be marked executable: an unmarked one shows its real filename and a generic icon, and asks "Trust and launch?" (showing its command) before running and marking it executable. "Show on desktop" and dragging from the main menu create executable copies, and desktop launchers and folders now open with an xdg-activation token
   - Rework hotkey capture to record the real key: F-keys, media keys and the rest of the keyboard now work, Print and Return are allowed, Caps Lock no longer breaks letters, Shift+letter shortcuts fire, and Esc cancels recording. Existing hotkeys are converted on upgrade
   - Show a warning on hotkeys the compositor couldn't bind (refused or already in use) in the Hotkeys settings, and refuse plain keys without Ctrl, Alt or Meta when recording
   - Stop a held repeating hotkey after 5 seconds or when the session locks
