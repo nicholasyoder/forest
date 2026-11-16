@@ -7,7 +7,7 @@
 #include <QScreen>
 #include <QWindow>
 
-wallpaperwidget::wallpaperwidget(QImage *image, WALLPAPER_MODE imode, QScreen *screen, bool hasicons){
+wallpaperwidget::wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScreen *screen, bool hasicons){
     Qt::WindowFlags flags;
     flags |= Qt::FramelessWindowHint;
     flags |= Qt::WindowStaysOnBottomHint;
@@ -34,10 +34,8 @@ wallpaperwidget::wallpaperwidget(QImage *image, WALLPAPER_MODE imode, QScreen *s
 }
 
 void wallpaperwidget::paintEvent(QPaintEvent *){
-    QRectF target(0.0, 0.0, width(), height());
-    QRectF source(0.0, 0.0, scaledwallpaper->width(), scaledwallpaper->height());
     QPainter painter(this);
-    painter.drawImage(target, *scaledwallpaper, source);
+    painter.drawImage(rect(), scaledwallpaper);
 }
 
 void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event){

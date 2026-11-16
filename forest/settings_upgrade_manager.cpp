@@ -128,6 +128,13 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
 }
 
 void SettingsUpgradeManager::upgrade_0_11_1(){
+    // Wallpaper mode is stored by name now; the old ints were 0 Fill, 1 Fit, 2 Stretch, 3 Tile (dropped), 4 Center.
+    const QStringList legacy_modes{"Fill", "Fit", "Stretch", "Fill", "Center"};
+    bool is_int = false;
+    const int mode = settings->value("desktop/imagemode").toString().toInt(&is_int);
+    if (is_int)
+        settings->setValue("desktop/imagemode", legacy_modes.value(mode, "Fill"));
+
     // Hotkeys store a shortcuts-spec `trigger` now, not a Qt `keysequence`.
     settings->beginGroup("hotkeys");
     foreach (QString child, settings->childGroups()){

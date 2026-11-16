@@ -4,6 +4,7 @@
 
 #include <QDBusConnection>
 #include <QDBusInterface>
+#include <QDBusMessage>
 #include <QDebug>
 #include <QGuiApplication>
 #include <QProcess>
@@ -26,6 +27,16 @@ namespace miscutills {
         else {
             qCritical() << "Cannot connect to the D-Bus session bus";
         }
+    }
+
+    void call_dbus_async(QString path, const QVariantList &args){
+        QString slot = path.split("/").last();
+        path = path.remove("/" + slot);
+
+        // No QDBusInterface: its constructor introspects the target synchronously.
+        QDBusMessage message = QDBusMessage::createMethodCall("org.forest", "/org/" + path, QString(), slot);
+        message.setArguments(args);
+        QDBusConnection::sessionBus().asyncCall(message);
     }
 
     QString run_shell_command(QString command){
@@ -53,65 +64,69 @@ namespace miscutills {
             return QSize(size, size);
         }
 
-    QImage* get_wallpaper_scaled(QImage *source_image, WALLPAPER_MODE mode, QSize target_size){
-        // Create an image the exact size of the target with the
-        // wallpaper image painted on it in the manner specified by `mode`
+    QImage get_wallpaper_scaled(const QImage &source_image, WALLPAPER_MODE mode, QSize target_size){
+        // Image exactly target_size with the wallpaper painted in the manner of `mode`
+        if (source_image.isNull() || target_size.isEmpty()) return {};
 
-        QImage wallpaper_image = *source_image;
-        int target_width = target_size.width();
-        int target_height = target_size.height();
-        QImage *scaled_wallpaper = new QImage(target_width, target_height, wallpaper_image.format());
-        scaled_wallpaper->fill(Qt::black);
+        QImage scaled_wallpaper(target_size, QImage::Format_RGB32);
+        scaled_wallpaper.fill(Qt::black);
+        QImage wallpaper_image;
         QRectF target, source;
+        const int target_width = target_size.width();
+        const int target_height = target_size.height();
 
         switch (mode){
             case Fill:{
-                wallpaper_image = wallpaper_image.scaled(target_width, target_height, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
-                int x = 0, y = 0;
-                if (wallpaper_image.width() > target_width)
-                    x = (wallpaper_image.width() - target_width) / 2;
-                else if (wallpaper_image.height() > target_height)
-                    y = (wallpaper_image.height() - target_height) / 2;
+                wallpaper_image = source_image.scaled(target_size, Qt::KeepAspectRatioByExpanding, Qt::SmoothTransformation);
+                int x = (wallpaper_image.width() - target_width) / 2;
+                int y = (wallpaper_image.height() - target_height) / 2;
                 target = QRectF(0, 0, target_width, target_height);
                 source = QRectF(x, y, target_width, target_height);
                 break;
             }
             case Fit:{
-                wallpaper_image = wallpaper_image.scaled(target_width, target_height, Qt::KeepAspectRatio, Qt::SmoothTransformation);
-                int x = target_width/2 - wallpaper_image.width()/2;
-                int y = target_height/2 - wallpaper_image.height()/2;
-                target = QRectF(x, y, wallpaper_image.width(), wallpaper_image.height());
-                source = QRectF(0, 0, wallpaper_image.width(), wallpaper_image.height());
+                wallpaper_image = source_image.scaled(target_size, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                target = QRectF((target_width - wallpaper_image.width()) / 2, (target_height - wallpaper_image.height()) / 2,
+                                wallpaper_image.width(), wallpaper_image.height());
+                source = QRectF(wallpaper_image.rect());
                 break;
             }
             case Stretch:{
-                wallpaper_image = wallpaper_image.scaled(target_width, target_height, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
-                target = QRectF(0.0, 0.0, target_width, target_height);
-                source = QRectF(0.0, 0.0, wallpaper_image.width(), wallpaper_image.height());
-                break;
-            }
-            case Tile:{
-
+                wallpaper_image = source_image.scaled(target_size, Qt::IgnoreAspectRatio, Qt::SmoothTransformation);
+                target = QRectF(0, 0, target_width, target_height);
+                source = QRectF(wallpaper_image.rect());
                 break;
             }
             case Center:{
-                int x = target_width/2 - wallpaper_image.width()/2;
-                int y = target_height/2 - wallpaper_image.height()/2;
-                target = QRectF(x, y, wallpaper_image.width(), wallpaper_image.height());
-                source = QRectF(0, 0, wallpaper_image.width(), wallpaper_image.height());
+                wallpaper_image = source_image;
+                target = QRectF((target_width - wallpaper_image.width()) / 2, (target_height - wallpaper_image.height()) / 2,
+                                wallpaper_image.width(), wallpaper_image.height());
+                source = QRectF(wallpaper_image.rect());
                 break;
             }
         }
 
-        QPainter painter(scaled_wallpaper);
+        QPainter painter(&scaled_wallpaper);
         painter.drawImage(target, wallpaper_image, source);
-
         return scaled_wallpaper;
     }
 
-    QImage* get_wallpaper_scaled(QString wallpaper_file, WALLPAPER_MODE mode, QSize target_size){
-        QImage *wallpaper_image = new QImage(wallpaper_file);
-        return get_wallpaper_scaled(wallpaper_image, mode, target_size);
+    QString wallpaper_mode_name(WALLPAPER_MODE mode){
+        switch (mode){
+            case Fit: return "Fit";
+            case Stretch: return "Stretch";
+            case Center: return "Center";
+            case Fill: break;
+        }
+        return "Fill";
+    }
+
+    WALLPAPER_MODE wallpaper_mode_from_setting(const QVariant &value){
+        const QString text = value.toString().trimmed();
+        if (text == "Fit") return Fit;
+        if (text == "Stretch") return Stretch;
+        if (text == "Center") return Center;
+        return Fill;
     }
 
     QString pad_with_zeros(int number){

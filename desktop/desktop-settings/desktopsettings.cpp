@@ -2,7 +2,12 @@
 
 #include "desktopsettings.h"
 
+#include <QFileInfo>
 #include <QHBoxLayout>
+#include <QImageReader>
+
+#include "settingsbinder.h"
+#include "../desktopconfig.h"
 
 DesktopSettings::DesktopSettings(){
 }
@@ -12,8 +17,7 @@ DesktopSettings::~DesktopSettings(){
 
 QList<settings_page*> DesktopSettings::pages(){
     settings_page *wallpaper_page = new settings_page("appearance/wallpaper", "Wallpaper", "preferences-desktop-wallpaper", 10);
-    wallpaper_page->set_keywords({"background", "desktop", "image", "photo", "picture", "fill", "fit", "stretch", "center", "tile"});
-    connect(wallpaper_page, &settings_category::opened, this, &DesktopSettings::load_wallpaper_settings);
+    wallpaper_page->set_keywords({"background", "desktop", "image", "photo", "picture", "fill", "fit", "stretch", "center"});
 
     QFrame *preview_base = new QFrame;
     preview_base->setObjectName("WallpaperPreviewBase");
@@ -31,63 +35,52 @@ QList<settings_page*> DesktopSettings::pages(){
     wallpaper_page->add_child(preview_item);
 
     // TODO: add option for solid color and gradient
-    QPushButton *browse_button = new QPushButton("Browse");
+    SettingsBinder *binder = new SettingsBinder("Forest", "Forest", desktopconfig::group, this);
+    binder->set_callback([]{ miscutills::call_dbus_async("forest/desktop/reloadwallpaper"); });
+
+    QStringList patterns;
+    foreach (QByteArray format, QImageReader::supportedImageFormats())
+        patterns << "*." + QString::fromLatin1(format);
     open_photo_dialog = new QFileDialog();
     open_photo_dialog->setFileMode(QFileDialog::ExistingFile);
-    open_photo_dialog->setNameFilter(tr("Images (*.png *.xpm *.jpg)"));
-    connect(open_photo_dialog, &QFileDialog::fileSelected, this, &DesktopSettings::set_wallpaper);
+    open_photo_dialog->setNameFilter(tr("Images (%1)").arg(patterns.join(' ')));
+    QPushButton *browse_button = new QPushButton("Browse");
     connect(browse_button, &QPushButton::clicked, open_photo_dialog, &QFileDialog::show);
-    settings_widget *wallpaper_select_item = new settings_widget("Choose Photo", "", browse_button);
-    wallpaper_page->add_child(wallpaper_select_item);
+    // The dialog is the bound control; the button is the row that flashes "saved".
+    binder->bind_custom(open_photo_dialog, &QFileDialog::fileSelected,
+        [this](QSettings &settings){
+            wallpaper_path = settings.value(desktopconfig::wallpaper).toString();
+            update_preview();
+            open_photo_dialog->setDirectory(QFileInfo(wallpaper_path).path());
+        },
+        [this](QSettings &settings){ settings.setValue(desktopconfig::wallpaper, open_photo_dialog->selectedFiles().value(0)); });
+    connect(open_photo_dialog, &QFileDialog::fileSelected, this, [this](const QString &file){
+        wallpaper_path = file;
+        update_preview();
+    });
+    wallpaper_page->add_child(new settings_widget("Choose Photo", "", browse_button));
 
     wallpaper_mode = new QComboBox();
-    wallpaper_mode->addItem("Fill");
-    wallpaper_mode->addItem("Fit");
-    wallpaper_mode->addItem("Stretch");
-    wallpaper_mode->addItem("Tile");
-    wallpaper_mode->addItem("Center");
-    settings_widget *mode_item = new settings_widget("Display Mode", "", wallpaper_mode);
-    wallpaper_page->add_child(mode_item);
+    for (WALLPAPER_MODE m : {Fill, Fit, Stretch, Center})
+        wallpaper_mode->addItem(miscutills::wallpaper_mode_name(m));
+        binder->bind(wallpaper_mode, desktopconfig::imagemode, miscutills::wallpaper_mode_name(Fill), {
+        [](const QVariant &stored){ return QVariant(miscutills::wallpaper_mode_name(miscutills::wallpaper_mode_from_setting(stored))); },
+        [](const QVariant &text){ return text; }});
+    connect(wallpaper_mode, &QComboBox::currentTextChanged, this, &DesktopSettings::update_preview);
+    wallpaper_page->add_child(new settings_widget("Display Mode", "", wallpaper_mode));
+
+    connect(wallpaper_page, &settings_category::opened, binder, &SettingsBinder::load);
 
     return {wallpaper_page};
 }
 
-void DesktopSettings::load_wallpaper_settings(){
-    QSettings settings("Forest", "Forest");
-
-    QString wallpaper_path = settings.value("desktop/wallpaper").toString();
-    wallpaper_preview->setPixmap(QPixmap(wallpaper_path));
-    {
-        const QSignalBlocker blocker(wallpaper_mode);
-        wallpaper_mode->setCurrentIndex(settings.value("desktop/imagemode", 0).toInt());
+void DesktopSettings::update_preview(){
+    // Decode only when the file changes.
+    if (wallpaper_path != preview_path){
+        preview_path = wallpaper_path;
+        preview_source = QImage(wallpaper_path);
     }
-
-    wallpaper_path.remove(wallpaper_path.split("/").last());
-    open_photo_dialog->setDirectory(wallpaper_path);
-
-    connect(wallpaper_mode, &QComboBox::currentTextChanged, this, &DesktopSettings::set_wallpaper_mode, Qt::UniqueConnection);
-}
-
-void DesktopSettings::set_wallpaper(QString file_path){
-    wallpaper_preview->setPixmap(QPixmap(file_path));
-    QSettings settings("Forest", "Forest");
-    settings.setValue("desktop/wallpaper", file_path);
-    settings.sync();
-    miscutills::call_dbus("forest/desktop/reloadwallpaper");
-}
-
-void DesktopSettings::set_wallpaper_mode(QString mode){
-    // Convert to int
-    QStringList modes;
-    modes.append("Fill");
-    modes.append("Fit");
-    modes.append("Stretch");
-    modes.append("Tile");
-    modes.append("Center");
-    int m = modes.indexOf(mode);
-    // Set setting
-    QSettings settings("Forest", "Forest");
-    settings.setValue("desktop/imagemode", m);
-    settings.sync();
-    miscutills::call_dbus("forest/desktop/reloadwallpaper");
+    const WALLPAPER_MODE mode = miscutills::wallpaper_mode_from_setting(wallpaper_mode->currentText());
+    wallpaper_preview->setPixmap(QPixmap::fromImage(
+        miscutills::get_wallpaper_scaled(preview_source, mode, wallpaper_preview->maximumSize())));
 }

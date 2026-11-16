@@ -6,16 +6,19 @@
 #include <QImage>
 #include <QPointer>
 #include <QTimer>
+#include <QVariant>
 #include <QVariantList>
 
 class QScreen;
 
-enum WALLPAPER_MODE { Fill, Fit, Stretch, Tile, Center};
+enum WALLPAPER_MODE { Fill, Fit, Stretch, Center };
 
 namespace miscutills {
 
     // Call forest dbus method, path should start with 'forest/'
     void call_dbus(QString path, const QVariantList &args = {});
+    // Same, without waiting for the reply
+    void call_dbus_async(QString path, const QVariantList &args = {});
 
     // Run bash command, wait for finished, and return output
     QString run_shell_command(QString command);
@@ -24,8 +27,12 @@ namespace miscutills {
     QSize get_iconsize_stylesheet(QString selector, QString stylesheet);
 
     // Scale image according to specified mode and target size
-    QImage* get_wallpaper_scaled(QImage *source_image, WALLPAPER_MODE mode, QSize target_size);
-    QImage* get_wallpaper_scaled(QString wallpaper_file, WALLPAPER_MODE mode, QSize target_size);
+    QImage get_wallpaper_scaled(const QImage &source_image, WALLPAPER_MODE mode, QSize target_size);
+
+    // Modes are stored by name ("Fill", "Fit", "Stretch", "Center").
+    QString wallpaper_mode_name(WALLPAPER_MODE mode);
+    // Unknown or missing names are Fill.
+    WALLPAPER_MODE wallpaper_mode_from_setting(const QVariant &value);
 
     // Pad value with zeros
     QString pad_with_zeros(int number);

@@ -3,6 +3,7 @@
 #ifndef DESKTOPSETTINGS_H
 #define DESKTOPSETTINGS_H
 
+#include <QImage>
 #include <QLabel>
 #include <QComboBox>
 #include <QPushButton>
@@ -25,14 +26,15 @@ public:
     QList<settings_page*> pages() override;
 
 private slots:
-    void load_wallpaper_settings();
-    void set_wallpaper(QString file_path);
-    void set_wallpaper_mode(QString mode);
+    void update_preview();
 
 private:
     QLabel *wallpaper_preview = nullptr;
     QComboBox *wallpaper_mode = nullptr;
     QFileDialog *open_photo_dialog = nullptr;
+    QString wallpaper_path;
+    QString preview_path;
+    QImage preview_source;
 };
 
 #endif // DESKTOPSETTINGS_H
