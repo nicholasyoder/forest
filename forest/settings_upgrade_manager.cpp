@@ -75,19 +75,14 @@ void SettingsUpgradeManager::load_defaults(){
         return;
     }
 
+    // Only fill in what's missing: a config without `version` may still hold the user's settings.
     QString dest_dir_path = QDir::homePath() + "/.config/Forest";
-    QDir dest_dir(dest_dir_path);
-    if (dest_dir.exists()){
-        QString bkup_path = dest_dir_path + "_backup";
-        qDebug() << "Found existing settings. Moving them to " << bkup_path;
-        dest_dir.rename(dest_dir_path, bkup_path);
-    }
-    qDebug() << "Creating settings directory: " << dest_dir_path;
-    dest_dir.mkdir(dest_dir_path);
+    QDir().mkpath(dest_dir_path);
 
-    foreach(QString conf_file, defaults_dir.entryList(QDir::Files)){
+    foreach(QString conf_file, defaults_dir.entryList({"*.conf"}, QDir::Files)){
         QString src_path = defaults_dir_path + "/" + conf_file;
         QString dest_path = dest_dir_path + "/" + conf_file;
+        if(QFile::exists(dest_path)) continue;
         qDebug() << "Copying " << src_path << "to" << dest_path;
         if(!QFile::copy(src_path, dest_path))
             qDebug() << "Failed to copy " << src_path << "to" << dest_path;

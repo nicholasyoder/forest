@@ -2,6 +2,8 @@ add_executable(forest-session
     main.cpp
     sessionapp.cpp
     sessionapp.h
+    supervisedprocess.cpp
+    supervisedprocess.h
 )
 
 

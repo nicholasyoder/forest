@@ -9,6 +9,8 @@
 
 #include <LayerShellQt/Window>
 #include <QApplication>
+#include <QDBusConnection>
+#include <QDBusError>
 #include <QTimer>
 
 forest::forest(){}
@@ -16,6 +18,12 @@ forest::forest(){}
 forest::~forest(){}
 
 void forest::setup(){
+    // Claimed first so a second instance exits before touching settings or the screen.
+    if (!QDBusConnection::sessionBus().registerService("org.forest")){
+        qWarning() << "org.forest is already owned (" << QDBusConnection::sessionBus().lastError().message() << "), exiting";
+        ::exit(0);
+    }
+
     SettingsUpgradeManager upgrade_manager(this);
     upgrade_manager.perform_upgrades();
 
@@ -26,8 +34,6 @@ void forest::setup(){
     loadstylesheet();
     loadplugins();
 
-    if (!QDBusConnection::sessionBus().registerService("org.forest"))
-        qCritical() << "Failed to register org.forest on DBus:" << QDBusConnection::sessionBus().lastError().message();
     if (!QDBusConnection::sessionBus().registerObject("/org/forest", this, QDBusConnection::ExportAllSlots))
         qCritical() << "Failed to register /org/forest object on DBus:" << QDBusConnection::sessionBus().lastError().message();
 

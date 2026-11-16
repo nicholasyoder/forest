@@ -4,6 +4,7 @@
 
 #include <QDBusConnection>
 #include <QDBusPendingCallWatcher>
+#include <QDBusServiceWatcher>
 #include <QDialog>
 #include <QDialogButtonBox>
 #include <QFormLayout>
@@ -176,6 +177,13 @@ DisplaysPage::DisplaysPage(){
     bus.connect(kService, kPath, kInterface, "applyFailed", this, SLOT(onApplyFailed()));
     bus.connect(kService, kPath, kInterface, "profilesChanged", this, SLOT(onProfilesChanged()));
     bus.connect(kService, kPath, kInterface, "activeProfileChanged", this, SLOT(onActiveProfileChanged()));
+
+    // A restarted daemon forgets an unconfirmed apply (it reverts with the old process).
+    auto *serviceWatcher = new QDBusServiceWatcher(kService, bus, QDBusServiceWatcher::WatchForRegistration, this);
+    connect(serviceWatcher, &QDBusServiceWatcher::serviceRegistered, this, [this]{
+        pending = false;
+        reload(true);
+    });
 
     manager = new OutputManager(this);
     connect(manager, &OutputManager::stateChanged, this, &DisplaysPage::onStateChanged);
