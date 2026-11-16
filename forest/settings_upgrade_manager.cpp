@@ -2,6 +2,8 @@
 
 #include "settings_upgrade_manager.h"
 
+#include "hotkeyconfig.h"
+
 #include <QDir>
 #include <QProcess>
 #include <QDebug>
@@ -45,6 +47,7 @@ void SettingsUpgradeManager::perform_upgrades(){
         {{0,9,0}, [this](){ this->upgrade_0_9_0(); }},
         {{0,10,0}, [this](){ this->upgrade_0_10_0(); }},
         {{0,10,1}, [this](){ this->upgrade_0_10_1(); }},
+        {{0,11,1}, [this](){ this->upgrade_0_11_1(); }},
     };
 
     // Get version of existing settings
@@ -122,6 +125,22 @@ void SettingsUpgradeManager::upgrade_0_9_0(){
         if (panel_settings.value(child + "/path").toString() == "seperator")
             panel_settings.setValue(child + "/path", "separator");
     panel_settings.endGroup();
+}
+
+void SettingsUpgradeManager::upgrade_0_11_1(){
+    // Hotkeys store a shortcuts-spec `trigger` now, not a Qt `keysequence`.
+    settings->beginGroup("hotkeys");
+    foreach (QString child, settings->childGroups()){
+        const QString legacy = settings->value(child + "/keysequence").toString();
+        if (legacy.isEmpty() && !settings->contains(child + "/keysequence")) continue;
+        const QString trigger = hotkeyconfig::triggerFromLegacy(legacy);
+        if (trigger.isEmpty())
+            qWarning() << "Hotkey" << child << "has an unconvertible keysequence" << legacy << "- left unbound";
+        else if (!settings->contains(child + "/trigger"))
+            settings->setValue(child + "/trigger", trigger);
+        settings->remove(child + "/keysequence");
+    }
+    settings->endGroup();
 }
 
 void SettingsUpgradeManager::upgrade_0_10_1(){

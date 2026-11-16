@@ -2,7 +2,10 @@
 
 #include "hotkeysettings.h"
 
+#include <QDBusConnection>
+#include <QDBusMessage>
 #include <QSettings>
+#include <QTimer>
 
 #include <QHBoxLayout>
 #include <QLabel>
@@ -21,6 +24,7 @@ void HotkeySettings::load_hotkeys(){
     hotkey_widget_group = new settings_widget_group;
     settings_item->add_child(hotkey_widget_group);
 
+    const QStringList unbound = unbound_ids();
     QSettings settings("Forest", "Forest");
     settings.beginGroup("hotkeys");
     foreach(QString key, settings.childGroups()){
@@ -33,7 +37,13 @@ void HotkeySettings::load_hotkeys(){
         QHBoxLayout *h_layout = new QHBoxLayout(item_widget);
         h_layout->setContentsMargins(QMargins(0,0,0,0));
         h_layout->addSpacing(5);
-        QLabel* keys_label = new QLabel(settings.value("keysequence", "").toString());
+        if (unbound.contains(key)){
+            QLabel* warning_label = new QLabel;
+            warning_label->setPixmap(QIcon::fromTheme("dialog-warning").pixmap(16, 16));
+            warning_label->setToolTip("Not bound: the compositor refused this shortcut or another one already uses it.");
+            h_layout->addWidget(warning_label);
+        }
+        QLabel* keys_label = new QLabel(hotkeyconfig::triggerDisplay(hotkeyconfig::readTrigger(settings)));
         keys_label->setStyleSheet("color: grey;");
         h_layout->addWidget(keys_label);
         h_layout->addSpacing(5);
@@ -58,6 +68,14 @@ void HotkeySettings::load_hotkeys(){
     hotkey_widget_group->add_child(hotkey_item);
 }
 
+// Ids the shell couldn't bind a trigger for; empty if it isn't running.
+QStringList HotkeySettings::unbound_ids() const{
+    QDBusMessage call = QDBusMessage::createMethodCall("org.forest", "/org/forest/hotkeys", QString(), "unboundHotkeys");
+    const QDBusMessage reply = QDBusConnection::sessionBus().call(call, QDBus::Block, 500);
+    return reply.type() == QDBusMessage::ReplyMessage && !reply.arguments().isEmpty()
+        ? reply.arguments().first().toStringList() : QStringList();
+}
+
 void HotkeySettings::refresh(){
     settings_item->clear();
     // Later: the sender may be one of them, mid-emit.
@@ -70,18 +88,15 @@ void HotkeySettings::refresh(){
 void HotkeySettings::reload_hotkeys(){
     refresh();
     miscutills::call_dbus("forest/hotkeys/reloadhotkeys");
+    // The rebind is async; show what it left unbound once it's done.
+    QTimer::singleShot(1500, this, &HotkeySettings::refresh);
 }
 
 void HotkeySettings::add_item(){
-    QSettings settings("Forest", "Forest");
-    settings.beginGroup("hotkeys");
-
-    const QStringList items = settings.childGroups();
-    int item_numer = items.isEmpty() ? 0 : items.last().split("-").last().toInt();
-    QString new_number = miscutills::pad_with_zeros(item_numer + 1);
-
-    HotkeySettingItem* item = new HotkeySettingItem("item-" + new_number);
+    // The id is assigned at save, so two pending adds can't collide.
+    HotkeySettingItem* item = new HotkeySettingItem(QString());
     connect(item, &HotkeySettingItem::item_changed, this, &HotkeySettings::reload_hotkeys);
+    item_list.append(item);
     item->edit();
 }
 
@@ -95,7 +110,7 @@ void HotkeySettingItem::edit(){
     settings.beginGroup("hotkeys/" + item_id);
 
     HotkeyData data;
-    data.shortcut = settings.value("keysequence", "").toString();
+    data.trigger = hotkeyconfig::readTrigger(settings);
     data.description = settings.value("description", "").toString();
     data.action = settings.value("action", "").toString();
     data.repeat = settings.value(hotkeyconfig::kRepeatKey, false).toBool();
@@ -140,9 +155,17 @@ void HotkeySettingItem::remove(){
 
 void HotkeySettingItem::save(const HotkeyData &data){
     QSettings settings("Forest", "Forest");
+    if (item_id.isEmpty()){
+        settings.beginGroup("hotkeys");
+        int last = 0;
+        foreach(QString key, settings.childGroups()) last = qMax(last, key.split("-").last().toInt());
+        settings.endGroup();
+        item_id = "item-" + miscutills::pad_with_zeros(last + 1);
+    }
     settings.beginGroup("hotkeys/" + item_id);
     settings.setValue("description", data.description);
-    settings.setValue("keysequence", data.shortcut);
+    settings.setValue(hotkeyconfig::kTriggerKey, data.trigger);
+    settings.remove(hotkeyconfig::kLegacyKeysequenceKey);
     settings.setValue("action", data.action);
     settings.setValue(hotkeyconfig::kRepeatKey, data.repeat);
     settings.setValue(hotkeyconfig::kRepeatIntervalKey, data.repeatInterval);

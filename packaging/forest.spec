@@ -26,7 +26,7 @@ BuildRequires:  wayland-devel
 BuildRequires:  wayland-protocols-devel >= 1.40
 BuildRequires:  systemd-rpm-macros
 
-Requires:       biome >= 0.3.0
+Requires:       biome >= 0.3.1
 Requires:       qt6-qtwayland
 Requires:       xdg-desktop-portal
 Requires:       dbus-tools
@@ -53,7 +53,7 @@ to encounter partially implemented features.
 Summary:        greetd greeter using the Forest theme system
 Requires:       %{name} = %{version}-%{release}
 Requires:       greetd
-Requires:       biome >= 0.3.0
+Requires:       biome >= 0.3.1
 Recommends:     xorg-x11-xinit
 Recommends:     xorg-x11-server-Xorg
 

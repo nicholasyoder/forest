@@ -28,8 +28,12 @@ public slots:
     void reloadhotkeys();
     void pauseHotkeys();
     void resumeHotkeys();
+    // Ids (Forest.conf groups) the last bind left without a trigger.
+    QStringList unboundHotkeys();
 
 private slots:
+    // A Deactivated can be lost with the session or a lock, so stop repeats explicitly.
+    void releaseAll();
     void dispatch(QString id, QString activationToken);
     void dispatchRelease(QString id);
 
@@ -39,11 +43,10 @@ private:
     void reconcile();
     void scheduleRetry();
     void retryNow();
-    // A Deactivated can be lost with the session, so stop repeats explicitly.
-    void releaseAll();
 
     GlobalShortcutsPortal *portal = nullptr;
     QList<globalhotkey*> hotkeylist;
+    QStringList unboundIds;
     QTimer retryTimer;
     int retryDelayMs = 0;
     // Watches pausers so a crash mid-capture doesn't leave hotkeys off.

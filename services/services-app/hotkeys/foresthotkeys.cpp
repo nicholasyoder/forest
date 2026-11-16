@@ -40,6 +40,9 @@ void foresthotkeys::setup(){
         retryNow();
     });
     connect(portal, &GlobalShortcutsPortal::portalAvailable, this, &foresthotkeys::retryNow);
+    // Biome doesn't send Deactivated for a key held through a lock; stop repeats.
+    QDBusConnection::systemBus().connect(QStringLiteral("org.freedesktop.login1"), QString(),
+        QStringLiteral("org.freedesktop.login1.Session"), QStringLiteral("Lock"), this, SLOT(releaseAll()));
     reconcile();
 }
 
@@ -80,6 +83,10 @@ void foresthotkeys::resumeHotkeys(){
     pausers.remove(caller);
     if (!caller.isEmpty()) pauserWatcher->removeWatchedService(caller);
     reconcile();
+}
+
+QStringList foresthotkeys::unboundHotkeys(){
+    return unboundIds;
 }
 
 void foresthotkeys::reloadhotkeys(){
@@ -126,8 +133,9 @@ void foresthotkeys::reconcile(){
         sessionOpen = true;
         configChanged = false;
         loadhotkeys();
-        portal->bindShortcuts(hotkeylist, [this](bool bound) {
+        portal->bindShortcuts(hotkeylist, [this](bool bound, const QStringList &unbound) {
             busy = false;
+            unboundIds = unbound;
             if (!bound) {
                 qCritical() << "foresthotkeys: BindShortcuts request failed";
                 configChanged = true; // next attempt starts from a fresh session
@@ -150,25 +158,18 @@ void foresthotkeys::loadhotkeys(){
     foreach (QString hotkey, settings.childGroups()){
         settings.beginGroup(hotkey);
 
-        QKeySequence kseq;
-        QString keys = settings.value("keysequence").toString();
-        if(keys == "Meta"){
-            kseq = QKeySequence(Qt::Key_Meta);
-        }
-        else{
-            kseq = QKeySequence(keys);
-        }
+        const QString trigger = hotkeyconfig::readTrigger(settings);
 
         QString description = settings.value("description").toString();
 
         const QString action = settings.value("action").toString();
         globalhotkey *item;
         if (const auto dbusAction = hotkeyconfig::parseDBusAction(action)){
-            item = new globalhotkey(hotkey, description, kseq, Type_Dbus);
+            item = new globalhotkey(hotkey, description, trigger, Type_Dbus);
             item->setDbusAction(*dbusAction);
         }
         else{
-            item = new globalhotkey(hotkey, description, kseq, Type_Exec);
+            item = new globalhotkey(hotkey, description, trigger, Type_Exec);
             item->setExecCommand(action);
         }
         if (settings.value(hotkeyconfig::kRepeatKey, false).toBool())

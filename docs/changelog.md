@@ -3,6 +3,10 @@ Changelog
 ============
 
 * Unreleased
+  - Rework hotkey capture to record the real key: F-keys, media keys and the rest of the keyboard now work, Print and Return are allowed, Caps Lock no longer breaks letters, Shift+letter shortcuts fire, and Esc cancels recording. Existing hotkeys are converted on upgrade
+  - Show a warning on hotkeys the compositor couldn't bind (refused or already in use) in the Hotkeys settings, and refuse plain keys without Ctrl, Alt or Meta when recording
+  - Stop a held repeating hotkey after 5 seconds or when the session locks
+  - Make the hotkey edit window modal; fix a possible crash on a malformed built-in D-Bus hotkey, and two simultaneous new hotkeys taking the same id
   - Restart the `forest` shell (panel, desktop, notifications, hotkeys) if it crashes, with backoff; a second `forest` now exits instead of running alongside the first
   - Fix the Displays settings page staying stuck on "pending" if the shell restarts while a layout change awaits confirmation
   - Fix first-run default settings moving the whole `~/.config/Forest` aside when `Forest.conf` had no version; missing defaults are now copied in without touching existing files

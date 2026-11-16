@@ -49,6 +49,8 @@ private slots:
     void add_item();
 
 private:
+    QStringList unbound_ids() const;
+
     settings_page *settings_item = nullptr;
     settings_widget_group *hotkey_widget_group = nullptr;
     QList<HotkeySettingItem*> item_list;

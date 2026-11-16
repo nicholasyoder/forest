@@ -17,5 +17,6 @@ forest_link_fstyleloader(forest)
 forest_link_layershellqt(forest)
 forest_link_layeroverlay(forest)
 forest_link_menuanchor(forest)
+forest_link_hotkeyconfig(forest)
 
 install(TARGETS forest RUNTIME DESTINATION bin)

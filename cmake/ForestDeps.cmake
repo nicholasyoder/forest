@@ -107,7 +107,7 @@ function(forest_link_outputs target)
 endfunction()
 
 # forest_link_hotkeyconfig(target)
-# Links the hotkeyconfig static library ([hotkeys] DBUS: action parse/format)
+# Links the hotkeyconfig static library ([hotkeys] DBUS: action and trigger parse/format)
 function(forest_link_hotkeyconfig target)
     target_link_libraries(${target} PRIVATE hotkeyconfig)
 endfunction()
