@@ -14,7 +14,8 @@ GeometryManager::GeometryManager(QWidget *panel) : panel_widget(panel) {
     build_shell();
 
     ScreenTracker *tracker = new ScreenTracker(this);
-    connect(tracker, &ScreenTracker::screens_replaced, this, &GeometryManager::rebuild_shell);
+    // Only rebuild if the panel's screen changed: a rebuild remaps the panel, which briefly doubles its exclusive zone.
+    connect(tracker, &ScreenTracker::screens_replaced, this, &GeometryManager::handle_geometry_change);
     connect(tracker, &ScreenTracker::geometry_changed, this, &GeometryManager::handle_geometry_change);
     connect(tracker, &ScreenTracker::primary_changed, this, &GeometryManager::handle_geometry_change);
 }
