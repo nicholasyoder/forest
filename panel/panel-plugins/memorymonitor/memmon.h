@@ -43,7 +43,7 @@ private:
     QSettings *settings = nullptr;
     graphwidget *gwidget;
     QMenu *pmenu = nullptr;
-    QTimer *refreshtimer = new QTimer;
+    QTimer *refreshtimer = new QTimer(this);
     int swapbehavior = 1;
     QString clickedcommand;
     QRect displayrect;

@@ -22,7 +22,11 @@ public:
     //called soon after plugin constuctor runs
     virtual void setupPlug(QBoxLayout *, QList<QAction*>)= 0;
 
-    //used when editing what plugins are on the panel
+    // Called when the applet is removed or the panel reloads its applets; the
+    // applet's widgets are deleted right after. Ownership contract: anything
+    // the applet creates must be parented to it or deleted in its destructor
+    // (timers, helpers, watchers). Popups stay unparented (the stylesheet would
+    // cascade into them otherwise), so delete them in the destructor.
     virtual void closePlug() = 0;
 
     // Called after the applet's settings page saves.

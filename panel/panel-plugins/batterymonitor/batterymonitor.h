@@ -44,7 +44,7 @@ private:
     // Last lookup's candidates; hasThemeIcon() only runs again when they change.
     QStringList iconcandidates;
     QTimer *updatetimer = new QTimer(this);
-    popup *pbox;
+    popup *pbox = nullptr;
     QLabel *popuplabel = new QLabel;
 };
 #endif // BATTERYMONITOR_H

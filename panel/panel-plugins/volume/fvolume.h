@@ -27,7 +27,7 @@ class fvolume : public panelbutton, panelpluginterface
 
 public:
     fvolume();
-    ~fvolume() override { delete pmenu; }
+    ~fvolume() override { delete pmenu; delete popupbox; }
 
     //begin plugin interface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
@@ -61,7 +61,7 @@ private:
     AudioEngine *audioengine = nullptr;
     AudioDevice *master_device = nullptr;
 
-    popup *popupbox;
+    popup *popupbox = nullptr;
     QVBoxLayout * popup_layout = nullptr;
     QMenu *pmenu = nullptr;
 

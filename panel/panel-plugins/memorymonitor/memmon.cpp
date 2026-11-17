@@ -12,7 +12,8 @@ memmon::~memmon(){ delete pmenu; }
 //beginning of plugin interface
 void memmon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     gwidget = new graphwidget;
-    settings = new QSettings("Forest", "Memory Monitor");
+    settings = new QSettings("Forest", "Memory Monitor", this);
+    connect(refreshtimer, &QTimer::timeout, this, &memmon::updatemem);
 
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->setContentsMargins(QMargins(0,0,0,0));
@@ -60,9 +61,6 @@ void memmon::loadsettings(){
 
     clickedcommand = settings->value(cfg::command, "").toString();
 
-    delete refreshtimer;
-    refreshtimer = new QTimer;
-    connect(refreshtimer, &QTimer::timeout, this, &memmon::updatemem);
     refreshtimer->start(settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt());
 
     gwidget->setFixedWidth(settings->value(cfg::width, cfg::width_default).toInt());

@@ -156,7 +156,7 @@ namespace miscutills {
     }
 }
 
-RunOnce::RunOnce(int delay){
+RunOnce::RunOnce(int delay, QObject *parent) : QObject(parent){
     timer.setSingleShot(true);
     timer.setInterval(delay);
     connect(&timer, &QTimer::timeout, this, &RunOnce::activated);

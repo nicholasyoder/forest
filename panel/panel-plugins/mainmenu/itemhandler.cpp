@@ -169,7 +169,7 @@ void itemhandler::trySetAllowSelectByMouse(){
         SbyMtimer->stop();
         delete SbyMtimer;
     }
-    SbyMtimer = new QTimer();
+    SbyMtimer = new QTimer(this);
     connect(SbyMtimer, &QTimer::timeout, this, &itemhandler::setAllowSelectByMouse);
     SbyMtimer->start(500);
 }

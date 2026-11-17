@@ -13,6 +13,10 @@ mainmenu::mainmenu() : panelbutton(Icon) {
 }
 
 mainmenu::~mainmenu(){
+    // appLdr first: its watcher would otherwise keep rescanning into a dead menu.
+    delete appLdr;
+    delete itemHandler;
+    delete pBox;
     delete pMenu;
     delete cMenu;
 }

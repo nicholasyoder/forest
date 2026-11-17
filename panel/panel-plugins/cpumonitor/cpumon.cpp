@@ -12,7 +12,8 @@ cpumon::~cpumon(){ delete pmenu; }
 //beginning of plugin interface
 void cpumon::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     gwidget = new graphwidget;
-    settings = new QSettings("Forest", "CPU Monitor");
+    settings = new QSettings("Forest", "CPU Monitor", this);
+    connect(refreshtimer, &QTimer::timeout, this, &cpumon::updatecpu);
 
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->setContentsMargins(QMargins(0,0,0,0));
@@ -43,9 +44,6 @@ void cpumon::loadsettings(){
     gwidget->setFixedWidth(settings->value(cfg::width, cfg::width_default).toInt());
     clickedcommand = settings->value(cfg::command, "").toString();
 
-    delete refreshtimer;
-    refreshtimer = new QTimer;
-    connect(refreshtimer, &QTimer::timeout, this, &cpumon::updatecpu);
     refreshtimer->start(settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt());
 }
 

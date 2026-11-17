@@ -8,6 +8,7 @@ nmcontrol::nmcontrol(){
 
 nmcontrol::~nmcontrol(){
     delete p_menu;
+    delete p_box;
 }
 
 void nmcontrol::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)

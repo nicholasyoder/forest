@@ -50,7 +50,7 @@ namespace miscutills {
 class RunOnce: public QObject {
     Q_OBJECT
 public:
-    RunOnce(int delay = 200);
+    explicit RunOnce(int delay = 200, QObject *parent = nullptr);
     bool is_pending() const{return timer.isActive();}
 signals:
     void activated();

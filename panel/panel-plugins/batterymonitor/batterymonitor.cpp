@@ -40,6 +40,7 @@ batterymonitor::batterymonitor() : panelbutton(Icon)
 batterymonitor::~batterymonitor()
 {
     qDeleteAll(batterylist);
+    delete pbox;
 }
 
 void batterymonitor::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)

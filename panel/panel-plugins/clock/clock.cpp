@@ -5,14 +5,14 @@
 
 clockplug::clockplug() : panelbutton(Text) {}
 
-clockplug::~clockplug(){ delete pmenu; }
+clockplug::~clockplug(){ delete pmenu; delete popupbox; }
 
 void clockplug::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     setText("12:00");
 
-    QTimer *uptimer = new QTimer;
-    connect(uptimer, SIGNAL(timeout()), this, SLOT(updatetime()));
-    uptimer->start(1000);
+    uptimer = new QTimer(this);
+    uptimer->setSingleShot(true);
+    connect(uptimer, &QTimer::timeout, this, &clockplug::updatetime);
 
     QVBoxLayout *popuplayout = new QVBoxLayout;
     popuplayout->addWidget(cwidget);
@@ -45,6 +45,10 @@ void clockplug::loadsettings(){
 void clockplug::updatetime(){
     QDateTime now = QDateTime::currentDateTime();
     setText(now.time().toString(time_format));
+
+    // Fire on the next second/minute boundary instead of polling at 1 Hz.
+    const QTime t = now.time();
+    uptimer->start(showseconds ? 1000 - t.msec() : (60 - t.second()) * 1000 - t.msec());
 
     // Also update calendar widget when the day changes
     QDate date = now.date();

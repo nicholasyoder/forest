@@ -45,7 +45,7 @@ private:
     QSettings *settings = nullptr;
     graphwidget *gwidget;
     QMenu *pmenu = nullptr;
-    QTimer *refreshtimer = new QTimer;
+    QTimer *refreshtimer = new QTimer(this);
     QString clickedcommand;
     QRect displayrect;
     bool verticalpanel = false;

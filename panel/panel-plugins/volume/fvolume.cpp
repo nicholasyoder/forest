@@ -11,7 +11,7 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     layout->addWidget(this);
     setIcon("audio-volume-muted");
 
-    save_runner = new RunOnce(1000);
+    save_runner = new RunOnce(1000, this);
     connect(save_runner, &RunOnce::activated, this, &fvolume::save_volumes);
 
     popup_layout = new QVBoxLayout;
@@ -31,7 +31,7 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
     QFileSystemWatcher *watcher = new QFileSystemWatcher(this);
     watcher->addPath("/dev/snd");
-    RunOnce* runner = new RunOnce(1000);
+    RunOnce* runner = new RunOnce(1000, this);
     connect(watcher, &QFileSystemWatcher::directoryChanged, runner, &RunOnce::try_activate);
     connect(runner, &RunOnce::activated, this, &fvolume::loadsettings);
 
