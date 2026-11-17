@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Fix applet reloads (adding, removing or reordering panel applets) leaking running timers, popups, the whole main menu and its `.desktop` watcher; the windowlist preview of a window now closes with that window; the clock only repaints (and wakes) on the second/minute boundary
   - Fix a memory leak of about 230 MB (two 4K screens) in `forest` on every wallpaper change: the wallpaper is now decoded only when its file changes and scaled once per screen, and the login and lock screens scale on resize instead of on every paint
   - Remove the Tile wallpaper mode (it never drew anything; existing Tile settings become Fill) and store the mode by name in the config, converted on upgrade (a custom login-screen mode is reset to Fill until re-applied); the Wallpaper settings page now saves through the shared binder, reloads the desktop without blocking, and previews the chosen mode and every supported image format
   - Fix the panel being remapped whenever any monitor was plugged in, unplugged or dropped out (e.g. on a display blank); it now rebuilds only when its own screen changes, which also stops windows maximized on that screen briefly resizing

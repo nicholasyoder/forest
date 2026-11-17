@@ -69,7 +69,7 @@ private:
     QList<QUuid> leftPaneItems;
     QHash<int, QList<QUuid>> rightPaneItems;
 
-    QSettings *settings = new QSettings("Forest","Main Menu");
+    QSettings *settings = new QSettings("Forest","Main Menu", this);
     bool allowSelectByMouse = true;
     QTimer *SbyMtimer = nullptr;
 

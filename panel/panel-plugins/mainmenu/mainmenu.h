@@ -47,7 +47,7 @@ private slots:
     void setAllowClose(){allowClose = true;}
 
 private:
-    QSettings *settings = new QSettings("Forest","Main Menu");
+    QSettings *settings = new QSettings("Forest","Main Menu", this);
 
     popup *pBox = nullptr;
     QMenu *pMenu = nullptr;

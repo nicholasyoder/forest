@@ -43,7 +43,8 @@ private:
     QString time_format = "h:mm";
     QDate currentDate;
     QCalendarWidget *cwidget = new QCalendarWidget;
-    popup *popupbox;
+    popup *popupbox = nullptr;
+    QTimer *uptimer = nullptr;
     QMenu *pmenu = nullptr;
 };
 

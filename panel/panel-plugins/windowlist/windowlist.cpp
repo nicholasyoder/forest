@@ -6,6 +6,7 @@
 windowlist::windowlist(){}
 
 windowlist::~windowlist(){
+    delete ipopup;
     delete pmenu;
 }
 
@@ -80,6 +81,7 @@ void windowlist::onWindowChanged(ForeignToplevelHandle *handle){
 
 void windowlist::onWindowRemoved(ForeignToplevelHandle *handle){
     if (windowbutton *wbt = button_list.take(handle)){
+        ipopup->buttonRemoved(wbt);
         mainlayout->removeWidget(wbt);
         wbt->close();
         wbt->deleteLater();

@@ -18,6 +18,10 @@ class imagepopup : public QObject
     Q_OBJECT
 public:
     imagepopup(QWidget *parentw);
+    ~imagepopup();
+
+    // Drops the preview if it belongs to a button that is going away.
+    void buttonRemoved(windowbutton *bt){ if (currentbt == bt) closepopup(); }
 
 signals:
 

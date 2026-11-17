@@ -41,7 +41,7 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     pmenu->addActions(itemlist);
     connect(pbutton, &panelbutton::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, pbutton, CenteredOnWidget); });
 
-    timer=new QTimer;
+    timer=new QTimer(this);
     connect(timer,SIGNAL(timeout()),this,SLOT(updateSensor()));
 
     loadSettings();

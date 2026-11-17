@@ -26,7 +26,7 @@ class SensorWidget : public QLabel, panelpluginterface
 
 public:
     SensorWidget();
-    ~SensorWidget() override { delete pmenu; }
+    ~SensorWidget() override { delete pmenu; delete popupbox; delete mSensors; }
 
     //begin plugininterface
     void setupPlug(QBoxLayout *layout, QList<QAction*> itemlist);
@@ -47,7 +47,7 @@ private:
     QBoxLayout *barlayout;
     QList<SensorBar*> barlist;
     QString popuptext;
-    popup *popupbox;
+    popup *popupbox = nullptr;
     QMenu *pmenu = nullptr;
 
     Sensors *mSensors = nullptr;

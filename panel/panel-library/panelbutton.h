@@ -66,6 +66,7 @@ public:
     bool isMouseOver(){return btmouseover;}
 
     void setText(QString text){
+        if (text == bttext) return;
         bttext = text;
         if (property("buttontype") == "Text") {
             QStyleOptionButton option;

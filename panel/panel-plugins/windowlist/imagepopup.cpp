@@ -9,6 +9,11 @@ imagepopup::imagepopup(QWidget *parentw){
     parentwidget = parentw;
 }
 
+imagepopup::~imagepopup(){
+    endCapture();
+    delete pbox;
+}
+
 // A fresh popup per shown preview: reusing one carried the previous window's
 // size and position over, so it resized or re-centered after it was visible.
 void imagepopup::buildPopup(const QPixmap &pix){
@@ -60,7 +65,7 @@ void imagepopup::btmouseEnter(windowbutton *bt){
         if (openptimer)
             delete openptimer;
 
-        openptimer = new QTimer;
+        openptimer = new QTimer(this);
         openptimer->setSingleShot(true);
         connect(openptimer, &QTimer::timeout, this, &imagepopup::showpopup);
         openptimer->start(450);
@@ -90,7 +95,7 @@ void imagepopup::showpopup(){
         closeptimer->stop();
         delete closeptimer;
     }
-    closeptimer = new QTimer;
+    closeptimer = new QTimer(this);
     connect(closeptimer, &QTimer::timeout, this, &imagepopup::tryclosepopup);
     closeptimer->start(450);
 
