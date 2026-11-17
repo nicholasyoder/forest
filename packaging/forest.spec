@@ -1,5 +1,5 @@
 Name:           forest
-Version:        0.11.0
+Version:        0.11.1
 Release:        1%{?dist}
 Summary:        Lightweight Qt-based desktop environment
 
@@ -132,6 +132,31 @@ install -pm 0644 man/*.1 %{buildroot}%{_mandir}/man1/
 %{_mandir}/man1/forest-greeter.1*
 
 %changelog
+* Tue Nov 17 2026 Nicholas Yoder <nicholasyoder@proton.me> - 0.11.1-1
+- Packaging cleanup: drop the unneeded `qt6-qtwayland` and `gio` dependencies, the leftover Openbox themes, `Forest-Flat-Dark`, qt5ct seeding and `power.png`; own the greetd drop-in directory, `/var/lib/forest/login` and `Login.conf`; install a `ForestThemeConfigVersion.cmake` so `find_package(ForestTheme <version>)` works; the session prepends Flatpak dirs to `XDG_DATA_DIRS` instead of replacing it, and stops `forest-session.target` when Biome exits
+- Default to JetBrains Mono as the monospace font and `qterminal` as the terminal (Meta+Q, Quicklaunch)
+- Fix applets with a settings gear in the Panel settings list not toggling on or off: the gear is now painted by the list's delegate (styled by `#AppletSettingsButton`, with hover and pressed states) instead of a widget laid over the row
+- Fix applet reloads (adding, removing or reordering panel applets) leaking running timers, popups, the whole main menu and its `.desktop` watcher; the windowlist preview of a window now closes with that window; the clock only repaints (and wakes) on the second/minute boundary
+- Fix a memory leak of about 230 MB (two 4K screens) in `forest` on every wallpaper change: the wallpaper is now decoded only when its file changes and scaled once per screen, and the login and lock screens scale on resize instead of on every paint
+- Remove the Tile wallpaper mode (it never drew anything; existing Tile settings become Fill) and store the mode by name in the config, converted on upgrade (a custom login-screen mode is reset to Fill until re-applied); the Wallpaper settings page now saves through the shared binder, reloads the desktop without blocking, and previews the chosen mode and every supported image format
+- Fix the panel being remapped whenever any monitor was plugged in, unplugged or dropped out (e.g. on a display blank); it now rebuilds only when its own screen changes, which also stops windows maximized on that screen briefly resizing
+- Require `.desktop` launchers on the desktop to be marked executable: an unmarked one shows its real filename and a generic icon, and asks "Trust and launch?" (showing its command) before running and marking it executable. "Show on desktop" and dragging from the main menu create executable copies, and desktop launchers and folders now open with an xdg-activation token
+- Rework hotkey capture to record the real key: F-keys, media keys and the rest of the keyboard now work, Print and Return are allowed, Caps Lock no longer breaks letters, Shift+letter shortcuts fire, and Esc cancels recording. Existing hotkeys are converted on upgrade
+- Show a warning on hotkeys the compositor couldn't bind (refused or already in use) in the Hotkeys settings, and refuse plain keys without Ctrl, Alt or Meta when recording
+- Stop a held repeating hotkey after 5 seconds or when the session locks
+- Make the hotkey edit window modal; fix a possible crash on a malformed built-in D-Bus hotkey, and two simultaneous new hotkeys taking the same id
+- Restart the `forest` shell (panel, desktop, notifications, hotkeys) if it crashes, with backoff; a second `forest` now exits instead of running alongside the first
+- Fix the Displays settings page staying stuck on "pending" if the shell restarts while a layout change awaits confirmation
+- Fix first-run default settings moving the whole `~/.config/Forest` aside when `Forest.conf` had no version; missing defaults are now copied in without touching existing files
+- Keep the login keyring unlocked: the session now starts the Secret Service daemon at login, so it attaches to the unlocked PAM-started one before that exits after a few idle minutes (previously the first app to ask minutes later got a locked keyring and a password prompt)
+- Make the screen locker fail safe: it keeps respawning the lockscreen once Biome holds a lock, shows a notification when a lock fails, no longer drops a lock requested (e.g. on suspend) just after unlocking, ignores SimulateUserActivity while locked, and can no longer hang on exit when the lock is refused
+- Rewrite the polkit authentication dialog: the typed password now goes to the selected user (current user preselected) instead of looping on the wrong one with two admin accounts, Cancel closes the dialog and completes the request, concurrent requests are queued instead of hanging, and PAM messages show inline
+- Fix a possible panel crash when a window resizes while its live preview is showing in the windowlist popup
+- Fix a possible panel crash when a tray app exits while its menu is being opened
+- Fix a possible settings crash, or an autostart command saved over another entry, when removing or adding an autostart entry right after typing in one
+- Fix copying or moving a file onto a same-named folder deleting the whole folder when Replace (or Replace with Apply to all) was chosen; a folder is now never replaced by a file
+- Make Replace in file copy/move safe: the new file is written to a temporary name and swapped in only on success, so a failed or cancelled copy no longer loses the original; new files and folders are created private and only get their final permissions after the data is written, and merging into an existing folder no longer changes its permissions
+
 * Fri Nov 13 2026 Nicholas Yoder <nicholasyoder@proton.me> - 0.11.0-1
 - Move theme loading (parent_themes chain, palette, per-layer CSS) into a header-only forest-theme library, installed with the new forest-theme-devel package so Biome can use it
 - Move menu styling into a per-theme shared.css, also loaded by Biome for its window menu; add arrow spacing for submenu items; call virtual desktops "workspaces" in the windowlist menu

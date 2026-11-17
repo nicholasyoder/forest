@@ -2,7 +2,7 @@
 Changelog
 ============
 
-* Unreleased
+* Release 0.11.1 - 2026-11-17
   - Packaging cleanup: drop the unneeded `qt6-qtwayland` and `gio` dependencies, the leftover Openbox themes, `Forest-Flat-Dark`, qt5ct seeding and `power.png`; own the greetd drop-in directory, `/var/lib/forest/login` and `Login.conf`; install a `ForestThemeConfigVersion.cmake` so `find_package(ForestTheme <version>)` works; the session prepends Flatpak dirs to `XDG_DATA_DIRS` instead of replacing it, and stops `forest-session.target` when Biome exits
   - Default to JetBrains Mono as the monospace font and `qterminal` as the terminal (Meta+Q, Quicklaunch)
   - Fix applets with a settings gear in the Panel settings list not toggling on or off: the gear is now painted by the list's delegate (styled by `#AppletSettingsButton`, with hover and pressed states) instead of a widget laid over the row

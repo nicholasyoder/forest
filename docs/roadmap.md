@@ -12,11 +12,6 @@ Kept at bullet-list altitude deliberately: when a feature is actually picked
 up, draft a real implementation plan for it then (a new `docs/<item>-plan.md`),
 rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
-## 0.11.1 — security, session, hotkeys & file safety
-
-Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
-Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
-
 ## 0.11.2 — applet, settings & login fixes
 
 - **Notification popup fixes** ([detail](review-2026-11.md#notification-popups)). Never-expire
