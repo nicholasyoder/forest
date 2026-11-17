@@ -31,7 +31,7 @@ builds packages.
    (no "done" markers). Remove finished items elsewhere in it too.
 6. **Packaging audit.** Compare `git diff vPREV..HEAD --name-status` against
    `packaging/forest.spec` `%files`/`BuildRequires`/`Requires` and `debian/*.install`/
-   `debian/control`: new binaries, `.desktop` files, man pages (`debian/man`),
+   `debian/control`: new binaries, `.desktop` files, man pages (`man/`),
    config files, themes, libraries, subpackages, dependencies added or dropped.
 7. **Settings upgrades.** If defaults in `etc/forest/*.conf` changed meaning
    (renamed keys, changed shipped hotkey actions, moved paths), add an upgrade

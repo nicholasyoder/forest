@@ -17,10 +17,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 Review fixes (details in [`review-2026-11.md`](review-2026-11.md)).
 Pairs with Biome 0.3.1 (`Requires: biome >= 0.3.1`).
 
-- **Packaging cleanup** ([detail](review-2026-11.md#packaging)). Drop stale deps
-  (`qt6-qtwayland`), JetBrains Mono + qterminal defaults, ForestTheme
-  version file, stop `forest-session.target` at logout.
-
 ## 0.11.2 — applet, settings & login fixes
 
 - **Notification popup fixes** ([detail](review-2026-11.md#notification-popups)). Never-expire

@@ -5,7 +5,7 @@ usr/bin/forest-settings
 usr/bin/forest-locker
 usr/bin/forest-lockscreen
 usr/bin/forest-screenshot
-usr/lib/forest
+usr/lib/*/forest
 etc/forest/Forest.conf
 etc/forest/Panel.conf
 etc/forest/Quicklaunch.conf
@@ -21,3 +21,5 @@ usr/share/forest/themes
 usr/share/wallpapers/forest
 usr/share/themes
 usr/share/polkit-1/actions
+usr/lib/systemd/user/forest-session.target
+var/lib/forest/login
