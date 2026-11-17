@@ -14,11 +14,17 @@
 #export DEB_LDFLAGS_MAINT_APPEND = -Wl,--as-needed
 
 
+include /usr/share/dpkg/architecture.mk
+
 %:
 	dh $@
 
 override_dh_auto_configure:
-	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release
+	dh_auto_configure -- -DCMAKE_BUILD_TYPE=Release -DCMAKE_INSTALL_LIBDIR=lib/$(DEB_HOST_MULTIARCH)
+
+override_dh_auto_install:
+	dh_auto_install
+	install -d debian/tmp/var/lib/forest/login
 
 override_dh_install:
 	dh_install --sourcedir=debian/tmp

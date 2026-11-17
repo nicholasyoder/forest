@@ -9,14 +9,7 @@ if [ -z "$XDG_DATA_HOME" ]; then
 fi
 
 # Flatpak exports first so Flatpak apps show up in the menu (greetd doesn't run profile.d).
-export XDG_DATA_DIRS="$XDG_DATA_HOME/flatpak/exports/share:/var/lib/flatpak/exports/share:/usr/local/share/:/usr/share/:/usr/share/gdm/:/var/lib/menu-xdg/"
-
-# Set qt5ct settings
-QT5CT_CONF_DIR="$XDG_CONFIG_HOME/qt5ct"
-if [ ! -f "$QT5CT_CONF_DIR/qt5ct.conf" ]; then
-	mkdir -p "$QT5CT_CONF_DIR"
-	cp /usr/share/forest/qtct.conf "$QT5CT_CONF_DIR/qt5ct.conf"
-fi
+export XDG_DATA_DIRS="$XDG_DATA_HOME/flatpak/exports/share:/var/lib/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 
 # Set qt6ct settings
 QT6CT_CONF_DIR="$XDG_CONFIG_HOME/qt6ct"
@@ -67,7 +60,7 @@ FONTS_MARKER="$XDG_CONFIG_HOME/Forest/.gsettings-fonts-set"
 if [ ! -f "$FONTS_MARKER" ] && command -v gsettings >/dev/null 2>&1; then
 	gsettings set org.gnome.desktop.interface font-name 'DejaVu Sans 10'
 	gsettings set org.gnome.desktop.interface document-font-name 'DejaVu Sans 10'
-	gsettings set org.gnome.desktop.interface monospace-font-name 'DejaVu Sans Mono 10'
+	gsettings set org.gnome.desktop.interface monospace-font-name 'JetBrains Mono 10'
 	mkdir -p "$XDG_CONFIG_HOME/Forest" && : > "$FONTS_MARKER"
 fi
 
@@ -100,4 +93,9 @@ mkdir -p "$LOG_DIR"
 [ -f "$LOG_DIR/biome.log" ] && mv -f "$LOG_DIR/biome.log" "$LOG_DIR/biome.log.1"
 
 # Biome forks forest-session (-s) once its Wayland socket is live.
-exec /usr/bin/biome -s /usr/bin/forest-session >"$LOG_DIR/biome.log" 2>&1
+/usr/bin/biome -s /usr/bin/forest-session >"$LOG_DIR/biome.log" 2>&1
+status=$?
+
+# BindsTo=graphical-session.target needs an explicit stop, or the next login finds it active.
+systemctl --user stop forest-session.target
+exit $status

@@ -69,7 +69,7 @@ or, without the spec:
 
 ```sh
 sudo dnf install gcc-c++ cmake pkgconf-pkg-config qt6-qtbase-devel qt6-qtbase-private-devel \
-  qt6-qtwayland-devel layer-shell-qt-devel libdbusmenu-lxqt-devel polkit-qt6-1-devel \
+  layer-shell-qt-devel libdbusmenu-lxqt-devel polkit-qt6-1-devel \
   libqtxdg-devel libXcursor-devel alsa-lib-devel lm_sensors-devel pam-devel \
   libxkbcommon-devel wayland-devel wayland-protocols-devel
 ```

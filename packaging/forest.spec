@@ -12,7 +12,6 @@ BuildRequires:  cmake
 BuildRequires:  pkgconfig
 BuildRequires:  qt6-qtbase-devel
 BuildRequires:  qt6-qtbase-private-devel
-BuildRequires:  qt6-qtwayland-devel
 BuildRequires:  layer-shell-qt-devel
 BuildRequires:  libdbusmenu-lxqt-devel
 BuildRequires:  polkit-qt6-1-devel
@@ -27,7 +26,6 @@ BuildRequires:  wayland-protocols-devel >= 1.40
 BuildRequires:  systemd-rpm-macros
 
 Requires:       biome >= 0.3.1
-Requires:       qt6-qtwayland
 Requires:       xdg-desktop-portal
 Requires:       dbus-tools
 Requires:       gtk-murrine-engine
@@ -35,14 +33,12 @@ Requires:       qt6ct
 Requires:       papirus-icon-theme
 Requires:       brightnessctl
 Requires:       xdg-user-dirs
-Requires:       /usr/bin/gio
 Requires:       /usr/bin/gsettings
-Requires:       lxterminal
+Requires:       qterminal
 Requires:       pcmanfm-qt
 Requires:       polkit
 Requires:       jetbrains-mono-fonts
 Requires:       dejavu-sans-fonts
-Requires:       dejavu-sans-mono-fonts
 
 %description
 Forest is a desktop environment built using Qt, running on the Biome
@@ -59,7 +55,7 @@ Recommends:     xorg-x11-server-Xorg
 
 %description greeter
 A Qt-based login greeter for the greetd display manager, styled with the
-Forest theme system. Runs inside the Biome Wayland compositor on VT1.
+Forest theme system. Runs inside the Biome Wayland compositor on VT7.
 xorg-x11-xinit and xorg-x11-server-Xorg are only needed to start xsessions
 entries (see forest-greeter-xsession); Forest's own session is Wayland-only.
 
@@ -81,8 +77,9 @@ Biome builds against it to style its decorations from Forest themes.
 
 %install
 %cmake_install
+install -d %{buildroot}%{_sharedstatedir}/forest/login
 install -d %{buildroot}%{_mandir}/man1
-install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
+install -pm 0644 man/*.1 %{buildroot}%{_mandir}/man1/
 
 %files
 %license LICENSE
@@ -108,9 +105,11 @@ install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
 %exclude %{_datadir}/forest/forest-greeter-xsession
 %{_datadir}/wallpapers/forest/
 %{_datadir}/themes/Forest/
-%{_datadir}/themes/Forest-Flat-Dark/
 %{_datadir}/polkit-1/actions/org.forest.login.policy
 %{_userunitdir}/forest-session.target
+%dir %{_sharedstatedir}/forest
+%dir %{_sharedstatedir}/forest/login
+%ghost %config(noreplace) %{_sysconfdir}/forest/Login.conf
 %{_mandir}/man1/forest.1*
 %{_mandir}/man1/forest-session.1*
 %{_mandir}/man1/forest-logout.1*
@@ -128,6 +127,7 @@ install -pm 0644 debian/man/*.1 %{buildroot}%{_mandir}/man1/
 %{_bindir}/forest-greeter
 %{_datadir}/forest/forest-greeter-xsession
 %config(noreplace) %{_sysconfdir}/forest/greetd.toml
+%dir %{_unitdir}/greetd.service.d
 %{_unitdir}/greetd.service.d/50-forest.conf
 %{_mandir}/man1/forest-greeter.1*
 

@@ -13,4 +13,7 @@ install(FILES include/forest-theme/foresttheme.h DESTINATION ${CMAKE_INSTALL_INC
 install(TARGETS forest-theme EXPORT ForestThemeTargets)
 install(EXPORT ForestThemeTargets NAMESPACE ForestTheme:: FILE ForestThemeTargets.cmake
         DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/ForestTheme)
-install(FILES ForestThemeConfig.cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/ForestTheme)
+include(CMakePackageConfigHelpers)
+write_basic_package_version_file(${CMAKE_CURRENT_BINARY_DIR}/ForestThemeConfigVersion.cmake
+    VERSION ${PROJECT_VERSION} COMPATIBILITY AnyNewerVersion ARCH_INDEPENDENT)
+install(FILES ForestThemeConfig.cmake ${CMAKE_CURRENT_BINARY_DIR}/ForestThemeConfigVersion.cmake DESTINATION ${CMAKE_INSTALL_DATADIR}/cmake/ForestTheme)
