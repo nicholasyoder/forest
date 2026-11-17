@@ -8,6 +8,11 @@
 #include <QSettings>
 #include <QPluginLoader>
 #include <QTimer>
+#include <QToolTip>
+#include <QPainter>
+#include <QMouseEvent>
+#include <QHelpEvent>
+#include <QStyleOptionToolButton>
 
 #include "panelconfig.h"
 #include "settingsbinder.h"
@@ -18,19 +23,91 @@ PanelSettings::PanelSettings()
 
 }
 
-AppletSettingsButton::AppletSettingsButton(const QString &applet_name){
-    QHBoxLayout *layout = new QHBoxLayout(this);
-    layout->setContentsMargins(0, 0, 0, 0);
-    layout->addStretch();
-    button = new QToolButton;
-    button->setObjectName("AppletSettingsButton");
-    button->setIcon(QIcon::fromTheme("configure"));
-    button->setToolTip(applet_name + " Settings");
-    layout->addWidget(button);
+AppletDelegate::AppletDelegate(QAbstractItemView *view) : QStyledItemDelegate(view), view(view){
+    style_source = new QToolButton(view->viewport());
+    style_source->setObjectName("AppletSettingsButton");
+    style_source->setIcon(QIcon::fromTheme("configure"));
+    style_source->hide();
+    view->viewport()->setMouseTracking(true);
+    view->viewport()->installEventFilter(this);
 }
 
-void AppletSettingsButton::resizeEvent(QResizeEvent *){
-    setMask(button->geometry()); // the rest of the row still takes clicks and drags
+// Right-aligned; the size includes the QSS box model (padding, border, margin).
+QRect AppletDelegate::gear_rect(const QRect &row) const {
+    style_source->ensurePolished();
+    const QSize size = style_source->sizeHint();
+    return QRect(QPoint(row.right() - size.width() + 1, row.center().y() - size.height() / 2), size);
+}
+
+QSize AppletDelegate::sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const {
+    QSize size = QStyledItemDelegate::sizeHint(option, index);
+    if (!index.data(SettingsPathRole).toString().isEmpty())
+        size.setHeight(qMax(size.height(), gear_rect(QRect()).height()));
+    return size;
+}
+
+// Delegates get no hover position, so track which row's gear the pointer is over.
+bool AppletDelegate::eventFilter(QObject *object, QEvent *event){
+    if (object == view->viewport()) {
+        const QEvent::Type type = event->type();
+        if (type == QEvent::MouseMove || type == QEvent::MouseButtonPress || type == QEvent::MouseButtonRelease || type == QEvent::Leave) {
+            QPersistentModelIndex over;
+            if (type != QEvent::Leave) {
+                const QPoint pos = static_cast<QMouseEvent*>(event)->position().toPoint();
+                const QModelIndex index = view->indexAt(pos);
+                if (index.isValid() && !index.data(SettingsPathRole).toString().isEmpty()
+                        && gear_rect(view->visualRect(index)).contains(pos))
+                    over = index;
+            }
+            QPersistentModelIndex now_pressed = pressed;
+            if (type == QEvent::MouseButtonPress) now_pressed = over;
+            else if (type == QEvent::MouseButtonRelease || type == QEvent::Leave) now_pressed = QPersistentModelIndex();
+            if (over != hovered || now_pressed != pressed) {
+                hovered = over;
+                pressed = now_pressed;
+                view->viewport()->update();
+            }
+        }
+    }
+    return QStyledItemDelegate::eventFilter(object, event);
+}
+
+void AppletDelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const {
+    QStyledItemDelegate::paint(painter, option, index);
+    if (index.data(SettingsPathRole).toString().isEmpty()) return;
+
+    QStyleOptionToolButton opt;
+    opt.initFrom(style_source);
+    opt.rect = gear_rect(option.rect);
+    opt.state = QStyle::State_Enabled | QStyle::State_Raised;
+    if (hovered == index) opt.state |= QStyle::State_MouseOver;
+    if (pressed == index) opt.state |= QStyle::State_Sunken;
+    opt.icon = style_source->icon();
+    opt.iconSize = style_source->iconSize();
+    opt.toolButtonStyle = Qt::ToolButtonIconOnly;
+    opt.features = QStyleOptionToolButton::None;
+    style_source->style()->drawComplexControl(QStyle::CC_ToolButton, &opt, painter, style_source);
+}
+
+bool AppletDelegate::editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index){
+    const QString path = index.data(SettingsPathRole).toString();
+    if (!path.isEmpty() && (event->type() == QEvent::MouseButtonRelease || event->type() == QEvent::MouseButtonPress)) {
+        QMouseEvent *me = static_cast<QMouseEvent*>(event);
+        if (me->button() == Qt::LeftButton && gear_rect(option.rect).contains(me->position().toPoint())) {
+            if (event->type() == QEvent::MouseButtonRelease) emit gearClicked(path);
+            return true;
+        }
+    }
+    return QStyledItemDelegate::editorEvent(event, model, option, index);
+}
+
+bool AppletDelegate::helpEvent(QHelpEvent *event, QAbstractItemView *view, const QStyleOptionViewItem &option, const QModelIndex &index){
+    if (event->type() == QEvent::ToolTip && !index.data(SettingsPathRole).toString().isEmpty()
+            && gear_rect(option.rect).contains(event->pos())) {
+        QToolTip::showText(event->globalPos(), index.data(Qt::DisplayRole).toString() + " Settings", view);
+        return true;
+    }
+    return QStyledItemDelegate::helpEvent(event, view, option, index);
 }
 
 QList<settings_page*> PanelSettings::pages(){
@@ -68,6 +145,9 @@ QList<settings_page*> PanelSettings::pages(){
     applet_list_w = new ListWidget;
     applet_list_w->setObjectName("AppletList");
     applet_list_w->setDragDropMode(QAbstractItemView::InternalMove);
+    AppletDelegate *delegate = new AppletDelegate(applet_list_w);
+    connect(delegate, &AppletDelegate::gearClicked, panel_page, [this](const QString &path){ emit panel_page->open_requested(path); });
+    applet_list_w->setItemDelegate(delegate);
     connect(applet_list_w, &QListWidget::itemChanged, this, &PanelSettings::set_applets);
     ReorderListener *rl = new ReorderListener(applet_list_w);
     connect(rl, &ReorderListener::reordered, this, &PanelSettings::set_applets);
@@ -78,6 +158,8 @@ QList<settings_page*> PanelSettings::pages(){
 }
 
 void PanelSettings::load_applets(){
+    // itemChanged would run set_applets on the half-built list and overwrite the config.
+    QSignalBlocker blocker(applet_list_w);
     applet_list_w->clear();
 
     QSettings settings("Forest", "Panel");
@@ -101,13 +183,9 @@ void PanelSettings::load_applets(){
         QListWidgetItem *item = new QListWidgetItem(name);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
+        item->setData(AppletDelegate::SettingsPathRole, settings_path);
         applet_list_w->addItem(item);
         path_hash[name] = path;
-        if (!settings_path.isEmpty()) {
-            AppletSettingsButton *button = new AppletSettingsButton(name);
-            connect(button->button, &QToolButton::clicked, panel_page, [this, settings_path]{ emit panel_page->open_requested(settings_path); });
-            applet_list_w->setItemWidget(item, button);
-        }
     }
 }
 

@@ -9,6 +9,7 @@
 #include <QDebug>
 #include <QDropEvent>
 #include <QTimer>
+#include <QStyledItemDelegate>
 #include <QToolButton>
 
 #include "miscutills.h"
@@ -43,13 +44,26 @@ private:
 };
 
 
-// Gear at the right of an applet row, overlaid with setItemWidget.
-class AppletSettingsButton : public QWidget {
+// Paints a gear at the right of rows whose item has a settings page path in
+// SettingsPathRole, and turns clicks on it into gearClicked().
+class AppletDelegate : public QStyledItemDelegate {
+    Q_OBJECT
 public:
-    explicit AppletSettingsButton(const QString &applet_name);
-    QToolButton *button = nullptr;
-protected:
-    void resizeEvent(QResizeEvent *) override;
+    static constexpr int SettingsPathRole = Qt::UserRole + 1;
+    explicit AppletDelegate(QAbstractItemView *view);
+    QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+    void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
+    bool editorEvent(QEvent *event, QAbstractItemModel *model, const QStyleOptionViewItem &option, const QModelIndex &index) override;
+    bool eventFilter(QObject *object, QEvent *event) override;
+    bool helpEvent(QHelpEvent *event, QAbstractItemView *view, const QStyleOptionViewItem &option, const QModelIndex &index) override;
+signals:
+    void gearClicked(const QString &settings_path);
+private:
+    QRect gear_rect(const QRect &row) const;
+    QAbstractItemView *view = nullptr;
+    // Never shown: lets the app style (and so QSS #AppletSettingsButton) draw the gear.
+    QToolButton *style_source = nullptr;
+    QPersistentModelIndex hovered, pressed; // row whose gear is under the pointer / pressed
 };
 
 class PanelSettings : public QObject, settings_plugin_interface
