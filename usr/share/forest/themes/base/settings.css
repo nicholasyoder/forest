@@ -207,7 +207,7 @@ QScrollBar::add-page:vertical, QScrollBar::sub-page:vertical {
 }
 
 #ControlWidget #AppletList::item {
-    min-height: 22px; /* room for the gear button */
+    min-height: 22px;
 }
 
 #AppletSettingsButton {
