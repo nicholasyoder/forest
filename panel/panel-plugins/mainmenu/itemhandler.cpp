@@ -91,11 +91,11 @@ void itemhandler::itemEvent(QUuid uuid, ITEM_EVENT eventtype, QEvent *event){
         if(mevent->button() == Qt::LeftButton)
             itemActivated(uuid);
         else if(mevent->button() == Qt::RightButton)
-            showContextMenu(itemHash[uuid], mevent->pos());
+            showContextMenu(uuid, mevent->pos());
     }
     else if(eventtype == DRAG){
-        if(appHash.contains(currentItem))
-            doDrag();
+        if(appHash.contains(uuid))
+            doDrag(uuid);
     }
 }
 
@@ -103,7 +103,7 @@ void itemhandler::itemActivated(QUuid id){
     if(appHash.contains(id)){
         XdgActivation::instance()->request(itemHash[id]); // before appLaunch hides the menu
         emit appLaunch();
-        XdgDesktopFile dfile = appHash[id];
+        XdgDesktopFile dfile = appHash.value(id);
         incrementHits(dfile.name());
         XdgActivation::instance()->launch([dfile](){ dfile.startDetached(); });
     }
@@ -132,15 +132,13 @@ void itemhandler::incrementHits(QString name){
     settings->endGroup();
 }
 
-void itemhandler::showContextMenu(QWidget *anchor, QPoint pos){
-    if(itemHash.contains(currentItem)){
-        emit requestContextMenu(appHash[currentItem], anchor, pos);
-    }
+void itemhandler::showContextMenu(QUuid id, QPoint pos){
+    if(appHash.contains(id) && itemHash.contains(id))
+        emit requestContextMenu(appHash.value(id), itemHash.value(id), pos);
 }
 
-void itemhandler::doDrag(){
-    const QUuid id = currentItem;
-    QString dfilePath = appHash[id].fileName();
+void itemhandler::doDrag(QUuid id){
+    QString dfilePath = appHash.value(id).fileName();
 
     QDrag *drag = new QDrag(this);
     QMimeData *data = new QMimeData;
@@ -151,7 +149,7 @@ void itemhandler::doDrag(){
     data->setData(fileops::trustedLauncherMime, QByteArray());
     drag->setMimeData(data);
     const int sz = 48;
-    QPixmap pm = appHash[id].icon().pixmap(sz, sz);
+    QPixmap pm = appHash.value(id).icon().pixmap(sz, sz);
     if(!pm.isNull()){
         drag->setPixmap(pm);
         drag->setHotSpot(QPoint(pm.width()/2, pm.height()/2) / pm.devicePixelRatio());
@@ -165,12 +163,11 @@ void itemhandler::doDrag(){
 }
 
 void itemhandler::trySetAllowSelectByMouse(){
-    if (SbyMtimer && SbyMtimer->isActive()){
-        SbyMtimer->stop();
-        delete SbyMtimer;
+    if (!SbyMtimer){
+        SbyMtimer = new QTimer(this);
+        SbyMtimer->setSingleShot(true);
+        connect(SbyMtimer, &QTimer::timeout, this, &itemhandler::setAllowSelectByMouse);
     }
-    SbyMtimer = new QTimer(this);
-    connect(SbyMtimer, &QTimer::timeout, this, &itemhandler::setAllowSelectByMouse);
     SbyMtimer->start(500);
 }
 
@@ -232,12 +229,12 @@ void itemhandler::moveUpDown(MOVE_DIRECTION direction, QList<QUuid> items){
 }
 
 void itemhandler::setItemFocus(QUuid itemUuid){
-    menuitem *olditem = itemHash[currentItem];
+    menuitem *olditem = itemHash.value(currentItem);
     if (olditem) olditem->setState(NORMAL);
 
     currentItem = itemUuid;
 
-    menuitem *newitem = itemHash[currentItem];
+    menuitem *newitem = itemHash.value(currentItem);
     if (newitem) newitem->setState(FOCUS);
 }
 

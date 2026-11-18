@@ -25,7 +25,7 @@ public slots:
     menuitem* newItem(QString data, ITEM_TYPE type = CATEGORY, int appPageIndex = 0);
     menuitem* newCategoryItem(QString category);
     menuitem* newAppItem(QString path, bool searchitem = false);
-    menuitem* item(QUuid uuid){return itemHash[uuid];}
+    menuitem* item(QUuid uuid){return itemHash.value(uuid, nullptr);}
 
     void activateCurrentItem();
     void moveFocus(MOVE_DIRECTION direction);
@@ -47,8 +47,8 @@ private slots:
     void itemEvent(QUuid uuid, ITEM_EVENT eventtype, QEvent *event);
     void itemActivated(QUuid id);
     void incrementHits(QString name);
-    void showContextMenu(QWidget *anchor, QPoint pos);
-    void doDrag();
+    void showContextMenu(QUuid id, QPoint pos);
+    void doDrag(QUuid id);
     void trySetAllowSelectByMouse();
 
 

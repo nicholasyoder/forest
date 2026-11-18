@@ -40,7 +40,7 @@ protected:
     void mouseMoveEvent(QMouseEvent *event);
 
 private:
-    ITEM_STATE currentState;
+    ITEM_STATE currentState = NORMAL;
     QUuid itemID;
     QIcon itemIcon;
     QString itemText;

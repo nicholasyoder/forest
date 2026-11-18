@@ -56,6 +56,7 @@ void contextmenu::runAsRoot(){
 void contextmenu::showProperties(){
     if (currentDeskFile.isValid()){
         propertieswidget *pwidget = new propertieswidget;
+        pwidget->setAttribute(Qt::WA_DeleteOnClose);
         pwidget->setWindowFlags(Qt::Dialog);
         pwidget->setdata(currentDeskFile.name(),
                          currentDeskFile.localizedValue("Exec").toString(),
