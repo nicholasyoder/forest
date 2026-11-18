@@ -28,7 +28,7 @@ public:
 
     uint show_notification(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
                            const QString &body, const QStringList &actions, const QVariantMap &hints, int expire_timeout);
-    void close_popup(uint id, uint reason);
+    bool close_popup(uint id, uint reason); // false if id is unknown
 
 signals:
     void NotificationClosed(uint id, uint reason);
@@ -41,6 +41,8 @@ private:
     void remove_popup(uint id);
     void restack();
     void show_held();
+    bool restacking = false;
+    bool restack_again = false;
 
     QHash<uint, notifypopup*> popuphash;
     QList<notifypopup*> stack; // oldest first, nearest the screen corner

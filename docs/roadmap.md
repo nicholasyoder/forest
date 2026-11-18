@@ -14,8 +14,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.11.2 — applet, settings & login fixes
 
-- **Notification popup fixes** ([detail](review-2026-11.md#notification-popups)). Never-expire
-  timeout, plain text, in-place replace, no 100 Hz repaint.
 - **Main menu interaction fixes** ([detail](review-2026-11.md#mainmenu-fixes)).
 - **Monitor, tray, quicklaunch and volume fixes** ([detail](review-2026-11.md#applet-fixes)).
   Incl. no battery warning while charging, working mute toggle.

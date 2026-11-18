@@ -3,6 +3,7 @@
 #include "notify.h"
 
 namespace {
+constexpr int max_visible = 5;
 constexpr char startup_property[] = "forestStartupOverlay"; // set by forest while its startup overlay is up
 }
 
@@ -37,32 +38,30 @@ uint notify::show_notification(
         const QVariantMap &hints,
         int expire_timeout)
 {
-    uint id;
-    int slot = -1;
+    const bool resident = hints.value("resident").toBool();
     if (replaces_id != 0 && popuphash.contains(replaces_id)) {
-        id = replaces_id;
-        slot = stack.indexOf(popuphash.value(id));
-        remove_popup(id); // a replaced notification isn't "closed", so no signal
-    } else {
-        id = next_id++;
-        if (next_id == 0)
-            next_id = 1; // 0 is reserved by the spec
+        notifypopup *popup = popuphash.value(replaces_id); // updated in place: no remap, keeps its stack slot
+        popup->update_content(app_name, summary, body, app_icon, actions, expire_timeout);
+        popup->set_resident(resident);
+        return replaces_id;
     }
 
-    bool resident = hints.value("resident").toBool();
+    const uint id = next_id++;
+    if (next_id == 0)
+        next_id = 1; // 0 is reserved by the spec
+
     notifypopup *npop = new notifypopup(app_name, summary, body, app_icon, actions, expire_timeout, id);
+    npop->set_resident(resident);
     connect(npop, &notifypopup::readyToClose, this, &notify::close_popup);
-    connect(npop, &notifypopup::actionInvoked, this, [this, resident](uint id, const QString &key) {
+    connect(npop, &notifypopup::actionInvoked, this, [this, npop](uint id, const QString &key) {
         emit ActionInvoked(id, key);
-        if (!resident)
+        if (!npop->resident())
             close_popup(id, Dismissed);
     });
     connect(npop, &notifypopup::heightChanged, this, &notify::restack);
     popuphash[id] = npop;
-    stack.insert(slot < 0 ? stack.size() : qMin(slot, int(stack.size())), npop);
+    stack.append(npop);
     restack();
-    if (!held)
-        npop->show();
     return id;
 }
 
@@ -79,25 +78,39 @@ void notify::show_held()
 {
     held = false;
     qApp->removeEventFilter(this);
-    for (notifypopup *popup : std::as_const(stack))
-        popup->show();
+    restack();
 }
 
-// Lay popups out from the corner inward, each past the ones before it.
+// Lay popups out from the corner inward, each past the ones before it. Only the
+// oldest max_visible are shown; the rest wait (timers unstarted) for a free slot.
 void notify::restack()
 {
-    int offset = 0;
-    for (notifypopup *popup : std::as_const(stack)) {
-        popup->set_stack_offset(offset);
-        offset += popup->height() - popup->stack_overlap(); // margins overlap so the gap equals the screen-edge gap
+    if (restacking) { // show() resizes, which re-enters here
+        restack_again = true;
+        return;
     }
+    restacking = true;
+    do {
+        restack_again = false;
+        int offset = 0, shown = 0;
+        for (notifypopup *popup : std::as_const(stack)) {
+            if (shown++ >= max_visible)
+                break;
+            popup->set_stack_offset(offset);
+            if (!held && !popup->isVisible())
+                popup->show();
+            offset += popup->height() - popup->stack_overlap(); // margins overlap so the gap equals the screen-edge gap
+        }
+    } while (restack_again);
+    restacking = false;
 }
 
-void notify::close_popup(uint id, uint reason){
+bool notify::close_popup(uint id, uint reason){
     if (!popuphash.contains(id))
-        return;
+        return false;
     remove_popup(id);
     emit NotificationClosed(id, reason);
+    return true;
 }
 
 void notify::remove_popup(uint id){

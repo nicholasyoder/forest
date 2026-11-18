@@ -8,7 +8,7 @@
 
 class notify;
 
-class notifyadapter : public QDBusAbstractAdaptor
+class notifyadapter : public QDBusAbstractAdaptor, protected QDBusContext
 {
     Q_OBJECT
     Q_CLASSINFO("D-Bus Interface", "org.freedesktop.Notifications")

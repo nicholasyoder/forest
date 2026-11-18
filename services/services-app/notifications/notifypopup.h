@@ -19,6 +19,9 @@
 #include <QPainterPath>
 #include <QPaintEvent>
 #include <QRegularExpression>
+#include <QVariantAnimation>
+#include <QTextDocument>
+#include <QAbstractTextDocumentLayout>
 
 #include <qt6xdg/XdgIcon>
 
@@ -58,39 +61,12 @@ protected:
 
     /* Paints a progress bar that can have a border radius. Only the static corners show the radius, i.e. the corners of the bar in the center when its at 50% will still be square. */
     void paintEvent(QPaintEvent *){
-        QPixmap pixmap(this->size());
-        pixmap.fill(Qt::transparent);
-        QPainter pix_painter(&pixmap);
-        pix_painter.setRenderHint(QPainter::Antialiasing);
-
-        // Create the clipping path
-        QPainterPath path;
-        QRectF rect = pixmap.rect();
-        // Start from top-left, moving clockwise
-        path.moveTo(rect.left() + top_left_radius, rect.top());
-        // Top edge and top-right corner
-        path.lineTo(rect.right() - top_right_radius, rect.top());
-        path.arcTo(rect.right() - 2*top_right_radius, rect.top(), 2*top_right_radius, 2*top_right_radius, 90, -90);
-        // Right edge and bottom-right corner
-        path.lineTo(rect.right(), rect.bottom() - bottom_right_radius);
-        path.arcTo(rect.right() - 2*bottom_right_radius, rect.bottom() - 2*bottom_right_radius, 2*bottom_right_radius, 2*bottom_right_radius, 0, -90);
-        // Bottom edge and bottom-left corner
-        path.lineTo(rect.left() + bottom_left_radius, rect.bottom());
-        path.arcTo(rect.left(), rect.bottom() - 2*bottom_left_radius, 2*bottom_left_radius, 2*bottom_left_radius, 270, -90);
-        // Left edge and top-left corner
-        path.lineTo(rect.left(), rect.top() + top_left_radius);
-        path.arcTo(rect.left(), rect.top(), 2*top_left_radius, 2*top_left_radius, 180, -90);
-        path.closeSubpath();
-        // Apply the clipping
-        pix_painter.setClipPath(path);
-        // Render the widget
-        style_sheet_target->render(&pix_painter);
-        // Display only the portion of the rendered widget that should be visible as indicated by _value
+        if (full_bar.size() != size())
+            rebuild_full_bar();
         QPainter painter(this);
-        QRect painted_rect = pixmap.rect();
+        QRect painted_rect = full_bar.rect();
         painted_rect.setWidth(width() * _value);
-        painter.drawPixmap(painted_rect, pixmap, painted_rect);
-        painter.end();
+        painter.drawPixmap(painted_rect, full_bar, painted_rect);
     }
 
 private:
@@ -100,7 +76,28 @@ private:
     int bottom_left_radius = 0;
     int bottom_right_radius = 0;
     QFrame *style_sheet_target = nullptr;
-    QPainterPath clip_path;
+    QPixmap full_bar; // rounded, fully filled bar; cached so ticks only blit
+
+    void rebuild_full_bar(){
+        full_bar = QPixmap(size());
+        full_bar.fill(Qt::transparent);
+        QPainter pix_painter(&full_bar);
+        pix_painter.setRenderHint(QPainter::Antialiasing);
+        QPainterPath path;
+        QRectF rect = full_bar.rect();
+        path.moveTo(rect.left() + top_left_radius, rect.top());
+        path.lineTo(rect.right() - top_right_radius, rect.top());
+        path.arcTo(rect.right() - 2*top_right_radius, rect.top(), 2*top_right_radius, 2*top_right_radius, 90, -90);
+        path.lineTo(rect.right(), rect.bottom() - bottom_right_radius);
+        path.arcTo(rect.right() - 2*bottom_right_radius, rect.bottom() - 2*bottom_right_radius, 2*bottom_right_radius, 2*bottom_right_radius, 0, -90);
+        path.lineTo(rect.left() + bottom_left_radius, rect.bottom());
+        path.arcTo(rect.left(), rect.bottom() - 2*bottom_left_radius, 2*bottom_left_radius, 2*bottom_left_radius, 270, -90);
+        path.lineTo(rect.left(), rect.top() + top_left_radius);
+        path.arcTo(rect.left(), rect.top(), 2*top_left_radius, 2*top_left_radius, 180, -90);
+        path.closeSubpath();
+        pix_painter.setClipPath(path);
+        style_sheet_target->render(&pix_painter);
+    }
 
     QHash<QString, QString> get_stylesheet_for_object(QString object_name){
         QHash<QString, QString> style_options;
@@ -186,9 +183,7 @@ class FadingLabel : public QLabel
 public:
     explicit FadingLabel(QString text) : QLabel(text) {}
     bool is_clipped(){
-        QFontMetrics fm(font());
-        int textHeight = fm.boundingRect(rect(), alignment() | Qt::TextWordWrap, text()).height();
-        return textHeight > height();
+        QTextDocument doc; layout_doc(doc); return doc.size().height() > height();
     }
 
 protected:
@@ -203,11 +198,15 @@ protected:
         QPixmap pixmap(size());
         pixmap.fill(Qt::transparent);
         QPainter pixmap_painter(&pixmap);
-        // First paint the text using the font and forground role of the actual QLabel
         pixmap_painter.setRenderHint(QPainter::Antialiasing);
-        pixmap_painter.setFont(font());
-        pixmap_painter.setPen(palette().color(foregroundRole()));
-        pixmap_painter.drawText(contentsRect(), alignment() | Qt::TextWordWrap, text());
+        pixmap_painter.translate(contentsRect().topLeft());
+        QTextDocument doc;
+        layout_doc(doc);
+        QAbstractTextDocumentLayout::PaintContext ctx;
+        ctx.palette = palette();
+        ctx.palette.setColor(QPalette::Text, palette().color(foregroundRole()));
+        doc.documentLayout()->draw(&pixmap_painter, ctx);
+        pixmap_painter.resetTransform();
         // Create a gradient mask
         QFontMetrics fm(font());
         int height = pixmap.height();
@@ -225,6 +224,14 @@ protected:
         painter.end();
     }
 
+private:
+    // The text is sanitized rich text; lay it out at the label's width.
+    void layout_doc(QTextDocument &doc) const {
+        doc.setDefaultFont(font());
+        doc.setDocumentMargin(0);
+        doc.setHtml(text());
+        doc.setTextWidth(contentsRect().width());
+    }
 };
 
 
@@ -238,7 +245,13 @@ public:
     // Distance from the anchored screen edge, used to stack popups.
     void set_stack_offset(int offset);
     // QSS margin on the side facing the next popup in the stack.
-    int stack_overlap() const;
+    int stack_overlap() const { return overlap; }
+
+    // Replace the content of a live popup (notification replaces_id) and restart its timeout.
+    void update_content(const QString &app_name, const QString &summary, const QString &body, const QString &app_icon,
+                        const QStringList &actions, int timeout);
+    void set_resident(bool r) { resident_ = r; }
+    bool resident() const { return resident_; }
 
 signals:
     void heightChanged();
@@ -247,8 +260,7 @@ signals:
 
 private slots:
     QIcon geticon(QString icon_name, QString app_name);
-    void closepopup(uint reason){ timeout_updater->stop(); emit readyToClose(popupid, reason); }
-    void update_timeout_bar();
+    void closepopup(uint reason){ timeout_anim->stop(); emit readyToClose(popupid, reason); }
 
 protected:
     void showEvent(QShowEvent *) override;
@@ -258,16 +270,26 @@ protected:
     void mouseReleaseEvent(QMouseEvent *event) override;
 
 private:
+    void set_actions(const QStringList &actions);
+    void apply_timeout(int timeout);
+    int read_stack_overlap() const;
+
     uint popupid;
+    bool resident_ = false;
+    int overlap = 0;
+    int min_timeout = 0, max_timeout = 0, default_timeout = 0; // ms; 0 default = never expire
     bool has_default_action = false;
-    QString body_text;
+    QLabel *iconlabel = nullptr;
+    QLabel *summarylabel = nullptr;
+    QLabel *appnamelabel = nullptr;
+    QFrame *actionsbox = nullptr;
+    QHBoxLayout *actionslayout = nullptr;
+    QString body_html; // sanitized body-markup
     QString summary_text;
     FadingLabel *bodylabel = nullptr;
     NonSegmentedProgressBar *timeout_bar = nullptr;
-    QTimer *timeout_updater = nullptr;
-    QTimer *timeout_timer = nullptr;
-    int resume_timeout = 0;
-    int full_timeout = 0;
+    QVariantAnimation *timeout_anim = nullptr; // bar value 1 -> 0 over full_timeout
+    int full_timeout = 0; // ms; 0 = never expires
     bool started = false;
     bool anchor_top = false;
     bool anchor_left = false;

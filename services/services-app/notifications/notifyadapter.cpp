@@ -10,8 +10,7 @@ notifyadapter::notifyadapter(notify *parent) : QDBusAbstractAdaptor(parent), ser
 
 QStringList notifyadapter::GetCapabilities()
 {
-    // No "body-markup": FadingLabel draws clipped bodies as plain text.
-    return {"body", "actions"};
+    return {"body", "body-markup", "actions"};
 }
 
 void notifyadapter::GetServerInformation(QString &name, QString &vendor, QString &version, QString &spec_version)
@@ -24,7 +23,8 @@ void notifyadapter::GetServerInformation(QString &name, QString &vendor, QString
 
 void notifyadapter::CloseNotification(uint id)
 {
-    service->close_popup(id, notify::ClosedByCall);
+    if (!service->close_popup(id, notify::ClosedByCall))
+        sendErrorReply(QDBusError::InvalidArgs, "No notification with that id");
 }
 
 uint notifyadapter::Notify(const QString &app_name, uint replaces_id, const QString &app_icon, const QString &summary,
