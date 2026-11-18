@@ -7,6 +7,7 @@ add_library(toplevels STATIC
     extworkspacemanager.cpp
     extworkspacehandle.cpp
     biomeworkspaces.cpp
+    workspacetracker.cpp
     toplevelcapture.cpp
     screengrab.cpp
     topleveltracker.h
@@ -17,6 +18,7 @@ add_library(toplevels STATIC
     extworkspacemanager.h
     extworkspacehandle.h
     biomeworkspaces.h
+    workspacetracker.h
     toplevelcapture.h
     screengrab.h
 )

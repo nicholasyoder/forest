@@ -8,14 +8,13 @@
 #include "panelbutton.h"
 #include "panelanchor.h"
 #include "foreigntoplevelhandle.h"
-#include "extworkspacemanager.h"
-#include "biomeworkspaces.h"
+#include "workspacetracker.h"
 
 class windowbutton : public panelbutton{
     Q_OBJECT
 
 public:
-    windowbutton(ForeignToplevelHandle *handle, ExtWorkspaceManager *workspaceManager, BiomeWorkspaces *biomeWorkspaces);
+    windowbutton(ForeignToplevelHandle *handle, WorkspaceTracker *workspaces);
     ~windowbutton() override { delete pmenu; }
 
     ForeignToplevelHandle *toplevelHandle(){return handle;}
@@ -41,7 +40,7 @@ private slots:
     void close_w();
     void demaximize_w();
 
-    // Deferred until workspace_manager has its initial workspace list.
+    // Deferred until workspaces has its initial list.
     void populateDeskMenu();
     void moveToDesktop(int workspace);
 
@@ -52,8 +51,7 @@ protected:
 
 private:
     ForeignToplevelHandle *handle;
-    ExtWorkspaceManager *workspace_manager;
-    BiomeWorkspaces *biome_workspaces;
+    WorkspaceTracker *workspaces;
     QString m_appId;
 
     bool dragActive = false;

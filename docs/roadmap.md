@@ -59,7 +59,6 @@ Pairs with Biome 0.4.0.
 - **Theme CSS consolidation** ([detail](review-2026-11.md#theme-css)). Shared rules into
   `base`, colours via `palette()`, icon sizes via `qproperty`. Do before the
   accent colour; Biome regenerates `builtin.qss` after.
-- **Key workspaces on ext-workspace `id`** ([detail](review-2026-11.md#workspace-ids)).
 - **Custom accent colour.** Let the user override the theme's `highlight`
   palette colour from the settings UI (Themes page). Hardcoded greens in
   theme CSS need to move to `palette(highlight)` first.

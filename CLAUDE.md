@@ -138,7 +138,7 @@ All in `library/` (except `panel-library`). They're linked into each plugin modu
 - **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
 - **`pluginutills`** — app plugin path resolution, settings plugin interface
 - **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
-- **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `BiomeWorkspaces`, `ToplevelTracker` (open windows + which are on the active workspace), and `ToplevelCapture`/`ScreenGrab` (ext-image-copy-capture window and output capture)
+- **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `WorkspaceTracker` (ext-workspace + `org.biome.Workspaces`, keyed by workspace `id`), `ToplevelTracker` (open windows + which are on the active workspace), and `ToplevelCapture`/`ScreenGrab` (ext-image-copy-capture window and output capture)
 - **`activation`** — xdg-activation client (`XdgActivation`): launch programs with a token so they can raise an existing window. `QMenu` actions need `watch()`; custom popups call `request()` before hiding. Create the instance at startup (binds asynchronously)
 - **`outputs`** — wlr-output-management client (`OutputManager`), display profiles (`DisplayProfiles`, `Displays.conf`) and layout fixups; see `docs/development-notes.md` → Display settings
 - **`hotkeyconfig`** — parse/format of `[hotkeys]` `DBUS:` actions, plus the Hotkeys page's built-in actions

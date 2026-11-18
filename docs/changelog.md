@@ -2,6 +2,9 @@
 Changelog
 ============
 
+* Unreleased
+  - Workspaces are matched to Biome's by their ext-workspace `id` instead of the order they arrive in (falling back to arrival order on compositors that send none); deskswitch and the windowlist share one workspace client class, and `forest-screenshot` no longer binds workspace clients
+
 * Release 0.11.1 - 2026-11-17
   - Packaging cleanup: drop the unneeded `qt6-qtwayland` and `gio` dependencies, the leftover Openbox themes, `Forest-Flat-Dark`, qt5ct seeding and `power.png`; own the greetd drop-in directory, `/var/lib/forest/login` and `Login.conf`; install a `ForestThemeConfigVersion.cmake` so `find_package(ForestTheme <version>)` works; the session prepends Flatpak dirs to `XDG_DATA_DIRS` instead of replacing it, and stops `forest-session.target` when Biome exits
   - Default to JetBrains Mono as the monospace font and `qterminal` as the terminal (Meta+Q, Quicklaunch)

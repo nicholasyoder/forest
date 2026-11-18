@@ -211,7 +211,7 @@ int main(int argc, char *argv[]) {
     if (args.mode == Mode::None) {
         // Hidden-launcher/picker windows must not end the app; exit is explicit.
         app.setQuitOnLastWindowClosed(false);
-        auto *tracker = new ToplevelTracker(&app);
+        auto *tracker = new ToplevelTracker(&app, false);
         auto *launcher = new Launcher;
         QObject::connect(launcher, &Launcher::rejected, &app, [] { QCoreApplication::exit(0); });
         QObject::connect(launcher, &Launcher::captureRequested, &app,
@@ -231,7 +231,7 @@ int main(int argc, char *argv[]) {
     }
 
     app.setQuitOnLastWindowClosed(false);
-    ToplevelTracker *tracker = args.mode == Mode::Window ? new ToplevelTracker(&app) : nullptr;
+    ToplevelTracker *tracker = args.mode == Mode::Window ? new ToplevelTracker(&app, false) : nullptr;
     // One pass lets the capture globals bind before the first isSupported().
     QTimer::singleShot(args.delay * 1000 + 100, &app, [&] { capture(args, tracker); });
     return app.exec();
