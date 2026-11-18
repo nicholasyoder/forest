@@ -19,6 +19,8 @@ public:
     ExtWorkspaceHandle(struct ::ext_workspace_handle_v1 *object, ExtWorkspaceManager *manager);
     ~ExtWorkspaceHandle();
 
+    // Empty if the compositor sent none.
+    QString id() const { return m_id; }
     QString name() const { return m_name; }
     bool isActive() const { return m_active; }
 
@@ -29,12 +31,14 @@ signals:
     void removed(ExtWorkspaceHandle *handle);
 
 protected:
+    void ext_workspace_handle_v1_id(const QString &id) override;
     void ext_workspace_handle_v1_name(const QString &name) override;
     void ext_workspace_handle_v1_state(uint32_t state) override;
     void ext_workspace_handle_v1_removed() override;
 
 private:
     ExtWorkspaceManager *m_manager;
+    QString m_id;
     QString m_name;
     bool m_active = false;
 };

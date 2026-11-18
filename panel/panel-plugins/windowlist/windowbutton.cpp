@@ -2,7 +2,6 @@
 
 #include "windowbutton.h"
 
-#include "extworkspacehandle.h"
 #include "iconresolver.h"
 
 struct MenuItem {
@@ -11,16 +10,15 @@ struct MenuItem {
     void (windowbutton::*slot)();
 };
 
-windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, ExtWorkspaceManager *workspaceManager,
-        BiomeWorkspaces *biomeWorkspaces)
-    : panelbutton(IconAndText), handle(toplevelHandle), workspace_manager(workspaceManager), biome_workspaces(biomeWorkspaces){
+windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, WorkspaceTracker *workspaceTracker)
+    : panelbutton(IconAndText), handle(toplevelHandle), workspaces(workspaceTracker){
     m_appId = handle->appId();
     setText(handle->title());
     setIcon(iconresolver::iconForAppId(m_appId));
     setDown(handle->isActivated());
 
     pmenu = new QMenu;
-    if (biome_workspaces->isAvailable())
+    if (workspaces->canMoveWindows())
         desk_menu = pmenu->addMenu(QIcon::fromTheme("window-next"), "Move to workspace");
 
     MenuItem pmenu_items[] = {
@@ -33,8 +31,8 @@ windowbutton::windowbutton(ForeignToplevelHandle *toplevelHandle, ExtWorkspaceMa
     for (const auto& item : pmenu_items)
         pmenu->addAction(QIcon::fromTheme(item.icon), item.text, this, item.slot);
 
-    if (workspace_manager->workspaces().isEmpty())
-        connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowbutton::populateDeskMenu);
+    if (workspaces->count() == 0)
+        connect(workspaces, &WorkspaceTracker::changed, this, &windowbutton::populateDeskMenu);
     else
         populateDeskMenu();
 
@@ -114,18 +112,18 @@ void windowbutton::demaximize_w(){
 }
 
 void windowbutton::populateDeskMenu(){
-    disconnect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &windowbutton::populateDeskMenu);
+    if (workspaces->count() == 0)
+        return; // the list hasn't arrived yet
+    disconnect(workspaces, &WorkspaceTracker::changed, this, &windowbutton::populateDeskMenu);
     if (!desk_menu)
         return;
 
-    const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
-    for (int index = 0; index < workspaces.length(); index++){
+    for (int index = 0; index < workspaces->count(); index++){
         desk_menu->addAction("Workspace " + QString::number(index + 1), this, [this, index](){ moveToDesktop(index); });
     }
 }
 
 void windowbutton::moveToDesktop(int workspace){
-    // Empty until paired with its ext-foreign-toplevel-list handle.
-    if (!handle->identifier().isEmpty())
-        biome_workspaces->moveToplevel(handle->identifier(), workspace);
+    // Identifier is empty until paired with its ext-foreign-toplevel-list handle.
+    workspaces->moveWindow(handle->identifier(), workspace);
 }

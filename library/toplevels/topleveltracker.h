@@ -11,21 +11,22 @@
 #include "foreigntoplevelhandle.h"
 #include "extforeigntoplevellist.h"
 #include "extforeigntoplevelhandle.h"
-#include "extworkspacemanager.h"
-#include "biomeworkspaces.h"
+#include "workspacetracker.h"
 
 // Open windows plus which workspace each is on. Handles are deleted after
-// their `closed` signal; connect to it to drop references.
+// their `closed` signal; connect to it to drop references. Without
+// trackWorkspaces no workspace clients are bound and every window counts as
+// on the active workspace.
 class ToplevelTracker : public QObject {
     Q_OBJECT
 
 public:
-    explicit ToplevelTracker(QObject *parent = nullptr);
+    explicit ToplevelTracker(QObject *parent = nullptr, bool trackWorkspaces = true);
     ~ToplevelTracker();
 
     const QList<ForeignToplevelHandle *> &toplevels() const { return m_toplevels; }
-    ExtWorkspaceManager *workspaceManager() const { return m_workspaceManager; }
-    BiomeWorkspaces *biomeWorkspaces() const { return m_biomeWorkspaces; }
+    // Null without trackWorkspaces.
+    WorkspaceTracker *workspaces() const { return m_workspaces; }
 
     // True for windows Biome hasn't classified, or with no active workspace known.
     bool isOnActiveWorkspace(ForeignToplevelHandle *handle) const;
@@ -47,8 +48,7 @@ private:
 
     ForeignToplevelManager *m_toplevelManager = nullptr;
     ExtForeignToplevelList *m_extToplevelList = nullptr;
-    ExtWorkspaceManager *m_workspaceManager = nullptr;
-    BiomeWorkspaces *m_biomeWorkspaces = nullptr;
+    WorkspaceTracker *m_workspaces = nullptr;
 
     QList<ForeignToplevelHandle *> m_toplevels;
     // Paired front-to-front; see extforeigntoplevellist.h.

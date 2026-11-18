@@ -67,7 +67,7 @@ void windowlist::onWindowChanged(ForeignToplevelHandle *handle){
         return;
     }
 
-    windowbutton *wbt = new windowbutton(handle, tracker->workspaceManager(), tracker->biomeWorkspaces());
+    windowbutton *wbt = new windowbutton(handle, tracker->workspaces());
     connect(wbt, &windowbutton::moved, this, &windowlist::onButtonMoved);
     connect(wbt, &windowbutton::mouseEnter, ipopup, &imagepopup::btmouseEnter);
     connect(wbt, &windowbutton::mouseLeave, ipopup, &imagepopup::btmouseLeave);

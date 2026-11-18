@@ -17,6 +17,10 @@ void ExtWorkspaceHandle::activate() {
     m_manager->commit();
 }
 
+void ExtWorkspaceHandle::ext_workspace_handle_v1_id(const QString &id) {
+    m_id = id;
+}
+
 void ExtWorkspaceHandle::ext_workspace_handle_v1_name(const QString &name) {
     m_name = name;
 }

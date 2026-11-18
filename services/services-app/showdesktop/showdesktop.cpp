@@ -42,7 +42,7 @@ void ShowDesktop::toggle(){
     if (record.isEmpty())
         return;
 
-    recordWorkspace = tracker->workspaceManager()->activeWorkspaceIndex();
+    recordWorkspace = tracker->workspaces()->activeIndex();
     for (const Entry &entry : std::as_const(record))
         entry.handle->setMinimized();
 }
@@ -72,7 +72,7 @@ void ShowDesktop::onHandleClosed(ForeignToplevelHandle *handle){
 }
 
 void ShowDesktop::onWorkspaceMembershipChanged(){
-    if (!record.isEmpty() && tracker->workspaceManager()->activeWorkspaceIndex() != recordWorkspace)
+    if (!record.isEmpty() && tracker->workspaces()->activeIndex() != recordWorkspace)
         clearRecord();
 }
 

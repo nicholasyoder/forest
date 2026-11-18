@@ -2,14 +2,10 @@
 
 #include "deskswitch.h"
 
-#include "extworkspacehandle.h"
-
 deskswitch::deskswitch() {}
 
 deskswitch::~deskswitch() {
     delete pmenu;
-    if (workspace_manager)
-        workspace_manager->release();
 }
 
 void deskswitch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
@@ -25,11 +21,8 @@ void deskswitch::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
 
     connect(this, &deskswitch::rightclicked, this, [this]{ popupMenuOnLauncher(pmenu, this, CenteredOnWidget); });
 
-    workspace_manager = new ExtWorkspaceManager(this);
-    connect(workspace_manager, &ExtWorkspaceManager::workspacesChanged, this, &deskswitch::onWorkspacesChanged);
-
-    biome_workspaces = new BiomeWorkspaces(this);
-    connect(biome_workspaces, &BiomeWorkspaces::windowWorkspacesChanged, this, &deskswitch::updateWindowCounts);
+    workspaces = new WorkspaceTracker(this);
+    connect(workspaces, &WorkspaceTracker::changed, this, &deskswitch::onWorkspacesChanged);
 }
 
 void deskswitch::setupbts(){
@@ -40,40 +33,30 @@ void deskswitch::setupbts(){
         delete child;
     }
 
-    const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
-    for (int index = 0; index < workspaces.length(); index++){
+    for (int index = 0; index < workspaces->count(); index++){
         deskbutton *bt = new deskbutton(index);
         basehlayout->addWidget(bt);
         connect(bt, SIGNAL(clicked(int)), this, SLOT(switchtodesk(int)));
         connect(this, SIGNAL(activate(int)), bt, SLOT(setactive(int)));
         dbuttons << bt;
     }
-    updateWindowCounts();
 }
 
 void deskswitch::switchtodesk(int index){
-    const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
-    if (index < 0 || index >= workspaces.length())
+    if (index < 0 || index >= workspaces->count())
         return;
 
-    workspaces[index]->activate();
+    workspaces->activate(index);
     emit activate(index);
 }
 
 void deskswitch::onWorkspacesChanged(){
-    const QList<ExtWorkspaceHandle*> workspaces = workspace_manager->workspaces();
-
-    if (workspaces.length() != dbuttons.length())
+    if (workspaces->count() != dbuttons.length())
         setupbts();
 
-    emit activate(workspace_manager->activeWorkspaceIndex());
-}
+    emit activate(workspaces->activeIndex());
 
-void deskswitch::updateWindowCounts(){
-    QHash<int, int> counts;
-    foreach (const QVariant &workspace, biome_workspaces->windowWorkspaces())
-        counts[workspace.toInt()]++;
-
-    foreach (deskbutton *bt, dbuttons)
+    const QList<int> counts = workspaces->windowCounts();
+    for (deskbutton *bt : std::as_const(dbuttons))
         bt->setNumDeskWindows(counts.value(bt->desknumber(), 0));
 }

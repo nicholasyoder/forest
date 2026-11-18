@@ -4,12 +4,11 @@
 
 #include "toplevelcapture.h"
 
-ToplevelTracker::ToplevelTracker(QObject *parent) : QObject(parent) {
-    m_biomeWorkspaces = new BiomeWorkspaces(this);
-    connect(m_biomeWorkspaces, &BiomeWorkspaces::windowWorkspacesChanged, this, &ToplevelTracker::workspaceMembershipChanged);
-
-    m_workspaceManager = new ExtWorkspaceManager(this);
-    connect(m_workspaceManager, &ExtWorkspaceManager::workspacesChanged, this, &ToplevelTracker::workspaceMembershipChanged);
+ToplevelTracker::ToplevelTracker(QObject *parent, bool trackWorkspaces) : QObject(parent) {
+    if (trackWorkspaces) {
+        m_workspaces = new WorkspaceTracker(this);
+        connect(m_workspaces, &WorkspaceTracker::changed, this, &ToplevelTracker::workspaceMembershipChanged);
+    }
 
     ToplevelCapture::preload();
 
@@ -28,16 +27,14 @@ ToplevelTracker::~ToplevelTracker() {
     m_toplevelManager->release();
     if (m_extToplevelList)
         m_extToplevelList->release();
-    m_workspaceManager->release();
 }
 
 bool ToplevelTracker::isOnActiveWorkspace(ForeignToplevelHandle *handle) const {
-    int active = m_workspaceManager->activeWorkspaceIndex();
+    int active = m_workspaces ? m_workspaces->activeIndex() : -1;
     if (active < 0)
         return true;
-    const QVariantMap &windowWorkspaces = m_biomeWorkspaces->windowWorkspaces();
-    auto it = windowWorkspaces.constFind(handle->identifier());
-    return it == windowWorkspaces.constEnd() || it->toInt() == active;
+    int index = m_workspaces->indexOfWindow(handle->identifier());
+    return index < 0 || index == active;
 }
 
 void ToplevelTracker::onToplevelCreated(ForeignToplevelHandle *handle) {

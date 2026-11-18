@@ -11,8 +11,7 @@
 #include "panelpluginterface.h"
 #include "panelanchor.h"
 #include "deskbutton.h"
-#include "extworkspacemanager.h"
-#include "biomeworkspaces.h"
+#include "workspacetracker.h"
 
 class deskswitch : public panelbutton, panelpluginterface {
     Q_OBJECT
@@ -36,15 +35,12 @@ private slots:
     void switchtodesk(int index);
 
     void onWorkspacesChanged();
-    // Per-desktop window-count dots.
-    void updateWindowCounts();
 
 private:
     QHBoxLayout *basehlayout;
     QList<deskbutton*> dbuttons;
     QMenu *pmenu = nullptr;
-    ExtWorkspaceManager *workspace_manager = nullptr;
-    BiomeWorkspaces *biome_workspaces = nullptr;
+    WorkspaceTracker *workspaces = nullptr;
 };
 
 #endif // DESKSWITCH_H
