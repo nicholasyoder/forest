@@ -4,6 +4,8 @@ Changelog
 
 * Unreleased
   - Workspaces are matched to Biome's by their ext-workspace `id` instead of the order they arrive in (falling back to arrival order on compositors that send none); deskswitch and the windowlist share one workspace client class, and `forest-screenshot` no longer binds workspace clients
+  - Rework notification popups: `expire_timeout` 0 now never expires (a default of 0 no longer closes popups instantly, and max is raised to min if set lower); a notification with `replaces_id` updates its popup in place instead of remapping it; `CloseNotification` on an unknown id returns an error; no more 10 ms repaint timer per popup (the timeout bar is animated and cached); at most 5 popups are shown, the rest wait for a free slot
+  - Advertise `body-markup`: notification bodies render `<b>`, `<i>`, `<u>`, `<br>` and http/https/mailto links (clickable), with everything else escaped or dropped; summaries stay plain text
 
 * Release 0.11.1 - 2026-11-17
   - Packaging cleanup: drop the unneeded `qt6-qtwayland` and `gio` dependencies, the leftover Openbox themes, `Forest-Flat-Dark`, qt5ct seeding and `power.png`; own the greetd drop-in directory, `/var/lib/forest/login` and `Login.conf`; install a `ForestThemeConfigVersion.cmake` so `find_package(ForestTheme <version>)` works; the session prepends Flatpak dirs to `XDG_DATA_DIRS` instead of replacing it, and stops `forest-session.target` when Biome exits
