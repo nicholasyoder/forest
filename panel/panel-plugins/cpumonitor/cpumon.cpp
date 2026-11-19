@@ -44,7 +44,7 @@ void cpumon::loadsettings(){
     gwidget->setFixedWidth(settings->value(cfg::width, cfg::width_default).toInt());
     clickedcommand = settings->value(cfg::command, "").toString();
 
-    refreshtimer->start(settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt());
+    refreshtimer->start(qMax(50, settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt()));
 }
 
 void cpumon::runcommand(){
@@ -61,30 +61,23 @@ void cpumon::updatecpu(){
     QFile file("/proc/stat");
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return;
 
-    QString line1 = file.readLine();
-    line1.remove("cpu");
+    // "cpu user nice system idle iowait irq softirq steal guest guest_nice".
+    // guest/guest_nice are already inside user/nice, so they're left out.
+    // iowait counts as busy on purpose: it shows disk flushes (e.g. before unmounting a drive).
+    const QStringList sections = QString(file.readLine()).split(QChar(' '), Qt::SkipEmptyParts);
+    if (sections.size() < 5) return;
 
-    QStringList sections = line1.split(QChar(' '), Qt::SkipEmptyParts);
+    unsigned long long total = 0, idle = 0;
+    for (int c = 1; c < qMin(int(sections.size()), 9); c++){
+        const unsigned long long v = sections[c].toULongLong();
+        total += v;
+        if (c == 4) idle = v; // idle only; iowait (c == 5) stays busy
+    }
+    const unsigned long long usage = total - idle;
 
-    unsigned long long total = 0;
-
-    for (int c = 0; c < sections.size(); c++)
-        total += sections[c].toULongLong();
-
-    unsigned long long usage = 0;
-    usage += sections[0].toULongLong();
-    usage += sections[1].toULongLong();
-    usage += sections[2].toULongLong();
-
-    for (int c = 4; c < sections.size(); c++)
-        usage += sections[c].toULongLong();
-
-    double divisor = double(total - oldtotal);
-    double newusage = double(usage - oldvalue) / divisor;
-
-    QList<qreal> values;
-    values << newusage;
-    gwidget->updategraph(values);
+    if (total > oldtotal){
+        gwidget->updategraph({double(usage - oldvalue) / double(total - oldtotal)});
+    }
 
     oldvalue = usage;
     oldtotal = total;

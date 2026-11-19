@@ -9,7 +9,7 @@ SensorWidget::SensorWidget(){
 }
 
 void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
-    setText(QChar(0x00B0)+QString::number(100));
+    setText(QString());
 
     mSensors = new Sensors;
     mDetectedChips = mSensors->getDetectedChips();
@@ -35,7 +35,7 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
     QVBoxLayout *vlayout = new QVBoxLayout;
     vlayout->addWidget(mLabelInfo);
     popupbox = new popup(vlayout, pbutton, CenteredOnWidget);
-    connect(pbutton, &panelbutton::leftclicked, popupbox, &popup::showpopup);
+    connect(pbutton, &panelbutton::leftclicked, this, &SensorWidget::showpopupnow);
 
     pmenu = new QMenu;
     pmenu->addActions(itemlist);
@@ -49,13 +49,11 @@ void SensorWidget::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 
 void SensorWidget::paintEvent(QPaintEvent *){
     QPainter painter(this);
-    QPen pen;
-    if (cicontemp < warningtemp)
-        pen.setColor(Qt::green);
-    else if(cicontemp < criticaltemp)
-        pen.setColor(Qt::yellow);
-    else if(cicontemp >= criticaltemp)
+    QPen pen(palette().color(QPalette::WindowText));
+    if (iconTemp >= criticaltemp)
         pen.setColor(Qt::red);
+    else if (iconTemp >= warningtemp)
+        pen.setColor(Qt::yellow);
 
     painter.setPen(pen);
     painter.drawText(0,0,this->width(),this->height(), Qt::AlignCenter, this->text());
@@ -67,7 +65,7 @@ void SensorWidget::loadSettings(){
 
     QSettings settings("Forest", "Temperature Monitor");
     settings.sync();
-    mTimeUpdat = settings.value(cfg::updateinterval, cfg::updateinterval_default).toInt()*1000;
+    mTimeUpdat = qMax(1, settings.value(cfg::updateinterval, cfg::updateinterval_default).toInt()) * 1000;
     mFahrenheit = settings.value(cfg::fahrenheit, cfg::fahrenheit_default).toBool();
     shownsensor = settings.value(cfg::sensor).toString();
     displaytype = settings.value(cfg::display, cfg::display_text).toString();
@@ -96,57 +94,64 @@ void SensorWidget::loadSettings(){
     timer->start(mTimeUpdat);
 }
 
+QString SensorWidget::formatTemp(double celsius){
+    return mFahrenheit ? QString::number(int(celsius2fahrenheit(celsius))) + QChar(0x00B0) + "F"
+                       : QString::number(int(celsius)) + QChar(0x00B0) + "C";
+}
+
+void SensorWidget::showpopupnow(){
+    buildpopup = true;
+    updateSensor();
+    buildpopup = false;
+    popupbox->showpopup();
+}
+
 void SensorWidget::updateSensor(){
     temps.clear();
-    popuptext = "<table cellspacing='0' cellpadding='3'>";
+    // Values are only read for what's displayed; the popup lists every sensor.
+    const bool popupshown = buildpopup || popupbox->isVisible();
+    QString popuptext = "<table cellspacing='0' cellpadding='3'>";
 
     int index=-1;
-    double curTemp = 0;
     bool shownfound = false;
+    bool anysensor = false;
 
     for (unsigned int i = 0; i < mDetectedChips.size(); ++i){
         const std::vector<Feature>& features = mDetectedChips[i].getFeatures();
         for (unsigned int j = 0; j < features.size(); ++j){
-            if (features[j].getType() == SENSORS_FEATURE_TEMP){
-                index++;
-                QString name= QString::fromStdString(features[j].getLabel());
+            if (features[j].getType() != SENSORS_FEATURE_TEMP)
+                continue;
+            index++;
+            anysensor = true;
+            QString id = sensorsconfig::sensor_id(mDetectedChips[i], features[j]);
+            const bool wantbar = displaytype == sensorsconfig::display_bars && !hiddenbars.contains(id);
+            const bool wanticon = index == 0 || (!shownfound && id == shownsensor);
+            if (!popupshown && !wantbar && !wanticon)
+                continue;
+
+            double curTemp = features[j].getValue(SENSORS_SUBFEATURE_TEMP_INPUT);
+
+            if (popupshown){
                 QString border = (index != 0) ? "style='border-top: 1px solid #aaa;'" : "";
-                popuptext += "<tr><td "+border+">"+name+"</td><td "+border+">&nbsp;&nbsp;&nbsp;</td>";
+                popuptext += "<tr><td "+border+">"+QString::fromStdString(features[j].getLabel())+"</td><td "+border+">&nbsp;&nbsp;&nbsp;</td>"
+                             "<td "+border+">"+formatTemp(curTemp)+"</td></tr>";
+            }
+            if (wantbar)
+                temps.append(int(curTemp));
 
-                curTemp = features[j].getValue(SENSORS_SUBFEATURE_TEMP_INPUT);
-
-                popuptext += "<td "+border+">";
-                if (mFahrenheit) popuptext += QString::number(int(celsius2fahrenheit(curTemp))) + QChar(0x00B0)+"F";
-                else popuptext += QString::number(int(curTemp)) +" C"+ QChar(0x00B0);
-                popuptext += "</td>";
-
-                QString id = sensorsconfig::sensor_id(mDetectedChips[i], features[j]);
-                if (!hiddenbars.contains(id))
-                    temps.append(int(curTemp));
-
-                // First sensor until the chosen one turns up.
-                if (index == 0 || (!shownfound && id == shownsensor)){
-                    shownfound = id == shownsensor;
-                    iconTemp = mFahrenheit ? celsius2fahrenheit(curTemp) : curTemp;
-                    cicontemp = curTemp;
-                }
-
-                popuptext += "</tr>";
+            // First sensor until the chosen one turns up.
+            if (wanticon){
+                shownfound = id == shownsensor;
+                iconTemp = curTemp;
             }
         }
     }
     popuptext += "</table>";
 
-    mLabelInfo->setText(popuptext);
+    if (popupshown)
+        mLabelInfo->setText(anysensor ? popuptext : "No temperature sensors");
 
-    if (displaytype == "text"){
-        if(mFahrenheit)
-            setText(QString::number(int(iconTemp)) +"F"+ QChar(0x00B0));
-        else
-            setText(QString::number(int(iconTemp)) +"C"+ QChar(0x00B0));
-        setFixedWidth(sizeHint().width());
-    }
-    else{
+    if (displaytype == sensorsconfig::display_bars){
         if (barlist.size() != temps.size()){
             qDeleteAll(barlist);
             barlist.clear();
@@ -160,6 +165,11 @@ void SensorWidget::updateSensor(){
         }
         for (int i = 0; i < temps.size(); ++i)
             barlist[i]->setValue(double(temps[i]) / maxtemp);
+    }
+    else{
+        setText(anysensor ? formatTemp(iconTemp) : "N/A");
+        setFixedWidth(sizeHint().width());
+        update();
     }
 }
 

@@ -59,7 +59,9 @@ void batterymonitor::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist)
     }
 
     updateicon();
-    if (!batterylist.isEmpty())
+    if (batterylist.isEmpty())
+        hide();
+    else
     {
         connect(updatetimer, &QTimer::timeout, this, &batterymonitor::updatedata);
         updatetimer->start(3000);

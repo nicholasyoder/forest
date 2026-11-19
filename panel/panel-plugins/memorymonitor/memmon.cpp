@@ -61,7 +61,7 @@ void memmon::loadsettings(){
 
     clickedcommand = settings->value(cfg::command, "").toString();
 
-    refreshtimer->start(settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt());
+    refreshtimer->start(qMax(50, settings->value(cfg::updateinterval, cfg::updateinterval_default).toInt()));
 
     gwidget->setFixedWidth(settings->value(cfg::width, cfg::width_default).toInt());
 }
@@ -72,56 +72,29 @@ void memmon::updatemem(){
     if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
         return;
 
-    //get total memory
-    QString memtotal = file.readLine();
-    memtotal.remove("MemTotal:");
-    memtotal.chop(3);
-    memtotal.remove(" ");
+    // Parsed by key, not line position; values are in kB.
+    double memtotal = 0, memfree = 0, swaptotal = 0, swapfree = 0;
+    // readAll(): atEnd() is true up front for /proc files (reported size 0).
+    for (const QByteArray &line : file.readAll().split('\n')){
+        const qsizetype colon = line.indexOf(':');
+        if (colon < 0) continue;
+        const QByteArrayView key = QByteArrayView(line).first(colon);
+        const double value = line.mid(colon + 1).trimmed().split(' ').value(0).toDouble();
+        if (key == "MemTotal") memtotal = value;
+        else if (key == "MemAvailable") memfree = value;
+        else if (key == "SwapTotal") swaptotal = value;
+        else if (key == "SwapFree") swapfree = value;
+    }
 
-    file.readLine();//skip line
-
-    //get available memory
-    QString memfree = file.readLine();
-    memfree.remove("MemAvailable:");
-    memfree.chop(3);
-    memfree.remove(" ");
-
-    //skip down to swap
-    for (int c = 0; c < 11; c++)
-        file.readLine();
-
-    //get total swap
-    QString swaptotal = file.readLine();
-    swaptotal.remove("SwapTotal:");
-    swaptotal.chop(3);
-    swaptotal.remove(" ");
-
-    //get free swap
-    QString swapfree = file.readLine();
-    swapfree.remove("SwapFree:");
-    swapfree.chop(3);
-    swapfree.remove(" ");
+    auto fraction = [](double total, double free){ return total > 0 ? (total - free) / total : 0; };
 
     QList<qreal> values;
-    if (swapbehavior == 0){ // disabled
-        double free = memfree.toDouble();
-        double total = memtotal.toDouble();
-        values << (total - free) / total;
-    }
-    else if (swapbehavior == 1){ // combine
-        double free = memfree.toDouble() + swapfree.toDouble();
-        double total = memtotal.toDouble() + swaptotal.toDouble();
-        values << (total - free) / total;
-    }
-    else { // seperate
-        double mfree = memfree.toDouble();
-        double mtotal = memtotal.toDouble();
-        values << (mtotal - mfree) / mtotal;
-
-        double sfree = swapfree.toDouble();
-        double stotal = swaptotal.toDouble();
-        values << (stotal > 0 ? (stotal - sfree) / stotal : 0);
-    }
+    if (swapbehavior == 0) // disabled
+        values << fraction(memtotal, memfree);
+    else if (swapbehavior == 1) // combine
+        values << fraction(memtotal + swaptotal, memfree + swapfree);
+    else // separate
+        values << fraction(memtotal, memfree) << fraction(swaptotal, swapfree);
     gwidget->updategraph(values);
 }
 

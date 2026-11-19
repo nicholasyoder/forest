@@ -55,7 +55,7 @@ signals:
 private:
     AudioEngine *m_engine;
     int m_volume;
-    int m_volumeBack;
+    int m_volumeBack = 0;
     bool m_mute;
     AudioDeviceType m_type;
     QString m_name;

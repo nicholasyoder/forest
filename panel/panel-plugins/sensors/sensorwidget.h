@@ -38,7 +38,12 @@ private slots:
     void paintEvent(QPaintEvent *);
     void updateSensor();
     void loadSettings();
+    void showpopupnow();
     double celsius2fahrenheit(double celsius);
+
+private:
+    QString formatTemp(double celsius);
+    bool buildpopup = false;
 
 private:
     panelbutton *pbutton;
@@ -46,7 +51,6 @@ private:
     QFrame *bars;
     QBoxLayout *barlayout;
     QList<SensorBar*> barlist;
-    QString popuptext;
     popup *popupbox = nullptr;
     QMenu *pmenu = nullptr;
 
@@ -57,7 +61,6 @@ private:
     int  mTimeUpdat;
     QString shownsensor;
     double iconTemp = 0;
-    double cicontemp = 0;
     QString displaytype;
     int warningtemp = 0;
     int criticaltemp = 0;

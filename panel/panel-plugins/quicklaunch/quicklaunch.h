@@ -43,6 +43,7 @@ private slots:
     void showpopupmenu(int launchernum);
     void removelauncher();
     QString padwithzeros(int number);
+    int nextkeynumber();
 
 private:
     QList<launcher*> launcherlist;

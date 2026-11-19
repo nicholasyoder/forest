@@ -4,6 +4,7 @@
 #define BATTERY_H
 
 #include <QString>
+#include <QtGlobal>
 
 class battery
 {
@@ -21,6 +22,7 @@ private:
     void notifylow();
 
     bool sentnotification = false;
+    uint notificationid = 0;
     QString pathtobatdir;
     qreal now = 0;
     qreal full = 0;

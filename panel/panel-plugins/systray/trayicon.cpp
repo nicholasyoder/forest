@@ -101,10 +101,18 @@ QIcon iconFromName(const QString &name, const QString &themePath) {
     if (themePath.isEmpty())
         return QIcon();
 
+    // Cached: the recursive scan would otherwise repeat on every refresh signal.
+    static QHash<QString, QIcon> cache;
+    const QString key = themePath + '\n' + name;
+    if (const auto found = cache.constFind(key); found != cache.constEnd())
+        return *found;
+
     QIcon icon;
     QDirIterator it(themePath, {name + ".svg", name + ".png", name + ".xpm"}, QDir::Files, QDirIterator::Subdirectories);
     while (it.hasNext())
         icon.addFile(it.next());
+    if (!icon.isNull())
+        cache.insert(key, icon);
     return icon;
 }
 
@@ -195,6 +203,7 @@ void trayicon::applyProperties(const QVariantMap &props)
         text = props.value("Title").toString();
     setToolTip(text);
 
+    m_itemIsMenu = props.value("ItemIsMenu").toBool();
     m_menuPath = props.value("Menu").value<QDBusObjectPath>().path();
 
     setVisible(status != QLatin1String("Passive"));
@@ -209,6 +218,11 @@ void trayicon::callItem(const QString &method, const QVariantList &args)
 
 void trayicon::onLeftClicked()
 {
+    // ItemIsMenu: Activate is meaningless, the menu is the primary action.
+    if (m_itemIsMenu && !m_menuPath.isEmpty() && m_menuPath != QLatin1String("/")) {
+        onRightClicked();
+        return;
+    }
     const QPoint pos = activationPos();
     callItem("Activate", {pos.x(), pos.y()});
 }
@@ -266,11 +280,19 @@ void trayicon::onMouseReleased(QMouseEvent *event)
 
 void trayicon::wheelEvent(QWheelEvent *event)
 {
+    // Hi-res wheels and touchpads send deltas under one 120-unit notch.
     const QPoint delta = event->angleDelta();
-    if (delta.y() != 0)
-        callItem("Scroll", {delta.y() / 120, QStringLiteral("vertical")});
-    if (delta.x() != 0)
-        callItem("Scroll", {delta.x() / 120, QStringLiteral("horizontal")});
+    m_scrollX += delta.x();
+    m_scrollY += delta.y();
+
+    if (const int steps = m_scrollY / 120) {
+        m_scrollY -= steps * 120;
+        callItem("Scroll", {steps, QStringLiteral("vertical")});
+    }
+    if (const int steps = m_scrollX / 120) {
+        m_scrollX -= steps * 120;
+        callItem("Scroll", {steps, QStringLiteral("horizontal")});
+    }
 
     event->accept();
 }

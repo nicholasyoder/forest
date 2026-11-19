@@ -35,7 +35,7 @@ public:
 
 public slots:
     void commitDeviceVolume(AudioDevice *device);
-    void setMute(AudioDevice *device, bool state);
+    bool setMute(AudioDevice *device, bool state);
     void updateDevice(AlsaDevice *device);
 
 private slots:
