@@ -56,6 +56,7 @@ private slots:
 private:
     int master_volume = 0;
     bool master_muted = false;
+    int wheel_accum = 0;
     bool autosave = false;
 
     AudioEngine *audioengine = nullptr;

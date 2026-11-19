@@ -36,7 +36,7 @@ void quicklaunch::dragEnterEvent(QDragEnterEvent *event){
         bool hasurl = true;
 
         foreach (QUrl url, event->mimeData()->urls()){
-            if (!url.toString().endsWith(".desktop"))
+            if (!url.isLocalFile() || !url.toLocalFile().endsWith(".desktop"))
                 hasurl = false;
         }
         if (hasurl)
@@ -48,12 +48,8 @@ void quicklaunch::dropEvent(QDropEvent *event){
     if (event->mimeData()->hasUrls()){
         QList<QUrl> urls = event->mimeData()->urls();
         foreach (QUrl url, urls){
-            QString filepath;
-            filepath = url.toString();
-            filepath.remove("file://");
-
-            int num = launcherlist.count();
-            settings->setValue("launchers/launch-" + padwithzeros(num), filepath);
+            if (url.isLocalFile())
+                settings->setValue("launchers/launch-" + padwithzeros(nextkeynumber()), url.toLocalFile());
         }
 
         event->acceptProposedAction();
@@ -74,7 +70,7 @@ void quicklaunch::reloadlaunchers(){
 }
 
 void quicklaunch::addlauncher(QString desktopfilepath){
-    settings->setValue("launchers/launch-"+padwithzeros(launcherlist.count()), desktopfilepath);
+    settings->setValue("launchers/launch-"+padwithzeros(nextkeynumber()), desktopfilepath);
     reloadlaunchers();
 }
 
@@ -137,6 +133,16 @@ void quicklaunch::removelauncher(){
     delete l;
 
     savelaunchermove();
+}
+
+// One past the highest stored key, so it never overwrites an existing entry.
+int quicklaunch::nextkeynumber(){
+    settings->beginGroup("launchers");
+    int next = 0;
+    foreach (QString key, settings->childKeys())
+        next = qMax(next, key.mid(key.lastIndexOf('-') + 1).toInt() + 1);
+    settings->endGroup();
+    return next;
 }
 
 QString quicklaunch::padwithzeros(int number){

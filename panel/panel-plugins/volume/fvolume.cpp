@@ -41,10 +41,13 @@ void fvolume::setupPlug(QBoxLayout *layout, QList<QAction*> itemlist){
 void fvolume::wheelEvent(QWheelEvent *event){
     if (!master_device) return;
 
-    if (event->angleDelta().y() > 1)
-        master_device->setVolume(master_device->volume() + 2);
-    else
-        master_device->setVolume(master_device->volume() - 2);
+    // Vertical only; hi-res wheels send deltas under one 120-unit notch.
+    wheel_accum += event->angleDelta().y();
+    if (const int steps = wheel_accum / 120) {
+        wheel_accum -= steps * 120;
+        master_device->setVolume(master_device->volume() + steps * 2);
+    }
+    event->accept();
 }
 
 void fvolume::loadsettings(){

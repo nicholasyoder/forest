@@ -24,7 +24,8 @@ public:
 
 public slots:
     virtual void commitDeviceVolume(AudioDevice *device) = 0;
-    virtual void setMute(AudioDevice *device, bool state) = 0;
+    // Returns false if the device has no mute switch.
+    virtual bool setMute(AudioDevice *device, bool state) = 0;
     void mute(AudioDevice *device);
     void unmute(AudioDevice *device);
     virtual void setIgnoreMaxVolume(bool ignore);

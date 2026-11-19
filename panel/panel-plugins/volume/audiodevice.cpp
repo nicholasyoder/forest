@@ -68,23 +68,20 @@ void AudioDevice::toggleMute()
 
 void AudioDevice::setMute(bool state)
 {
+    if (m_mute == state)
+        return;
 
-        if (m_mute == state)
-                return;
+    setMuteNoCommit(state);
 
-        setMuteNoCommit(state);
-
-        if (m_engine){
-                if(state==true){
-                        m_volumeBack=m_volume-1;
-                        setVolume(0);
-                        //   m_engine->setMute(this, true);
-                }else{
-                        //
-                        setVolume(m_volumeBack+1);
-                         m_engine->setMute(this, false);
-                }
+    // Without a mute switch, mute by zeroing the volume and restoring it after.
+    if (m_engine && !m_engine->setMute(this, state)) {
+        if (state) {
+            m_volumeBack = m_volume;
+            setVolume(0);
         }
+        else
+            setVolume(m_volumeBack);
+    }
 }
 
 void AudioDevice::setMuteNoCommit(bool state)

@@ -41,6 +41,9 @@ private:
     bool m_menuProbeInFlight = false;
     bool m_refreshInFlight = false;
     bool m_refreshAgain = false;
+    bool m_itemIsMenu = false;
+    int m_scrollX = 0;
+    int m_scrollY = 0;
 };
 
 #endif // TRAYICON_H

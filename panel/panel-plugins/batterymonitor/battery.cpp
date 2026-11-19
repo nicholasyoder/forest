@@ -22,13 +22,13 @@ void battery::refresh(){
     now = readline(pathtobatdir + "/" + fname + "_now").toDouble();
     status = readline(pathtobatdir + "/status");
 
-    if (getpercentfull() < 0.15){
+    if (getpercentfull() < 0.15 && status != "Charging" && status != "Full"){
         if (!sentnotification){
             sentnotification = true;
             notifylow();
         }
     }
-    else
+    else if (status == "Charging" || status == "Full" || getpercentfull() >= 0.15)
         sentnotification = false;
 }
 
@@ -36,7 +36,11 @@ void battery::notifylow(){
     if (QDBusConnection::sessionBus().isConnected()){
         QDBusInterface iface("org.freedesktop.Notifications", "/org/freedesktop/Notifications");
         if (iface.isValid())
-            iface.call("Notify", "Battery Monitor", uint(1234), "dialog-warning", "Battery Low", "Connect to external power or shutdown soon", QStringList(), QVariantMap(), -1);
+            {
+            QDBusReply<uint> reply = iface.call("Notify", "Battery Monitor", notificationid, "dialog-warning", "Battery Low", "Connect to external power or shutdown soon", QStringList(), QVariantMap(), -1);
+            if (reply.isValid())
+                notificationid = reply.value();
+        }
         else
             fprintf(stderr, "%s\n", qPrintable(QDBusConnection::sessionBus().lastError().message()));
     }

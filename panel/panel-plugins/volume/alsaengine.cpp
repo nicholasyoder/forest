@@ -80,16 +80,14 @@ void AlsaEngine::commitDeviceVolume(AudioDevice *device)
     snd_mixer_selem_set_playback_volume_all(dev->element(), value);
 }
 
-void AlsaEngine::setMute(AudioDevice *device, bool state)
+bool AlsaEngine::setMute(AudioDevice *device, bool state)
 {
     AlsaDevice *dev = qobject_cast<AlsaDevice*>(device);
-    if (!dev || !dev->element())
-        return;
+    if (!dev || !dev->element() || !snd_mixer_selem_has_playback_switch(dev->element()))
+        return false;
 
-    if (snd_mixer_selem_has_playback_switch(dev->element()))
-        snd_mixer_selem_set_playback_switch_all(dev->element(), (int)!state);
-    else if (state)
-        dev->setVolume(0);
+    snd_mixer_selem_set_playback_switch_all(dev->element(), (int)!state);
+    return true;
 }
 
 void AlsaEngine::updateDevice(AlsaDevice *device)
