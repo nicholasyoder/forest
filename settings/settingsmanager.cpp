@@ -160,7 +160,6 @@ const QList<category_info> categories = {
     {"notifications", "Notifications", "preferences-desktop-notifications"},
     {"power", "Power & Lock", "system-lock-screen"},
     {"session", "Session & Startup", "preferences-system-session"},
-    {"system", "System", "preferences-system"},
     {"other", "Other", "preferences-other"},
 };
 
@@ -171,8 +170,9 @@ class SearchFilterModel : public QSortFilterProxyModel {
 public:
     using QSortFilterProxyModel::QSortFilterProxyModel;
     void set_query(const QString &query){
+        beginFilterChange();
         words = query_words(query);
-        invalidateRowsFilter();
+        endFilterChange(QSortFilterProxyModel::Direction::Rows);
     }
 protected:
     bool filterAcceptsRow(int row, const QModelIndex &parent) const override {
@@ -519,8 +519,12 @@ void SettingsManager::open_page(settings_page *page){
 
 void SettingsManager::update_widgets(QUuid parent_id, QList<settings_item*> items){
     row_frames.remove(parent_id);
-    delete stack_hash.take(parent_id);
+    QWidget *old = stack_hash.take(parent_id);
+    // Rebuilding a background page mustn't steal the view.
+    QPointer<QWidget> keep = stacked_layout->currentWidget() == old ? nullptr : stacked_layout->currentWidget();
+    delete old;
     display_widgets(parent_id, items);
+    if (keep) stacked_layout->setCurrentWidget(keep);
 }
 
 void SettingsManager::display_widgets(QUuid parent_id, QList<settings_item*> items){

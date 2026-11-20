@@ -50,6 +50,7 @@ class AppletDelegate : public QStyledItemDelegate {
     Q_OBJECT
 public:
     static constexpr int SettingsPathRole = Qt::UserRole + 1;
+    static constexpr int ConfigPathRole = Qt::UserRole + 2; // applet plugin path as saved
     explicit AppletDelegate(QAbstractItemView *view);
     QSize sizeHint(const QStyleOptionViewItem &option, const QModelIndex &index) const override;
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
@@ -86,7 +87,6 @@ private:
     QString padwithzeros(int number);
     settings_page *panel_page = nullptr;
     ListWidget *applet_list_w = nullptr;
-    QHash <QString, QString> path_hash;
 };
 
 #endif // PANELSETTINGS_H

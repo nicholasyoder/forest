@@ -4,9 +4,10 @@
 
 #include <QFrame>
 #include <QHBoxLayout>
-#include <QSettings>
-
-#include "miscutills.h"
+#include <QFile>
+#include <QLocale>
+#include <QPixmap>
+#include <QSysInfo>
 
 AboutPage::AboutPage(){
     settings_item = new settings_page("about/about", "About", "help-about");
@@ -60,7 +61,7 @@ AboutPage::AboutPage(){
     info_wg->add_child(architecture_item);
     memory_label = new QLabel;
     memory_label->setObjectName("SystemInfoLabel");
-    settings_widget *memory_item = new settings_widget("Memory", "", memory_label);
+    settings_widget *memory_item = new settings_widget("Usable Memory", "", memory_label);
     info_wg->add_child(memory_item);
     hostname_label = new QLabel;
     hostname_label->setObjectName("SystemInfoLabel");
@@ -69,33 +70,30 @@ AboutPage::AboutPage(){
 }
 
 void AboutPage::load_about_data(){
-    QSettings settings("Forest", "Forest");
-    logo_label->setText("Forest " + settings.value("version", "0.0.0").toString());
+    logo_label->setText("Forest " FOREST_VERSION);
     logo_image->setPixmap(QPixmap("/usr/share/forest/pics/logo.png"));
 
-    QString os_name = miscutills::run_shell_command("cat /etc/os-release | grep PRETTY_NAME");
-    os_name = os_name.remove("PRETTY_NAME=\"");
-    os_name = os_name.remove("\"");
-    os_name = os_name.remove("\n");
-    os_name_label->setText(os_name);
+    os_name_label->setText(QSysInfo::prettyProductName());
+    kernel_version_label->setText(QSysInfo::kernelVersion());
+    architecture_label->setText(QSysInfo::currentCpuArchitecture());
+    hostname_label->setText(QSysInfo::machineHostName());
+    cpu_model_label->setText(proc_value("/proc/cpuinfo", "model name"));
 
-    QString kernel_version = miscutills::run_shell_command("uname -r");
-    kernel_version = kernel_version.remove("\n");
-    kernel_version_label->setText(kernel_version);
+    qint64 mem_kb = proc_value("/proc/meminfo", "MemTotal").split(' ', Qt::SkipEmptyParts).value(0).toLongLong();
+    memory_label->setText(mem_kb > 0 ? QLocale().formattedDataSize(mem_kb * 1024, 1) : QString());
+}
 
-    QString cpu_model = miscutills::run_shell_command("cpumodel=`lscpu | grep 'Model name:'` && echo ${cpumodel:12}");
-    cpu_model = cpu_model.remove("\n");
-    cpu_model_label->setText(cpu_model);
-
-    QString architecture = miscutills::run_shell_command("cpuarch=`lscpu | grep 'Architecture:'` && echo ${cpuarch:13}");
-    architecture = architecture.remove("\n");
-    architecture_label->setText(architecture);
-
-    QString memory = miscutills::run_shell_command("memamount=`lsmem | grep 'Total online memory:'` && echo -n ${memamount:21} && echo B");
-    memory = memory.remove("\n");
-    memory_label->setText(memory);
-
-    QString hostname = miscutills::run_shell_command("hostname");
-    hostname = hostname.remove("\n");
-    hostname_label->setText(hostname);
+// First "<key>: value" line of a /proc file.
+QString AboutPage::proc_value(const QString &path, const QString &key){
+    QFile file(path);
+    if (!file.open(QIODevice::ReadOnly | QIODevice::Text)) return QString();
+    // /proc files report size 0, so atEnd()/readLine() are unreliable; read it whole.
+    const QList<QByteArray> lines = file.readAll().split('\n');
+    for (const QByteArray &raw : lines) {
+        const QString line = QString::fromUtf8(raw);
+        if (!line.startsWith(key)) continue;
+        int colon = line.indexOf(':');
+        if (colon >= 0) return line.mid(colon + 1).trimmed();
+    }
+    return QString();
 }

@@ -14,7 +14,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 ## 0.11.2 — applet, settings & login fixes
 
-- **Settings and displays fixes** ([detail](review-2026-11.md#settings-fixes)).
 - **Greeter, logout and session fixes** ([detail](review-2026-11.md#login-fixes)).
 - **Screenshot fixes, ext-data-control clipboard** ([detail](review-2026-11.md#screenshot-fixes)).
 - **Dead-code sweep** ([detail](review-2026-11.md#dead-code)). Removes the `nmcontrol` stub.

@@ -24,7 +24,7 @@ const QSize PreviewSize(400, 250);
 }
 
 LoginSettings::LoginSettings(){
-    settings_item = new settings_page("appearance/lock-screen", "Lock Screen", "system-lock-screen", 15);
+    settings_item = new settings_page("appearance/lock-screen", "Login & Lock Wallpaper", "system-lock-screen", 15);
     settings_item->set_keywords({"wallpaper", "background", "greeter", "lock", "lockscreen", "image", "photo", "picture"});
     connect(settings_item, &settings_category::opened, this, &LoginSettings::load);
 

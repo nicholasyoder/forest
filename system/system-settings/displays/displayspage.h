@@ -127,7 +127,8 @@ private:
     void setPrimary(int index);
 
     settings_page *settings_item = nullptr;
-    OutputManager *manager = nullptr;
+    bool ready() const;
+    OutputManager *manager = nullptr; // created on first open
     DisplayProfiles profiles; // read-only copy, re-read on daemon signals
 
     QString selection; // profile id, or kCurrent
