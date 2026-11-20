@@ -67,8 +67,14 @@ void Displays::onHotplugSettled(){
         qInfo() << "Displays: outputs changed while blanked, waiting for the wake";
         return;
     }
-    // Back to the same monitors: Biome has already restored the reconnected one.
+    // Back to the same monitors: Biome usually restores the reconnected one, but not every compositor does.
     if (connectedKeys == settledKeys){
+        const DisplayProfile *active = pending || applying ? nullptr : profiles.find(profiles.active());
+        if (active && DisplayProfiles::matches(*active, manager->state()) && !isLive(*active)){
+            qInfo() << "Displays: outputs reconnected off the saved layout, re-applying" << active->name;
+            apply(*active);
+            return;
+        }
         qInfo() << "Displays: outputs reconnected, keeping the layout";
         syncActive();
         return;
@@ -204,15 +210,11 @@ bool Displays::isLive(const DisplayProfile &profile) const{
 }
 
 void Displays::setPrimary(const QString &name){
-    QSettings settings("Forest", "Forest");
-    if (name.isEmpty() || settings.value("display/primary_screen").toString() == name) return;
-    settings.setValue("display/primary_screen", name);
-    settings.sync(); // before other processes hear about it
-    emit primaryChanged(name);
+    if (outputs::savePrimary(name)) emit primaryChanged(name);
 }
 
 QString Displays::currentPrimary(){
-    return QSettings("Forest", "Forest").value("display/primary_screen").toString();
+    return outputs::savedPrimary();
 }
 
 void Displays::applyProfile(const QString &id){

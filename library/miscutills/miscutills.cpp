@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "miscutills.h"
+#include "outputtypes.h"
 
 #include <QDBusConnection>
 #include <QDBusInterface>
@@ -199,17 +200,15 @@ void ScreenTracker::handle_primary_setting(){
 }
 
 QScreen* ScreenTracker::primary(){
-    QList<QScreen*> screens = qApp->screens();
-    QString name = QSettings("Forest", "Forest").value("display/primary_screen").toString();
-    QScreen *best = nullptr;
+    const QList<QScreen*> screens = qApp->screens();
+    QStringList names;
+    QList<QPoint> positions;
     foreach (QScreen *screen, screens){
-        if (!name.isEmpty() && screen->name() == name)
-            return screen;
-        QPoint pos = screen->geometry().topLeft();
-        if (!best || pos.x() < best->geometry().x() || (pos.x() == best->geometry().x() && pos.y() < best->geometry().y()))
-            best = screen;
+        names << screen->name();
+        positions << screen->geometry().topLeft();
     }
-    return best;
+    const int index = outputs::pickPrimary(outputs::savedPrimary(), names, positions);
+    return index < 0 ? nullptr : screens[index];
 }
 
 void ScreenTracker::watch(QScreen *screen){

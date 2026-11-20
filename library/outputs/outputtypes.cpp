@@ -2,6 +2,8 @@
 
 #include "outputtypes.h"
 
+#include <QSettings>
+
 #include <QJsonArray>
 #include <QJsonDocument>
 #include <QJsonObject>
@@ -200,6 +202,29 @@ bool needsConfirm(const OutputLayout &before, const OutputLayout &after){
             return true;
     }
     return false;
+}
+
+QString savedPrimary(){
+    return QSettings("Forest", "Forest").value("display/primary_screen").toString();
+}
+
+bool savePrimary(const QString &name){
+    QSettings settings("Forest", "Forest");
+    if (name.isEmpty() || settings.value("display/primary_screen").toString() == name) return false;
+    settings.setValue("display/primary_screen", name);
+    settings.sync();
+    return true;
+}
+
+int pickPrimary(const QString &saved, const QStringList &names, const QList<QPoint> &positions){
+    int best = -1;
+    for (int i = 0; i < names.size(); i++){
+        if (!saved.isEmpty() && names[i] == saved) return i;
+        if (best < 0 || positions[i].x() < positions[best].x()
+            || (positions[i].x() == positions[best].x() && positions[i].y() < positions[best].y()))
+            best = i;
+    }
+    return best;
 }
 
 QString layoutToJson(const OutputLayout &layout, const QString &primary){

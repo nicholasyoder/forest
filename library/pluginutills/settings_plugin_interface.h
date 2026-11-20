@@ -4,6 +4,7 @@
 #define SETTINGS_PLUGIN_INTERFACE_H
 
 #include <QObject>
+#include <QPointer>
 #include <QWidget>
 #include <QUuid>
 #include <QStringList>
@@ -61,13 +62,13 @@ class settings_widget : public settings_item {
 public:
     settings_widget(QString name, QString description = "", QWidget *widget = nullptr, bool custom = false)
         : settings_item(name, description) { set_widget(widget); set_custom(custom); }
-    ~settings_widget(){ delete item_widget; }
-    QWidget* widget(){ return item_widget; }
+    ~settings_widget(){ if (item_widget) item_widget->deleteLater(); }
+    QWidget* widget(){ return item_widget.data(); }
     bool is_custom(){ return custom_widget; }
     void set_widget(QWidget *widget){ item_widget = widget; }
     void set_custom(bool custom){ custom_widget = custom; }
 private:
-    QWidget *item_widget = nullptr;
+    QPointer<QWidget> item_widget; // the row frame may already have deleted it
     bool custom_widget = false;
 };
 

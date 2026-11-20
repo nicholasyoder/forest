@@ -24,6 +24,8 @@ private slots:
     void load_about_data();
 
 private:
+    static QString proc_value(const QString &path, const QString &key);
+
     QLabel *logo_label = nullptr;
     QLabel *logo_image = nullptr;
     QLabel *os_name_label = nullptr;

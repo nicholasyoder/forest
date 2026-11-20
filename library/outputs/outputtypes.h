@@ -9,6 +9,7 @@
 #include <QRect>
 #include <QSize>
 #include <QString>
+#include <QStringList>
 
 struct OutputModeInfo {
     QSize size;
@@ -96,6 +97,13 @@ QString topLeft(const OutputLayout &layout);
 
 // Changes that can leave a screen dark: enabled, mode, scale or transform.
 bool needsConfirm(const OutputLayout &before, const OutputLayout &after);
+
+// Forest.conf's display/primary_screen: the connector chosen as primary, or empty.
+QString savedPrimary();
+// Writes it and syncs before other processes hear about it; false if unchanged or `name` is empty.
+bool savePrimary(const QString &name);
+// Index of the screen named `saved`, else of the top-left one (-1 when empty).
+int pickPrimary(const QString &saved, const QStringList &names, const QList<QPoint> &positions);
 
 // D-Bus payload: {"outputs":[…],"primary":"DP-1"}. Identity keys aren't included.
 QString layoutToJson(const OutputLayout &layout, const QString &primary);

@@ -6,6 +6,8 @@
 #include <QLabel>
 #include <QProcess>
 #include <QSettings>
+#include <QSignalBlocker>
+#include <QStandardPaths>
 
 #include <X11/Xcursor/Xcursor.h>
 
@@ -37,7 +39,8 @@ CursorThemeSettings::CursorThemeSettings(){
 
     size_input = new QSpinBox;
     size_input->setMaximum(128);
-    connect(size_input, &QSpinBox::textChanged, this, &CursorThemeSettings::set_cursor_size);
+    size_input->setKeyboardTracking(false); // one write per edit, not per keystroke
+    connect(size_input, &QSpinBox::valueChanged, this, &CursorThemeSettings::set_cursor_size);
     settings_widget *test_item = new settings_widget("Size", "", size_input);
     settings_item->add_child(test_item);
 
@@ -57,32 +60,25 @@ CursorThemeSettings::CursorThemeSettings(){
 void CursorThemeSettings::load_cursor_themes(){
     QStringList theme_list;
 
-    // Check some default dirs as well as XDG_DATA_DIRS
-    QStringList theme_dirs = {
-        "/usr/share/icons",
-        "/usr/local/share/icons",
-        QDir::home().filePath(".icons"),
-        QDir::home().filePath(".local/share/icons")
-    };
-    QString xdgDataDirs = qgetenv("XDG_DATA_DIRS");
-    if (!xdgDataDirs.isEmpty()) {
-        foreach (QString path, xdgDataDirs.split(":")) {
-            if(!theme_dirs.contains(path))
-                theme_dirs.append(path);
-        }
-    }
+    // Icon-theme roots: <datadir>/icons for each XDG data dir, plus legacy ~/.icons.
+    QStringList theme_dirs = {QDir::home().filePath(".icons")};
+    foreach (const QString &path, QStandardPaths::standardLocations(QStandardPaths::GenericDataLocation))
+        theme_dirs.append(QDir(path).filePath("icons"));
+    theme_dirs.removeDuplicates();
     foreach(QString dir_path, theme_dirs) {
         QDir dir(dir_path);
         QStringList themes = dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
         foreach(QString theme, themes) {
             QString cursors_path = dir.filePath(theme + "/cursors");
             if (QDir(cursors_path).exists()) {
-                theme_list.append(theme);
+                if (!theme_list.contains(theme)) theme_list.append(theme);
             }
         }
     }
 
     theme_list.sort();
+    // Loading must not write index.theme back.
+    const QSignalBlocker blocker(size_input);
     cursor_theme_list->clear();
 
     // The Xcursor fallback theme file; set_cursor_theme() writes it, so it's also our saved state.

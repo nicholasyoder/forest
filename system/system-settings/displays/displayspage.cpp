@@ -161,7 +161,7 @@ DisplaysPage::DisplaysPage(){
     output_group->add_child(new settings_widget("Scale", "", scaleCombo));
     output_group->add_child(new settings_widget("Orientation", "", transformCombo));
 
-    QLabel *hotkeyNote = new QLabel(tr("Saved profiles can be given keyboard shortcuts under Services → Hotkeys."));
+    QLabel *hotkeyNote = new QLabel(tr("Saved profiles can be given keyboard shortcuts under Input & Hotkeys → Hotkeys."));
     hotkeyNote->setObjectName("SettingsNoteLabel");
     hotkeyNote->setWordWrap(true);
     settings_item->add_child(new settings_widget("", "", hotkeyNote, true));
@@ -185,15 +185,24 @@ DisplaysPage::DisplaysPage(){
         reload(true);
     });
 
-    manager = new OutputManager(this);
-    connect(manager, &OutputManager::stateChanged, this, &DisplaysPage::onStateChanged);
+    // The Wayland manager binds on first open, not at settings startup.
+    connect(settings_item, &settings_category::opened, this, [this]{
+        if (manager) return;
+        manager = new OutputManager(this);
+        connect(manager, &OutputManager::stateChanged, this, &DisplaysPage::onStateChanged);
+        reload(true);
+    });
     reload(true);
+}
+
+bool DisplaysPage::ready() const{
+    return manager && manager->isReady();
 }
 
 QString DisplaysPage::activeId() const{
     // Displays.conf may name a profile for other monitors until the daemon catches up.
     const DisplayProfile *active = profiles.find(profiles.active());
-    if (!active || !manager->isReady() || !DisplayProfiles::matches(*active, manager->state())) return QString();
+    if (!active || !ready() || !DisplayProfiles::matches(*active, manager->state())) return QString();
     return active->id;
 }
 
@@ -204,7 +213,7 @@ QString DisplaysPage::profileName(const QString &id) const{
 
 void DisplaysPage::reload(bool followActive){
     profiles.load(); // the daemon writes it, so always re-read
-    if (manager->isReady()){
+    if (ready()){
         const QList<QString> keys = outputs::identityKeys(manager->state()).values();
         connected = QSet<QString>(keys.begin(), keys.end());
     }
@@ -228,14 +237,14 @@ void DisplaysPage::loadSelection(){
     editedFrom.clear();
     setError(QString());
 
-    if (manager->isReady()){
+    if (ready()){
         const OutputState &state = manager->state();
         const DisplayProfile *profile = profiles.find(selection);
         if (!profile){
             selection = kCurrent;
             editedFrom = appliedFrom;
             working = outputs::currentLayout(state);
-            workingPrimary = QSettings("Forest", "Forest").value("display/primary_screen").toString();
+            workingPrimary = outputs::savedPrimary();
         }
         else {
             editedFrom = profile->id;
@@ -285,7 +294,7 @@ void DisplaysPage::onStateChanged(){
 
 QHash<QString, QString> DisplaysPage::liveLabels() const{
     QHash<QString, QString> labels;
-    if (manager->isReady())
+    if (ready())
         for (const OutputHeadInfo &head : manager->state().heads) labels[head.name] = outputs::headLabel(head);
     return labels;
 }
@@ -340,11 +349,11 @@ void DisplaysPage::updateCombo(){
         profileCombo->setItemData(profileCombo->count() - 1, italic, Qt::FontRole);
     };
     if (edited) addUnsaved(tr("Unsaved changes"), kEdited);
-    if (manager->isReady() && activeId().isEmpty()) addUnsaved(tr("Current layout"), kCurrent);
+    if (ready() && activeId().isEmpty()) addUnsaved(tr("Current layout"), kCurrent);
 
     QList<DisplayProfile> matching, other;
     for (const DisplayProfile &profile : profiles.profiles()){
-        if (manager->isReady() && DisplayProfiles::matches(profile, manager->state())) matching << profile;
+        if (ready() && DisplayProfiles::matches(profile, manager->state())) matching << profile;
         else other << profile;
     }
     for (const DisplayProfile &profile : DisplayProfiles::sortedByName(matching))
@@ -368,7 +377,7 @@ void DisplaysPage::updateStatus(){
         statusState->style()->polish(statusState);
     };
 
-    if (!manager->isReady()){
+    if (!ready()){
         show("waiting", tr("Waiting for display information…"));
     }
     else if (viewOnly){
@@ -412,7 +421,7 @@ void DisplaysPage::updatePrimary(){
 
 void DisplaysPage::updateControls(){
     const QSignalBlocker b1(enabledCheck), b2(resolutionCombo), b3(refreshCombo), b4(scaleCombo), b5(transformCombo);
-    const OutputHeadInfo *head = manager->isReady() ? selectedHead() : nullptr;
+    const OutputHeadInfo *head = ready() ? selectedHead() : nullptr;
     const OutputConfig *config = selectedConfig();
     const bool editable = !pending && !viewOnly;
 
@@ -467,17 +476,17 @@ void DisplaysPage::updateControls(){
 }
 
 void DisplaysPage::updateButtons(){
-    const bool ready = manager->isReady();
+    const bool isReady = ready();
     const bool tested = testOk && !testDebounce.isActive();
-    const bool usable = ready && !viewOnly && !pending && !renaming;
+    const bool usable = isReady && !viewOnly && !pending && !renaming;
     applyButton->setEnabled(usable && (edited ? tested : selection != kCurrent && selection != activeId()));
     saveButton->setEnabled(usable && (!edited || tested));
     revertButton->setEnabled(edited && !pending);
-    const bool profileActions = ready && !edited && !pending && !renaming && isProfile(selection);
+    const bool profileActions = isReady && !edited && !pending && !renaming && isProfile(selection);
     renameButton->setEnabled(profileActions);
     deleteButton->setEnabled(profileActions);
-    profileCombo->setEnabled(ready && !pending);
-    identifyButton->setEnabled(ready);
+    profileCombo->setEnabled(isReady && !pending);
+    identifyButton->setEnabled(isReady);
 }
 
 void DisplaysPage::edit(const OutputLayout &layout){

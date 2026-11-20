@@ -5,6 +5,7 @@
 #include <QCheckBox>
 #include <QHBoxLayout>
 #include <QJsonObject>
+#include <QFileInfo>
 #include <QSettings>
 #include <QPluginLoader>
 #include <QTimer>
@@ -175,17 +176,18 @@ void PanelSettings::load_applets(){
             QJsonObject info = QPluginLoader(path).metaData().value("MetaData").toObject();
             name = info.value("name").toString();
             if (name.isEmpty()) {
+                // Keep the row so a save doesn't erase it (plugin removed or unreadable).
                 qWarning() << "Not a panel applet:" << path;
-                continue;
+                name = tr("%1 (unavailable)").arg(QFileInfo(path).fileName());
             }
-            settings_path = info.value("settings").toString();
+            else settings_path = info.value("settings").toString();
         }
         QListWidgetItem *item = new QListWidgetItem(name);
         item->setFlags(item->flags() | Qt::ItemIsUserCheckable);
         item->setCheckState(enabled ? Qt::Checked : Qt::Unchecked);
         item->setData(AppletDelegate::SettingsPathRole, settings_path);
         applet_list_w->addItem(item);
-        path_hash[name] = path;
+        item->setData(AppletDelegate::ConfigPathRole, path);
     }
 }
 
@@ -196,7 +198,7 @@ void PanelSettings::set_applets(){
 
     for(int i = 0; i < applet_list_w->count(); i++){
         settings.beginGroup("plug-"+padwithzeros(i));
-        settings.setValue("path", path_hash[applet_list_w->item(i)->text()]);
+        settings.setValue("path", applet_list_w->item(i)->data(AppletDelegate::ConfigPathRole).toString());
         if (applet_list_w->item(i)->checkState() == Qt::Checked)
             settings.setValue("enabled", true);
         else
