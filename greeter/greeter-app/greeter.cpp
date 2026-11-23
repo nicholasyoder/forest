@@ -33,7 +33,7 @@ Greeter::Greeter(QObject *parent)
         QApplication::quit();
     });
 
-    // Biome focuses the newest exclusive surface, so primary goes last.
+    // Compositors differ on which exclusive surface gets focus; the card follows focus (ScreenSet).
     m_screens = new loginui::ScreenSet(createCard(), [](QWindow *window) {
         auto *layer = LayerShellQt::Window::get(window);
         layer->setLayer(LayerShellQt::Window::LayerOverlay);
@@ -281,6 +281,10 @@ void Greeter::onAuthSucceeded()
     int idx = m_passwordView->sessionIndex();
     if (idx < 0 || idx >= m_sessions.sessions().size()) {
         qWarning() << "No session selected";
+        m_client->cancelSession();
+        m_sessionActive = false;
+        m_passwordView->setStatus("No session available to start", true);
+        m_passwordView->resetPrompt();
         return;
     }
     const SessionInfo &session = m_sessions.sessions().at(idx);
@@ -300,6 +304,8 @@ void Greeter::onAuthSucceeded()
 
 void Greeter::onAuthFailed(const QString &description)
 {
+    // greetd keeps the half-configured session until cancelled; create_session would be refused.
+    m_client->cancelSession();
     m_sessionActive = false;
     m_autoSubmitPending = false;
     m_pendingPassword.clear();

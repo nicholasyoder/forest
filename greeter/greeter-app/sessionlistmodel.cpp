@@ -3,51 +3,33 @@
 #include "sessionlistmodel.h"
 
 #include <QDir>
-#include <QFile>
 #include <QFileInfo>
-#include <QTextStream>
 #include <QDebug>
+
+#include <qt6xdg/XdgDesktopFile>
 
 SessionListModel::SessionListModel() {
     load();
 }
 
 void SessionListModel::loadDir(const QString &path, SessionType type) {
-    QDir dir(path);
-    if (!dir.exists())
-        return;
+    const QDir dir(path);
     const QStringList files = dir.entryList({"*.desktop"}, QDir::Files);
 
     for (const QString &filename : files) {
-        QFile file(dir.filePath(filename));
-        if (!file.open(QIODevice::ReadOnly | QIODevice::Text))
+        XdgDesktopFile file;
+        if (!file.load(dir.filePath(filename)) || !file.isSuitable(true))
+            continue;
+        if (file.contains("TryExec") && !file.tryExec())
             continue;
 
-        QString name, exec, desktopNames;
-        bool inDesktopEntry = false;
-        QTextStream in(&file);
-        while (!in.atEnd()) {
-            QString line = in.readLine().trimmed();
-            if (line == "[Desktop Entry]") {
-                inDesktopEntry = true;
-                continue;
-            }
-            if (line.startsWith('[')) {
-                inDesktopEntry = false;
-                continue;
-            }
-            if (!inDesktopEntry)
-                continue;
-            if (line.startsWith("Name="))
-                name = line.mid(5);
-            else if (line.startsWith("Exec="))
-                exec = line.mid(5);
-            else if (line.startsWith("DesktopNames="))
-                desktopNames = line.mid(13).split(';', Qt::SkipEmptyParts).join(':');
-        }
+        const QString name = file.name();
+        const QString exec = file.value("Exec").toString();
+        if (name.isEmpty() || exec.isEmpty())
+            continue;
 
-        if (!name.isEmpty() && !exec.isEmpty())
-            m_sessions.append({name, exec, type, QFileInfo(filename).completeBaseName(), desktopNames});
+        const QString desktopNames = file.value("DesktopNames").toStringList().join(':');
+        m_sessions.append({name, exec, type, QFileInfo(filename).completeBaseName(), desktopNames});
     }
 }
 

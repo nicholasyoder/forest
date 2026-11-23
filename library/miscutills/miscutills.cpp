@@ -1,6 +1,11 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "miscutills.h"
+
+#include <QSocketNotifier>
+
+#include <sys/signalfd.h>
+#include <unistd.h>
 #include "outputtypes.h"
 
 #include <QDBusConnection>
@@ -233,4 +238,29 @@ void ScreenTracker::handle_change(){
     else {
         emit geometry_changed();
     }
+}
+
+sigset_t block_signals(std::initializer_list<int> signums)
+{
+    sigset_t mask;
+    sigemptyset(&mask);
+    for (int signum : signums)
+        sigaddset(&mask, signum);
+    pthread_sigmask(SIG_BLOCK, &mask, nullptr);
+    return mask;
+}
+
+QObject *watch_signals(const sigset_t &mask, QObject *parent, std::function<void()> handler)
+{
+    const int fd = signalfd(-1, &mask, SFD_NONBLOCK | SFD_CLOEXEC);
+    if (fd < 0)
+        return nullptr;
+    auto *notifier = new QSocketNotifier(fd, QSocketNotifier::Read, parent);
+    QObject::connect(notifier, &QSocketNotifier::activated, notifier, [fd, handler = std::move(handler)] {
+        signalfd_siginfo info;
+        while (read(fd, &info, sizeof info) == sizeof info) {}
+        handler();
+    });
+    QObject::connect(notifier, &QObject::destroyed, notifier, [fd] { close(fd); });
+    return notifier;
 }

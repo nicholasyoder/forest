@@ -2,9 +2,9 @@
 
 #include "userlistmodel.h"
 
-#include <QFile>
-#include <QTextStream>
 #include <QDebug>
+
+#include <pwd.h>
 
 #include "loginui.h"
 
@@ -17,42 +17,19 @@ void UserListModel::load() {
         "/usr/sbin/nologin", "/bin/false", "/sbin/nologin"
     };
 
-    QFile passwd("/etc/passwd");
-    if (!passwd.open(QIODevice::ReadOnly | QIODevice::Text)) {
-        qWarning() << "Cannot open /etc/passwd";
-        return;
-    }
-
-    QTextStream in(&passwd);
-    while (!in.atEnd()) {
-        QString line = in.readLine().trimmed();
-        if (line.isEmpty() || line.startsWith('#'))
+    // getpwent() goes through NSS, so SSSD/LDAP users are included.
+    setpwent();
+    while (const passwd *pw = getpwent()) {
+        if (pw->pw_uid < 1000 || noLoginShells.contains(QString::fromLocal8Bit(pw->pw_shell)))
             continue;
 
-        QStringList fields = line.split(':');
-        if (fields.size() < 7)
-            continue;
-
-        int uid = fields[2].toInt();
-        if (uid < 1000)
-            continue;
-
-        QString shell = fields[6];
-        if (noLoginShells.contains(shell))
-            continue;
-
-        QString username = fields[0];
-        QString homeDir = fields[5];
-
-        QString gecos = fields[4];
-        QString displayName = gecos.split(',').first().trimmed();
-        if (displayName.isEmpty())
-            displayName = username;
-
-        m_users.append({username, displayName, homeDir,
+        const QString username = QString::fromLocal8Bit(pw->pw_name);
+        const QString homeDir = QString::fromLocal8Bit(pw->pw_dir);
+        m_users.append({username, loginui::displayName(pw), homeDir,
                         loginui::faceIconPath(username, homeDir)});
     }
+    endpwent();
 
     if (m_users.isEmpty())
-        qWarning() << "No users found in /etc/passwd with UID >= 1000";
+        qWarning() << "No users found with UID >= 1000";
 }

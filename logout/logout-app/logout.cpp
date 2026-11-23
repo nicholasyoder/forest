@@ -9,6 +9,8 @@
 #include <QMessageBox>
 #include <QVector>
 
+#include <climits>
+
 #include <LayerShellQt/Window>
 
 #include "miscutills.h"
@@ -31,14 +33,14 @@ const QString LOGIN1_SERVICE = "org.freedesktop.login1";
 const QString LOGIN1_PATH = "/org/freedesktop/login1";
 const QString LOGIN1_MANAGER = "org.freedesktop.login1.Manager";
 
-// Returns an invalid QDBusError on success.
-QDBusError call_login1(const QString &method){
+// Async: an interactive call can sit in a polkit prompt indefinitely, so no reply timeout.
+QDBusPendingCall call_login1(const QString &method){
     QDBusMessage msg;
     if (method == "Terminate" || method == "Lock") // the per-session self object avoids resolving our session id
         msg = QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH + "/session/self", "org.freedesktop.login1.Session", method);
     else // Manager methods take an "interactive" (polkit auth) bool
         msg = QDBusMessage::createMethodCall(LOGIN1_SERVICE, LOGIN1_PATH, LOGIN1_MANAGER, method) << true;
-    return QDBusError(QDBusConnection::systemBus().call(msg));
+    return QDBusConnection::systemBus().asyncCall(msg, INT_MAX);
 }
 
 bool login1_can(const QString &method){
@@ -110,6 +112,7 @@ void logoutmanager::setup(){
     vlayout->addWidget(mainframe);
 
     QString lastaction = settings->value("lastaction", "shutdown").toString();
+    focusbt = shutdownbt; // also the fallback for an unknown lastaction
     if (lastaction == "lock") focusbt = lockbt;
     else if (lastaction == "shutdown") focusbt = shutdownbt;
     else if (lastaction == "reboot") focusbt = rebootbt;
@@ -167,14 +170,18 @@ void logoutmanager::start_action(ActionType action){
         settings->setValue("lastaction", action_data.key);
         settings->sync();
 
-        const QDBusError error = call_login1(action_data.method);
-        if (error.isValid()){
-            qWarning() << "login1" << action_data.method << "failed:" << error.message();
-            close_overlays();
-            QMessageBox::warning(nullptr, "Logout", QString("Failed to %1: %2").arg(action_data.key, error.message()));
-        }
-        if (error.isValid() || session_survives)
-            qApp->quit();
+        auto *watcher = new QDBusPendingCallWatcher(call_login1(action_data.method), this);
+        connect(watcher, &QDBusPendingCallWatcher::finished, this, [this, action_data, session_survives](QDBusPendingCallWatcher *w){
+            w->deleteLater();
+            const QDBusError error = w->error();
+            if (error.isValid()){
+                qWarning() << "login1" << action_data.method << "failed:" << error.message();
+                close_overlays();
+                QMessageBox::warning(nullptr, "Logout", QString("Failed to %1: %2").arg(action_data.key, error.message()));
+            }
+            if (error.isValid() || session_survives)
+                qApp->quit();
+        });
     });
 }
 

@@ -30,10 +30,8 @@ LockScreen::LockScreen(QObject *parent)
     if (passwd *pw = getpwuid(getuid())) {
         username = QString::fromLocal8Bit(pw->pw_name);
         homeDir = QString::fromLocal8Bit(pw->pw_dir);
-        displayName = QString::fromLocal8Bit(pw->pw_gecos).split(',').first().trimmed();
+        displayName = loginui::displayName(pw);
     }
-    if (displayName.isEmpty())
-        displayName = username;
     m_form->setUser(displayName, loginui::faceIconPath(username, homeDir));
 
     auto *card = new loginui::Card;

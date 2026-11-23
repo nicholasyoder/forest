@@ -14,6 +14,8 @@
 
 #include <memory>
 
+#include <pwd.h>
+
 #include "loginconfig.h"
 #include "miscutills.h"
 
@@ -49,6 +51,12 @@ QPixmap circularAvatar(const QString &path, int size, const QString &fallback)
         p.drawText(QRect(0, 0, size, size), Qt::AlignCenter, ch);
     }
     return result;
+}
+
+QString displayName(const passwd *pw)
+{
+    const QString name = QString::fromLocal8Bit(pw->pw_gecos).split(',').first().trimmed();
+    return name.isEmpty() ? QString::fromLocal8Bit(pw->pw_name) : name;
 }
 
 QString faceIconPath(const QString &username, const QString &homeDir)
