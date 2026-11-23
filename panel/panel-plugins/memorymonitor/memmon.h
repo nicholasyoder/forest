@@ -46,8 +46,5 @@ private:
     QTimer *refreshtimer = new QTimer(this);
     int swapbehavior = 1;
     QString clickedcommand;
-    QRect displayrect;
-    bool verticalpanel = false;
-    int margin = 0;
 };
 #endif // MEMMON_H

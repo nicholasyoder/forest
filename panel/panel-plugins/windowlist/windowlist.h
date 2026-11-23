@@ -51,7 +51,6 @@ private slots:
     void refreshVisibility();
 
 private:
-    QWidget *stretchwidget = new QWidget;
     QHBoxLayout *mainlayout = new QHBoxLayout();
     QMap<ForeignToplevelHandle*, windowbutton*> button_list;
 

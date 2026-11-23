@@ -1,7 +1,6 @@
 add_subdirectory(batterymonitor)
 add_subdirectory(mainmenu)
 add_subdirectory(clock)
-add_subdirectory(nmcontrol)
 add_subdirectory(volume)
 add_subdirectory(cpumonitor)
 add_subdirectory(memorymonitor)

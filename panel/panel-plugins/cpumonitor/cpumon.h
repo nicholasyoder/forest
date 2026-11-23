@@ -47,9 +47,6 @@ private:
     QMenu *pmenu = nullptr;
     QTimer *refreshtimer = new QTimer(this);
     QString clickedcommand;
-    QRect displayrect;
-    bool verticalpanel = false;
-    int margin = 0;
     unsigned long long oldvalue = 0;
     unsigned long long oldtotal = 0;
 };

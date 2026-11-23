@@ -71,7 +71,6 @@ private:
     QTimer *closeptimer = nullptr;
     popup *pbox = nullptr;
     QLabel *scrshotlabel = nullptr;
-    QLabel *wintitlelabel = nullptr;
     //QVBoxLayout *popupvlayout = nullptr;
     QGridLayout *popupglayout = nullptr;
     QWidget *parentwidget = nullptr;

@@ -46,7 +46,6 @@ public:
 
 public slots:
     Q_SCRIPTABLE void reloadwallpaper();
-    Q_SCRIPTABLE void reloadsettings(){ GS::load(); }
 
 private slots:
     void loadwallpaperwidgets();

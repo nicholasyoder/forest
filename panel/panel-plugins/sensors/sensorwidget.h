@@ -73,7 +73,6 @@ private:
     QStringList hiddenbars;
     QColor backcolor;
     Qt::Orientation barorientation;
-    QString plugnum;
 
 };
 
