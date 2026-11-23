@@ -113,8 +113,8 @@ Pairs with Biome 0.5.0 (data-control, for the clipboard manager).
 
 ## Later (unscheduled)
 
-- **Network manager plugin.** The old `nmcontrol` stub is being removed
-  (0.11.2); a real plugin would start fresh. Needs connection status, Wi-Fi
+- **Network manager plugin.** The old `nmcontrol` stub is gone; a real
+  plugin would start fresh. Needs connection status, Wi-Fi
   list/connect, wired/VPN toggles. Pick a backend first (NetworkManagerQt vs.
   raw `org.freedesktop.NetworkManager` D-Bus). Low priority: `nm-applet`
   works fine as is.
