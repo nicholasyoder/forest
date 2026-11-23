@@ -32,10 +32,9 @@ Pairs with Biome 0.4.0.
   `ActionInvoked` so the client can raise its window via xdg-activation.
   Without it, clicking e.g. a browser notification may not focus the browser.
   Needs a way to get an xdg-activation token from Qt for the popup's surface.
-- **More notification hints.** `body-markup` (`FadingLabel`'s clipped path
-  paints plain text, so it needs rich-text rendering first), `urgency`
-  (styling; critical shouldn't time out), `image-data` / `image-path`,
-  `transient`, `category`/`desktop-entry` (better app icon/name lookup).
+- **More notification hints.** `urgency` (styling; critical shouldn't time
+  out), `image-data` / `image-path`, `transient`, `category`/`desktop-entry`
+  (better app icon/name lookup).
 - **More hardware info on the About page** (#61). Machine vendor/model,
   GPU, root-disk capacity, BIOS/firmware, boot mode, Secure Boot state,
   motherboard. Maybe a separate "more details" page (lshw-gtk-like).

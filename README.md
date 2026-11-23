@@ -90,7 +90,7 @@ sudo cmake --install build
 sudo dnf install rpm-build rpmdevtools           # once
 sudo dnf builddep packaging/forest.spec          # once: installs the spec's BuildRequires
 mkdir -p rpmbuild/SOURCES
-git archive --prefix=forest-0.11.1/ -o rpmbuild/SOURCES/forest-0.11.1.tar.gz HEAD   # stands in for the release tarball the spec expects
+git archive --prefix=forest-0.11.2/ -o rpmbuild/SOURCES/forest-0.11.2.tar.gz HEAD   # stands in for the release tarball the spec expects
 rpmbuild -ba --define "_topdir $PWD/rpmbuild" packaging/forest.spec
 ```
 

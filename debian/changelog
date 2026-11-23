@@ -1,3 +1,17 @@
+forest (0.11.2) unstable; urgency=medium
+
+  * Remove the unused `nmcontrol` panel plugin stub, a stale generated header and the `desktop::reloadsettings` D-Bus method
+  * Greeter and logout fixes: greetd replies are matched to requests in order, the greeter lists users through NSS/SSSD and sessions through `XdgDesktopFile`, and the logout dialog no longer crashes on an unknown saved action or reports a slow polkit prompt as a failure
+  * Match workspaces to Biome's by their ext-workspace `id` instead of arrival order (falling back to arrival order if none is sent)
+  * Rework notification popups: `expire_timeout` 0 now never expires, `replaces_id` updates a popup in place, `CloseNotification` on an unknown id returns an error, and at most 5 popups show at once
+  * Render `<b>`, `<i>`, `<u>`, `<br>` and clickable http/https/mailto links in notification bodies (`body-markup`)
+  * Applet fixes: the battery warning no longer fires while charging and the applet hides without a battery; the CPU monitor no longer double-counts guest time; the temperature applet reads only displayed sensors and handles none; Quicklaunch keeps every file of a multi-file drop; the tray honours `ItemIsMenu`; mute toggles the playback switch instead of zeroing volume
+  * Settings and displays fixes: a background change no longer jumps the settings window to its page; the Cursor page no longer rewrites `index.theme` on every keystroke; About and the Displays page no longer run shell commands or connect to the compositor up front; the Panel page keeps applets it can't load; the displays service re-applies the saved profile when a monitor reconnects off its layout
+  * Screenshot fixes: the PNG is encoded once for the file and clipboard, the clipboard copy is reported only once the helper owns the selection, the helper prefers `ext-data-control-v1` over `wlr-data-control`, and a capture with no screens fails instead of hanging
+
+ -- Nicholas Yoder <nicholasyoder@proton.me>  Mon, 23 Nov 2026 00:00:00 -0500
+
+
 forest (0.11.1) unstable; urgency=medium
 
   * Packaging cleanup: drop the unneeded `qt6-qtwayland` and `gio` dependencies, the leftover Openbox themes, `Forest-Flat-Dark`, qt5ct seeding and `power.png`; own the greetd drop-in directory, `/var/lib/forest/login` and `Login.conf`; install a `ForestThemeConfigVersion.cmake` so `find_package(ForestTheme <version>)` works; the session prepends Flatpak dirs to `XDG_DATA_DIRS` instead of replacing it, and stops `forest-session.target` when Biome exits
