@@ -360,27 +360,8 @@ void Picker::release(const QPoint &p) {
         setSelection(QRect());
 }
 
-// Composites the outputs under the selection at the densest scale among them.
 QImage Picker::cropSelection() const {
-    qreal scale = 1.0;
-    for (const capturecore::Shot &s : m_shots)
-        if (s.screen->geometry().intersects(m_sel))
-            scale = qMax(scale, qreal(s.image.width()) / s.screen->geometry().width());
-    QImage out(QSize(qRound(m_sel.width() * scale), qRound(m_sel.height() * scale)), QImage::Format_ARGB32_Premultiplied);
-    out.fill(Qt::black);
-    QPainter p(&out);
-    p.setRenderHint(QPainter::SmoothPixmapTransform);
-    for (const capturecore::Shot &s : m_shots) {
-        const QRect g = s.screen->geometry();
-        const QRect i = g.intersected(m_sel);
-        if (i.isEmpty())
-            continue;
-        const qreal sx = qreal(s.image.width()) / g.width(), sy = qreal(s.image.height()) / g.height();
-        const QRectF target((i.x() - m_sel.x()) * scale, (i.y() - m_sel.y()) * scale, i.width() * scale, i.height() * scale);
-        const QRectF source((i.x() - g.x()) * sx, (i.y() - g.y()) * sy, i.width() * sx, i.height() * sy);
-        p.drawImage(target, s.image, source);
-    }
-    return out;
+    return capturecore::crop(m_shots, m_sel);
 }
 
 #include "picker.moc"

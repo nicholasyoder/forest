@@ -5,6 +5,7 @@
 
 #include <QImage>
 #include <QList>
+#include <QRect>
 #include <QString>
 
 class QScreen;
@@ -22,8 +23,11 @@ struct Shot {
     QImage image;
 };
 
-// Composites per-output grabs by logical geometry at the densest output's
-// scale, so fractional-scale captures keep their physical pixels.
+// Composites the outputs under `region` (logical coords) at the densest
+// scale among them, so fractional-scale captures keep their physical pixels.
+QImage crop(const QList<Shot> &shots, const QRect &region);
+
+// crop() over the union of all outputs.
 QImage compose(const QList<Shot> &shots);
 
 // Next free Screenshot_YYYY-MM-DD_HH-MM-SS[_N].png in <Pictures>/Screenshots
