@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Greeter, logout and session fixes: the greetd client matches replies to requests in order (a stale reply after cancelling is ignored, and a missing session shows an error); the greeter lists users through `getpwent()` (NSS/SSSD) and sessions through `XdgDesktopFile` (Hidden, TryExec, localized names); the logout dialog no longer crashes on an unknown saved action and its logind calls are async with no timeout, so a slow polkit prompt isn't reported as a failure; the locker and lockscreen share signalfd and display-name helpers
   - Workspaces are matched to Biome's by their ext-workspace `id` instead of the order they arrive in (falling back to arrival order on compositors that send none); deskswitch and the windowlist share one workspace client class, and `forest-screenshot` no longer binds workspace clients
   - Rework notification popups: `expire_timeout` 0 now never expires (a default of 0 no longer closes popups instantly, and max is raised to min if set lower); a notification with `replaces_id` updates its popup in place instead of remapping it; `CloseNotification` on an unknown id returns an error; no more 10 ms repaint timer per popup (the timeout bar is animated and cached); at most 5 popups are shown, the rest wait for a free slot
   - Advertise `body-markup`: notification bodies render `<b>`, `<i>`, `<u>`, `<br>` and http/https/mailto links (clickable), with everything else escaped or dropped; summaries stay plain text

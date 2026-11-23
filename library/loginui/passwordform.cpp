@@ -2,6 +2,8 @@
 
 #include "passwordform.h"
 
+#include <QTimer>
+
 #include <QHBoxLayout>
 #include <QKeyEvent>
 #include <QLabel>
@@ -94,6 +96,12 @@ PasswordForm::PasswordForm(QWidget *parent)
     connect(m_submitButton, &QPushButton::clicked, this, &PasswordForm::submit);
     connect(m_input, &QLineEdit::returnPressed, this, &PasswordForm::submit);
 
+    m_busyTimer = new QTimer(this);
+    m_busyTimer->setInterval(400);
+    connect(m_busyTimer, &QTimer::timeout, this, [this] {
+        m_busyStep = (m_busyStep + 1) % 4;
+        m_input->setPlaceholderText("Please wait" + QString(m_busyStep, '.'));
+    });
     setBusy();
 }
 
@@ -130,6 +138,7 @@ void PasswordForm::setPrompt(const QString &prompt, bool secret)
         text.chop(1);
     m_input->setPlaceholderText(text.isEmpty() ? (secret ? "Password" : "Input") : text);
     m_input->setEchoMode(secret ? QLineEdit::Password : QLineEdit::Normal);
+    m_busyTimer->stop();
     m_input->setEnabled(true);
     m_submitButton->setEnabled(true);
     m_input->setFocus();
@@ -144,6 +153,9 @@ void PasswordForm::focusInput()
 void PasswordForm::setBusy()
 {
     m_input->clear();
+    m_busyStep = 0;
+    m_input->setPlaceholderText("Please wait");
+    m_busyTimer->start();
     m_input->setEnabled(false);
     m_submitButton->setEnabled(false);
 }

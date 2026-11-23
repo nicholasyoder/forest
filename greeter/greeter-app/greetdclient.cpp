@@ -24,37 +24,40 @@ GreetdClient::GreetdClient(QObject *parent)
 }
 
 void GreetdClient::createSession(const QString &username) {
-    m_state = State::CreatingSession;
     QJsonObject msg;
     msg["type"] = "create_session";
     msg["username"] = username;
-    sendMessage(msg);
+    send(Request::Create, msg);
 }
 
 void GreetdClient::postAuthResponse(const QString &response) {
-    m_state = State::Authenticating;
     QJsonObject msg;
     msg["type"] = "post_auth_message_response";
     if (response.isNull())
         msg["response"] = QJsonValue(QJsonValue::Null);
     else
         msg["response"] = response;
-    sendMessage(msg);
+    send(Request::PostResponse, msg);
 }
 
 void GreetdClient::startSession(const QStringList &cmd, const QStringList &env) {
-    m_state = State::StartingSession;
     QJsonObject msg;
     msg["type"] = "start_session";
     msg["cmd"] = QJsonArray::fromStringList(cmd);
     msg["env"] = QJsonArray::fromStringList(env);
-    sendMessage(msg);
+    send(Request::Start, msg);
 }
 
 void GreetdClient::cancelSession() {
-    m_state = State::Idle;
     QJsonObject msg;
     msg["type"] = "cancel_session";
+    // Replies to requests already in flight belong to the dead session.
+    m_pending.fill(Request::Cancel);
+    send(Request::Cancel, msg);
+}
+
+void GreetdClient::send(Request request, const QJsonObject &msg) {
+    m_pending.enqueue(request);
     sendMessage(msg);
 }
 
@@ -103,19 +106,27 @@ void GreetdClient::onReadyRead() {
 }
 
 void GreetdClient::processMessage(const QJsonObject &msg) {
-    QString type = msg["type"].toString();
+    if (m_pending.isEmpty()) {
+        qWarning() << "Unexpected greetd message:" << msg["type"].toString();
+        return;
+    }
+    const Request request = m_pending.dequeue();
+    const QString type = msg["type"].toString();
 
     if (type == "success") {
-        if (m_state == State::StartingSession)
+        if (request == Request::Start)
             emit sessionStarted();
-        else if (m_state == State::Authenticating || m_state == State::CreatingSession)
+        else if (request != Request::Cancel)
             emit authSucceeded();
-        // success for cancel_session (Idle state) is intentionally ignored
     } else if (type == "error") {
-        if (m_state != State::Idle)
+        if (request == Request::Cancel)
+            return;
+        // auth_error's description is raw PAM text ("pam_authenticate: AUTH_ERR").
+        if (msg["error_type"].toString() == "auth_error")
+            emit authFailed(QStringLiteral("Incorrect password"));
+        else
             emit authFailed(msg["description"].toString());
     } else if (type == "auth_message") {
-        m_state = State::Authenticating;
         emit authMessage(msg["auth_message_type"].toString(), msg["auth_message"].toString());
     } else {
         qWarning() << "Unknown greetd message type:" << type;

@@ -14,11 +14,16 @@
 
 #include "miscutills.h"
 
+struct passwd;
+
 // UI pieces shared by forest-greeter and forest-lockscreen.
 namespace loginui {
 
 // Circular avatar from an image file, or an initial on a grey disc.
 QPixmap circularAvatar(const QString &path, int size, const QString &fallback);
+
+// First GECOS field, else the username.
+QString displayName(const passwd *pw);
 
 // ~/.face, else the AccountsService icon; empty if neither exists.
 QString faceIconPath(const QString &username, const QString &homeDir);

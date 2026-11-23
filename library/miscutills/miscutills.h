@@ -4,6 +4,10 @@
 #define MISCUTILLS_H
 
 #include <QImage>
+
+#include <csignal>
+#include <functional>
+#include <initializer_list>
 #include <QPointer>
 #include <QTimer>
 #include <QVariant>
@@ -46,6 +50,12 @@ namespace miscutills {
     // Convert "r,g,b" string to QColor
     QColor string_to_color(QString color_string);
 };
+
+// Blocks the signals in this thread (call before QApplication so every thread inherits the mask).
+sigset_t block_signals(std::initializer_list<int> signums);
+
+// Runs handler on the event loop when a signal in `mask` arrives; delete the result to stop.
+QObject *watch_signals(const sigset_t &mask, QObject *parent, std::function<void()> handler);
 
 class RunOnce: public QObject {
     Q_OBJECT

@@ -10,6 +10,7 @@ class QHBoxLayout;
 class QLabel;
 class QLineEdit;
 class QPushButton;
+class QTimer;
 
 namespace loginui {
 
@@ -28,7 +29,7 @@ public:
     void addLeadingButton(QPushButton *button);
 
     void setPrompt(const QString &prompt, bool secret);
-    // Clears and disables the input until the next setPrompt().
+    // Clears and disables the input until the next setPrompt(); the placeholder animates meanwhile.
     void setBusy();
     void focusInput();
     void setStatus(const QString &text, bool error);
@@ -51,6 +52,8 @@ private:
     QHBoxLayout *m_buttonRow;
     QPushButton *m_submitButton;
     QLabel *m_statusLabel;
+    QTimer *m_busyTimer;
+    int m_busyStep = 0;
 };
 
 } // namespace loginui

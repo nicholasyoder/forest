@@ -7,6 +7,7 @@
 #include <QLocalSocket>
 #include <QByteArray>
 #include <QJsonObject>
+#include <QQueue>
 
 class GreetdClient : public QObject {
     Q_OBJECT
@@ -33,11 +34,13 @@ private:
     void sendMessage(const QJsonObject &msg);
     void processMessage(const QJsonObject &msg);
 
-    enum class State { Idle, CreatingSession, Authenticating, StartingSession };
+    // greetd answers each request exactly once, in order.
+    enum class Request { Create, PostResponse, Start, Cancel };
+    void send(Request request, const QJsonObject &msg);
 
     QLocalSocket *m_socket;
     QByteArray m_buffer;
-    State m_state = State::Idle;
+    QQueue<Request> m_pending;
 };
 
 #endif // GREETDCLIENT_H
