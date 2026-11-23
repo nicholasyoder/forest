@@ -9,34 +9,44 @@
 #include <QDBusMessage>
 #include <QDateTime>
 #include <QDir>
+#include <QFile>
 #include <QFileInfo>
 #include <QPainter>
 #include <QScreen>
 #include <QStandardPaths>
 #include <QTextStream>
 
-QImage capturecore::compose(const QList<Shot> &shots) {
-    if (shots.size() == 1)
-        return shots.first().image;
-
-    QRect bounds;
+QImage capturecore::crop(const QList<Shot> &shots, const QRect &region) {
     qreal scale = 1.0;
-    for (const Shot &s : shots) {
-        bounds |= s.screen->geometry();
-        scale = qMax(scale, qreal(s.image.width()) / s.screen->geometry().width());
-    }
-    QImage canvas(QSize(qRound(bounds.width() * scale), qRound(bounds.height() * scale)),
-                  QImage::Format_ARGB32_Premultiplied);
-    canvas.fill(Qt::black);
-    QPainter p(&canvas);
+    for (const Shot &s : shots)
+        if (s.screen->geometry().intersects(region))
+            scale = qMax(scale, qreal(s.image.width()) / s.screen->geometry().width());
+    QImage out(QSize(qRound(region.width() * scale), qRound(region.height() * scale)),
+               QImage::Format_ARGB32_Premultiplied);
+    out.fill(Qt::black);
+    QPainter p(&out);
     p.setRenderHint(QPainter::SmoothPixmapTransform);
     for (const Shot &s : shots) {
         const QRect g = s.screen->geometry();
-        const QRect target(qRound((g.x() - bounds.x()) * scale), qRound((g.y() - bounds.y()) * scale),
-                           qRound(g.width() * scale), qRound(g.height() * scale));
-        p.drawImage(target, s.image);
+        const QRect i = g.intersected(region);
+        if (i.isEmpty())
+            continue;
+        const qreal sx = qreal(s.image.width()) / g.width(), sy = qreal(s.image.height()) / g.height();
+        const QRectF target((i.x() - region.x()) * scale, (i.y() - region.y()) * scale, i.width() * scale,
+                            i.height() * scale);
+        const QRectF source((i.x() - g.x()) * sx, (i.y() - g.y()) * sy, i.width() * sx, i.height() * sy);
+        p.drawImage(target, s.image, source);
     }
-    return canvas;
+    return out;
+}
+
+QImage capturecore::compose(const QList<Shot> &shots) {
+    if (shots.size() == 1)
+        return shots.first().image;
+    QRect bounds;
+    for (const Shot &s : shots)
+        bounds |= s.screen->geometry();
+    return crop(shots, bounds);
 }
 
 QString capturecore::autoPath() {
@@ -81,19 +91,22 @@ int capturecore::deliver(const QImage &image, const Options &opts) {
     if (image.isNull())
         return fail(QStringLiteral("Could not capture the screen"));
 
+    QByteArray png;
+    QBuffer buf(&png);
+    buf.open(QIODevice::WriteOnly);
+    if (!image.save(&buf, "PNG"))
+        return fail(QStringLiteral("Could not encode the screenshot"));
+
     QString path;
     if (opts.save) {
         path = opts.outputFile.isEmpty() ? autoPath() : opts.outputFile;
-        if (path.isEmpty() || !image.save(path, "PNG"))
+        QFile f(path);
+        if (path.isEmpty() || !f.open(QIODevice::WriteOnly) || f.write(png) != png.size())
             return fail(QStringLiteral("Could not save the screenshot"));
     }
 
     bool copied = true;
     if (opts.clipboard) {
-        QByteArray png;
-        QBuffer buf(&png);
-        buf.open(QIODevice::WriteOnly);
-        image.save(&buf, "PNG");
         copied = clipboard::copyPng(png);
         if (!copied)
             err << "forest-screenshot: clipboard copy failed" << Qt::endl;

@@ -13,6 +13,8 @@ add_executable(forest-screenshot
 target_link_libraries(forest-screenshot PRIVATE Qt6::Core Qt6::Gui Qt6::Widgets Qt6::DBus Qt6::WaylandClient Qt6::WaylandClientPrivate toplevels)
 forest_generate_wayland_protocol_client(forest-screenshot
     ${CMAKE_SOURCE_DIR}/protocol/wlr-data-control-unstable-v1.xml)
+forest_generate_wayland_protocol_client(forest-screenshot
+    ${CMAKE_SOURCE_DIR}/protocol/ext-data-control-v1.xml)
 forest_link_flogger(forest-screenshot)
 forest_link_fstyleloader(forest-screenshot)
 forest_link_layershellqt(forest-screenshot)

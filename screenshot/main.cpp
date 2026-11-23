@@ -87,6 +87,10 @@ void grabShots(const QList<QScreen *> &screens, QObject *ctx,
         int pending;
         bool failed = false;
     };
+    if (screens.isEmpty()) {
+        done({});
+        return;
+    }
     auto *st = new State{{}, int(screens.size())};
     for (QScreen *screen : screens) {
         ScreenGrab *grab = ScreenGrab::grabOutput(screen, ctx);
