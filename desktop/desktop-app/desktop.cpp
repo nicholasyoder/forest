@@ -17,15 +17,16 @@ desktop::~desktop(){
 
 void desktop::setupPlug(){
     GS::load();
-    loadwallpaperwidgets();
+    QDir().mkpath(desktopdir()); // an invalid root would show the filesystem root
+
+    fsmodel = new QFileSystemModel(this);
+    fsmodel->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
+    model = new desktopmodel(fsmodel, this); // sets the icon provider before loading starts
+    fsmodel->setRootPath(desktopdir());
+
     setupmenus();
-
-    //monitor desktop dir for changes
-    QFileSystemWatcher *watcher = new QFileSystemWatcher;
-    watcher->addPath(desktopdir());
-    connect(watcher, SIGNAL(directoryChanged(QString)), this, SLOT(updateicons()));
-
-    updateicons();
+    loadwallpaperwidgets();
+    createview();
 
     QDBusConnection::sessionBus().registerObject("/org/forest/desktop", this, QDBusConnection::ExportScriptableSlots);
 
@@ -44,156 +45,83 @@ void desktop::reloadwallpaper(){
 }
 
 void desktop::loadwallpaperwidgets(){
-    QScreen *primary = ScreenTracker::primary();
     foreach (QScreen *screen, qApp->screens()){
-        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen, screen == primary);
+        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen);
+        wallwidget->setcontextmenu(deskmenu);
         wallwidgetlist << wallwidget;
-
-        if (screen == primary){
-            iwidget = new iconswidget(screen->size(), getusabledesktopspace(screen));
-            QVBoxLayout *vlayout = new QVBoxLayout;
-            vlayout->setContentsMargins(QMargins(0,0,0,0));
-            vlayout->addWidget(iwidget);
-            connect(iwidget, &iconswidget::iconposchange, this, &desktop::saveiconlocations);
-            connect(iwidget, &iconswidget::icontextchanged, this, &desktop::handleicontextchanged);
-            iwidget->setdropdir(desktopdir());
-            connect(iwidget, &iconswidget::filesdropped, this, &desktop::handlefilesdropped);
-            connect(iwidget, &iconswidget::keypressed, this, &desktop::handlekeypressed);
-            wallwidget->setLayout(vlayout);
-            wallwidget->setcontextmenu(deskmenu);
-        }
-
         wallwidget->show();
     }
 }
 
+void desktop::createview(){
+    view = new desktopview(model, desktopdir(), ScreenTracker::primary());
+    view->setmenus(iconmenu, deskmenu);
+    view->addActions(viewactions);
+    static_cast<desktopdelegate*>(view->itemDelegate())->onrename = [this](const QString &path, const QString &name){
+        renamefile(path, name);
+    };
+    connect(view, &desktopview::filesdropped, this, &desktop::handlefilesdropped);
+    connect(view, &desktopview::openrequested, this, [this](){
+        XdgActivation::instance()->request(view); // token must be requested inside the input event
+        openselected();
+    });
+    connect(view, &QAbstractItemView::activated, this, [this](const QModelIndex &index){
+        XdgActivation::instance()->request(view);
+        openfile(index.data(QFileSystemModel::FilePathRole).toString());
+    });
+    view->show();
+}
+
+QAction *desktop::addaction(QMenu *menu, const QString &icon, const QString &text, void (desktop::*slot)(),
+                            const QKeySequence &shortcut){
+    QAction *action = new QAction(QIcon::fromTheme(icon), text, this);
+    connect(action, &QAction::triggered, this, slot);
+    if (!shortcut.isEmpty()){
+        action->setShortcut(shortcut);
+        action->setShortcutContext(Qt::WidgetShortcut); // not while the rename editor has focus
+        viewactions << action;
+    }
+    menu->addAction(action);
+    return action;
+}
+
 void desktop::setupmenus(){
+    //iconmenu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    XdgActivation::instance()->watch(addaction(iconmenu, "document-open", "Open", &desktop::openselected));
+    iconmenu->addSeparator();
+    addaction(iconmenu, "edit-cut", "Cut", &desktop::cutselected, QKeySequence::Cut);
+    addaction(iconmenu, "edit-copy", "Copy", &desktop::copyselected, QKeySequence::Copy);
+    addaction(iconmenu, "edit-link", "Copy path(s)", &desktop::copypathofselected);
+    iconmenu->addSeparator();
+    addaction(iconmenu, "edit-rename", "Rename", &desktop::renameselected, Qt::Key_F2);
+    iconmenu->addSeparator();
+    addaction(iconmenu, "user-trash", "Trash", &desktop::trashselected, Qt::Key_Delete);
+    addaction(iconmenu, "edit-delete", "Delete", &desktop::deleteselected, Qt::SHIFT | Qt::Key_Delete);
 
-        //iconmenu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        QAction *openaction = new QAction(QIcon::fromTheme("document-open"), "Open", this);
-        connect(openaction, &QAction::triggered, this, &desktop::openselected);
-        iconmenu->addAction(openaction);
-        iconmenu->addSeparator();
+    //deskmenu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    QMenu *createMenu = new QMenu("Create New");
+    createMenu->setIcon(QIcon::fromTheme("list-add"));
+    addaction(createMenu, "folder", "Folder...", &desktop::createfolder);
+    addaction(createMenu, "text-x-generic", "Empty file...", &desktop::createfile);
+    deskmenu->addMenu(createMenu);
+    deskmenu->addSeparator();
 
-        QAction *cutaction = new QAction(QIcon::fromTheme("edit-cut"), "Cut", this);
-        connect(cutaction, &QAction::triggered, this, &desktop::cutselected);
-        iconmenu->addAction(cutaction);
+    addaction(deskmenu, "edit-paste", "Paste", &desktop::paste2desktop, QKeySequence::Paste);
+    addaction(deskmenu, "", "Select all", &desktop::selectall, QKeySequence::SelectAll);
+    addaction(deskmenu, "", "Refresh", &desktop::refresh, Qt::Key_F5);
+    XdgActivation::instance()->watch(addaction(deskmenu, "document-open-folder", "Open Desktop folder", &desktop::opendesktopfolder));
+    deskmenu->addSeparator();
 
-        QAction *copyaction = new QAction(QIcon::fromTheme("edit-copy"), "Copy", this);
-        connect(copyaction, &QAction::triggered, this, &desktop::copyselected);
-        iconmenu->addAction(copyaction);
-
-        QAction *copypathaction = new QAction(QIcon::fromTheme("edit-link"), "Copy path(s)", this);
-        connect(copypathaction, &QAction::triggered, this, &desktop::copypathofselected);
-        iconmenu->addAction(copypathaction);
-        iconmenu->addSeparator();
-
-        QAction *renameaction = new QAction(QIcon::fromTheme("edit-rename"), "Rename", this);
-        connect(renameaction, &QAction::triggered, this, &desktop::renameselected);
-        iconmenu->addAction(renameaction);
-        iconmenu->addSeparator();
-
-        QAction *trashaction = new QAction(QIcon::fromTheme("user-trash"), "Trash", this);
-        connect(trashaction, &QAction::triggered, this, &desktop::trashselected);
-        iconmenu->addAction(trashaction);
-
-        QAction *deleteaction = new QAction(QIcon::fromTheme("edit-delete"), "Delete", this);
-        connect(deleteaction, &QAction::triggered, this, &desktop::deleteselected);
-        iconmenu->addAction(deleteaction);
-
-        //deskmenu~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
-        QMenu *createMenu = new QMenu("Create New");
-        createMenu->setIcon(QIcon::fromTheme("list-add"));
-        QAction *newfolderaction = new QAction(QIcon::fromTheme("folder"), "Folder...", this);
-        connect(newfolderaction, &QAction::triggered, this, &desktop::createfolder);
-        createMenu->addAction(newfolderaction);
-        QAction *newfileaction = new QAction(QIcon::fromTheme("text-x-generic"), "Empty file...", this);
-        connect(newfileaction, &QAction::triggered, this, &desktop::createfile);
-        createMenu->addAction(newfileaction);
-        deskmenu->addMenu(createMenu);
-        deskmenu->addSeparator();
-
-        QAction *pasteaction = new QAction(QIcon::fromTheme("edit-paste"), "Paste", this);
-        connect(pasteaction, &QAction::triggered, this, &desktop::paste2desktop);
-        deskmenu->addAction(pasteaction);
-
-        QAction *selectallaction = new QAction(QIcon(), "Select all", this);
-        connect(selectallaction, &QAction::triggered, this, [this](){ iwidget->selectall(); }); // iwidget is recreated on screen changes
-        deskmenu->addAction(selectallaction);
-
-        QAction *refreshaction = new QAction(QIcon(), "Refresh", this);
-        connect(refreshaction, &QAction::triggered, this, &desktop::updateicons);
-        deskmenu->addAction(refreshaction);
-
-        QAction *opendesktopaction = new QAction(QIcon::fromTheme("document-open-folder"), "Open Desktop folder", this);
-        connect(opendesktopaction, &QAction::triggered, this, &desktop::opendesktopfolder);
-        deskmenu->addAction(opendesktopaction);
-        deskmenu->addSeparator();
-
-
-    QAction *desktopsettingsaction = new QAction(QIcon::fromTheme("preferences-desktop"), "Desktop settings", this);
-    connect(desktopsettingsaction, &QAction::triggered, this, &desktop::showsettings);
-    XdgActivation::instance()->watch(desktopsettingsaction);
-    deskmenu->addAction(desktopsettingsaction);
+    XdgActivation::instance()->watch(addaction(deskmenu, "preferences-desktop", "Desktop settings", &desktop::showsettings));
 }
 
 void desktop::showsettings(){
     XdgActivation::instance()->launch("forest-settings", {"appearance/wallpaper"});
 }
 
-void desktop::updateicons(){
-    if (updatepaused){
-        updatepaused = false;
-        return;
-    }
-
-    iwidget->removeall();
-
-    const QString dir = desktopdir();
-    foreach (QString file, QDir(dir).entryList(QDir::AllEntries | QDir::NoDotAndDotDot))
-        loadicon(dir + "/" + file);
-}
-
-void desktop::loadicon(QString file){
-    QMimeDatabase db;
-    XdgMimeType mime = db.mimeTypeForFile(file);
-    XdgDesktopFile dfile;
-    desktopicon *icon;
-
-    if (mime.mimeType() == "application/x-desktop" && dfile.load(file)){
-        // Untrusted launchers show their real filename, not a self-chosen Name/Icon.
-        if (QFileInfo(file).isExecutable())
-            icon = new desktopicon(dfile.name(), dfile.icon(), file, iconmenu);
-        else
-            icon = new desktopicon(file.split("/").last(), mime.icon(), file, iconmenu);
-    }
-    else
-        icon = new desktopicon(file.split("/").last(), mime.icon(), file, iconmenu);
-
-    connect(icon, &desktopicon::sigactivated, this, [this](QString id){
-        XdgActivation::instance()->request(iwidget); // token must be requested inside the input event
-        handleiconactivated(id);
-    });
-
-    QString gridpos = settings->value("desktopicons/" + file).toString();
-
-    iwidget->addicon(icon, gridpos.split(",").first().toInt(), gridpos.split(",").last().toInt());
-}
-
-void desktop::saveiconlocations(QHash<QString, QString> poshash){
-    settings->beginGroup("desktopicons");
-    settings->remove("");//removes everything in the current group
-    foreach(QString id, poshash.keys())
-        settings->setValue(id, poshash.value(id));
-
-    settings->endGroup();
-}
-
-//get rid of this...
-QRect desktop::getusabledesktopspace(QScreen *screen){
-    int iconmargin = 10;
-
-    return QRect(iconmargin, iconmargin, screen->size().width() - (iconmargin*2), screen->size().height() - (iconmargin*2));
+// The model follows the directory itself; this re-reads launcher names and icons.
+void desktop::refresh(){
+    model->refresh();
 }
 
 void desktop::handleScreenChange(){
@@ -203,35 +131,17 @@ void desktop::handleScreenChange(){
     }
     wallwidgetlist.clear();
     loadwallpaperwidgets();
-    updateicons();
-}
 
-void desktop::handlekeypressed(QKeyEvent *event){
-    const Qt::KeyboardModifiers mods = event->modifiers() & ~Qt::KeypadModifier;
-    if (mods == Qt::ControlModifier){
-        switch (event->key()){
-        case Qt::Key_A: iwidget->selectall(); break;
-        case Qt::Key_C: copyselected(); break;
-        case Qt::Key_X: cutselected(); break;
-        case Qt::Key_V: paste2desktop(); break;
-        }
-    }
-    else if (mods == Qt::ShiftModifier){
-        if (event->key() == Qt::Key_Delete) deleteselected();
-    }
-    else if (mods == Qt::NoModifier){
-        switch (event->key()){
-        case Qt::Key_F5: updateicons(); break;
-        case Qt::Key_Delete: trashselected(); break;
-        }
-    }
+    // Layer surfaces can't change output; recreate on the (possibly new) primary.
+    view->close();
+    view->deleteLater();
+    createview();
 }
 
 void desktop::handlefilesdropped(QStringList paths, Qt::DropAction action, bool trusted){
     if (trusted){
         for (const QString &path : paths)
             fileops::installLauncher(path, desktopdir());
-        updateicons();
     }
     else if (action == Qt::MoveAction)
         fileops::move(paths, desktopdir());
@@ -239,68 +149,53 @@ void desktop::handlefilesdropped(QStringList paths, Qt::DropAction action, bool 
         fileops::copy(paths, desktopdir());
 }
 
-// Runs inside the icon's editingFinished emission: don't delete icons (updateicons) here.
-void desktop::handleicontextchanged(QString ID, QString newtext){
-    QFileInfo old(ID);
-    if (newtext.isEmpty() || newtext == old.fileName() || newtext.contains('/'))
+// Runs inside the editor's commit: the model picks the new name up from the directory.
+void desktop::renamefile(const QString &path, const QString &newname){
+    QFileInfo old(path);
+    if (newname.isEmpty() || newname == old.fileName() || newname.contains('/'))
         return;
 
-    QString newid = old.absolutePath() + "/" + newtext;
-    if (QFileInfo(newid).exists() || QFileInfo(newid).isSymLink()){
-        fileops::showErrors("Couldn't rename “" + old.fileName() + "”.", {"“" + newtext + "” already exists."});
+    QString newpath = old.absolutePath() + "/" + newname;
+    if (QFileInfo(newpath).exists() || QFileInfo(newpath).isSymLink()){
+        fileops::showErrors("Couldn't rename “" + old.fileName() + "”.", {"“" + newname + "” already exists."});
         return;
     }
-    if (!QDir().rename(ID, newid)){
+    if (!QDir().rename(path, newpath)){
         fileops::showErrors("Couldn't rename “" + old.fileName() + "”.", {});
         return;
     }
-
-    settings->beginGroup("desktopicons");
-    settings->setValue(newid, settings->value(ID));
-    settings->remove(ID);
-    settings->endGroup();
+    view->renamed(old.fileName(), newname);
 }
 
 void desktop::openselected(){
-    foreach (desktopicon *icon, iwidget->selectedicons())
-        handleiconactivated(icon->getID());
-}
-
-QStringList desktop::selectedpaths(){
-    QStringList paths;
-    foreach (desktopicon *icon, iwidget->selectedicons())
-        paths.append(icon->getID());
-    return paths;
+    for (const QString &path : selectedpaths())
+        openfile(path);
 }
 
 void desktop::cutselected(){
-    if (!iwidget->selectedicons().isEmpty())
+    if (!selectedpaths().isEmpty())
         fileops::setClipboard(selectedpaths(), true);
 }
 
 void desktop::copyselected(){
-    if (!iwidget->selectedicons().isEmpty())
+    if (!selectedpaths().isEmpty())
         fileops::setClipboard(selectedpaths(), false);
 }
 
 void desktop::copypathofselected(){
-    QClipboard *clip = QApplication::clipboard();
-    clip->setText(iwidget->selectedicons().first()->getID());
-}
-
-void desktop::renameselected(){
-    QList<desktopicon*> icons = iwidget->selectedicons();
-    if (icons.length() == 1)
-        icons.first()->enterTextEditMode();
+    const QStringList paths = selectedpaths();
+    if (!paths.isEmpty())
+        QApplication::clipboard()->setText(paths.join('\n'));
 }
 
 void desktop::trashselected(){
-    if (!iwidget->selectedicons().isEmpty())
+    if (!selectedpaths().isEmpty())
         fileops::trash(selectedpaths());
 }
 
 void desktop::deleteselected(){
-    fileops::remove(selectedpaths());
+    if (!selectedpaths().isEmpty())
+        fileops::remove(selectedpaths());
 }
 
 void desktop::createfolder(){
@@ -322,9 +217,7 @@ void desktop::createfolder(){
         fileops::showErrors("Couldn't create a new folder.", {dirname});
         return;
     }
-    updateicons();
-    updatepaused = true;//keep filesystemwatcher from updating after icon is in edit mode
-    iwidget->seticonintexteditmode(dirname);
+    view->editwhenadded(dirname);
 }
 
 void desktop::createfile(){
@@ -348,10 +241,7 @@ void desktop::createfile(){
         return;
     }
     f.close();
-
-    updateicons();
-    updatepaused = true;//keep filesystemwatcher from updating after icon is in edit mode
-    iwidget->seticonintexteditmode(filename);
+    view->editwhenadded(filename);
 }
 
 void desktop::openfile(const QString &file){
@@ -378,7 +268,7 @@ void desktop::openfile(const QString &file){
                 fileops::showErrors("Couldn't mark the launcher as executable.", {file});
                 return;
             }
-            updateicons();
+            model->refresh(file);
         }
         XdgActivation::instance()->launch([dfile]() mutable { dfile.startDetached(); });
     }
