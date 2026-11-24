@@ -7,7 +7,7 @@
 #include <QScreen>
 #include <QWindow>
 
-wallpaperwidget::wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScreen *screen, bool hasicons){
+wallpaperwidget::wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScreen *screen){
     Qt::WindowFlags flags;
     flags |= Qt::FramelessWindowHint;
     flags |= Qt::WindowStaysOnBottomHint;
@@ -22,9 +22,7 @@ wallpaperwidget::wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScr
                               | LayerShellQt::Window::AnchorLeft | LayerShellQt::Window::AnchorRight));
     // -1: extend behind panels' exclusive zones instead of being shrunk by them.
     layer_window->setExclusiveZone(-1);
-    // Icons take keys (rename, Delete, Ctrl+A...) once clicked.
-    layer_window->setKeyboardInteractivity(hasicons ? LayerShellQt::Window::KeyboardInteractivityOnDemand
-                                                    : LayerShellQt::Window::KeyboardInteractivityNone);
+    layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
     layer_window->setScope("forest-desktop");
 
     wallpaper = image;

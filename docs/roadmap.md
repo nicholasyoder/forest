@@ -16,9 +16,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 Pairs with Biome 0.4.0.
 
-- **Desktop icon view rework** ([detail](review-2026-11.md#desktop-icon-view)). Incremental
-  updates, cached label shadows, no ghost icons, grid sized to the usable
-  area. Do before the settings page.
 - **Desktop icons settings page.** No page for desktop icons yet (Desktop →
   Icons is a placeholder). Icon size, grid spacing, sort/arrange, which
   default icons show, etc.

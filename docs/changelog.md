@@ -2,6 +2,9 @@
 Changelog
 ============
 
+* Unreleased
+  - Rework desktop icons: changes to `~/Desktop` update only the affected icons, icons keep clear of panels and never pile up when the grid is full, and dragging icons out to other apps now works
+
 * Release 0.11.2 - 2026-11-23
   - Remove the unused `nmcontrol` panel plugin stub, a stale generated header and the `desktop::reloadsettings` D-Bus method
   - Greeter and logout fixes: greetd replies are matched to requests in order, the greeter lists users through NSS/SSSD and sessions through `XdgDesktopFile`, and the logout dialog no longer crashes on an unknown saved action or reports a slow polkit prompt as a failure

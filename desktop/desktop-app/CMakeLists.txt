@@ -2,13 +2,11 @@ add_library(desktop-app MODULE
     desktop.cpp
     global_settings.cpp
     wallpaperwidget.cpp
-    iconswidget.cpp
-    desktopicon.cpp
+    desktopview.cpp
     desktop.h
     global_settings.h
     wallpaperwidget.h
-    iconswidget.h
-    desktopicon.h
+    desktopview.h
 )
 
 target_compile_definitions(desktop-app PRIVATE PLUG_LIBRARY QT_DEPRECATED_WARNINGS)

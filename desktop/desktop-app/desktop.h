@@ -11,19 +11,17 @@
 #include <QClipboard>
 #include <QApplication>
 #include <QSettings>
-#include <QListWidget>
-#include <QVBoxLayout>
 #include <QMenu>
 #include <QDir>
 #include <QProcess>
 #include <QMimeDatabase>
-#include <QFileSystemWatcher>
+#include <QFileSystemModel>
 #include <qt6xdg/XdgDesktopFile>
 #include <qt6xdg/XdgMimeType>
 #include <qt6xdg/XdgDirs>
 
 #include "wallpaperwidget.h"
-#include "iconswidget.h"
+#include "desktopview.h"
 
 #include "global_settings.h"
 
@@ -51,41 +49,40 @@ private slots:
     void loadwallpaperwidgets();
     void setupmenus();
     void showsettings();
-    void updateicons();
-    void loadicon(QString file);
-    void saveiconlocations(QHash<QString, QString> poshash);
-    QRect getusabledesktopspace(QScreen *screen);
+    void refresh();
     void handleScreenChange();
 
-    void handleiconactivated(QString iconID){openfile(iconID);}
     void paste2desktop(){fileops::paste(desktopdir());}
     void opendesktopfolder(){openfile(desktopdir());}
 
-    void handlekeypressed(QKeyEvent *event);
     void handlefilesdropped(QStringList paths, Qt::DropAction action, bool trusted);
-    void handleicontextchanged(QString ID, QString newtext);
+    void renamefile(const QString &path, const QString &newname);
 
     void openselected();
     void cutselected();
     void copyselected();
     void copypathofselected();
-    void renameselected();
+    void renameselected(){ if (view) view->renameselected(); }
+    void selectall(){ if (view) view->selectAll(); }
     void trashselected();
     void deleteselected();
 
     void createfolder();
+    void createview();
     void createfile();
 
 private:
     static QString desktopdir(){ return XdgDirs::userDir(XdgDirs::Desktop); }
     void openfile(const QString &file);
-    QStringList selectedpaths();
-
-    bool updatepaused = false;
+    QStringList selectedpaths(){ return view ? view->selectedpaths() : QStringList(); }
+    QAction *addaction(QMenu *menu, const QString &icon, const QString &text, void (desktop::*slot)(),
+                       const QKeySequence &shortcut = {});
 
     QList <wallpaperwidget *> wallwidgetlist;
-    iconswidget *iwidget = nullptr;
-    QSettings *settings = new QSettings("Forest", "Forest");
+    QFileSystemModel *fsmodel = nullptr;
+    desktopmodel *model = nullptr;
+    desktopview *view = nullptr;
+    QList<QAction*> viewactions; // keyboard shortcuts while the icon view has focus
     QMenu *deskmenu = new QMenu;
     QMenu *iconmenu = new QMenu;
 };

@@ -69,21 +69,22 @@
 } 
 
 /* Desktop icons stuff is identical across themes for now */
-#desktopIcon {
+#desktopIcons {
+    background: transparent;
+    border: none;
+}
+
+#desktopIcons::item {
     border: 1px solid transparent;
     border-radius: 3px;
 }
 
-#desktopIcon:hover  {
+#desktopIcons::item:hover, #desktopIcons::item:selected {
     background: rgba(180,180,180, 25%);
     border-top: 1px solid rgba(100,100,100, 70%);
     border-right: 1px solid rgba(100,100,100, 70%);
     border-bottom: 1px solid rgba(100,100,100, 60%);
     border-left: 1px solid rgba(100,100,100, 60%);
-}
-
-#desktopDragBox {
-    background: rgba(200,200,200, 60%);
 }
 
 #panelMainmenuSearchbox {
