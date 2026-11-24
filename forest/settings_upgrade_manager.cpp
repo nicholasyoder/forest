@@ -5,6 +5,7 @@
 #include "hotkeyconfig.h"
 
 #include <QDir>
+#include <QStandardPaths>
 #include <QProcess>
 #include <QDebug>
 
@@ -48,6 +49,7 @@ void SettingsUpgradeManager::perform_upgrades(){
         {{0,10,0}, [this](){ this->upgrade_0_10_0(); }},
         {{0,10,1}, [this](){ this->upgrade_0_10_1(); }},
         {{0,11,1}, [this](){ this->upgrade_0_11_1(); }},
+        {{0,12,0}, [this](){ this->upgrade_0_12_0(); }},
     };
 
     // Get version of existing settings
@@ -146,6 +148,20 @@ void SettingsUpgradeManager::upgrade_0_11_1(){
         else if (!settings->contains(child + "/trigger"))
             settings->setValue(child + "/trigger", trigger);
         settings->remove(child + "/keysequence");
+    }
+    settings->endGroup();
+}
+
+void SettingsUpgradeManager::upgrade_0_12_0(){
+    // Desktop icon positions are keyed by filename now, not absolute path (nested QSettings groups).
+    const QString prefix = QStandardPaths::writableLocation(QStandardPaths::DesktopLocation).mid(1) + "/";
+    settings->beginGroup("desktopicons");
+    foreach (QString key, settings->allKeys()){
+        if (!key.contains('/')) continue;
+        const QString name = key.mid(prefix.size());
+        if (key.startsWith(prefix) && !name.contains('/') && !settings->contains(name))
+            settings->setValue(name, settings->value(key));
+        settings->remove(key);
     }
     settings->endGroup();
 }

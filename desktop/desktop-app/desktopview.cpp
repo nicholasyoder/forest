@@ -420,18 +420,7 @@ void desktopview::renamed(const QString &oldname, const QString &newname)
 void desktopview::loadpositions()
 {
     settings.beginGroup(positionsgroup);
-    for (const QString &key : settings.allKeys()) {
-        QString name = key;
-        // Pre-0.12 keys were absolute paths (nested QSettings groups).
-        if (key.contains('/')) {
-            const QString prefix = dir.mid(1) + "/";
-            const QString value = settings.value(key).toString();
-            settings.remove(key);
-            if (!key.startsWith(prefix) || key.mid(prefix.size()).contains('/'))
-                continue;
-            name = key.mid(prefix.size());
-            settings.setValue(name, value);
-        }
+    for (const QString &name : settings.childKeys()) {
         const QStringList parts = settings.value(name).toString().split(',');
         if (parts.size() == 2)
             stored.insert(name, QPoint(parts[0].toInt(), parts[1].toInt()));
