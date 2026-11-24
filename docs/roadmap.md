@@ -46,6 +46,12 @@ Pairs with Biome 0.4.0.
 - **Custom accent colour.** Let the user override the theme's `highlight`
   palette colour from the settings UI (Themes page). Hardcoded greens in
   theme CSS need to move to `palette(highlight)` first.
+- **Light/dark and accent in every toolkit** ([detail](cross-toolkit-theming.md)).
+  Publish `color-scheme` and `accent-color` through the
+  `org.freedesktop.appearance` portal Settings interface (a Forest portal
+  backend, or gsettings plus xdg-desktop-portal-gtk) so Qt, GTK and
+  libadwaita apps follow the theme, plus a Qt platform-theme plugin supplying
+  the palette. Colours only; control shapes come later.
 
 ## 0.13.0 — hardware & system
 

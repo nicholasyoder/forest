@@ -1,7 +1,8 @@
 # Cross-Toolkit Theming (research)
 
 Research notes (2026-10) on making third-party Qt, GTK and other apps match
-Forest/Biome. Not scheduled; see "Direction" for the decisions so far.
+Forest/Biome. The colors stage is on the 0.12.0 roadmap; control shapes are not scheduled.
+See "Direction" for the decisions so far.
 
 Today Forest's QSS themes (`usr/share/forest/themes/`) only style Forest's own
 processes. The `usr/share/themes/Forest*/` dirs are GTK2 `gtkrc` + Openbox
