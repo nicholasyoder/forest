@@ -28,7 +28,8 @@ void SessionListModel::loadDir(const QString &path, SessionType type) {
         if (name.isEmpty() || exec.isEmpty())
             continue;
 
-        const QString desktopNames = file.value("DesktopNames").toStringList().join(':');
+        // XdgDesktopFile returns the raw ';'-list; XDG_CURRENT_DESKTOP wants ':'.
+        const QString desktopNames = file.value("DesktopNames").toString().split(';', Qt::SkipEmptyParts).join(':');
         m_sessions.append({name, exec, type, QFileInfo(filename).completeBaseName(), desktopNames});
     }
 }
