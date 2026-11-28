@@ -2,10 +2,14 @@
 
 #include "desktop.h"
 #include "xdgactivation.h"
+#include "../desktopconfig.h"
 
+#include <QActionGroup>
 #include <QWindow>
 #include <QMessageBox>
 #include <QPushButton>
+#include <qt6xdg/XdgDefaultApps>
+#include <memory>
 
 desktop::desktop(){
 
@@ -20,13 +24,14 @@ void desktop::setupPlug(){
     QDir().mkpath(desktopdir()); // an invalid root would show the filesystem root
 
     fsmodel = new QFileSystemModel(this);
-    fsmodel->setFilter(QDir::AllEntries | QDir::NoDotAndDotDot);
+    updatefilter();
     model = new desktopmodel(fsmodel, this); // sets the icon provider before loading starts
     fsmodel->setRootPath(desktopdir());
 
     setupmenus();
     loadwallpaperwidgets();
-    createview();
+    if (GS::SHOW_ICONS)
+        createview();
 
     QDBusConnection::sessionBus().registerObject("/org/forest/desktop", this, QDBusConnection::ExportScriptableSlots);
 
@@ -44,6 +49,50 @@ void desktop::reloadwallpaper(){
     }
 }
 
+void desktop::reloadicons(){
+    GS::load();
+    updatefilter();
+    if (GS::SHOW_ICONS) {
+        if (!view)
+            createview();
+        else
+            view->applysettings(currenticonsettings());
+    } else if (view) {
+        view->close();
+        view->deleteLater();
+        view = nullptr;
+    }
+    syncsortmenu();
+}
+
+void desktop::arrangeicons(){
+    GS::load();
+    if (view) {
+        view->applysettings(currenticonsettings());
+        view->arrangeicons();
+    }
+    syncsortmenu();
+}
+
+desktopview::iconsettings desktop::currenticonsettings(){
+    return {
+        GS::ICON_SIZE,
+        GS::GRID_SPACING,
+        GS::AUTO_ARRANGE,
+        GS::SORT_BY,
+        GS::SORT_ORDER,
+        GS::FOLDERS_FIRST,
+        GS::SINGLE_CLICK,
+    };
+}
+
+void desktop::updatefilter(){
+    QDir::Filters f = QDir::AllEntries | QDir::NoDotAndDotDot;
+    if (GS::SHOW_HIDDEN)
+        f |= QDir::Hidden;
+    fsmodel->setFilter(f);
+}
+
 void desktop::loadwallpaperwidgets(){
     foreach (QScreen *screen, qApp->screens()){
         wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen);
@@ -57,6 +106,7 @@ void desktop::createview(){
     view = new desktopview(model, desktopdir(), ScreenTracker::primary());
     view->setmenus(iconmenu, deskmenu);
     view->addActions(viewactions);
+    view->applysettings(currenticonsettings());
     static_cast<desktopdelegate*>(view->itemDelegate())->onrename = [this](const QString &path, const QString &name){
         renamefile(path, name);
     };
@@ -65,7 +115,7 @@ void desktop::createview(){
         XdgActivation::instance()->request(view); // token must be requested inside the input event
         openselected();
     });
-    connect(view, &QAbstractItemView::activated, this, [this](const QModelIndex &index){
+    connect(view, &desktopview::itemactivated, this, [this](const QModelIndex &index){
         XdgActivation::instance()->request(view);
         openfile(index.data(QFileSystemModel::FilePathRole).toString());
     });
@@ -107,16 +157,93 @@ void desktop::setupmenus(){
     deskmenu->addSeparator();
 
     addaction(deskmenu, "edit-paste", "Paste", &desktop::paste2desktop, QKeySequence::Paste);
-    addaction(deskmenu, "", "Select all", &desktop::selectall, QKeySequence::SelectAll);
+    selectallaction = addaction(deskmenu, "", "Select all", &desktop::selectall, QKeySequence::SelectAll);
     addaction(deskmenu, "", "Refresh", &desktop::refresh, Qt::Key_F5);
     XdgActivation::instance()->watch(addaction(deskmenu, "document-open-folder", "Open Desktop folder", &desktop::opendesktopfolder));
     deskmenu->addSeparator();
 
-    XdgActivation::instance()->watch(addaction(deskmenu, "preferences-desktop", "Desktop settings", &desktop::showsettings));
+    sortmenu = new QMenu("Sort by", deskmenu);
+    sortmenu->setIcon(QIcon::fromTheme("view-sort"));
+    QActionGroup *bygroup = new QActionGroup(this);
+    const QList<QPair<QString, QString>> fields = {
+        {"name", "Name"}, {"type", "Type"}, {"size", "Size"}, {"modified", "Date modified"}
+    };
+    for (const auto &[key, label] : fields) {
+        QAction *a = sortmenu->addAction(label);
+        a->setCheckable(true);
+        bygroup->addAction(a);
+        sortbyactions.insert(key, a);
+        connect(a, &QAction::triggered, this, [this, key]{ savesortsetting(desktopconfig::sortby, key, true); });
+    }
+    sortmenu->addSeparator();
+    QActionGroup *ordergroup = new QActionGroup(this);
+    for (const auto &[key, label] : QList<QPair<QString, QString>>{{"ascending", "Ascending"}, {"descending", "Descending"}}) {
+        QAction *a = sortmenu->addAction(label);
+        a->setCheckable(true);
+        ordergroup->addAction(a);
+        sortorderactions.insert(key, a);
+        connect(a, &QAction::triggered, this, [this, key]{ savesortsetting(desktopconfig::sortorder, key, true); });
+    }
+    sortmenu->addSeparator();
+    foldersfirstaction = sortmenu->addAction("Folders first");
+    foldersfirstaction->setCheckable(true);
+    connect(foldersfirstaction, &QAction::triggered, this, [this](bool checked){
+        savesortsetting(desktopconfig::foldersfirst, checked, true);
+    });
+    autoarrangeaction = sortmenu->addAction("Auto-arrange");
+    autoarrangeaction->setCheckable(true);
+    connect(autoarrangeaction, &QAction::triggered, this, [this](bool checked){
+        savesortsetting(desktopconfig::autoarrange, checked, false);
+    });
+    sortmenu->addSeparator();
+    arrangeaction = sortmenu->addAction("Arrange icons");
+    connect(arrangeaction, &QAction::triggered, this, &desktop::arrangeicons);
+    deskmenu->addMenu(sortmenu);
+    deskmenu->addSeparator();
+
+    XdgActivation::instance()->watch(addaction(deskmenu, "preferences-desktop-wallpaper", "Wallpaper settings", &desktop::showwallpapersettings));
+    XdgActivation::instance()->watch(addaction(deskmenu, "user-desktop", "Desktop icon settings", &desktop::showiconsettings));
+
+    connect(deskmenu, &QMenu::aboutToShow, this, &desktop::syncsortmenu);
+    syncsortmenu();
 }
 
-void desktop::showsettings(){
+void desktop::savesortsetting(const QString &key, const QVariant &value, bool arrange){
+    QSettings settings("Forest", "Forest");
+    settings.beginGroup(desktopconfig::group);
+    settings.setValue(key, value);
+    settings.sync();
+    GS::load();
+    if (view) {
+        view->applysettings(currenticonsettings());
+        if (arrange && !GS::AUTO_ARRANGE)
+            view->arrangeicons();
+    }
+    syncsortmenu();
+}
+
+void desktop::syncsortmenu(){
+    if (!sortmenu)
+        return;
+    const bool icons = GS::SHOW_ICONS;
+    if (selectallaction)
+        selectallaction->setEnabled(icons);
+    sortmenu->setEnabled(icons);
+    if (QAction *a = sortbyactions.value(GS::SORT_BY))
+        a->setChecked(true);
+    if (QAction *a = sortorderactions.value(GS::SORT_ORDER))
+        a->setChecked(true);
+    foldersfirstaction->setChecked(GS::FOLDERS_FIRST);
+    autoarrangeaction->setChecked(GS::AUTO_ARRANGE);
+    arrangeaction->setEnabled(!GS::AUTO_ARRANGE);
+}
+
+void desktop::showwallpapersettings(){
     XdgActivation::instance()->launch("forest-settings", {"appearance/wallpaper"});
+}
+
+void desktop::showiconsettings(){
+    XdgActivation::instance()->launch("forest-settings", {"desktop/icons"});
 }
 
 // The model follows the directory itself; this re-reads launcher names and icons.
@@ -133,9 +260,13 @@ void desktop::handleScreenChange(){
     loadwallpaperwidgets();
 
     // Layer surfaces can't change output; recreate on the (possibly new) primary.
-    view->close();
-    view->deleteLater();
-    createview();
+    if (view) {
+        view->close();
+        view->deleteLater();
+        view = nullptr;
+    }
+    if (GS::SHOW_ICONS)
+        createview();
 }
 
 void desktop::handlefilesdropped(QStringList paths, Qt::DropAction action, bool trusted){
@@ -269,6 +400,17 @@ void desktop::openfile(const QString &file){
                 return;
             }
             model->refresh(file);
+        }
+        if (dfile.type() == XdgDesktopFile::LinkType) {
+            const QString url = dfile.url();
+            // x-scheme-handler/trash is rarely registered; pass trash URLs to the file manager directly.
+            if (url.startsWith(QLatin1String("trash:"))) {
+                std::unique_ptr<XdgDesktopFile> fm(XdgDefaultApps::fileManager());
+                if (fm) {
+                    XdgActivation::instance()->launch([fm = *fm, url]() mutable { fm.startDetached(url); });
+                    return;
+                }
+            }
         }
         XdgActivation::instance()->launch([dfile]() mutable { dfile.startDetached(); });
     }

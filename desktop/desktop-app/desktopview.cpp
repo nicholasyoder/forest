@@ -6,9 +6,12 @@
 
 #include <QApplication>
 #include <QAbstractFileIconProvider>
+#include <QCollator>
 #include <QContextMenuEvent>
+#include <QDateTime>
 #include <QDrag>
 #include <QFileSystemModel>
+#include <QHoverEvent>
 #include <QAbstractTextDocumentLayout>
 #include <QScrollBar>
 #include <QMenu>
@@ -23,6 +26,7 @@
 #include <LayerShellQt/Window>
 #include <qt6xdg/XdgDesktopFile>
 #include <qt6xdg/XdgMimeType>
+#include <algorithm>
 
 namespace {
 
@@ -192,6 +196,14 @@ void renameedit::insertFromMimeData(const QMimeData *source)
 
 // desktopdelegate ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
 
+void desktopdelegate::seticonsize(int size)
+{
+    if (m_iconsize == size)
+        return;
+    m_iconsize = size;
+    labels.clear();
+}
+
 void desktopdelegate::paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const
 {
     QStyleOptionViewItem opt = option;
@@ -201,11 +213,12 @@ void desktopdelegate::paint(QPainter *painter, const QStyleOptionViewItem &optio
     style->drawPrimitive(QStyle::PE_PanelItemViewItem, &opt, painter, w); // QSS ::item
 
     const QRect r = opt.rect;
-    opt.icon.paint(painter, QRect(r.x() + (r.width() - iconsize)/2, r.y() + 2, iconsize, iconsize));
+    opt.icon.paint(painter, QRect(r.x() + (r.width() - m_iconsize)/2, r.y() + 2, m_iconsize, m_iconsize));
     if (index == editing)
         return;
-    painter->drawPixmap(r.x(), r.y() + labeltop,
-                        label(opt.text, QSize(r.width(), r.height() - labeltop), opt.font, painter->device()->devicePixelRatioF()));
+    const int top = labeltop();
+    painter->drawPixmap(r.x(), r.y() + top,
+                        label(opt.text, QSize(r.width(), r.height() - top), opt.font, painter->device()->devicePixelRatioF()));
 }
 
 // White text, word-wrapped and elided to fit, over a blurred shadow; cached since the blur is costly.
@@ -299,7 +312,7 @@ void desktopdelegate::updateEditorGeometry(QWidget *editor, const QStyleOptionVi
 {
     auto *edit = static_cast<renameedit*>(editor);
     edit->document()->setTextWidth(option.rect.width() - 2*edit->frameWidth());
-    edit->setGeometry(option.rect.x(), option.rect.y() + labeltop, option.rect.width(),
+    edit->setGeometry(option.rect.x(), option.rect.y() + labeltop(), option.rect.width(),
                       qCeil(edit->document()->size().height()) + 2*edit->frameWidth());
 }
 
@@ -344,20 +357,94 @@ desktopview::desktopview(desktopmodel *model, const QString &dir, QScreen *scree
     layer->setScope("forest-desktop-icons");
 }
 
+void desktopview::applysettings(const iconsettings &cfg)
+{
+    config = cfg;
+    static_cast<desktopdelegate*>(itemDelegate())->seticonsize(config.iconsize);
+    setIconSize(QSize(config.iconsize, config.iconsize));
+    if (!config.singleclick)
+        viewport()->unsetCursor();
+    doItemsLayout();
+    viewport()->update();
+}
+
 int desktopview::columns() const
 {
-    return qMax(1, (viewport()->width() - 2*margin + (cell - desktopdelegate::itemsize)) / cell);
+    return qMax(1, (viewport()->width() - 2*margin + config.gridspacing) / cellx());
 }
 
 int desktopview::rows() const
 {
-    return qMax(1, (viewport()->height() - 2*margin + (cell - desktopdelegate::itemsize)) / cell);
+    return qMax(1, (viewport()->height() - 2*margin + config.gridspacing) / celly());
 }
 
 QPoint desktopview::cellat(QPoint contentpos) const
 {
     auto floordiv = [](int a, int b){ return a >= 0 ? a / b : -((-a + b - 1) / b); };
-    return QPoint(floordiv(contentpos.x() - margin, cell), floordiv(contentpos.y() - margin, cell));
+    return QPoint(floordiv(contentpos.x() - margin, cellx()), floordiv(contentpos.y() - margin, celly()));
+}
+
+QList<QModelIndex> desktopview::sortedindexes(const QList<QModelIndex> &indexes) const
+{
+    struct sortitem {
+        QModelIndex index;
+        QString name;
+        bool isdir = false;
+        QString type;
+        qint64 size = 0;
+        qint64 modified = 0;
+    };
+
+    const bool bytype = config.sortby == QLatin1String("type");
+    const bool bysize = config.sortby == QLatin1String("size");
+    const bool bymod = config.sortby == QLatin1String("modified");
+    const bool desc = config.sortorder == QLatin1String("descending");
+    QMimeDatabase db;
+
+    QList<sortitem> items;
+    items.reserve(indexes.size());
+    for (const QModelIndex &index : indexes) {
+        const QFileInfo info(index.data(QFileSystemModel::FilePathRole).toString());
+        sortitem s;
+        s.index = index;
+        s.name = index.data(Qt::DisplayRole).toString();
+        s.isdir = info.isDir();
+        if (bytype)
+            s.type = s.isdir ? QString() : db.mimeTypeForFile(info).comment();
+        else if (bysize)
+            s.size = s.isdir ? 0 : info.size();
+        else if (bymod)
+            s.modified = info.lastModified().toMSecsSinceEpoch();
+        items.append(std::move(s));
+    }
+
+    QCollator collator;
+    collator.setCaseSensitivity(Qt::CaseInsensitive);
+    collator.setNumericMode(true);
+
+    std::stable_sort(items.begin(), items.end(), [&](const sortitem &a, const sortitem &b) {
+        if (config.foldersfirst && a.isdir != b.isdir)
+            return a.isdir;
+        int cmp = 0;
+        if (bytype)
+            cmp = collator.compare(a.type, b.type);
+        else if (bysize)
+            cmp = (a.size < b.size) ? -1 : (a.size > b.size ? 1 : 0);
+        else if (bymod)
+            cmp = (a.modified < b.modified) ? -1 : (a.modified > b.modified ? 1 : 0);
+        else
+            cmp = collator.compare(a.name, b.name);
+
+        if (cmp != 0)
+            return desc ? (cmp > 0) : (cmp < 0);
+        return collator.compare(a.name, b.name) < 0;
+    });
+
+    QList<QModelIndex> out;
+    out.reserve(items.size());
+    for (const sortitem &s : std::as_const(items))
+        out.append(s.index);
+    return out;
 }
 
 QString desktopview::nameof(const QModelIndex &index) const
@@ -447,18 +534,23 @@ void desktopview::doItemsLayout()
     placeitems();
 }
 
+void desktopview::arrangeicons()
+{
+    if (!config.autoarrange) {
+        stored.clear();
+        settings.beginGroup(positionsgroup);
+        settings.remove("");
+        settings.endGroup();
+    }
+    placeitems();
+}
+
 void desktopview::placeitems()
 {
     QAbstractItemModel *m = model();
     if (!m)
         return;
     const QModelIndex root = rootIndex();
-
-    // Stored cells stay reserved, so new icons never take a displaced (or not yet loaded) icon's spot.
-    QSet<QPoint> reserved;
-    for (auto it = stored.cbegin(); it != stored.cend(); ++it)
-        if (inside(it.value()))
-            reserved.insert(it.value());
 
     placed.clear();
     occupant.clear();
@@ -469,6 +561,28 @@ void desktopview::placeitems()
         if (rectForIndex(index).topLeft() != pos)
             setPositionForIndex(pos, index);
     };
+
+    const int rowcount = rows();
+    if (config.autoarrange) {
+        QList<QModelIndex> all;
+        all.reserve(m->rowCount(root));
+        for (int row = 0; row < m->rowCount(root); ++row)
+            all.append(m->index(row, 0, root));
+        QPoint next(0, 0);
+        for (const QModelIndex &index : sortedindexes(all)) {
+            put(index, nameof(index), next);
+            next.ry()++;
+            if (next.y() >= rowcount)
+                next = QPoint(next.x() + 1, 0);
+        }
+        return;
+    }
+
+    // Stored cells stay reserved, so new icons never take a displaced (or not yet loaded) icon's spot.
+    QSet<QPoint> reserved;
+    for (auto it = stored.cbegin(); it != stored.cend(); ++it)
+        if (inside(it.value()))
+            reserved.insert(it.value());
 
     QList<QModelIndex> rest;
     for (int row = 0; row < m->rowCount(root); ++row) {
@@ -483,8 +597,7 @@ void desktopview::placeitems()
 
     // Column-major from the top left; past the last column when the grid is full.
     QPoint next(0, 0);
-    const int rowcount = rows();
-    for (const QModelIndex &index : std::as_const(rest)) {
+    for (const QModelIndex &index : sortedindexes(rest)) {
         while (occupant.contains(next) || reserved.contains(next)) {
             next.ry()++;
             if (next.y() >= rowcount)
@@ -525,6 +638,15 @@ void desktopview::paintEvent(QPaintEvent *event)
 bool desktopview::viewportEvent(QEvent *event)
 {
     const bool handled = QListView::viewportEvent(event);
+    if (config.singleclick && event->type() == QEvent::HoverMove) {
+        const QPoint pos = static_cast<QHoverEvent*>(event)->position().toPoint();
+        if (indexAt(pos).isValid())
+            viewport()->setCursor(Qt::PointingHandCursor);
+        else
+            viewport()->unsetCursor();
+    } else if (config.singleclick && event->type() == QEvent::HoverLeave) {
+        viewport()->unsetCursor();
+    }
     if (event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverLeave)
         return true;
     return handled;
@@ -535,6 +657,8 @@ bool desktopview::viewportEvent(QEvent *event)
 void desktopview::mousePressEvent(QMouseEvent *event)
 {
     presspos = event->position().toPoint();
+    pressedindex = (event->button() == Qt::LeftButton) ? indexAt(presspos) : QModelIndex();
+    draggedpress = false;
     QListView::mousePressEvent(event);
 }
 
@@ -545,12 +669,38 @@ void desktopview::mouseMoveEvent(QMouseEvent *event)
     if ((event->buttons() & Qt::LeftButton) && state() == NoState && pressed.isValid()
         && selectionModel()->isSelected(pressed)
         && (event->position().toPoint() - presspos).manhattanLength() >= 3) {
+        draggedpress = true;
         setState(DraggingState);
         startDrag(Qt::CopyAction | Qt::MoveAction | Qt::LinkAction);
         setState(NoState);
         return;
     }
     QListView::mouseMoveEvent(event);
+}
+
+void desktopview::mouseReleaseEvent(QMouseEvent *event)
+{
+    QListView::mouseReleaseEvent(event);
+    if (config.singleclick && !draggedpress && event->button() == Qt::LeftButton
+        && event->modifiers() == Qt::NoModifier && state() != EditingState) {
+        const QModelIndex idx = indexAt(event->position().toPoint());
+        if (idx.isValid() && idx == pressedindex)
+            emit itemactivated(idx);
+    }
+    pressedindex = QPersistentModelIndex();
+    draggedpress = false;
+}
+
+void desktopview::mouseDoubleClickEvent(QMouseEvent *event)
+{
+    if (!config.singleclick && event->button() == Qt::LeftButton) {
+        const QModelIndex idx = indexAt(event->position().toPoint());
+        if (idx.isValid()) {
+            emit itemactivated(idx);
+            return;
+        }
+    }
+    QListView::mouseDoubleClickEvent(event);
 }
 
 void desktopview::keyPressEvent(QKeyEvent *event)
@@ -623,6 +773,10 @@ void desktopview::startDrag(Qt::DropActions)
 bool desktopview::acceptdrop(QDropEvent *event)
 {
     if (event->source() == this) {
+        if (config.autoarrange) {
+            event->ignore();
+            return false;
+        }
         event->setDropAction(Qt::MoveAction);
         event->accept();
         return true;
@@ -663,10 +817,11 @@ void desktopview::dropEvent(QDropEvent *event)
 // Shifts the dragged icons by the anchor's cell offset, if every target cell is in the grid and free.
 void desktopview::movedragged(QPoint droppos)
 {
-    if (!draganchor.isValid())
+    if (!draganchor.isValid() || config.autoarrange)
         return;
     const QPoint offset(horizontalOffset(), verticalOffset());
-    const QPoint center(desktopdelegate::itemsize/2, desktopdelegate::itemsize/2);
+    const QSize sz = itemsize();
+    const QPoint center(sz.width()/2, sz.height()/2);
     const QPoint delta = cellat(droppos + offset - dragoffset + center) - placed.value(nameof(draganchor));
     if (delta.isNull())
         return;
