@@ -135,7 +135,8 @@ All in `library/` (except `panel-library`). They're linked into each plugin modu
 - **`forest-theme`** — header-only theme format parser, installed for Biome (see Theming System)
 - **`fstyleloader`** — theme CSS loading (header-only implementation in `.h`)
 - **`flogger`** — logging setup; call `FLogger::install("appname")` at startup
-- **`miscutills`** — wallpaper scaling, DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
+- **`miscutills`** — DBus helpers, color utilities, `RunOnce`, `ScreenTracker` (screen-change tracking + `primary()` screen)
+- **`wallpaper`** — shared wallpaper config, rendering, slideshow `WallpaperSource`, and `WallpaperView` widget (used by desktop, greeter, lockscreen, and settings)
 - **`pluginutills`** — app plugin path resolution, settings plugin interface
 - **`menuanchor`** — xdg_positioner placement for `QMenu`s (see Menus above)
 - **`toplevels`** — wlr-foreign-toplevel, ext-foreign-toplevel-list and ext-workspace clients, `WorkspaceTracker` (ext-workspace + `org.biome.Workspaces`, keyed by workspace `id`), `ToplevelTracker` (open windows + which are on the active workspace), and `ToplevelCapture`/`ScreenGrab` (ext-image-copy-capture window and output capture)

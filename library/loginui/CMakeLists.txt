@@ -10,7 +10,7 @@ add_library(loginui STATIC
 set_target_properties(loginui PROPERTIES POSITION_INDEPENDENT_CODE ON)
 
 # WaylandClientPrivate for PasswordForm's Caps Lock state.
-target_link_libraries(loginui PUBLIC Qt6::Widgets PRIVATE Qt6::WaylandClientPrivate)
+target_link_libraries(loginui PUBLIC Qt6::Widgets wallpaper PRIVATE Qt6::WaylandClientPrivate)
 target_include_directories(loginui PUBLIC ${CMAKE_CURRENT_SOURCE_DIR})
 forest_link_miscutills(loginui)
 

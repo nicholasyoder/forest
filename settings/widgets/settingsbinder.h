@@ -42,7 +42,7 @@ public:
     // Runs after each successful save.
     void set_callback(std::function<void()> callback){ saved_callback = callback; }
     // For hand-written controls: saves through write with the next batch and flashes row's row.
-    void changed(QWidget *row, std::function<void(QSettings&)> write);
+    void changed(QWidget *row, std::function<void(QSettings&)> write, bool immediate = true);
 
     // Combo storing item data instead of its text.
     static Converter item_data(QComboBox *combo);

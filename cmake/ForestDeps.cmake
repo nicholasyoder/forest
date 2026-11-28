@@ -112,6 +112,12 @@ function(forest_link_hotkeyconfig target)
     target_link_libraries(${target} PRIVATE hotkeyconfig)
 endfunction()
 
+# forest_link_wallpaper(target)
+# Links the wallpaper static library (shared wallpaper config, slideshow source and view)
+function(forest_link_wallpaper target)
+    target_link_libraries(${target} PRIVATE wallpaper)
+endfunction()
+
 # forest_add_applet_settings(applet SOURCES...)
 # Adds the <applet>-settings module: the applet's settings page, installed
 # beside the other settings plugins

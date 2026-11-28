@@ -1,6 +1,7 @@
 // SPDX-License-Identifier: LGPL-3.0-or-later
 
 #include "desktop.h"
+#include "miscutills.h"
 #include "xdgactivation.h"
 #include "../desktopconfig.h"
 
@@ -28,6 +29,9 @@ void desktop::setupPlug(){
     model = new desktopmodel(fsmodel, this); // sets the icon provider before loading starts
     fsmodel->setRootPath(desktopdir());
 
+    wallsource = new wallpaper::WallpaperSource(this);
+    wallsource->setConfig(GS::WALLPAPER_CONFIG);
+
     setupmenus();
     loadwallpaperwidgets();
     if (GS::SHOW_ICONS)
@@ -44,9 +48,13 @@ void desktop::setupPlug(){
 //called by dbus to load new wallpaper
 void desktop::reloadwallpaper(){
     GS::load();
-    foreach (wallpaperwidget *wallwidget, wallwidgetlist){
-        wallwidget->setwallpaper(GS::WALLPAPER, GS::IMAGE_MODE);
-    }
+    if (wallsource)
+        wallsource->setConfig(GS::WALLPAPER_CONFIG);
+}
+
+void desktop::nextwallpaper(){
+    if (wallsource)
+        wallsource->next();
 }
 
 void desktop::reloadicons(){
@@ -95,7 +103,7 @@ void desktop::updatefilter(){
 
 void desktop::loadwallpaperwidgets(){
     foreach (QScreen *screen, qApp->screens()){
-        wallpaperwidget *wallwidget = new wallpaperwidget(GS::WALLPAPER, GS::IMAGE_MODE, screen);
+        wallpaperwidget *wallwidget = new wallpaperwidget(wallsource, screen);
         wallwidget->setcontextmenu(deskmenu);
         wallwidgetlist << wallwidget;
         wallwidget->show();
@@ -201,6 +209,7 @@ void desktop::setupmenus(){
     deskmenu->addMenu(sortmenu);
     deskmenu->addSeparator();
 
+    nextwallpaperaction = addaction(deskmenu, "go-next", "Next wallpaper", &desktop::nextwallpaper);
     XdgActivation::instance()->watch(addaction(deskmenu, "preferences-desktop-wallpaper", "Wallpaper settings", &desktop::showwallpapersettings));
     XdgActivation::instance()->watch(addaction(deskmenu, "user-desktop", "Desktop icon settings", &desktop::showiconsettings));
 
@@ -236,6 +245,11 @@ void desktop::syncsortmenu(){
     foldersfirstaction->setChecked(GS::FOLDERS_FIRST);
     autoarrangeaction->setChecked(GS::AUTO_ARRANGE);
     arrangeaction->setEnabled(!GS::AUTO_ARRANGE);
+    if (nextwallpaperaction) {
+        const bool slideshow = wallsource && wallsource->config().type == wallpaper::Type::Slideshow;
+        nextwallpaperaction->setVisible(slideshow);
+        nextwallpaperaction->setEnabled(slideshow && wallsource->slideshowCount() > 1);
+    }
 }
 
 void desktop::showwallpapersettings(){

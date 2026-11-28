@@ -3,18 +3,17 @@
 #ifndef LOGINSETTINGS_H
 #define LOGINSETTINGS_H
 
-#include <QImage>
 #include <QObject>
 
-#include "miscutills.h"
+#include "wallpaperconfig.h"
 #include "../../library/pluginutills/settings_plugin_interface.h"
 
-class QComboBox;
 class QLabel;
 class QProcess;
 class QPushButton;
+class WallpaperEditor;
 
-// Appearance → Lock Screen: wallpaper for the greeter and lockscreen, installed by forest-login-helper.
+// Appearance → Login & Lock Wallpaper: wallpaper for the greeter and lockscreen, installed by forest-login-helper.
 class LoginSettings : public QObject
 {
     Q_OBJECT
@@ -25,26 +24,20 @@ public:
 
 private slots:
     void load();
-    void choose_photo();
-    void update_ui();
+    void update_apply();
     void apply();
     void apply_finished(int exit_code);
 
 private:
-    QString preview_source() const;
+    bool has_changes() const;
 
     settings_page *settings_item = nullptr;
-    QLabel *preview = nullptr;
+    WallpaperEditor *editor = nullptr;
     QLabel *status = nullptr;
-    QComboBox *mode_box = nullptr;
     QPushButton *apply_button = nullptr;
     QProcess *process = nullptr;
 
-    bool installed_custom = false; // a custom image is installed
-    WALLPAPER_MODE installed_mode = Fill;
-    QImage preview_image;
-    QString preview_path;
-    QString pending_image;          // newly chosen file, not yet installed
+    wallpaper::Config installed_config;
 };
 
 #endif // LOGINSETTINGS_H

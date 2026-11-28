@@ -16,8 +16,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 Pairs with Biome 0.4.0.
 
-- **Wallpaper slideshow mode** (#21). Cycle through a directory at a
-  configurable interval; also add a solid-colour background mode.
 - **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
   placeholder). Needs a picker plus a decision on how the choice reaches
   other toolkits (Qt platform theme, GTK via gsettings/`settings.ini`), not

@@ -7,17 +7,11 @@
 #include <QFileInfo>
 #include <QPainter>
 #include <QPainterPath>
-#include <QSettings>
 #include <QTextStream>
 #include <QTimer>
 #include <QVBoxLayout>
 
-#include <memory>
-
 #include <pwd.h>
-
-#include "loginconfig.h"
-#include "miscutills.h"
 
 namespace loginui {
 
@@ -77,26 +71,6 @@ QString faceIconPath(const QString &username, const QString &homeDir)
     return {};
 }
 
-Wallpaper::Wallpaper()
-{
-    if (QFileInfo::exists(loginconfig::wallpaperFile)) {
-        QSettings settings(loginconfig::confFile, QSettings::IniFormat);
-        m_source = QImage(loginconfig::wallpaperFile);
-        m_mode = miscutills::wallpaper_mode_from_setting(settings.value(loginconfig::modeKey));
-    }
-    if (m_source.isNull()) { // absent or unreadable custom image
-        m_source = QImage(loginconfig::defaultWallpaper);
-        m_mode = Fill;
-    }
-}
-
-QImage Wallpaper::scaled(QSize size)
-{
-    if (m_scaled.size() != size)
-        m_scaled = miscutills::get_wallpaper_scaled(m_source, m_mode, size);
-    return m_scaled;
-}
-
 Card::Card(QWidget *parent)
     : QFrame(parent)
 {
@@ -129,25 +103,6 @@ Clock::Clock(QWidget *parent)
 void Clock::tick()
 {
     setText(QDateTime::currentDateTime().toString("hh:mm"));
-}
-
-ScreenBackground::ScreenBackground(QWidget *parent)
-    : QWidget(parent)
-{
-}
-
-void ScreenBackground::paintEvent(QPaintEvent *)
-{
-    QPainter painter(this);
-    if (m_scaled.isNull())
-        painter.fillRect(rect(), QColor(30, 30, 30));
-    else
-        painter.drawImage(rect(), m_scaled);
-}
-
-void ScreenBackground::resizeEvent(QResizeEvent *)
-{
-    m_scaled = m_wallpaper.scaled(size());
 }
 
 } // namespace loginui
