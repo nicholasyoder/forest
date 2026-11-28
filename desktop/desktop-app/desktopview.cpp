@@ -520,6 +520,16 @@ void desktopview::paintEvent(QPaintEvent *event)
     QListView::paintEvent(event);
 }
 
+// QWidget::event() update()s the whole viewport on hover enter/leave; the base class already
+// repaints just the hovered item, so skip that full-surface repaint.
+bool desktopview::viewportEvent(QEvent *event)
+{
+    const bool handled = QListView::viewportEvent(event);
+    if (event->type() == QEvent::HoverEnter || event->type() == QEvent::HoverLeave)
+        return true;
+    return handled;
+}
+
 // Input ------------------------------------------------------------------------
 
 void desktopview::mousePressEvent(QMouseEvent *event)
