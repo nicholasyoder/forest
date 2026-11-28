@@ -73,6 +73,20 @@ throwaway `QPluginLoader` program (register `org.forest` first, disable
 quit-on-last-window-closed) under `dbus-run-session`, and drive it with
 `gdbus call` and `wlr-randr`.
 
+## Greeter structure
+
+`greeter/greeter-app`: a `QStackedWidget` in one card with `userselectview.*`
+(`UserTile` list + "Other user..."), `passwordview.*` (known-user or manual
+entry) and `sessionselectview`.
+
+- Manual entry submits username and password together via greetd
+  (`m_autoSubmitPending`, `m_pendingPassword`).
+- Last user is stored in `QSettings("Forest","Forest")` `greeter/last_user`,
+  written before `quit()` on `sessionStarted`.
+- uid < 1000 (root) is filtered in `userlistmodel.cpp`; "Other user" covers it.
+- `UserTile` lives in `userselectview.cpp` and needs `#include "userselectview.moc"`.
+- QSS ids are `#login_*` (`login.css`, shared with the lockscreen).
+
 ## Debugging Wayland/Qt protocol issues (window roles, popups, layer-shell)
 
 Static reasoning about Qt/QtWaylandClient/LayerShellQt internals is
