@@ -24,7 +24,7 @@ list(APPEND CMAKE_MODULE_PATH ${CMAKE_SOURCE_DIR}/cmake)
 include(ForestDeps)
 
 # Find Qt6
-find_package(Qt6 REQUIRED COMPONENTS Core Gui Widgets DBus Network WaylandClient WaylandClientPrivate)
+find_package(Qt6 REQUIRED COMPONENTS Core Gui GuiPrivate Widgets DBus Network WaylandClient WaylandClientPrivate)
 
 # Find external dependencies
 find_package(PkgConfig REQUIRED)
@@ -68,6 +68,7 @@ add_subdirectory(system)
 add_subdirectory(greeter)
 add_subdirectory(locker)
 add_subdirectory(screenshot)
+add_subdirectory(platformtheme)
 
 # Install config and data files
 install(DIRECTORY usr/share/wayland-sessions/ DESTINATION share/wayland-sessions)

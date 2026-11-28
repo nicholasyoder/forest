@@ -48,7 +48,7 @@ private:
 
     static QStringList themechain(){
         QSettings settings("Forest", "Forest");
-        return foresttheme::chain(themesdir(), settings.value("theme", "Round-Dark").toString());
+        return foresttheme::chain(themesdir(), settings.value("theme", foresttheme::defaultTheme()).toString());
     }
 };
 

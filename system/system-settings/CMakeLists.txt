@@ -2,6 +2,7 @@ add_library(system-settings MODULE
     aboutpage.cpp
     cursorthemesettings.cpp
     forestthemesettings.cpp
+    iconthemesettings.cpp
     loginsettings.cpp
     systemsettings.cpp
     displays/arrangementcanvas.cpp
@@ -9,6 +10,8 @@ add_library(system-settings MODULE
     aboutpage.h
     cursorthemesettings.h
     forestthemesettings.h
+    iconthemesettings.h
+    wideicondelegate.h
     loginsettings.h
     systemsettings.h
     displays/arrangementcanvas.h

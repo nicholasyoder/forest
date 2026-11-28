@@ -11,13 +11,6 @@ fi
 # Flatpak exports first so Flatpak apps show up in the menu (greetd doesn't run profile.d).
 export XDG_DATA_DIRS="$XDG_DATA_HOME/flatpak/exports/share:/var/lib/flatpak/exports/share:${XDG_DATA_DIRS:-/usr/local/share:/usr/share}"
 
-# Set qt6ct settings
-QT6CT_CONF_DIR="$XDG_CONFIG_HOME/qt6ct"
-if [ ! -f "$QT6CT_CONF_DIR/qt6ct.conf" ]; then
-	mkdir -p "$QT6CT_CONF_DIR"
-	cp /usr/share/forest/qtct.conf "$QT6CT_CONF_DIR/qt6ct.conf"
-fi
-
 # Setup gtk-2.0 themes
 GTK2_CONF_FILE="$HOME/.gtkrc-2.0"
 if [ ! -f "$GTK2_CONF_FILE" ]; then
@@ -69,7 +62,7 @@ fi
 # TTY launches. "biome" makes xdg-desktop-portal load biome-portals.conf,
 # without which hotkeys get no GlobalShortcuts backend.
 export XDG_CURRENT_DESKTOP="${XDG_CURRENT_DESKTOP:-Forest:biome}"
-export QT_QPA_PLATFORMTHEME="qt6ct"
+export QT_QPA_PLATFORMTHEME="forest"
 export XDG_SESSION_TYPE="wayland"
 
 # Export the cursor settings saves to index.theme for clients that only read

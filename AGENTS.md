@@ -25,11 +25,7 @@ a `file INSTALL cannot set permissions on "/etc/forest"` error: that step needs
 root and runs last, so it's expected and harmless unless something under
 `etc/forest/` or `etc/pam.d/` actually changed (then the user has to install
 that part manually). Keep new `install()` rules above the `/etc` ones in the
-top-level `CMakeLists.txt`, with prefix-relative destinations. Systemd units and
-the polkit policy reach the live system only through hand-made symlinks
-(`/usr/lib/systemd/user/forest-session.target`,
-`/usr/share/polkit-1/actions/org.forest.login.policy`); a new file there needs
-one too.
+top-level `CMakeLists.txt`, with prefix-relative destinations. Systemd units, the polkit policy and the Qt 6 platform-theme plugin reach the live system only through hand-made symlinks (`/usr/lib/systemd/user/forest-session.target`, `/usr/share/polkit-1/actions/org.forest.login.policy`, `/usr/lib64/qt6/plugins/platformthemes/libforestplatformtheme.so`); a new file there needs one too.
 
 There are no tests. Build a single target with:
 ```sh
@@ -122,6 +118,8 @@ Parsing the theme format (`parent_themes` chain, `[Palette]` → `QPalette`, per
 Theme inheritance example — "Round-Dark" has `parent_themes=base,base-rounded,base-dark`, so it loads `base/forest.css` → `base-rounded/forest.css` → `base-dark/forest.css` → `Round-Dark/forest.css`, then `base/shared.css` → … → `Round-Dark/shared.css`. Files are the outer loop, so every layer's `shared.css` comes after every layer's component CSS: a later layer can't override a parent's `shared.css` rule from its component file. Adding a new component means adding a `<component>.css` to `base/` (and overrides in variant themes as needed).
 
 Biome reads the same layers (`biome.css` + `shared.css`) through `etc/biome/conf.d/50-forest.conf` (`[Theme] dir/name`); the theme page also writes `[Theme] name` to the user's `Biome.conf` so decorations follow live.
+
+Cross-toolkit colors and icons: `platformtheme/` builds a Qt 6 `QPlatformTheme` plugin (`libforestplatformtheme.so`, `QT_QPA_PLATFORMTHEME=forest`) that reads `Forest.conf` (`theme`, `icon_theme`) + `foresttheme` and live-reloads palette, `colorScheme()`, `QPalette::Accent`, fonts and icon theme across Qt 6 apps via `QFileSystemWatcher`. `library/fstyleloader/toolkitsync.h` syncs the same settings to GTK/libadwaita/browsers/Flatpaks via `gsettings` (`org.gnome.desktop.interface`, mirrored into `org.freedesktop.appearance` by `xdg-desktop-portal-gtk`) and `settings.ini` / `.gtkrc-2.0`.
 
 Themes are selected from user-visible themes (those without `hidden=True`): `Circle-Dark`, `Circle-Light`, `Round-Dark`, `Round-Light`.
 

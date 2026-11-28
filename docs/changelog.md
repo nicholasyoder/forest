@@ -3,6 +3,7 @@ Changelog
 ============
 
 * Unreleased
+  - Add an Icons settings page (Appearance → Icons) and sync the icon theme, light/dark color scheme, palette and accent colour live to Qt 6, GTK, libadwaita and Flatpak apps via a Forest Qt platform-theme plugin and GSettings, replacing `qt6ct`
   - Rework desktop icons: changes to `~/Desktop` update only the affected icons, icons keep clear of panels and never pile up when the grid is full, and dragging icons out to other apps now works
   - Add a Desktop Icons settings page (visibility, icon size, grid spacing, sorting and auto-arrange, single-click, hidden files, and Home/Trash/Computer shortcuts) and a Sort by desktop menu
   - Add wallpaper slideshow mode (folder, interval, shuffle, fade transitions, and a desktop Next wallpaper action) and solid-colour / background-colour support for both desktop and login/lock screen wallpapers

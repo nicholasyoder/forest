@@ -4,9 +4,11 @@
 
 #include <QDir>
 #include <QSettings>
+#include <QSignalBlocker>
 
 #include "miscutills.h"
 #include "../../library/fstyleloader/fstyleloader.h"
+#include "../../library/fstyleloader/toolkitsync.h"
 
 ForestThemeSettings::ForestThemeSettings(){
     settings_item = new settings_page("appearance/theme", "Theme", "preferences-desktop-color");
@@ -23,10 +25,11 @@ ForestThemeSettings::ForestThemeSettings(){
 }
 
 void ForestThemeSettings::load_desktop_themes(){
+    const QSignalBlocker blocker(forest_theme_list);
     forest_theme_list->clear();
 
     QSettings settings("Forest", "Forest");
-    QString current_theme = settings.value("theme").toString();
+    QString current_theme = settings.value("theme", foresttheme::defaultTheme()).toString();
 
     QDir theme_dir("/usr/share/forest/themes");
     QStringList entrylist = theme_dir.entryList(QDir::Dirs | QDir::NoDotAndDotDot);
@@ -54,6 +57,8 @@ void ForestThemeSettings::set_desktop_theme(QListWidgetItem *theme_item){
     QSettings biome_settings("Biome", "Biome");
     biome_settings.setValue("Theme/name", new_theme);
     biome_settings.sync();
+
+    toolkitsync::applyTheme(new_theme);
 
     miscutills::call_dbus("forest/loadstylesheet");
     fstyleloader::apply("settings"); // this page runs inside forest-settings

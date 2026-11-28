@@ -5,6 +5,7 @@
 #include "menuanchor.h"
 #include "pluginutills.h"
 #include "../library/fstyleloader/fstyleloader.h"
+#include "../library/fstyleloader/toolkitsync.h"
 #include "settings_upgrade_manager.h"
 
 #include <LayerShellQt/Window>
@@ -26,6 +27,7 @@ void forest::setup(){
 
     SettingsUpgradeManager upgrade_manager(this);
     upgrade_manager.perform_upgrades();
+    toolkitsync::apply();
 
     qApp->setProperty("forestStartupOverlay", true); // read by the notification service
     const QList<QPointer<layeroverlay>> startup_overlays = layeroverlay::showOnAllScreens(Qt::black, layeroverlay::Layer::Overlay, "forest-startup");
