@@ -16,6 +16,7 @@ target_link_libraries(desktop-app PRIVATE
     Qt6Xdg
 )
 forest_link_miscutills(desktop-app)
+forest_link_wallpaper(desktop-app)
 forest_link_layershellqt(desktop-app)
 forest_link_menuanchor(desktop-app)
 forest_link_fileops(desktop-app)

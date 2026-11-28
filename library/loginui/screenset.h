@@ -9,6 +9,7 @@
 #include <functional>
 
 #include "loginui.h"
+#include "wallpaper.h"
 
 class QScreen;
 class QVBoxLayout;
@@ -18,10 +19,10 @@ class ScreenTracker;
 namespace loginui {
 
 // One screen's surface: wallpaper, plus the card and clock when it hosts the card.
-class ScreenWindow : public ScreenBackground {
+class ScreenWindow : public wallpaper::WallpaperView {
     Q_OBJECT
 public:
-    explicit ScreenWindow(QScreen *screen);
+    ScreenWindow(wallpaper::WallpaperSource *wallpaper, QScreen *screen);
 
     // Takes ownership; nullptr detaches the current card (the caller re-hosts it).
     void setCard(QWidget *card);
@@ -59,6 +60,7 @@ private:
     QWidget *m_card;
     std::function<void(QWindow *)> m_setupSurface;
     InitialFocus m_focus;
+    wallpaper::WallpaperSource *m_wallpaper;
     QHash<QScreen *, ScreenWindow *> m_windows;
     ScreenTracker *m_tracker;
 };

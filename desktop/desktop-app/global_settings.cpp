@@ -6,9 +6,7 @@
 #include <QStringList>
 
 // Initialization / Defaults
-QImage GS::WALLPAPER;
-QString GS::WALLPAPER_PATH;
-WALLPAPER_MODE GS::IMAGE_MODE = Fill;
+wallpaper::Config GS::WALLPAPER_CONFIG;
 bool GS::SHOW_ICONS = desktopconfig::showicons_default;
 int GS::ICON_SIZE = desktopconfig::iconsize_default;
 int GS::GRID_SPACING = desktopconfig::gridspacing_default;
@@ -24,12 +22,7 @@ void GS::load(){
     settings.sync();
     settings.beginGroup(desktopconfig::group);
 
-    const QString path = settings.value(desktopconfig::wallpaper).toString();
-    if (path != WALLPAPER_PATH || WALLPAPER.isNull()){
-        WALLPAPER_PATH = path;
-        WALLPAPER = QImage(path);
-    }
-    IMAGE_MODE = miscutills::wallpaper_mode_from_setting(settings.value(desktopconfig::imagemode));
+    WALLPAPER_CONFIG = desktopconfig::readWallpaper(settings);
     SHOW_ICONS = settings.value(desktopconfig::showicons, desktopconfig::showicons_default).toBool();
     ICON_SIZE = qBound(desktopconfig::iconsize_min,
                        settings.value(desktopconfig::iconsize, desktopconfig::iconsize_default).toInt(),

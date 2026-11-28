@@ -7,7 +7,9 @@
 #include <QScreen>
 #include <QWindow>
 
-wallpaperwidget::wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScreen *screen){
+wallpaperwidget::wallpaperwidget(wallpaper::WallpaperSource *source, QScreen *screen)
+    : wallpaper::WallpaperView(source)
+{
     Qt::WindowFlags flags;
     flags |= Qt::FramelessWindowHint;
     flags |= Qt::WindowStaysOnBottomHint;
@@ -24,16 +26,6 @@ wallpaperwidget::wallpaperwidget(const QImage &image, WALLPAPER_MODE imode, QScr
     layer_window->setExclusiveZone(-1);
     layer_window->setKeyboardInteractivity(LayerShellQt::Window::KeyboardInteractivityNone);
     layer_window->setScope("forest-desktop");
-
-    wallpaper = image;
-    imagemode = imode;
-
-    setup_wallpaper();
-}
-
-void wallpaperwidget::paintEvent(QPaintEvent *){
-    QPainter painter(this);
-    painter.drawImage(rect(), scaledwallpaper);
 }
 
 void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event){
@@ -42,9 +34,3 @@ void wallpaperwidget::mouseReleaseEvent(QMouseEvent *event){
         cmenu->exec(event->globalPosition().toPoint());
     }
 }
-
-void wallpaperwidget::setup_wallpaper(){
-    scaledwallpaper = miscutills::get_wallpaper_scaled(wallpaper, imagemode, size());
-    update();
-}
-

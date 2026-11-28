@@ -4,15 +4,9 @@
 #define LOGINUI_H
 
 #include <QFrame>
-#include <QHash>
-#include <QImage>
 #include <QLabel>
 #include <QPixmap>
-#include <QSize>
 #include <QString>
-#include <QWidget>
-
-#include "miscutills.h"
 
 struct passwd;
 
@@ -27,18 +21,6 @@ QString displayName(const passwd *pw);
 
 // ~/.face, else the AccountsService icon; empty if neither exists.
 QString faceIconPath(const QString &username, const QString &homeDir);
-
-// The system-wide login wallpaper (loginconfig.h): decoded once, scaled when the size changes.
-class Wallpaper {
-public:
-    Wallpaper();
-    QImage scaled(QSize size);
-
-private:
-    QImage m_source;
-    QImage m_scaled;
-    WALLPAPER_MODE m_mode = Fill;
-};
 
 // The themed frame around a login UI.
 class Card : public QFrame {
@@ -56,21 +38,6 @@ public:
 
 private:
     void tick();
-};
-
-// Wallpaper filling the whole widget; meant as one per QScreen.
-class ScreenBackground : public QWidget {
-    Q_OBJECT
-public:
-    explicit ScreenBackground(QWidget *parent = nullptr);
-
-protected:
-    void paintEvent(QPaintEvent *event) override;
-    void resizeEvent(QResizeEvent *event) override;
-
-private:
-    Wallpaper m_wallpaper;
-    QImage m_scaled;
 };
 
 } // namespace loginui

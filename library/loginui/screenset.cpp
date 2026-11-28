@@ -7,11 +7,13 @@
 #include <QScreen>
 #include <QVBoxLayout>
 
+#include "loginconfig.h"
 #include "miscutills.h"
 
 namespace loginui {
 
-ScreenWindow::ScreenWindow(QScreen *screen)
+ScreenWindow::ScreenWindow(wallpaper::WallpaperSource *wallpaper, QScreen *screen)
+    : wallpaper::WallpaperView(wallpaper)
 {
     setWindowFlags(Qt::FramelessWindowHint);
     setScreen(screen);
@@ -60,8 +62,11 @@ ScreenSet::ScreenSet(QWidget *card, std::function<void(QWindow *)> setupSurface,
     , m_card(card)
     , m_setupSurface(std::move(setupSurface))
     , m_focus(focus)
+    , m_wallpaper(new wallpaper::WallpaperSource(this))
     , m_tracker(new ScreenTracker(this))
 {
+    m_wallpaper->setConfig(loginconfig::readWallpaper(), loginconfig::defaultWallpaper);
+
     connect(qGuiApp, &QGuiApplication::screenAdded, this, &ScreenSet::addScreen);
     connect(qGuiApp, &QGuiApplication::screenRemoved, this, &ScreenSet::removeScreen);
     connect(m_tracker, &ScreenTracker::screens_replaced, this, &ScreenSet::placeCard);
@@ -92,7 +97,7 @@ void ScreenSet::addScreen(QScreen *screen)
 {
     if (!screen || m_windows.contains(screen))
         return;
-    auto *window = new ScreenWindow(screen);
+    auto *window = new ScreenWindow(m_wallpaper, screen);
     window->winId();
     m_setupSurface(window->windowHandle());
     m_windows.insert(screen, window);

@@ -44,6 +44,7 @@ public:
 
 public slots:
     Q_SCRIPTABLE void reloadwallpaper();
+    Q_SCRIPTABLE void nextwallpaper();
     Q_SCRIPTABLE void reloadicons();
     Q_SCRIPTABLE void arrangeicons();
 
@@ -85,6 +86,7 @@ private:
     QAction *addaction(QMenu *menu, const QString &icon, const QString &text, void (desktop::*slot)(),
                        const QKeySequence &shortcut = {});
 
+    wallpaper::WallpaperSource *wallsource = nullptr;
     QList <wallpaperwidget *> wallwidgetlist;
     QFileSystemModel *fsmodel = nullptr;
     desktopmodel *model = nullptr;
@@ -97,6 +99,7 @@ private:
     QAction *foldersfirstaction = nullptr;
     QAction *autoarrangeaction = nullptr;
     QAction *arrangeaction = nullptr;
+    QAction *nextwallpaperaction = nullptr;
     QHash<QString, QAction*> sortbyactions;
     QHash<QString, QAction*> sortorderactions;
 };

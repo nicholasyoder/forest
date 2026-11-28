@@ -48,10 +48,10 @@ void SettingsBinder::bind(QWidget *widget, const QString &key, const QVariant &d
     connect(widget, &QObject::destroyed, this, [this, widget]{ bindings.remove(widget); });
 }
 
-void SettingsBinder::changed(QWidget *row, std::function<void(QSettings&)> write){
+void SettingsBinder::changed(QWidget *row, std::function<void(QSettings&)> write, bool immediate){
     if (loading) return;
     writers.append({row, write});
-    schedule(true);
+    schedule(immediate);
 }
 
 void SettingsBinder::bind_color(ColorButton *button, const QString &color_key, const QString &opacity_key,

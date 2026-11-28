@@ -3,19 +3,18 @@
 #ifndef MISCUTILLS_H
 #define MISCUTILLS_H
 
-#include <QImage>
-
 #include <csignal>
 #include <functional>
 #include <initializer_list>
+#include <QColor>
+#include <QIcon>
 #include <QPointer>
+#include <QSize>
 #include <QTimer>
 #include <QVariant>
 #include <QVariantList>
 
 class QScreen;
-
-enum WALLPAPER_MODE { Fill, Fit, Stretch, Center };
 
 namespace miscutills {
 
@@ -29,14 +28,6 @@ namespace miscutills {
 
     // Load a custom iconsize directive in a stylesheet
     QSize get_iconsize_stylesheet(QString selector, QString stylesheet);
-
-    // Scale image according to specified mode and target size
-    QImage get_wallpaper_scaled(const QImage &source_image, WALLPAPER_MODE mode, QSize target_size);
-
-    // Modes are stored by name ("Fill", "Fit", "Stretch", "Center").
-    QString wallpaper_mode_name(WALLPAPER_MODE mode);
-    // Unknown or missing names are Fill.
-    WALLPAPER_MODE wallpaper_mode_from_setting(const QVariant &value);
 
     // Pad value with zeros
     QString pad_with_zeros(int number);
