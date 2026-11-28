@@ -7,6 +7,7 @@
 
 #include "aboutpage.h"
 #include "forestthemesettings.h"
+#include "iconthemesettings.h"
 #include "cursorthemesettings.h"
 #include "displays/displayspage.h"
 #include "loginsettings.h"
@@ -26,6 +27,7 @@ private:
     AboutPage *about_page = nullptr;
     CursorThemeSettings *cursor_theme_settings = nullptr;
     ForestThemeSettings *forest_theme_settings = nullptr;
+    IconThemeSettings *icon_theme_settings = nullptr;
     DisplaysPage *displays_page = nullptr;
     LoginSettings *login_settings = nullptr;
 };

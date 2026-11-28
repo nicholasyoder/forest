@@ -16,10 +16,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 Pairs with Biome 0.4.0.
 
-- **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
-  placeholder). Needs a picker plus a decision on how the choice reaches
-  other toolkits (Qt platform theme, GTK via gsettings/`settings.ini`), not
-  just Forest's own processes.
 - **Notification `ActivationToken`.** Spec 1.2 signal sent before
   `ActionInvoked` so the client can raise its window via xdg-activation.
   Without it, clicking e.g. a browser notification may not focus the browser.
@@ -40,13 +36,10 @@ Pairs with Biome 0.4.0.
   accent colour; Biome regenerates `builtin.qss` after.
 - **Custom accent colour.** Let the user override the theme's `highlight`
   palette colour from the settings UI (Themes page). Hardcoded greens in
-  theme CSS need to move to `palette(highlight)` first.
-- **Light/dark and accent in every toolkit** ([detail](cross-toolkit-theming.md)).
-  Publish `color-scheme` and `accent-color` through the
-  `org.freedesktop.appearance` portal Settings interface (a Forest portal
-  backend, or gsettings plus xdg-desktop-portal-gtk) so Qt, GTK and
-  libadwaita apps follow the theme, plus a Qt platform-theme plugin supplying
-  the palette. Colours only; control shapes come later.
+  theme CSS need to move to `palette(highlight)` first. The Qt platform theme
+  and `toolkitsync` already forward `highlight` (mapped to the nearest GNOME
+  accent enum for GTK/gsettings); arbitrary RGB on
+  `org.freedesktop.appearance` would need a Forest Settings portal backend.
 
 ## 0.13.0 — hardware & system
 

@@ -103,6 +103,19 @@ desktopmodel::desktopmodel(QFileSystemModel *source, QObject *parent) : QIdentit
         for (int row = first; row <= last; ++row)
             cache.remove(source->filePath(source->index(row, 0, parent)));
     });
+    // Refresh cached launcher/mime icons when the icon theme changes live.
+    if (qApp) {
+        struct ThemeWatcher : QObject {
+            desktopmodel *model;
+            ThemeWatcher(desktopmodel *m) : QObject(m), model(m) {}
+            bool eventFilter(QObject *, QEvent *ev) override {
+                if (ev->type() == QEvent::ThemeChange)
+                    model->refresh();
+                return false;
+            }
+        };
+        qApp->installEventFilter(new ThemeWatcher(this));
+    }
 }
 
 const desktopmodel::entry &desktopmodel::lookup(const QModelIndex &index) const

@@ -1,7 +1,10 @@
 # Cross-Toolkit Theming (research)
 
 Research notes (2026-10) on making third-party Qt, GTK and other apps match
-Forest/Biome. The colors stage is on the 0.12.0 roadmap; control shapes are not scheduled.
+Forest/Biome. The colors & icons stage is implemented via Forest's Qt 6
+platform-theme plugin (`platformtheme/`, `QT_QPA_PLATFORMTHEME=forest`,
+replacing `qt6ct`) plus `toolkitsync.h` (GSettings + `settings.ini` +
+`xdg-desktop-portal-gtk`); control shapes are not scheduled.
 See "Direction" for the decisions so far.
 
 Today Forest's QSS themes (`usr/share/forest/themes/`) only style Forest's own

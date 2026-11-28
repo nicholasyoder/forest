@@ -9,16 +9,19 @@ QList<settings_page*> SystemSettings::pages(){
     about_page = new AboutPage;
     displays_page = new DisplaysPage;
     forest_theme_settings = new ForestThemeSettings;
+    icon_theme_settings = new IconThemeSettings;
     cursor_theme_settings = new CursorThemeSettings;
     login_settings = new LoginSettings;
 
     return {about_page->get_settings_item(), displays_page->get_settings_item(),
-            forest_theme_settings->get_settings_item(), cursor_theme_settings->get_settings_item(), login_settings->get_settings_item()};
+            forest_theme_settings->get_settings_item(), icon_theme_settings->get_settings_item(),
+            cursor_theme_settings->get_settings_item(), login_settings->get_settings_item()};
 }
 
 SystemSettings::~SystemSettings(){
     delete about_page;
     delete forest_theme_settings;
+    delete icon_theme_settings;
     delete cursor_theme_settings;
     delete login_settings;
     delete displays_page;

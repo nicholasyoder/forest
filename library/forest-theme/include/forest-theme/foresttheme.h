@@ -18,6 +18,8 @@
 namespace foresttheme {
 
 inline QString defaultDir() { return QStringLiteral("/usr/share/forest/themes"); }
+inline QString defaultTheme() { return QStringLiteral("Round-Dark"); }
+inline QString defaultIconTheme() { return QStringLiteral("Papirus"); }
 
 // parent_themes in load order, then `name` itself.
 inline QStringList chain(const QString &dir, const QString &name) {
@@ -60,7 +62,7 @@ inline const QList<PaletteEntry> &paletteEntries() {
         {"text", QPalette::All, {QPalette::WindowText, QPalette::Text, QPalette::ButtonText, QPalette::ToolTipText}},
         {"disabled_text", QPalette::Disabled, {QPalette::WindowText, QPalette::Text, QPalette::ButtonText, QPalette::ToolTipText}},
         {"placeholder_text", QPalette::All, {QPalette::PlaceholderText}},
-        {"highlight", QPalette::All, {QPalette::Highlight}},
+        {"highlight", QPalette::All, {QPalette::Highlight, QPalette::Accent}},
         {"highlighted_text", QPalette::All, {QPalette::HighlightedText}},
         {"link", QPalette::All, {QPalette::Link}},
         {"light", QPalette::All, {QPalette::Light}},
@@ -96,6 +98,40 @@ inline QPalette palette(const QString &dir, const QStringList &layers, const QPa
     if (found)
         *found = any;
     return pal;
+}
+
+// Reads `color_scheme` (dark/light) across layers, later layers winning;
+// falls back to the window palette luminance when omitted.
+inline Qt::ColorScheme colorScheme(const QString &dir, const QStringList &layers) {
+    Qt::ColorScheme scheme = Qt::ColorScheme::Unknown;
+    for (const QString &layer : layers) {
+        QSettings conf(QDir(dir).filePath(layer + "/theme.conf"), QSettings::IniFormat);
+        const QString val = conf.value("color_scheme").toString().trimmed().toLower();
+        if (val == QLatin1String("dark"))
+            scheme = Qt::ColorScheme::Dark;
+        else if (val == QLatin1String("light"))
+            scheme = Qt::ColorScheme::Light;
+    }
+    if (scheme != Qt::ColorScheme::Unknown)
+        return scheme;
+    bool found = false;
+    const QPalette pal = palette(dir, layers, QPalette(), &found);
+    if (!found)
+        return Qt::ColorScheme::Unknown;
+    return pal.color(QPalette::Window).lightness() < 128 ? Qt::ColorScheme::Dark : Qt::ColorScheme::Light;
+}
+
+// Reads `[Palette] highlight` across layers, later layers winning.
+inline QColor accentColor(const QString &dir, const QStringList &layers) {
+    QColor accent;
+    for (const QString &layer : layers) {
+        QSettings conf(QDir(dir).filePath(layer + "/theme.conf"), QSettings::IniFormat);
+        conf.beginGroup("Palette");
+        const QColor color(conf.value("highlight").toString());
+        if (color.isValid())
+            accent = color;
+    }
+    return accent;
 }
 
 } // namespace foresttheme

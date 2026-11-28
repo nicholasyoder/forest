@@ -6,6 +6,7 @@ usr/bin/forest-locker
 usr/bin/forest-lockscreen
 usr/bin/forest-screenshot
 usr/lib/*/forest
+usr/lib/*/qt6/plugins/platformthemes/libforestplatformtheme.so
 etc/forest/Forest.conf
 etc/forest/Panel.conf
 etc/forest/Quicklaunch.conf
@@ -15,7 +16,6 @@ usr/share/wayland-sessions
 usr/share/applications
 usr/share/forest/pics
 usr/share/forest/power-manager.desktop
-usr/share/forest/qtct.conf
 usr/share/forest/startforest-wayland
 usr/share/forest/themes
 usr/share/wallpapers/forest

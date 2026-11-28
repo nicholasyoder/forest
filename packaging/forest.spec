@@ -27,9 +27,9 @@ BuildRequires:  systemd-rpm-macros
 
 Requires:       biome >= 0.3.1
 Requires:       xdg-desktop-portal
+Requires:       xdg-desktop-portal-gtk
 Requires:       dbus-tools
 Requires:       gtk-murrine-engine
-Requires:       qt6ct
 Requires:       papirus-icon-theme
 Requires:       brightnessctl
 Requires:       xdg-user-dirs
@@ -91,6 +91,7 @@ install -pm 0644 man/*.1 %{buildroot}%{_mandir}/man1/
 %{_bindir}/forest-lockscreen
 %{_bindir}/forest-screenshot
 %{_libdir}/forest/
+%{_libdir}/qt6/plugins/platformthemes/libforestplatformtheme.so
 %dir %{_sysconfdir}/forest
 %config(noreplace) %{_sysconfdir}/forest/Forest.conf
 %config(noreplace) %{_sysconfdir}/forest/Panel.conf
