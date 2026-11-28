@@ -12,6 +12,8 @@
 #include <QPersistentModelIndex>
 #include <functional>
 
+#include "../desktopconfig.h"
+
 class QFileSystemModel;
 class QMenu;
 
@@ -51,13 +53,15 @@ class desktopdelegate : public QStyledItemDelegate
 {
     Q_OBJECT
 public:
-    static constexpr int itemsize = 96;
-    static constexpr int iconsize = 48;
-    static constexpr int labeltop = 46;
-
     using QStyledItemDelegate::QStyledItemDelegate;
+
+    void seticonsize(int size);
+    int iconsize() const { return m_iconsize; }
+    int labeltop() const { return m_iconsize + 2; }
+    QSize itemsize() const { return {m_iconsize + 48, m_iconsize + 50}; }
+
     void paint(QPainter *painter, const QStyleOptionViewItem &option, const QModelIndex &index) const override;
-    QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const override { return {itemsize, itemsize}; }
+    QSize sizeHint(const QStyleOptionViewItem &, const QModelIndex &) const override { return itemsize(); }
     QWidget *createEditor(QWidget *parent, const QStyleOptionViewItem &, const QModelIndex &index) const override;
     void destroyEditor(QWidget *editor, const QModelIndex &index) const override;
     void setEditorData(QWidget *editor, const QModelIndex &index) const override;
@@ -69,6 +73,7 @@ public:
 
 private:
     QPixmap label(const QString &text, QSize size, const QFont &font, qreal dpr) const;
+    int m_iconsize = desktopconfig::iconsize_default;
     mutable QCache<QString, QPixmap> labels{512};
     mutable QPersistentModelIndex editing; // its label is hidden under the editor
 };
@@ -79,9 +84,21 @@ class desktopview : public QListView
 {
     Q_OBJECT
 public:
+    struct iconsettings {
+        int iconsize = desktopconfig::iconsize_default;
+        int gridspacing = desktopconfig::gridspacing_default;
+        bool autoarrange = desktopconfig::autoarrange_default;
+        QString sortby = desktopconfig::sortby_default;
+        QString sortorder = desktopconfig::sortorder_default;
+        bool foldersfirst = desktopconfig::foldersfirst_default;
+        bool singleclick = desktopconfig::singleclick_default;
+    };
+
     desktopview(desktopmodel *model, const QString &dir, QScreen *screen);
 
     void setmenus(QMenu *icons, QMenu *desktop) { iconmenu = icons; deskmenu = desktop; }
+    void applysettings(const iconsettings &cfg);
+    void arrangeicons();
     QStringList selectedpaths() const;
     void renameselected();
     void editwhenadded(const QString &path);
@@ -92,6 +109,7 @@ public:
 signals:
     void filesdropped(QStringList paths, Qt::DropAction action, bool trusted);
     void openrequested();
+    void itemactivated(const QModelIndex &index);
 
 protected:
     void resizeEvent(QResizeEvent *event) override;
@@ -99,6 +117,8 @@ protected:
     bool viewportEvent(QEvent *event) override;
     void mousePressEvent(QMouseEvent *event) override;
     void mouseMoveEvent(QMouseEvent *event) override;
+    void mouseReleaseEvent(QMouseEvent *event) override;
+    void mouseDoubleClickEvent(QMouseEvent *event) override;
     void keyPressEvent(QKeyEvent *event) override;
     void contextMenuEvent(QContextMenuEvent *event) override;
     void startDrag(Qt::DropActions) override;
@@ -109,14 +129,17 @@ protected:
 
 private:
     static constexpr int margin = 10;
-    static constexpr int cell = 100;
 
+    QSize itemsize() const { return static_cast<desktopdelegate*>(itemDelegate())->itemsize(); }
+    int cellx() const { return itemsize().width() + config.gridspacing; }
+    int celly() const { return itemsize().height() + config.gridspacing; }
     int columns() const;
     int rows() const;
     bool inside(QPoint c) const { return c.x() >= 0 && c.y() >= 0 && c.x() < columns() && c.y() < rows(); }
-    QPoint cellpos(QPoint c) const { return QPoint(margin + c.x()*cell, margin + c.y()*cell); }
+    QPoint cellpos(QPoint c) const { return QPoint(margin + c.x()*cellx(), margin + c.y()*celly()); }
     QPoint cellat(QPoint contentpos) const;
     QString nameof(const QModelIndex &index) const;
+    QList<QModelIndex> sortedindexes(const QList<QModelIndex> &indexes) const;
 
     void placeitems();
     void store(const QString &name, QPoint c);
@@ -126,6 +149,7 @@ private:
     void movedragged(QPoint droppos);
 
     QString dir;
+    iconsettings config;
     QSettings settings{"Forest", "Forest"};
     QHash<QString, QPoint> stored;   // name -> cell, from settings
     QHash<QString, QPoint> placed;   // name -> cell in the current layout
@@ -133,6 +157,8 @@ private:
     bool canstore = false;           // the compositor's size is known (first paint)
 
     QPoint presspos;
+    QPersistentModelIndex pressedindex;
+    bool draggedpress = false;
     QList<QPersistentModelIndex> dragged;
     QPersistentModelIndex draganchor;
     QPoint dragoffset;

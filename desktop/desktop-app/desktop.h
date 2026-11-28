@@ -44,11 +44,15 @@ public:
 
 public slots:
     Q_SCRIPTABLE void reloadwallpaper();
+    Q_SCRIPTABLE void reloadicons();
+    Q_SCRIPTABLE void arrangeicons();
 
 private slots:
     void loadwallpaperwidgets();
     void setupmenus();
-    void showsettings();
+    void showwallpapersettings();
+    void showiconsettings();
+    void syncsortmenu();
     void refresh();
     void handleScreenChange();
 
@@ -73,6 +77,9 @@ private slots:
 
 private:
     static QString desktopdir(){ return XdgDirs::userDir(XdgDirs::Desktop); }
+    static desktopview::iconsettings currenticonsettings();
+    void updatefilter();
+    void savesortsetting(const QString &key, const QVariant &value, bool arrange);
     void openfile(const QString &file);
     QStringList selectedpaths(){ return view ? view->selectedpaths() : QStringList(); }
     QAction *addaction(QMenu *menu, const QString &icon, const QString &text, void (desktop::*slot)(),
@@ -85,5 +92,12 @@ private:
     QList<QAction*> viewactions; // keyboard shortcuts while the icon view has focus
     QMenu *deskmenu = new QMenu;
     QMenu *iconmenu = new QMenu;
+    QMenu *sortmenu = nullptr;
+    QAction *selectallaction = nullptr;
+    QAction *foldersfirstaction = nullptr;
+    QAction *autoarrangeaction = nullptr;
+    QAction *arrangeaction = nullptr;
+    QHash<QString, QAction*> sortbyactions;
+    QHash<QString, QAction*> sortorderactions;
 };
 #endif // DESKTOP_H

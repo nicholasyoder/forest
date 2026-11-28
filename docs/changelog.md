@@ -4,6 +4,7 @@ Changelog
 
 * Unreleased
   - Rework desktop icons: changes to `~/Desktop` update only the affected icons, icons keep clear of panels and never pile up when the grid is full, and dragging icons out to other apps now works
+  - Add a Desktop Icons settings page (visibility, icon size, grid spacing, sorting and auto-arrange, single-click, hidden files, and Home/Trash/Computer shortcuts) and a Sort by desktop menu
 
 * Release 0.11.2 - 2026-11-23
   - Remove the unused `nmcontrol` panel plugin stub, a stale generated header and the `desktop::reloadsettings` D-Bus method

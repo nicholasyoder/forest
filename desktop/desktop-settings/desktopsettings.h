@@ -29,6 +29,9 @@ private slots:
     void update_preview();
 
 private:
+    settings_page *make_wallpaper_page();
+    settings_page *make_icons_page();
+
     QLabel *wallpaper_preview = nullptr;
     QComboBox *wallpaper_mode = nullptr;
     QFileDialog *open_photo_dialog = nullptr;

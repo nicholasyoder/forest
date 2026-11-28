@@ -164,6 +164,11 @@ void SettingsUpgradeManager::upgrade_0_12_0(){
         settings->remove(key);
     }
     settings->endGroup();
+
+    // Old defaults shipped iconsize=32 and margins/bottom=26 while icons drew at 48 px; drop both.
+    settings->remove("desktop/margins");
+    if (settings->value("desktop/iconsize").toInt() == 32)
+        settings->remove("desktop/iconsize");
 }
 
 void SettingsUpgradeManager::upgrade_0_10_1(){

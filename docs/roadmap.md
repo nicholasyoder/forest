@@ -16,9 +16,6 @@ rather than designing it here ahead of time. Small fixes don't need a plan doc.
 
 Pairs with Biome 0.4.0.
 
-- **Desktop icons settings page.** No page for desktop icons yet (Desktop →
-  Icons is a placeholder). Icon size, grid spacing, sort/arrange, which
-  default icons show, etc.
 - **Wallpaper slideshow mode** (#21). Cycle through a directory at a
   configurable interval; also add a solid-colour background mode.
 - **Icon theme setting.** No icon theme page yet (Themes → Icon is an empty
